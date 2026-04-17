@@ -36,43 +36,38 @@ def _ensure_pipeline(vrlimit=14):
     _pipe = WanVideoPipeline.from_pretrained(
         torch_dtype=torch.bfloat16,
         device="cuda",
+        redirect_common_files=False,
         model_configs=[
             ModelConfig(
                 model_id="Wan-AI/Wan2.1-I2V-14B-480P", 
                 origin_file_pattern="diffusion_pytorch_model*.safetensors",
-                redirect_common_files=False,  # ← ADD THIS
                 **_vram_config
             ),
             ModelConfig(
                 model_id="Wan-AI/Wan2.1-I2V-14B-480P", 
                 origin_file_pattern="models_t5_umt5-xxl-enc-bf16.pth",
-                redirect_common_files=False,  # ← ADD THIS
                 **_vram_config
             ),
             ModelConfig(
                 model_id="Wan-AI/Wan2.1-I2V-14B-480P", 
                 origin_file_pattern="Wan2.1_VAE.pth",
-                redirect_common_files=False,  # ← ADD THIS
                 **_vram_config
             ),
             ModelConfig(
                 model_id="Wan-AI/Wan2.1-I2V-14B-480P", 
                 origin_file_pattern="models_clip_open-clip-xlm-roberta-large-vit-huge-14.pth",
-                redirect_common_files=False,  # ← ADD THIS
                 **_vram_config
             ),
         ],
         tokenizer_config=ModelConfig(
             model_id="google/umt5-xxl", 
             origin_file_pattern="google/umt5-xxl/",
-            redirect_common_files=False  # ← ADD THIS
         ),
         vram_limit=vrlimit,
     )
     lora = ModelConfig(
         model_id="lightx2v/Wan2.1-Distill-Loras", 
         origin_file_pattern="wan2.1_i2v_lora_rank64_lightx2v_4step.safetensors",
-        redirect_common_files=False  # ← ADD THIS
     )
 
     _pipe.load_lora(_pipe.dit, lora, alpha=1.0)
