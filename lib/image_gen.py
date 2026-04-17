@@ -1,0 +1,181 @@
+from diffsynth.pipelines.qwen_image import QwenImagePipeline, ModelConfig, FlowMatchScheduler
+import gc
+import torch
+import os
+from image_analysis import AnalyzeImage, EnhancePrompt
+from config import load_environ
+
+load_environ()
+
+class ImageGen(object):
+    def __init__(self,vrlimit=14):
+        if "VRAM" in os.environ:
+            vrlimit = int(os.environ["VRAM"])
+        vram_config = {
+                "offload_dtype": "disk",
+                "offload_device": "disk",
+                "onload_dtype": torch.float8_e4m3fn,
+                "onload_device": "cpu",
+                "preparing_dtype": torch.float8_e4m3fn,
+                "preparing_device": "cuda",
+                "computation_dtype": torch.bfloat16,
+                "computation_device": "cuda",
+            }
+        self.pipe = QwenImagePipeline.from_pretrained(
+                torch_dtype=torch.bfloat16,
+                device="cuda",
+                model_configs=[
+                    ModelConfig(model_id="Qwen/Qwen-Image-2512", origin_file_pattern="transformer/diffusion_pytorch_model*.safetensors", **vram_config),
+                    ModelConfig(model_id="Qwen/Qwen-Image", origin_file_pattern="text_encoder/model*.safetensors", **vram_config),
+                    ModelConfig(model_id="Qwen/Qwen-Image", origin_file_pattern="vae/diffusion_pytorch_model.safetensors", **vram_config),
+               ],
+                tokenizer_config=ModelConfig(model_id="Qwen/Qwen-Image", origin_file_pattern="tokenizer/"),
+                vram_limit=vrlimit,
+            )
+        lora = ModelConfig(model_id="lightx2v/Qwen-Image-2512-Lightning", origin_file_pattern="Qwen-Image-2512-Lightning-8steps-V1.0-bf16.safetensors")
+        self.pipe.load_lora(self.pipe.dit, lora, alpha=1.0)
+        self.pipe.scheduler = FlowMatchScheduler("Qwen-Image-Lightning")
+
+    def generate(self, prompt, output, width, height, seed):
+        image = self.pipe(
+                prompt=prompt,
+                seed=seed,
+                num_inference_steps=8,
+                cfg_scale=1.0,
+                height=height,
+                width=width
+            )
+        image.save(output)
+        return {"status":"success", "output_path":output}
+
+
+    def __del__(self):
+        del self.pipe
+        gc.collect()
+        torch.cuda.empty_cache()
+
+def GenerateImage(prompt='', output='tmp.png', width=1328, height=1328, seed=42):
+    prompt = EnhancePrompt('',prompt,'system/QwenImage.txt')
+    gen = ImageGen()
+    status = gen.generate(prompt['analysis'], output, int(width), int(height), int(seed))
+    del gen
+    analysis = AnalyzeImage(output, "Briefly describe this image, no more than 100 words")
+    status['description'] = analysis['analysis']
+    status['prompt'] = prompt['analysis']
+    return status
+
+def CreateCharacterSheet(prompt='', output='character_tmp.png'):
+    prompt = f'create a character sheet single image with two side by side views (3/4 front view, back view) with plain white background, studio lighting of {prompt}'
+    prompt = EnhancePrompt('',prompt,'system/QwenImage.txt')
+    gen = ImageGen()
+    status = gen.generate(prompt['analysis'], output, 1328, 1328, -1)
+    del gen
+    analysis = AnalyzeImage(output, "Briefly describe this image, no more than 100 words")
+    status['description'] = analysis['analysis']
+    status['prompt'] = prompt['analysis']
+    return status
+
+def CreateBackground(prompt='', output='location_tmp.png'):
+    print("CREATE BACKGROUND")
+    base_prompt = (
+        "A pure environmental background plate with absolutely no characters, people, animals, or foreground subjects. "
+        "Focus solely on scenery, lighting, atmosphere, and spatial composition. "
+    )
+    
+    # 2. Combine user input + hard exclusion cues
+    user_part = prompt.strip() if prompt else "empty, atmospheric location"
+    combined = f"{base_prompt} {user_part}"
+    
+    exclusion_suffix = (
+        " Composition: edge-to-edge environment, uniform depth, no central focal point, background-only layout. "
+        " Exclude: figures, faces, silhouettes, text, logos, living beings, narrative subjects."
+    )
+    final_prompt = (combined + exclusion_suffix).strip() + "When enhancing background prompts, preserve all exclusion constraints. Do not add people, animals, or narrative subjects. Maintain environmental/empty scene focus."
+    prompt = EnhancePrompt('',final_prompt,'system/QwenImage.txt')
+    gen = ImageGen()
+    status = gen.generate(prompt['analysis'], output, 1328, 1328, -1)
+    del gen
+    analysis = AnalyzeImage(output, "Briefly describe this image, no more than 100 words")
+    status['description'] = analysis['analysis']
+    status['prompt'] = prompt['analysis']
+    return status
+
+def GenerateImageSchema():
+    return {
+        "type": "function",
+        "function": {
+            "name": "generate_image",
+            "description": "Generate a new image from a text prompt.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "prompt": {"type": "string", "description": "Image description."},
+                    "width": {"type": "integer"},
+                    "height": {"type": "integer"},
+                    "seed": {"type": "integer"}
+                },
+                "required": ["prompt"]
+            }
+        }
+    }
+
+def CreateCharacterSheetSchema():
+    return {
+        "type": "function",
+        "function": {
+            "name": "create_character_sheet",
+            "description": "Generate a character reference sheet with side-by-side 3/4 front and back views on a white background.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "prompt": {
+                        "type": "string", 
+                        "description": "Detailed description of the character's appearance, clothing, and style."
+                    }
+                },
+                "required": ["prompt"]
+            }
+        }
+    }
+
+def CreateBackgroundSchema():
+    return {
+        "type": "function",
+        "function": {
+            "name": "create_background",
+            "description": "Generate a pure environmental background plate with NO characters, subjects, or foreground objects.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "prompt": {
+                        "type": "string", 
+                        "description": "Description of the environment, lighting, and atmosphere (e.g., 'cyberpunk city street at night, wet asphalt')."
+                    }
+                },
+                "required": ["prompt"]
+            }
+        }
+    }
+
+
+
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser(
+                    prog='GenerateImages',
+                    description='Generate images from prompt',
+                    epilog='')
+    parser.add_argument('-W', '--width', type=int, default=1024, help='width of output')
+    parser.add_argument('-H', '--height', type=int, default=1024, help='height of output')
+    parser.add_argument('-E', '--seed', type=int, default=42, help='seed')
+    parser.add_argument('-P', '--prompt', type=str, default='a beautiful woman tanning at the beach', help='prompt')
+    parser.add_argument('-O', '--output', type=str, default='output.png')
+    parser.add_argument('-C', '--charactersheet', action='store_true')
+    parser.add_argument('-L', '--location', action='store_true')
+    args = parser.parse_args()
+    if args.charactersheet:
+        print(CreateCharacterSheet(args.prompt, args.output))
+    if args.location:
+        print(CreateBackground(args.prompt, args.output))
+    else:
+        print(GenerateImage(args.prompt, args.output, args.width, args.height, args.seed))
