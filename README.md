@@ -7,3 +7,5 @@ conda create python=3.12 -n plan10
 pip install -r requirements.txt
 git clone https://github.com/modelscope/DiffSynth-Studio.git 
 pip install -e DiffSynth-Studio
+mkdir loras
+hf download lightx2v/Wan2.1-Distill-Loras --local-dir ./loras
