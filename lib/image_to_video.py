@@ -39,8 +39,9 @@ def _ensure_pipeline(vrlimit=14):
         model_configs=[
             # DiT - Safetensors (DiffSynth-Studio repo)
             ModelConfig(
-                model_id="DiffSynth-Studio/Wan-Series-Converted-Safetensors",
+                model_id="Wan-AI/Wan2.1-I2V-14B-480P",
                 origin_file_pattern="Wan2.1-I2V-14B-480P/diffusion_pytorch_model*.safetensors",
+                redirect_common_files=False,
                 **_vram_config
             ),
             
@@ -48,13 +49,15 @@ def _ensure_pipeline(vrlimit=14):
             ModelConfig(
                 model_id="Wan-AI/Wan2.1-I2V-14B-480P",
                 origin_file_pattern="models_t5_umt5-xxl-enc-bf16.pth",
+                redirect_common_files=False,
                 **_vram_config
             ),
             
             # VAE - Safetensors (DiffSynth-Studio repo)
             ModelConfig(
-                model_id="DiffSynth-Studio/Wan-Series-Converted-Safetensors",
-                origin_file_pattern="Wan2.1-I2V-14B-480P/Wan2.1_VAE.safetensors",
+                model_id="Wan-AI/Wan2.1-I2V-14B-480P",
+                origin_file_pattern="Wan2.1-I2V-14B-480P/Wan2.1_VAE.pth",
+                redirect_common_files=False,
                 **_vram_config
             ),
             
