@@ -74,7 +74,7 @@ def _ensure_pipeline(vrlimit=14):
         
         vram_limit=vrlimit,
     )
-   lora = ModelConfig(model_id="lightx2v/Wan2.1-Distill-Loras", origin_file_pattern="wan2.1_i2v_lora_rank64_lightx2v_4step.safetensors")
+    lora = ModelConfig(model_id="lightx2v/Wan2.1-Distill-Loras", origin_file_pattern="wan2.1_i2v_lora_rank64_lightx2v_4step.safetensors")
 
     _pipe.load_lora(
         _pipe.dit, 
