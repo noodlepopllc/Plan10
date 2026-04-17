@@ -37,20 +37,44 @@ def _ensure_pipeline(vrlimit=14):
         torch_dtype=torch.bfloat16,
         device="cuda",
         model_configs=[
-            ModelConfig(model_id="Wan-AI/Wan2.1-I2V-14B-480P", 
-                       origin_file_pattern="diffusion_pytorch_model*.safetensors", **_vram_config),
-            ModelConfig(model_id="Wan-AI/Wan2.1-I2V-14B-480P", 
-                       origin_file_pattern="models_t5_umt5-xxl-enc-bf16.pth", **_vram_config),
-            ModelConfig(model_id="Wan-AI/Wan2.1-I2V-14B-480P", 
-                       origin_file_pattern="Wan2.1_VAE.pth", **_vram_config),
-            ModelConfig(model_id="Wan-AI/Wan2.1-I2V-14B-480P", 
-                       origin_file_pattern="models_clip_open-clip-xlm-roberta-large-vit-huge-14.pth", **_vram_config),
+            # DiT - Safetensors (DiffSynth-Studio repo)
+            ModelConfig(
+                model_id="DiffSynth-Studio/Wan-Series-Converted-Safetensors",
+                origin_file_pattern="Wan2.1-I2V-14B-480P/diffusion_pytorch_model*.safetensors",
+                **_vram_config
+            ),
+            
+            # T5 Encoder - PTH (Original Wan-AI repo, no safetensors version)
+            ModelConfig(
+                model_id="Wan-AI/Wan2.1-I2V-14B-480P",
+                origin_file_pattern="models_t5_umt5-xxl-enc-bf16.pth",
+                **_vram_config
+            ),
+            
+            # VAE - Safetensors (DiffSynth-Studio repo)
+            ModelConfig(
+                model_id="DiffSynth-Studio/Wan-Series-Converted-Safetensors",
+                origin_file_pattern="Wan2.1-I2V-14B-480P/Wan2.1_VAE.safetensors",
+                **_vram_config
+            ),
+            
+            # CLIP - PTH (Original Wan-AI repo, no safetensors version)
+            ModelConfig(
+                model_id="Wan-AI/Wan2.1-I2V-14B-480P",
+                origin_file_pattern="models_clip_open-clip-xlm-roberta-large-vit-huge-14.pth",
+                **_vram_config
+            ),
         ],
-        tokenizer_config=ModelConfig(model_id="Wan-AI/Wan2.1-T2V-1.3B", 
-                                    origin_file_pattern="google/umt5-xxl/"),
+        
+        # Tokenizer - Usually from a separate T5 repo
+        tokenizer_config=ModelConfig(
+            model_id="google/umt5-xxl",
+            origin_file_pattern="**/*"
+        ),
+        
         vram_limit=vrlimit,
     )
-    lora = ModelConfig(model_id="lightx2v/Wan2.1-Distill-Loras", origin_file_pattern="wan2.1_i2v_lora_rank64_lightx2v_4step.safetensors")
+   lora = ModelConfig(model_id="lightx2v/Wan2.1-Distill-Loras", origin_file_pattern="wan2.1_i2v_lora_rank64_lightx2v_4step.safetensors")
 
     _pipe.load_lora(
         _pipe.dit, 
