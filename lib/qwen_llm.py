@@ -36,7 +36,7 @@ def _load_llm():
     model = Qwen3_5ForConditionalGeneration.from_pretrained(
         os.environ["QWEN"],
         torch_dtype=torch.float16,
-        quantization_config=get_bnb_config() if os.environ["BITSNBYTES"} == "True" else None,
+        quantization_config=get_bnb_config() if os.environ["BITSNBYTES"] == "True" else None,
         device_map="cuda:0",
         trust_remote_code=True
     )
