@@ -4,4 +4,4 @@ torchvision
 torchcodec
 transformers
 bitsandbytes
-
+opencv-python
