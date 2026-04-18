@@ -16,7 +16,7 @@ from json import load
 import re, os
 import sys
 sys.path.append('./lib')
-from image_gen import CreateCharacterSheet, CreateBackground
+from image_gen import CreateCharacterSheet, CreateBackground, GenerateReverseBackground
 from config import load_environ
 
 load_environ()
@@ -301,5 +301,6 @@ if __name__ == '__main__':
         fn, prompt = (f'{dirname}/location.png',var_prompts.pop())
         print(fn, prompt)
         CreateBackground(prompt, fn)
+        GenerateReverseBackground(f'{dirname}/location.png', f'{dirname}/location_reverse.png')
         print("#"*100)
 

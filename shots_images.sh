@@ -16,7 +16,7 @@ SEED=$RANDOM
 # ─── STEP 1: GENERATE REVERSE BACKGROUND ───
 echo "=== GENERATING REVERSE BACKGROUND ==="
 if [[ ! -f "$BG_REV" ]]; then
-    python lib/image_edit.py --gen-reverse -I "$BG" -O "$BG_REV" -W 1328 -H 1328 -E $SEED
+    python lib/image_gen.py --gen-reverse -I "$BG" -O "$BG_REV" -W 1328 -H 1328 -E $SEED
     [ ! -f "$BG_REV" ] && { echo "❌ Reverse BG failed."; exit 1; }
 fi
 

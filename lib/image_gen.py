@@ -32,8 +32,7 @@ class ImageGen(object):
                 tokenizer_config=ModelConfig(model_id="Qwen/Qwen-Image", origin_file_pattern="tokenizer/"),
                 vram_limit=vrlimit,
             )
-        lora = ModelConfig(model_id="lightx2v/Qwen-Image-2512-Lightning", origin_file_pattern="Qwen-Image-2512-Lightning-8steps-V1.0-bf16.safetensors")
-        self.pipe.load_lora(self.pipe.dit, lora, alpha=1.0)
+        self.pipe.load_lora(self.pipe.dit, "./loras/Qwen-Image-2512-Lightning-8steps-V1.0-bf16.safetensors", alpha=1.0)
         self.pipe.scheduler = FlowMatchScheduler("Qwen-Image-Lightning")
 
     def generate(self, prompt, output, width, height, seed):
@@ -100,6 +99,37 @@ def CreateBackground(prompt='', output='location_tmp.png'):
     status['prompt'] = prompt['analysis']
     return status
 
+def GenerateReverseBackground(source_image: str, output: str = "reverse_bg.png", width: int = 1328, height: int = 1328, seed: int = -1):
+    if not os.path.exists(source_image): raise FileNotFoundError(f"Source not found: {source_image}")
+    
+    analysis = AnalyzeImage(source_image, "Describe this environment's style, lighting, time of day, weather, and architectural details. Under 60 words.")
+    env_desc = analysis['analysis'].strip()
+    
+    prompt = f"{env_desc}. View from a completely different camera angle in the exact same location. Reverse shot perspective. Different composition, looking in the opposite direction. Cinematic, atmospheric, matching style and lighting. No characters, no text."
+    return GenerateImage(prompt=prompt, output=output, width=width, height=height, seed=seed)
+
+# ─────────────────────────────────────────────────────────────
+# REVERSE BACKGROUND (Uses T2I, not Edit)
+# ─────────────────────────────────────────────────────────────
+def GenerateReverseBackgroundSchema():
+    return {
+        "type": "function", "function": {
+            "name": "generate_reverse_background",
+            "description": "Analyze a background and generate a NEW background from a different angle using text-to-image.",
+            "parameters": {
+                "type": "object", "properties": {
+                    "source_image": {"type": "string", "description": "Path to source background to analyze."},
+                    "output": {"type": "string", "default": "reverse_bg.png"},
+                    "width": {"type": "integer", "default": 1280},
+                    "height": {"type": "integer", "default": 720},
+                    "seed": {"type": "integer", "default": -1}
+                }, "required": ["source_image"]
+            }
+        }
+    }
+
+
+
 def GenerateImageSchema():
     return {
         "type": "function",
@@ -157,8 +187,6 @@ def CreateBackgroundSchema():
         }
     }
 
-
-
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser(
@@ -172,10 +200,14 @@ if __name__ == '__main__':
     parser.add_argument('-O', '--output', type=str, default='output.png')
     parser.add_argument('-C', '--charactersheet', action='store_true')
     parser.add_argument('-L', '--location', action='store_true')
+    parser.add_argument('-R', '--gen-reverse', action='store_true', help='Generate reverse-angle background (T2I)')
     args = parser.parse_args()
-    if args.charactersheet:
+    if args.gen_reverse:
+        if not args.images: print("ERROR: -I required for reverse gen"); exit(1)
+        print(GenerateReverseBackground(args.images[0], args.output, args.width, args.height, args.seed))
+    elif args.charactersheet:
         print(CreateCharacterSheet(args.prompt, args.output))
-    if args.location:
+    elif args.location:
         print(CreateBackground(args.prompt, args.output))
     else:
         print(GenerateImage(args.prompt, args.output, args.width, args.height, args.seed))

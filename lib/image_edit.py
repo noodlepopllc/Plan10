@@ -54,9 +54,7 @@ class ImageEdit(object):
             processor_config=ModelConfig(model_id="Qwen/Qwen-Image-Edit", origin_file_pattern="processor/"),
             vram_limit=vrlimit,
         )
-        lora = ModelConfig(model_id="lightx2v/Qwen-Image-Edit-2511-Lightning",
-                           origin_file_pattern="Qwen-Image-Edit-2511-Lightning-8steps-V1.0-bf16.safetensors")
-        self.pipe.load_lora(self.pipe.dit, lora, alpha=1)
+        self.pipe.load_lora(self.pipe.dit, "./loras/Qwen-Image-Edit-2511-Lightning-8steps-V1.0-bf16.safetensors", alpha=1)
         self.pipe.scheduler = FlowMatchScheduler("Qwen-Image-Lightning")
 
     def generate(self, prompt, images, output, width, height, seed):
