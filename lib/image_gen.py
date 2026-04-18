@@ -63,18 +63,20 @@ def GenerateImage(prompt='', output='tmp.png', width=1328, height=1328, seed=42)
     status['prompt'] = prompt['analysis']
     return status
 
-def CreateCharacterSheet(prompt='', output='character_tmp.png'):
+def CreateCharacterSheet(prompt='', output='character_tmp.png',seed=-1):
+    seed=int(seed)
     prompt = f'create a character sheet single image with two side by side views (3/4 front view, back view) with plain white background, studio lighting of {prompt}'
     prompt = EnhancePrompt('',prompt,'system/QwenImage.txt')
     gen = ImageGen()
-    status = gen.generate(prompt['analysis'], output, 1328, 1328, -1)
+    status = gen.generate(prompt['analysis'], output, 1328, 1328, seed)
     del gen
     analysis = AnalyzeImage(output, "Briefly describe this image, no more than 100 words")
     status['description'] = analysis['analysis']
     status['prompt'] = prompt['analysis']
     return status
 
-def CreateBackground(prompt='', output='location_tmp.png'):
+def CreateBackground(prompt='', output='location_tmp.png',seed=-1):
+    seed=int(seed)
     print("CREATE BACKGROUND")
     base_prompt = (
         "A pure environmental background plate with absolutely no characters, people, animals, or foreground subjects. "
@@ -92,7 +94,7 @@ def CreateBackground(prompt='', output='location_tmp.png'):
     final_prompt = (combined + exclusion_suffix).strip() + "When enhancing background prompts, preserve all exclusion constraints. Do not add people, animals, or narrative subjects. Maintain environmental/empty scene focus."
     prompt = EnhancePrompt('',final_prompt,'system/QwenImage.txt')
     gen = ImageGen()
-    status = gen.generate(prompt['analysis'], output, 1328, 1328, -1)
+    status = gen.generate(prompt['analysis'], output, 1328, 1328, seed)
     del gen
     analysis = AnalyzeImage(output, "Briefly describe this image, no more than 100 words")
     status['description'] = analysis['analysis']
@@ -181,7 +183,8 @@ def CreateCharacterSheetSchema():
                 "properties": {
                     "prompt": {
                         "type": "string", 
-                        "description": "Detailed description of the character's appearance, clothing, and style."
+                        "description": "Detailed description of the character's appearance, clothing, and style.",
+                        "seed": {"type": "integer"}
                     }
                 },
                 "required": ["prompt"]
@@ -200,7 +203,8 @@ def CreateBackgroundSchema():
                 "properties": {
                     "prompt": {
                         "type": "string", 
-                        "description": "Description of the environment, lighting, and atmosphere (e.g., 'cyberpunk city street at night, wet asphalt')."
+                        "description": "Description of the environment, lighting, and atmosphere (e.g., 'cyberpunk city street at night, wet asphalt').",
+                        "seed": {"type": "integer"}
                     }
                 },
                 "required": ["prompt"]
@@ -227,8 +231,8 @@ if __name__ == '__main__':
         if not args.images: print("ERROR: -I required for reverse gen"); exit(1)
         print(GenerateReverseBackground(args.images[0], args.output, args.width, args.height, args.seed))
     elif args.charactersheet:
-        print(CreateCharacterSheet(args.prompt, args.output))
+        print(CreateCharacterSheet(args.prompt, args.output, args.seed))
     elif args.location:
-        print(CreateBackground(args.prompt, args.output))
+        print(CreateBackground(args.prompt, args.output,args.seed))
     else:
         print(GenerateImage(args.prompt, args.output, args.width, args.height, args.seed))

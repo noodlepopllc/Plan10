@@ -1,14 +1,3 @@
-#!/usr/bin/env python3
-"""
-DUO CHARACTER GENERATOR - LOW-RISK POSES
-Two-character portrait generation with clean anatomy.
-High-risk contact poses removed to avoid limb artifacts.
-
-Usage:
-    python generate_duo_chars.py characters.json [char1] [char2]
-    Example: python generate_duo_chars.py characters.json Aria Jade
-"""
-
 import sys, random
 from glob import glob
 from pathlib import Path
@@ -18,6 +7,7 @@ import sys
 sys.path.append('./lib')
 from image_gen import CreateCharacterSheet, CreateBackground, GenerateReverseBackground
 from config import load_environ
+from locations import LocationPairGenerator
 
 load_environ()
 print(os.environ)
@@ -117,21 +107,53 @@ class DuoPOVScene:
             {"char1": "silver", "char2": "burgundy", "background": "warm brown"}
         ])
 
-        self.locations = ShuffleBag([
-            "rooftop bar at night with city lights bokeh",
-            "luxury poolside with turquoise water reflections",
-            "neon-lit alleyway with vibrant urban glow",
-            "penthouse balcony with skyline backdrop",
-            "beach at golden hour with ocean waves",
-            "rain-soaked street with neon reflections",
-            "luxury hotel lobby with marble and chandeliers",
-            "yacht deck at sunset with ocean horizon",
-            "dimly lit speakeasy with vintage ambiance",
-            "Moroccan riad with intricate tilework",
-            "Tokyo street at night with neon signs",
-            "Santorini terrace with white architecture and sea view",
-            "Dubai rooftop with futuristic skyline",
-            "Barcelona balcony with Mediterranean sunset"
+        # REPLACES self.locations -> self.location_layouts
+        self.location_layouts = ShuffleBag([
+            {"base": "modern penthouse balcony at night", 
+             "view_a": "LEFT: floor-to-ceiling sliding glass doors. RIGHT: black glass railing. CENTER: open lounge space. BACKGROUND: {bg} city skyline visible.", 
+             "view_b": "LEFT: black glass railing. RIGHT: floor-to-ceiling sliding glass doors. CENTER: open lounge space. BACKGROUND: dimly lit interior lounge, skyline replaced by warm architectural details."},
+            {"base": "luxury poolside at golden hour", 
+             "view_a": "LEFT: white limestone pool edge. RIGHT: two lounge chairs under large umbrella. CENTER: open tiled area. BACKGROUND: calm water reflecting {bg} tones.", 
+             "view_b": "LEFT: two lounge chairs under umbrella. RIGHT: white limestone pool edge. CENTER: open tiled area. BACKGROUND: tropical garden wall with dappled foliage, pool not in view."},
+            {"base": "neon-lit urban alleyway at night", 
+             "view_a": "LEFT: brick facade with glowing vending machines. RIGHT: narrow service entrance. CENTER: rain-slicked asphalt. BACKGROUND: {bg} street intersection with traffic bokeh.", 
+             "view_b": "LEFT: narrow service entrance. RIGHT: brick facade with glowing vending machines. CENTER: rain-slicked asphalt. BACKGROUND: layered poster wall and utility pipes, street glow behind camera."},
+            {"base": "grand hotel lobby in evening", 
+             "view_a": "LEFT: marble pillar with gold trim. RIGHT: curved velvet seating area. CENTER: wide polished floor. BACKGROUND: illuminated reception desk, {bg} ambient glow.", 
+             "view_b": "LEFT: curved velvet seating area. RIGHT: marble pillar with gold trim. CENTER: wide polished floor. BACKGROUND: grand double doors, soft dusk light filtering through glass."},
+            {"base": "traditional Moroccan riad courtyard", 
+             "view_a": "LEFT: arched corridor with carved wooden doors. RIGHT: lush potted plants and mosaic benches. CENTER: geometric tile path. BACKGROUND: second-story balcony, bright {bg} sky above.", 
+             "view_b": "LEFT: lush potted plants and mosaic benches. RIGHT: arched corridor with carved wooden doors. CENTER: geometric tile path. BACKGROUND: ornate courtyard entrance, filtered daylight on floor."},
+            {"base": "Parisian café terrace on overcast day", 
+             "view_a": "LEFT: café glass window with chalkboard menu. RIGHT: row of bistro tables under striped awning. CENTER: wet cobblestone path. BACKGROUND: blurred {bg} street traffic and distant signs.", 
+             "view_b": "LEFT: row of bistro tables under striped awning. RIGHT: café glass window with chalkboard menu. CENTER: wet cobblestone path. BACKGROUND: warm interior café glow visible through glass, empty booths."},
+            {"base": "desert modernist courtyard at sunset", 
+             "view_a": "LEFT: smooth terracotta wall with recessed planter. RIGHT: concrete bench with copper fire pit. CENTER: gravel area. BACKGROUND: low mountain ridge silhouetted against {bg} sky.", 
+             "view_b": "LEFT: concrete bench with copper fire pit. RIGHT: smooth terracotta wall with recessed planter. CENTER: gravel area. BACKGROUND: glass-walled pavilion, warm interior light spilling out."},
+            {"base": "mid-century modern backyard at late afternoon", 
+             "view_a": "LEFT: wooden deck with lounge chairs. RIGHT: pool coping with diving board. CENTER: clear water. BACKGROUND: privacy fence with climbing ivy, {bg} sky.", 
+             "view_b": "LEFT: pool coping with diving board. RIGHT: wooden deck with lounge chairs. CENTER: clear water. BACKGROUND: glass sliding doors to kitchen, warm indoor lighting visible."},
+            {"base": "prohibition-style speakeasy interior", 
+             "view_a": "LEFT: brick wall with vintage liquor shelves. RIGHT: dark leather booths with brass lamps. CENTER: worn hardwood walkway. BACKGROUND: polished mahogany bar, {bg} mirror glow.", 
+             "view_b": "LEFT: dark leather booths with brass lamps. RIGHT: brick wall with vintage liquor shelves. CENTER: worn hardwood walkway. BACKGROUND: heavy wooden entrance door, dim hallway light."},
+            {"base": "contemporary art gallery in daylight", 
+             "view_a": "LEFT: white partition with large abstract painting. RIGHT: open sightline to adjacent room. CENTER: polished concrete floor. BACKGROUND: distant sculpture, {bg} natural window light.", 
+             "view_b": "LEFT: open sightline to adjacent room. RIGHT: white partition with large abstract painting. CENTER: polished concrete floor. BACKGROUND: gallery entrance doors, soft street daylight visible."},
+            {"base": "rustic mountain cabin porch in morning mist", 
+             "view_a": "LEFT: wooden rocking chair with wool blanket. RIGHT: stone fireplace with stacked firewood. CENTER: wide plank deck. BACKGROUND: dense pine trees fading into {bg} misty sky.", 
+             "view_b": "LEFT: stone fireplace with stacked firewood. RIGHT: wooden rocking chair with wool blanket. CENTER: wide plank deck. BACKGROUND: cabin cedar exterior, warm glow from front window."},
+            {"base": "luxury yacht deck at twilight", 
+             "view_a": "LEFT: stainless railing with coiled rope. RIGHT: white canopy frame with integrated lighting. CENTER: teak floor. BACKGROUND: calm horizon, fading {bg} gradient, distant marker light.", 
+             "view_b": "LEFT: white canopy frame with integrated lighting. RIGHT: stainless railing with coiled rope. CENTER: teak floor. BACKGROUND: outdoor lounge area, warm cabin spill through glass."},
+            {"base": "Victorian glass conservatory in daylight", 
+             "view_a": "LEFT: curved glass wall with climbing orchids. RIGHT: wrought iron bench surrounded by ferns. CENTER: mosaic tile path. BACKGROUND: tall palm fronds, bright {bg} sky through dome.", 
+             "view_b": "LEFT: wrought iron bench surrounded by ferns. RIGHT: curved glass wall with climbing orchids. CENTER: mosaic tile path. BACKGROUND: ornate double glass doors, bright exterior light."},
+            {"base": "glass-enclosed urban skybridge at night", 
+             "view_a": "LEFT: tempered glass showing corporate interior. RIGHT: brushed steel handrail with LED strip. CENTER: wide walkway. BACKGROUND: opposite tower facade, {bg} city grid.", 
+             "view_b": "LEFT: brushed steel handrail with LED strip. RIGHT: tempered glass showing corporate interior. CENTER: wide walkway. BACKGROUND: connecting corridor with brushed metal doors, overhead glow."},
+            {"base": "industrial converted loft in overcast daylight", 
+             "view_a": "LEFT: exposed brick wall with vintage posters. RIGHT: tall steel-framed windows. CENTER: open hardwood floor. BACKGROUND: bright {bg} sky through glass, distant fire escapes.", 
+             "view_b": "LEFT: tall steel-framed windows. RIGHT: exposed brick wall with vintage posters. CENTER: open hardwood floor. BACKGROUND: interior workspace with drafting table, hanging Edison bulbs."}
         ])
 
         # 🔹 9:16 OPTIMIZED: Vertical framing poses - NO PHYSICAL CONTACT
@@ -208,45 +230,26 @@ class DuoPOVScene:
         if seed is not None:
             random.seed(seed)
         colors = self.color_schemes.get()
-        data = {
-            "outfit_1": self.outfits.get(),
-            "outfit_2": self.outfits.get(),
-            "texture_1": self.textures.get(),
-            "texture_2": self.textures.get(),
-            "char1_color": colors["char1"],
-            "char2_color": colors["char2"],
-            "background": colors["background"],
-            "location": self.locations.get(),
-            "lighting": self.lighting.get(),
-            "camera_term": self.camera_terms.get()
+        layout = self.location_layouts.get()
+        
+        return {
+            "char1_prompt": f'{char1.name.capitalize()} is {char1.character_description} '
+                            f"wearing {colors['char1']} {self.textures.get()} {self.outfits.get()}.",
+            "char2_prompt": f'{char2.name.capitalize()} is {char2.character_description} '
+                            f"wearing {colors['char2']} {self.textures.get()} {self.outfits.get()}.",
+            "data": {
+                "layout": layout,
+                "background": colors["background"],
+                "lighting": self.lighting.get(),
+                "camera_term": self.camera_terms.get()
+            }
         }
-        return [
-            (f'{char1.name.capitalize()} is {char1.character_description} ' 
-            f"wearing {data['char1_color']} {data['texture_1']} {data['outfit_1']}. "),         
-            (f'{char2.name.capitalize()} is {char2.character_description} ' 
-            f"wearing {data['char2_color']} {data['texture_2']} {data['outfit_2']}. "),
-            (f"Location: {data['location']} with {data['background']} background. "
-            f"Lighting: {data['lighting']}. "
-            f"Technical: {data['camera_term']}. ")
-        ]
 
     def reset_all_bags(self):
         """Reset all ShuffleBags."""
         for attr in dir(self):
             if isinstance(getattr(self, attr), ShuffleBag):
                 getattr(self, attr).reset()
-
-
-def generate_duo_image(pipe, prompt, output_path, generation_seed):
-    """Simple generation without identity verification."""
-    try:
-        image = pipe(prompt, width=928, height=1664, cfg_scale=1.0, 
-                    seed=generation_seed, num_inference_steps=8)
-        image.save(output_path)
-        return True
-    except Exception as e:
-        print(f"   ⚠️  Generation failed: {e}")
-        return False
 
 
 if __name__ == '__main__':
@@ -283,6 +286,7 @@ if __name__ == '__main__':
         all_chars = output['characters']
         character_pairs = [random.sample(all_chars, 2) for _ in range(5)]
 
+    location_gen = LocationPairGenerator()
 
     for i, (char1_json, char2_json) in enumerate(character_pairs):
         char1 = CharacterRecord.from_json(char1_json)
@@ -291,16 +295,53 @@ if __name__ == '__main__':
         os.mkdir(dirname)
         print("#"*50,dirname.upper(),"#"*50)
         scene.reset_all_bags()
-        var_prompts = scene.generate_chars(char1, char2)
-        fn, prompt = (f'{dirname}/char1.png',var_prompts.pop(0))
-        print(fn, prompt)
-        CreateCharacterSheet(prompt, fn)
-        fn, prompt = (f'{dirname}/char2.png',var_prompts.pop(0))
-        print(fn, prompt)
-        CreateCharacterSheet(prompt, fn)
-        fn, prompt = (f'{dirname}/location.png',var_prompts.pop())
-        print(fn, prompt)
-        CreateBackground(prompt, fn)
-        GenerateReverseBackground(f'{dirname}/location.png', f'{dirname}/location_reverse.png')
-        print("#"*100)
 
+        result = scene.generate_chars(char1, char2)
+        
+        # Generate Character Sheets
+        CreateCharacterSheet(result["char1_prompt"], f'{dirname}/char1.png', seed=seed)
+        CreateCharacterSheet(result["char2_prompt"], f'{dirname}/char2.png', seed=seed)
+        
+        # Extract coordinated dynamic elements
+        d = result["data"]
+        layout = d["layout"]
+        bg_color = d["background"]
+        lighting_desc = d["lighting"]
+        camera_desc = d["camera_term"]
+        
+        # Build Shot A Prompt (coordinated + spatially explicit)
+        prompt_a = (
+            f"Environment: {layout['base']}. "
+            f"Spatial: {layout['view_a'].format(bg=bg_color)}. "
+            f"Lighting: {lighting_desc}. "
+            f"Technical: {camera_desc}. "
+            f"Cinematic, atmospheric, empty of characters or text."
+        )
+        print(f"Generating Location A -> {dirname}/location.png")
+        CreateBackground(prompt_a, f'{dirname}/location.png', seed=seed)
+        
+        # Build Shot B Prompt (identical lighting/camera, inverted spatial)
+        prompt_b = (
+            f"Environment: {layout['base']}. "
+            f"Spatial: {layout['view_b'].format(bg=bg_color)}. "
+            f"Lighting: {lighting_desc}. "
+            f"Technical: {camera_desc}. "
+            f"Cinematic, atmospheric, empty of characters or text."
+        )
+        print(f"Generating Location B -> {dirname}/location_reverse.png")
+        CreateBackground(prompt_b, f'{dirname}/location_reverse.png', seed=seed)
+        
+                # Pick a random location key, or use a specific one
+        location_key = random.choice(list(location_gen.locations.keys()))
+        
+        prompt_a, prompt_b = location_gen.get_pair(
+            key=location_key,
+            bg_color=bg_color,
+            lighting=lighting_desc,
+            camera=camera_desc
+        )
+        
+        print(f"📍 Location2: {location_key} | Seed: {seed}")
+        CreateBackground(prompt_a, f'{dirname}/location2.png', seed=seed)
+        CreateBackground(prompt_b, f'{dirname}/location2_reverse.png', seed=seed)
+        print("#"*100)
