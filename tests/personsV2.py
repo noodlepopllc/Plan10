@@ -309,29 +309,8 @@ if __name__ == '__main__':
         lighting_desc = d["lighting"]
         camera_desc = d["camera_term"]
         
-        # Build Shot A Prompt (coordinated + spatially explicit)
-        prompt_a = (
-            f"Environment: {layout['base']}. "
-            f"Spatial: {layout['view_a'].format(bg=bg_color)}. "
-            f"Lighting: {lighting_desc}. "
-            f"Technical: {camera_desc}. "
-            f"Cinematic, atmospheric, empty of characters or text."
-        )
-        print(f"Generating Location A -> {dirname}/location.png")
-        CreateBackground(prompt_a, f'{dirname}/location.png', seed=seed)
         
-        # Build Shot B Prompt (identical lighting/camera, inverted spatial)
-        prompt_b = (
-            f"Environment: {layout['base']}. "
-            f"Spatial: {layout['view_b'].format(bg=bg_color)}. "
-            f"Lighting: {lighting_desc}. "
-            f"Technical: {camera_desc}. "
-            f"Cinematic, atmospheric, empty of characters or text."
-        )
-        print(f"Generating Location B -> {dirname}/location_reverse.png")
-        CreateBackground(prompt_b, f'{dirname}/location_reverse.png', seed=seed)
-        
-                # Pick a random location key, or use a specific one
+        # Pick a random location key, or use a specific one
         location_key = random.choice(list(location_gen.locations.keys()))
         
         prompt_a, prompt_b = location_gen.get_pair(
@@ -341,7 +320,7 @@ if __name__ == '__main__':
             camera=camera_desc
         )
         
-        print(f"📍 Location2: {location_key} | Seed: {seed}")
-        CreateBackground(prompt_a, f'{dirname}/location2.png', seed=seed)
-        CreateBackground(prompt_b, f'{dirname}/location2_reverse.png', seed=seed)
+        print(f"📍 Location: {location_key} | Seed: {seed}")
+        CreateBackground(prompt_a, f'{dirname}/location.png', seed=seed)
+        CreateBackground(prompt_b, f'{dirname}/location_reverse.png', seed=seed)
         print("#"*100)
