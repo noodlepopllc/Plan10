@@ -1,5 +1,5 @@
 #!/bin/bash
-OUTDIR="tests/Aria_Jisoo"
+OUTDIR="tests/$1"
 BG="$OUTDIR/location.png"
 A="$OUTDIR/char1.png"
 B="$OUTDIR/char2.png"
