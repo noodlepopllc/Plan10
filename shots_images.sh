@@ -28,7 +28,6 @@ shot_2char() { # <bg> <charA> <charB> <shot> <gaze> <mood> <exprA> <exprB> <out>
         python lib/image_edit.py -C -BG "$1" -CHARS "$2" -CHARS "$3" \
             -SHOT "$4" -GAZE "$5" -T "$6" -EXPR "$7" -EXPR "$7" -Z "cute idol pose" -Z "cute idol pose" \
             -O "$out" -E $SEED -H $HEIGHT -W $WIDTH
-        python lib/image_to_video.py -I "$out" -O "$out_vid" -W $VWIDTH -H $VHEIGHT -S $SEED -D 6.0
     else
         echo "⏭️ Skipping $out (already exists)"
     fi
@@ -43,9 +42,6 @@ shot_OTS() { # <bg> <charA> <charB> <shot> <gaze> <mood> <exprA> <exprB> <out>
         python lib/image_edit.py -C -BG "$1" -CHARS "$2" -CHARS "$3" \
             -SHOT "$4" -GAZE "$5" -EXPR "" -EXPR "$7" \
             -O "$out" -E $SEED -H $HEIGHT -W $WIDTH
-        python lib/image_analysis.py -I "$out" -E system/Director_prompt.txt -O tmp.txt
-        local prompt=$(< "tmp.txt")
-        python lib/image_to_video.py -P "$prompt" -I "$out" -O "$out_vid" -W $VWIDTH -H $VHEIGHT -S $SEED -D 6.0
     else
         echo "⏭️ Skipping $out (already exists)"
     fi
@@ -59,9 +55,6 @@ shot_1char() { # <bg> <char> <shot> <gaze> <mood> <expr> <out>
         python lib/image_edit.py -C -BG "$1" -CHARS "$2" \
             -SHOT "$3" -GAZE "$4" -T "$5" -EXPR "$6" \
             -O "$out" -E $SEED -H $HEIGHT -W $WIDTH
-        python lib/image_analysis.py -I "$out" -E system/Director_prompt.txt -O tmp.txt
-        local prompt=$(< "tmp.txt")
-        python lib/image_to_video.py -P "$prompt" -I "$out" -O "$out_vid" -W $VWIDTH -H $VHEIGHT -S $SEED -D 6.0
     else
         echo "⏭️ Skipping $out (already exists)"
     fi
