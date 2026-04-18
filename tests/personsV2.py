@@ -5,7 +5,7 @@ from json import load
 import re, os
 import sys
 sys.path.append('./lib')
-from image_gen import CreateCharacterSheet, CreateBackground, GenerateReverseBackground
+from image_gen import CreateCharacterSheet, CreateBackground
 from config import load_environ
 from locations import LocationPairGenerator
 
@@ -107,67 +107,6 @@ class DuoPOVScene:
             {"char1": "silver", "char2": "burgundy", "background": "warm brown"}
         ])
 
-        # REPLACES self.locations -> self.location_layouts
-        self.location_layouts = ShuffleBag([
-            {"base": "modern penthouse balcony at night", 
-             "view_a": "LEFT: floor-to-ceiling sliding glass doors. RIGHT: black glass railing. CENTER: open lounge space. BACKGROUND: {bg} city skyline visible.", 
-             "view_b": "LEFT: black glass railing. RIGHT: floor-to-ceiling sliding glass doors. CENTER: open lounge space. BACKGROUND: dimly lit interior lounge, skyline replaced by warm architectural details."},
-            {"base": "luxury poolside at golden hour", 
-             "view_a": "LEFT: white limestone pool edge. RIGHT: two lounge chairs under large umbrella. CENTER: open tiled area. BACKGROUND: calm water reflecting {bg} tones.", 
-             "view_b": "LEFT: two lounge chairs under umbrella. RIGHT: white limestone pool edge. CENTER: open tiled area. BACKGROUND: tropical garden wall with dappled foliage, pool not in view."},
-            {"base": "neon-lit urban alleyway at night", 
-             "view_a": "LEFT: brick facade with glowing vending machines. RIGHT: narrow service entrance. CENTER: rain-slicked asphalt. BACKGROUND: {bg} street intersection with traffic bokeh.", 
-             "view_b": "LEFT: narrow service entrance. RIGHT: brick facade with glowing vending machines. CENTER: rain-slicked asphalt. BACKGROUND: layered poster wall and utility pipes, street glow behind camera."},
-            {"base": "grand hotel lobby in evening", 
-             "view_a": "LEFT: marble pillar with gold trim. RIGHT: curved velvet seating area. CENTER: wide polished floor. BACKGROUND: illuminated reception desk, {bg} ambient glow.", 
-             "view_b": "LEFT: curved velvet seating area. RIGHT: marble pillar with gold trim. CENTER: wide polished floor. BACKGROUND: grand double doors, soft dusk light filtering through glass."},
-            {"base": "traditional Moroccan riad courtyard", 
-             "view_a": "LEFT: arched corridor with carved wooden doors. RIGHT: lush potted plants and mosaic benches. CENTER: geometric tile path. BACKGROUND: second-story balcony, bright {bg} sky above.", 
-             "view_b": "LEFT: lush potted plants and mosaic benches. RIGHT: arched corridor with carved wooden doors. CENTER: geometric tile path. BACKGROUND: ornate courtyard entrance, filtered daylight on floor."},
-            {"base": "Parisian café terrace on overcast day", 
-             "view_a": "LEFT: café glass window with chalkboard menu. RIGHT: row of bistro tables under striped awning. CENTER: wet cobblestone path. BACKGROUND: blurred {bg} street traffic and distant signs.", 
-             "view_b": "LEFT: row of bistro tables under striped awning. RIGHT: café glass window with chalkboard menu. CENTER: wet cobblestone path. BACKGROUND: warm interior café glow visible through glass, empty booths."},
-            {"base": "desert modernist courtyard at sunset", 
-             "view_a": "LEFT: smooth terracotta wall with recessed planter. RIGHT: concrete bench with copper fire pit. CENTER: gravel area. BACKGROUND: low mountain ridge silhouetted against {bg} sky.", 
-             "view_b": "LEFT: concrete bench with copper fire pit. RIGHT: smooth terracotta wall with recessed planter. CENTER: gravel area. BACKGROUND: glass-walled pavilion, warm interior light spilling out."},
-            {"base": "mid-century modern backyard at late afternoon", 
-             "view_a": "LEFT: wooden deck with lounge chairs. RIGHT: pool coping with diving board. CENTER: clear water. BACKGROUND: privacy fence with climbing ivy, {bg} sky.", 
-             "view_b": "LEFT: pool coping with diving board. RIGHT: wooden deck with lounge chairs. CENTER: clear water. BACKGROUND: glass sliding doors to kitchen, warm indoor lighting visible."},
-            {"base": "prohibition-style speakeasy interior", 
-             "view_a": "LEFT: brick wall with vintage liquor shelves. RIGHT: dark leather booths with brass lamps. CENTER: worn hardwood walkway. BACKGROUND: polished mahogany bar, {bg} mirror glow.", 
-             "view_b": "LEFT: dark leather booths with brass lamps. RIGHT: brick wall with vintage liquor shelves. CENTER: worn hardwood walkway. BACKGROUND: heavy wooden entrance door, dim hallway light."},
-            {"base": "contemporary art gallery in daylight", 
-             "view_a": "LEFT: white partition with large abstract painting. RIGHT: open sightline to adjacent room. CENTER: polished concrete floor. BACKGROUND: distant sculpture, {bg} natural window light.", 
-             "view_b": "LEFT: open sightline to adjacent room. RIGHT: white partition with large abstract painting. CENTER: polished concrete floor. BACKGROUND: gallery entrance doors, soft street daylight visible."},
-            {"base": "rustic mountain cabin porch in morning mist", 
-             "view_a": "LEFT: wooden rocking chair with wool blanket. RIGHT: stone fireplace with stacked firewood. CENTER: wide plank deck. BACKGROUND: dense pine trees fading into {bg} misty sky.", 
-             "view_b": "LEFT: stone fireplace with stacked firewood. RIGHT: wooden rocking chair with wool blanket. CENTER: wide plank deck. BACKGROUND: cabin cedar exterior, warm glow from front window."},
-            {"base": "luxury yacht deck at twilight", 
-             "view_a": "LEFT: stainless railing with coiled rope. RIGHT: white canopy frame with integrated lighting. CENTER: teak floor. BACKGROUND: calm horizon, fading {bg} gradient, distant marker light.", 
-             "view_b": "LEFT: white canopy frame with integrated lighting. RIGHT: stainless railing with coiled rope. CENTER: teak floor. BACKGROUND: outdoor lounge area, warm cabin spill through glass."},
-            {"base": "Victorian glass conservatory in daylight", 
-             "view_a": "LEFT: curved glass wall with climbing orchids. RIGHT: wrought iron bench surrounded by ferns. CENTER: mosaic tile path. BACKGROUND: tall palm fronds, bright {bg} sky through dome.", 
-             "view_b": "LEFT: wrought iron bench surrounded by ferns. RIGHT: curved glass wall with climbing orchids. CENTER: mosaic tile path. BACKGROUND: ornate double glass doors, bright exterior light."},
-            {"base": "glass-enclosed urban skybridge at night", 
-             "view_a": "LEFT: tempered glass showing corporate interior. RIGHT: brushed steel handrail with LED strip. CENTER: wide walkway. BACKGROUND: opposite tower facade, {bg} city grid.", 
-             "view_b": "LEFT: brushed steel handrail with LED strip. RIGHT: tempered glass showing corporate interior. CENTER: wide walkway. BACKGROUND: connecting corridor with brushed metal doors, overhead glow."},
-            {"base": "industrial converted loft in overcast daylight", 
-             "view_a": "LEFT: exposed brick wall with vintage posters. RIGHT: tall steel-framed windows. CENTER: open hardwood floor. BACKGROUND: bright {bg} sky through glass, distant fire escapes.", 
-             "view_b": "LEFT: tall steel-framed windows. RIGHT: exposed brick wall with vintage posters. CENTER: open hardwood floor. BACKGROUND: interior workspace with drafting table, hanging Edison bulbs."}
-        ])
-
-        # 🔹 9:16 OPTIMIZED: Vertical framing poses - NO PHYSICAL CONTACT
-        self.pov = ShuffleBag([
-            "medium two-shot, both subjects centered vertically with slight overlap",
-            "eye-level portrait framing both faces in upper third of composition",
-            "tight vertical crop focusing on upper bodies and faces",
-            "straight-on portrait with both subjects filling vertical frame",
-            "slight upward angle emphasizing height and presence",
-            "intimate close two-shot with faces occupying upper half of frame",
-            "side-by-side portrait with both faces clearly visible in upper frame",
-            "vertical composition with subjects at similar height, balanced framing"
-        ])
-
         self.lighting = ShuffleBag([
             "dramatic rim lighting with warm backlight separating both silhouettes",
             "moody chiaroscuro with high contrast shadows and detail",
@@ -181,31 +120,6 @@ class DuoPOVScene:
             "warm ambient with directional key light for dimension"
         ])
 
-        self.expressions = ShuffleBag([
-            "both sharing genuine laughter with crinkled eyes, pure joy",
-            "playful smirks with sparkling eyes and mischievous energy",
-            "warm smiles reaching the eyes with authentic warmth",
-            "candid mid-laugh expressions with natural joy visible",
-            "soft smiles with warm eyes and inviting expressions",
-            "bold direct gazes with slight smiles and magnetic presence",
-            "laughing expressions with genuine happiness, eyes lit up",
-            "relaxed expressions with natural comfort between them"
-        ])
-
-        # 🔹 LOW-RISK POSES ONLY - NO CONTACT, NO OVERLAPPING LIMBS
-        self.poses = ShuffleBag([
-            "standing side-by-side with slight stagger, both facing camera, arms relaxed at sides",
-            "both leaning against wall, bodies parallel, no physical contact",
-            "standing close but not touching, natural personal space, vertical alignment",
-            "one slightly in front of other, depth separation, no overlapping limbs",
-            "standing side-by-side, weight shifted naturally, hands out of frame or visible",
-            "both facing camera with relaxed postures, shoulders aligned, no contact",
-            "standing with slight angle toward each other, engaged but not touching",
-            "side-by-side stance with natural gap between them, clean vertical composition",
-            "both standing straight, relaxed shoulders, arms naturally positioned",
-            "standing close with slight depth offset, no limb overlap, clean framing"
-        ])
-
         self.camera_terms = ShuffleBag([
             "shot on full-frame camera, 85mm f/1.4",
             "professional portrait photography, 50mm f/1.2",
@@ -215,22 +129,10 @@ class DuoPOVScene:
             "magazine quality, professional lighting, 70mm f/2.0"
         ])
 
-        self.quality_tags = ShuffleBag([
-            "natural skin texture with visible pores, no plastic appearance",
-            "realistic subsurface scattering, authentic skin tones",
-            "high-fidelity detail, no AI artifacts, real people",
-            "accurate anatomical proportions, no distortions",
-            "natural eye moisture and reflections, lifelike gazes",
-            "realistic fabric detail with authentic texture",
-            "dimensional lighting with shadow modeling, not flat",
-            "professional color grading, natural tones, no waxy finish"
-        ])
-
     def generate_chars(self, char1, char2, seed=None):
         if seed is not None:
             random.seed(seed)
         colors = self.color_schemes.get()
-        layout = self.location_layouts.get()
         
         return {
             "char1_prompt": f'{char1.name.capitalize()} is {char1.character_description} '
@@ -238,7 +140,6 @@ class DuoPOVScene:
             "char2_prompt": f'{char2.name.capitalize()} is {char2.character_description} '
                             f"wearing {colors['char2']} {self.textures.get()} {self.outfits.get()}.",
             "data": {
-                "layout": layout,
                 "background": colors["background"],
                 "lighting": self.lighting.get(),
                 "camera_term": self.camera_terms.get()
@@ -304,7 +205,6 @@ if __name__ == '__main__':
         
         # Extract coordinated dynamic elements
         d = result["data"]
-        layout = d["layout"]
         bg_color = d["background"]
         lighting_desc = d["lighting"]
         camera_desc = d["camera_term"]
