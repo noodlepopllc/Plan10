@@ -41,7 +41,7 @@ shot_OTS() { # <bg> <charA> <charB> <shot> <gaze> <mood> <exprA> <exprB> <out>
     local out_vid="$OUTDIR/${WIDTH}_${HEIGHT}_$9.mp4"
     if [[ ! -f "$out" ]]; then
         python lib/image_edit.py -C -BG "$1" -CHARS "$2" -CHARS "$3" \
-            -SHOT "$4" -GAZE "$5" -T "$6" -EXPR "" -EXPR "$7" \
+            -SHOT "$4" -GAZE "$5" -EXPR "" -EXPR "$7" \
             -O "$out" -E $SEED -H $HEIGHT -W $WIDTH
         python lib/image_analysis.py -I "$out" -E system/Director_prompt.txt -O tmp.txt
         local prompt=$(< "tmp.txt")
