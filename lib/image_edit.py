@@ -54,7 +54,7 @@ class ImageEdit(object):
             processor_config=ModelConfig(model_id="Qwen/Qwen-Image-Edit", origin_file_pattern="processor/"),
             vram_limit=vrlimit,
         )
-        self.pipe.load_lora(self.pipe.dit, "./loras/Qwen-Image-Edit-2511-Lightning-8steps-V1.0-bf16.safetensors", alpha=1)
+        self.pipe.load_lora(self.pipe.dit, "./loras/Qwen-Image-Edit-2511-Lightning-8steps-V1.0-bf16.safetensors", alpha=1.0)
         self.pipe.scheduler = FlowMatchScheduler("Qwen-Image-Lightning")
 
     def generate(self, prompt, images, output, width, height, seed):
@@ -305,7 +305,8 @@ def CompositeScene(background_path: str, characters: list[str], shot_type: str =
             f"REFERENCE IMAGE 3: {identity_keywords[1]}, Character 2 (Background/Focus). "
             "Prioritize REF 3 visuals for face details. "
             f"Over-the-shoulder shot. "
-            f"Character 1 Pose: {char1_pose}. Character 2 Pose: {char2_pose}. "
+            f"Character 1 Pose: back is to the camera, facing away from the camera towards Character 2. " 
+            f"Character 2 Pose: {char2_pose}. "
             f"Expression (Character 2): {expr_list[1]}. "
             f"{interaction_block}"
             f"{lighting_instruction} Apply shallow depth of field. NO extras, text, or watermarks."
