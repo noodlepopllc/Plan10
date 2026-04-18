@@ -36,7 +36,7 @@ def _ensure_pipeline(vrlimit=14):
     _pipe = WanVideoPipeline.from_pretrained(
         torch_dtype=torch.bfloat16,
         device="cuda",
-        redirect_common_files=False,
+        redirect_common_files=True,
         model_configs=[
             ModelConfig(
                 model_id="Wan-AI/Wan2.1-I2V-14B-480P", 
@@ -60,7 +60,7 @@ def _ensure_pipeline(vrlimit=14):
             ),
         ],
         tokenizer_config=ModelConfig(
-            model_id="google/umt5-xxl", 
+            model_id="Wan-AI/Wan2.1-T2V-1.3B", 
             origin_file_pattern="google/umt5-xxl/",
         ),
         vram_limit=vrlimit,
