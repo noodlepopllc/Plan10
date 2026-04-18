@@ -102,7 +102,7 @@ def CreateBackground(prompt='', output='location_tmp.png'):
 def GenerateReverseBackground(source_image: str, output: str = "reverse_bg.png", width: int = 1328, height: int = 1328, seed: int = -1):
     if not os.path.exists(source_image): raise FileNotFoundError(f"Source not found: {source_image}")
     
-    analysis = AnalyzeImage(source_image, "Describe this environment's style, lighting, time of day, weather, and architectural details. Under 60 words.")
+    analysis = AnalyzeImage(source_image, "Describe this environment's style, lighting, time of day, weather, and architectural details. Under 120 words.")
     env_desc = analysis['analysis'].strip()
     
     prompt = f"{env_desc}. View from a completely different camera angle in the exact same location. Reverse shot perspective. Different composition, looking in the opposite direction. Cinematic, atmospheric, matching style and lighting. No characters, no text."
