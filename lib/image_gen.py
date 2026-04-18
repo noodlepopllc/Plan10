@@ -99,13 +99,32 @@ def CreateBackground(prompt='', output='location_tmp.png'):
     status['prompt'] = prompt['analysis']
     return status
 
+
 def GenerateReverseBackground(source_image: str, output: str = "reverse_bg.png", width: int = 1328, height: int = 1328, seed: int = -1):
-    if not os.path.exists(source_image): raise FileNotFoundError(f"Source not found: {source_image}")
+    if not os.path.exists(source_image): 
+        raise FileNotFoundError(f"Source not found: {source_image}")
     
-    analysis = AnalyzeImage(source_image, "Describe this environment's style, lighting, time of day, weather, and architectural details. Under 120 words.")
+    # Analysis: explicitly separate lighting properties from visible sources
+    analysis_prompt = (
+        "Describe this scene in two parts:\n"
+        "1. ENVIRONMENT: [indoor/outdoor], lighting quality (soft/hard/diffused), lighting direction (e.g., key light from top-left), time of day, weather, architectural style.\n"
+        "2. VISIBLE LIGHT SOURCES: Is the sun/moon/lamp physically visible in frame? If yes, note its position (LEFT/RIGHT/CENTER, high/low).\n"
+        "3. SPATIAL: structural anchors (railings, walls, windows, pillars) with positions: LEFT/RIGHT/CENTER, FOREGROUND/BACKGROUND.\n"
+        "Keep under 120 words total."
+    )
+    analysis = AnalyzeImage(source_image, analysis_prompt)
     env_desc = analysis['analysis'].strip()
     
-    prompt = f"{env_desc}. View from a completely different camera angle in the exact same location. Reverse shot perspective. Different composition, looking in the opposite direction. Cinematic, atmospheric, matching style and lighting. No characters, no text."
+    # Prompt: lock lighting properties, invert spatial + adjust visible sources
+    prompt = (
+        f"{env_desc}\n\n"
+        "Generate the reverse shot for a conversation scene: camera rotated 180° around the conversation axis.\n"
+        "PRESERVE EXACTLY: environment type, lighting quality, lighting direction (shadow angles), time of day, weather, materials, color palette, vanishing point.\n"
+        "ADJUST VISIBLE LIGHT SOURCES: If the sun/moon/lamp was visible in the original frame, it should NOT be visible now (camera now faces away from it). Keep only its lighting effect.\n"
+        "INVERT STRICTLY: horizontal placement of all structural anchors—railings, walls, windows that were on the LEFT now appear on the RIGHT, and vice versa.\n"
+        "Cinematic, atmospheric, empty of characters or text."
+    )
+    
     return GenerateImage(prompt=prompt, output=output, width=width, height=height, seed=seed)
 
 # ─────────────────────────────────────────────────────────────
