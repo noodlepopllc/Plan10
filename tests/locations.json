@@ -2,176 +2,401 @@
   "rooftop_bar": {
     "desc": "rooftop bar at night, city lights bokeh",
     "shared": ["polished concrete floor with subtle gray veining", "black metal railing with vertical bars, waist-height", "warm 2700K recessed ceiling lights"],
-    "anchor_a": "outdoor bar counter with backlit bottles",
-    "anchor_b": "lounge seating area with low sofa",
-    "forward_bg": "distant city skyline with neon glow"
+    "view_a": {
+      "left": "outdoor bar counter with backlit bottles",
+      "right": "black metal safety railing",
+      "foreground": "edge of glass-top table with two cocktail glasses",
+      "background": "distant city skyline with neon glow"
+    },
+    "view_b": {
+      "left": "black metal safety railing",
+      "right": "outdoor bar counter with backlit bottles",
+      "foreground": "low stone planter with trailing ivy",
+      "background": "warmly lit interior lounge entrance with dark wood paneling"
+    }
   },
   "poolside": {
-    "desc": "luxury poolside at golden hour, turquoise reflections",
-    "shared": ["white limestone tiles with fine grout lines", "brushed stainless pool edge, flush-mounted", "soft golden hour backlight with long shadows"],
-    "anchor_a": "teal lounge chairs under large umbrella",
-    "anchor_b": "low planter with tropical foliage",
-    "forward_bg": "calm turquoise water reflecting sky"
+    "desc": "luxury outdoor terrace at golden hour",
+    "shared": ["white limestone tiles with fine grout lines", "brushed stainless pool coping edge", "soft golden hour backlight with long shadows"],
+    "view_a": {
+      "left": "calm turquoise pool edge extending full height of frame",
+      "right": "teal lounge chairs under large umbrella",
+      "foreground": "low planter with tropical foliage",
+      "background": "water horizon reflecting sunset sky"
+    },
+    "view_b": {
+      "left": "teal lounge chairs under large umbrella",
+      "right": "calm turquoise pool edge extending full height of frame",
+      "foreground": "edge of wooden side table with stacked towels",
+      "background": "glass sliding doors reflecting interior lounge lighting"
+    }
   },
   "neon_alley": {
     "desc": "neon-lit alleyway, rain-slicked asphalt, humid atmosphere",
     "shared": ["wet black asphalt with realistic puddle reflections", "exposed red brick wall with weathered texture", "overhead utility cables casting subtle shadows"],
-    "anchor_a": "glowing blue vending machine against brick",
-    "anchor_b": "metal fire escape ladder with rust accents",
-    "forward_bg": "distant street intersection with traffic bokeh"
+    "view_a": {
+      "left": "glowing blue vending machine against brick",
+      "right": "metal fire escape ladder with rust accents",
+      "foreground": "wet concrete curb with overflowing drain",
+      "background": "distant street intersection with traffic bokeh"
+    },
+    "view_b": {
+      "left": "metal fire escape ladder with rust accents",
+      "right": "glowing blue vending machine against brick",
+      "foreground": "stacked wooden crates near brick wall",
+      "background": "dead-end brick wall covered in layered posters and utility pipes"
+    }
   },
   "hotel_lobby": {
     "desc": "grand hotel lobby, marble floors, evening chandeliers",
     "shared": ["polished white marble floor with gray veining", "brass-trimmed marble pillars, classical detailing", "warm chandelier glow with soft ambient fill"],
-    "anchor_a": "curved velvet lounge seating in deep navy",
-    "anchor_b": "ornate concierge desk with marble top",
-    "forward_bg": "illuminated reception area with backlit onyx wall"
+    "view_a": {
+      "left": "ornate concierge desk with marble top",
+      "right": "curved velvet lounge seating in deep navy",
+      "foreground": "marble side table with bronze lamp",
+      "background": "grand glass entrance doors with dusk light"
+    },
+    "view_b": {
+      "left": "curved velvet lounge seating in deep navy",
+      "right": "ornate concierge desk with marble top",
+      "foreground": "wooden console table with stacked magazines",
+      "background": "elevator bank with polished brass doors"
+    }
   },
   "moroccan_riad": {
     "desc": "traditional Moroccan riad, zellige tilework, dappled shade",
     "shared": ["geometric zellige tile floor in blue/white pattern", "carved wooden arches with intricate geometric details", "bright natural daylight filtering through courtyard"],
-    "anchor_a": "lush potted citrus trees in terracotta pots",
-    "anchor_b": "mosaic-tiled bench with colorful cushions",
-    "forward_bg": "second-story balcony with wrought iron railings"
+    "view_a": {
+      "left": "lush potted citrus trees in terracotta pots",
+      "right": "mosaic-tiled bench with colorful cushions",
+      "foreground": "low brass fountain basin with rippling water",
+      "background": "second-story balcony with wrought iron railings"
+    },
+    "view_b": {
+      "left": "mosaic-tiled bench with colorful cushions",
+      "right": "lush potted citrus trees in terracotta pots",
+      "foreground": "woven floor rug with geometric border",
+      "background": "carved wooden courtyard entrance door"
+    }
   },
   "modern_library": {
     "desc": "private library, rich mahogany, quiet atmosphere",
     "shared": ["dark green carpet with subtle texture", "brass reading lamps with green glass shades", "rich mahogany bookshelves to ceiling"],
-    "anchor_a": "rolling library ladder against shelves",
-    "anchor_b": "plush leather reading armchair",
-    "forward_bg": "large arched windows showing twilight city"
+    "view_a": {
+      "left": "rolling library ladder against shelves",
+      "right": "plush leather reading armchair",
+      "foreground": "stack of hardcover books on low table",
+      "background": "large arched windows showing twilight city"
+    },
+    "view_b": {
+      "left": "plush leather reading armchair",
+      "right": "rolling library ladder against shelves",
+      "foreground": "brass letter tray with open correspondence",
+      "background": "heavy wooden bookcases with glass cabinet doors"
+    }
   },
   "jazz_club": {
     "desc": "intimate jazz club, velvet and wood, moody ambiance",
     "shared": ["dark velvet curtains, heavy drape", "aged mahogany bar top with brass footrail", "warm amber pendant lighting overhead"],
-    "anchor_a": "grand piano on raised dimly lit stage",
-    "anchor_b": "cluster of intimate booth tables",
-    "forward_bg": "stage microphone stand with spotlight"
+    "view_a": {
+      "left": "grand piano on raised dimly lit stage",
+      "right": "cluster of intimate booth tables",
+      "foreground": "brass microphone stand base",
+      "background": "stage spotlight beam cutting through haze"
+    },
+    "view_b": {
+      "left": "cluster of intimate booth tables",
+      "right": "grand piano on raised dimly lit stage",
+      "foreground": "low wooden table with half-empty glass",
+      "background": "rear exit corridor with velvet curtains"
+    }
   },
   "greenhouse_cafe": {
     "desc": "glass greenhouse cafe, lush plants, bright diffused light",
     "shared": ["wrought iron structural beams, slender", "hexagonal terracotta floor tiles", "bright diffused skylight filtering through glass"],
-    "anchor_a": "hanging fern baskets near glass wall",
-    "anchor_b": "wooden bistro table with rattan chairs",
-    "forward_bg": "lush tropical foliage wall"
+    "view_a": {
+      "left": "hanging fern baskets near glass wall",
+      "right": "wooden bistro table with rattan chairs",
+      "foreground": "edge of slate serving tray with cups",
+      "background": "lush tropical foliage wall"
+    },
+    "view_b": {
+      "left": "wooden bistro table with rattan chairs",
+      "right": "hanging fern baskets near glass wall",
+      "foreground": "terracotta pot with trailing ivy",
+      "background": "glass entrance door with wrought iron handle"
+    }
   },
   "penthouse_kitchen": {
     "desc": "modern penthouse kitchen, sleek and minimalist",
     "shared": ["matte charcoal cabinetry, handleless", "quartz waterfall island with veining", "recessed LED strip lighting under cabinets"],
-    "anchor_a": "espresso machine and coffee station",
-    "anchor_b": "dining table with modern leather chairs",
-    "forward_bg": "floor-to-ceiling windows with skyline"
+    "view_a": {
+      "left": "espresso machine and coffee station",
+      "right": "dining table with modern leather chairs",
+      "foreground": "marble countertop with fruit bowl",
+      "background": "floor-to-ceiling windows with skyline"
+    },
+    "view_b": {
+      "left": "dining table with modern leather chairs",
+      "right": "espresso machine and coffee station",
+      "foreground": "wooden cutting board with chef's knife",
+      "background": "matte charcoal pantry wall with integrated fridge"
+    }
   },
   "subway_station": {
     "desc": "vintage subway station, ceramic tiles, fluorescent light",
     "shared": ["white ceramic subway tiles with green trim", "polished concrete platform with tactile paving", "fluorescent tube lighting in metal housings"],
-    "anchor_a": "metal ticket turnstiles with worn paint",
-    "anchor_b": "vintage advertisement lightbox glowing",
-    "forward_bg": "dark tunnel entrance with track lights"
+    "view_a": {
+      "left": "metal ticket turnstiles with worn paint",
+      "right": "vintage advertisement lightbox glowing",
+      "foreground": "concrete bench with peeling green paint",
+      "background": "dark tunnel entrance with track lights"
+    },
+    "view_b": {
+      "left": "vintage advertisement lightbox glowing",
+      "right": "metal ticket turnstiles with worn paint",
+      "foreground": "metal trash receptacle with warning sign",
+      "background": "stairwell leading up to street level"
+    }
   },
   "museum_gallery": {
     "desc": "contemporary art gallery, clean lines, focused lighting",
     "shared": ["polished concrete floors, matte finish", "crisp white gallery walls, seamless", "track lighting focused on center axis"],
-    "anchor_a": "large abstract canvas on left wall",
-    "anchor_b": "minimalist sculpture on white pedestal",
-    "forward_bg": "distant corridor with soft ambient glow"
+    "view_a": {
+      "left": "large abstract canvas on left wall",
+      "right": "minimalist sculpture on white pedestal",
+      "foreground": "low glass display case with artifacts",
+      "background": "distant corridor with soft ambient glow"
+    },
+    "view_b": {
+      "left": "minimalist sculpture on white pedestal",
+      "right": "large abstract canvas on left wall",
+      "foreground": "gallery information placard on stand",
+      "background": "main entrance with frosted glass doors"
+    }
   },
   "beach_cabana": {
     "desc": "luxury beach cabana, linen and wood, coastal light",
     "shared": ["weathered teak wood decking, aged", "white linen canopy drapes, slightly billowing", "soft morning golden light, warm tone"],
-    "anchor_a": "stack of rolled white towels on side table",
-    "anchor_b": "low daybed with plush off-white cushions",
-    "forward_bg": "calm ocean waves meeting pale sand"
+    "view_a": {
+      "left": "stack of rolled white towels on side table",
+      "right": "low daybed with plush off-white cushions",
+      "foreground": "woven rattan tray with sunglasses",
+      "background": "calm ocean waves meeting pale sand"
+    },
+    "view_b": {
+      "left": "low daybed with plush off-white cushions",
+      "right": "stack of rolled white towels on side table",
+      "foreground": "ceramic water pitcher with condensation",
+      "background": "wooden cabana support beams and interior lounge"
+    }
   },
   "mountain_cabin": {
     "desc": "rustic mountain cabin interior, firelight and wood",
     "shared": ["rough-hewn pine log walls, resin seams", "stone hearth floor, irregular slate", "warm fireplace glow casting flickering light"],
-    "anchor_a": "antler chandelier hanging from beam",
-    "anchor_b": "woven bearskin rug near hearth",
-    "forward_bg": "frosted window showing snow-covered pines"
+    "view_a": {
+      "left": "antler chandelier hanging from beam",
+      "right": "woven bearskin rug near hearth",
+      "foreground": "cast iron fire poker and log holder",
+      "background": "frosted window showing snow-covered pines"
+    },
+    "view_b": {
+      "left": "woven bearskin rug near hearth",
+      "right": "antler chandelier hanging from beam",
+      "foreground": "wooden crate with stacked firewood",
+      "background": "heavy timber staircase leading to loft"
+    }
   },
   "cyberpunk_ramen": {
     "desc": "cyberpunk ramen shop, neon accents, wet surfaces",
     "shared": ["brushed stainless steel counter, reflective", "neon pink and blue accent strip lighting", "glossy black tiled floor, wet reflections"],
-    "anchor_a": "ramen cooking station with rising steam",
-    "anchor_b": "glass-fronted vending machine with glowing buttons",
-    "forward_bg": "rain-streaked window with blurred neon city"
+    "view_a": {
+      "left": "ramen cooking station with rising steam",
+      "right": "glass-fronted vending machine with glowing buttons",
+      "foreground": "condiment caddy with soy sauce bottles",
+      "background": "rain-streaked window with blurred neon city"
+    },
+    "view_b": {
+      "left": "glass-fronted vending machine with glowing buttons",
+      "right": "ramen cooking station with rising steam",
+      "foreground": "stack of ceramic bowls on counter edge",
+      "background": "narrow kitchen corridor with exhaust fans"
+    }
   },
   "vintage_boutique": {
     "desc": "vintage fashion boutique, ornate and warm",
     "shared": ["distressed oak flooring, wide planks", "antique gold-framed mirrors, slightly tarnished", "warm tungsten track lighting, soft falloff"],
-    "anchor_a": "circular clothing rack with vintage dresses",
-    "anchor_b": "velvet ottoman next to glass display case",
-    "forward_bg": "ornate arched doorway leading to fitting rooms"
+    "view_a": {
+      "left": "circular clothing rack with vintage dresses",
+      "right": "velvet ottoman next to glass display case",
+      "foreground": "antique brass hat stand with fedora",
+      "background": "ornate arched doorway leading to fitting rooms"
+    },
+    "view_b": {
+      "left": "velvet ottoman next to glass display case",
+      "right": "circular clothing rack with vintage dresses",
+      "foreground": "wooden shoe display shelf with boots",
+      "background": "front entrance with stained glass window"
+    }
   },
   "botanical_path": {
     "desc": "botanical garden pathway, stone and greenery",
     "shared": ["curved cobblestone pathway, moss edges", "limestone retaining walls, weathered", "dappled sunlight through high canopy"],
-    "anchor_a": "ornate wrought iron bench with scrollwork",
-    "anchor_b": "tall ceramic planter with small palm",
-    "forward_bg": "glass conservatory dome in distance"
+    "view_a": {
+      "left": "ornate wrought iron bench with scrollwork",
+      "right": "tall ceramic planter with small palm",
+      "foreground": "low stone wall with climbing jasmine",
+      "background": "glass conservatory dome in distance"
+    },
+    "view_b": {
+      "left": "tall ceramic planter with small palm",
+      "right": "ornate wrought iron bench with scrollwork",
+      "foreground": "wrought iron garden gate slightly ajar",
+      "background": "dense hedge wall with stone archway"
+    }
   },
   "yacht_cabin": {
     "desc": "luxury yacht interior, teak and chrome",
     "shared": ["teak wood decking, honey tone", "chrome and glass safety railings, polished", "cool blue ambient cabinetry lighting"],
-    "anchor_a": "sun lounger with crisp white cushions",
-    "anchor_b": "wet bar with crystal glassware",
-    "forward_bg": "deep blue ocean horizon at dusk"
+    "view_a": {
+      "left": "sun lounger with crisp white cushions",
+      "right": "wet bar with crystal glassware",
+      "foreground": "navy rope coiled on deck cleat",
+      "background": "deep blue ocean horizon at dusk"
+    },
+    "view_b": {
+      "left": "wet bar with crystal glassware",
+      "right": "sun lounger with crisp white cushions",
+      "foreground": "stainless steel chart table edge",
+      "background": "enclosed cabin interior with leather seating"
+    }
   },
   "industrial_loft": {
     "desc": "converted industrial loft, brick and steel",
     "shared": ["polished concrete floor with score lines", "exposed red brick wall, painted white patches", "large steel-framed windows, black frames"],
-    "anchor_a": "mid-century modern sofa in olive green",
-    "anchor_b": "architect's drafting table with rolled prints",
-    "forward_bg": "city skyline visible through glass panes"
+    "view_a": {
+      "left": "mid-century modern sofa in olive green",
+      "right": "architect's drafting table with rolled prints",
+      "foreground": "low industrial coffee table with metal base",
+      "background": "city skyline visible through glass panes"
+    },
+    "view_b": {
+      "left": "architect's drafting table with rolled prints",
+      "right": "mid-century modern sofa in olive green",
+      "foreground": "stack of design magazines on side table",
+      "background": "exposed brick interior wall with vintage posters"
+    }
   },
   "parisian_bistro": {
     "desc": "Parisian bistro terrace, classic European charm",
     "shared": ["black and white checkered floor, worn", "woven rattan chair backs, natural fiber", "warm brass sconce lighting on exterior wall"],
-    "anchor_a": "cafe counter with chrome espresso machine",
-    "anchor_b": "terrace table with striped red awning",
-    "forward_bg": "blurred Parisian street with passing cars"
+    "view_a": {
+      "left": "cafe counter with chrome espresso machine",
+      "right": "terrace table with striped red awning",
+      "foreground": "wire basket with fresh baguettes",
+      "background": "blurred Parisian street with passing cars"
+    },
+    "view_b": {
+      "left": "terrace table with striped red awning",
+      "right": "cafe counter with chrome espresso machine",
+      "foreground": "chalkboard menu stand on sidewalk",
+      "background": "bistro interior with warm pendant lights"
+    }
   },
   "skybridge": {
     "desc": "corporate skybridge, glass and aluminum",
     "shared": ["frosted glass flooring panels, grid lines", "brushed aluminum wall cladding, vertical seams", "cool white linear LED strips recessed in ceiling"],
-    "anchor_a": "digital directory screen glowing on wall",
-    "anchor_b": "glass display case with corporate art piece",
-    "forward_bg": "corridor leading to executive office doors"
+    "view_a": {
+      "left": "digital directory screen glowing on wall",
+      "right": "glass display case with corporate art piece",
+      "foreground": "metal handrail with brushed finish",
+      "background": "corridor leading to executive office doors"
+    },
+    "view_b": {
+      "left": "glass display case with corporate art piece",
+      "right": "digital directory screen glowing on wall",
+      "foreground": "wall-mounted emergency phone panel",
+      "background": "elevator lobby with polished steel doors"
+    }
   },
   "underground_garage": {
     "desc": "modern underground parking, clean and utilitarian",
     "shared": ["epoxy gray sealed concrete, high gloss", "yellow safety line markings, crisp", "bright overhead fluorescent bays, even light"],
-    "anchor_a": "concrete support pillar with mounted fire hose",
-    "anchor_b": "electric vehicle charging station with coiled cable",
-    "forward_bg": "ramp leading upward to daylight opening"
+    "view_a": {
+      "left": "concrete support pillar with mounted fire hose",
+      "right": "electric vehicle charging station with coiled cable",
+      "foreground": "speed bump with reflective stripes",
+      "background": "ramp leading upward to daylight opening"
+    },
+    "view_b": {
+      "left": "electric vehicle charging station with coiled cable",
+      "right": "concrete support pillar with mounted fire hose",
+      "foreground": "metal drainage grate in floor",
+      "background": "lower parking level with structural columns"
+    }
   },
   "desert_resort": {
     "desc": "desert modernist resort, stone and sunset",
     "shared": ["polished travertine stone floors, warm beige", "stucco walls in sand tone, smooth", "sunset glow with long geometric shadows"],
-    "anchor_a": "stone water feature with gentle flow",
-    "anchor_b": "low daybed with woven earth-tone throws",
-    "forward_bg": "vast desert landscape with distant mesas"
+    "view_a": {
+      "left": "stone water feature with gentle flow",
+      "right": "low daybed with woven earth-tone throws",
+      "foreground": "ceramic side table with clay pitcher",
+      "background": "vast desert landscape with distant mesas"
+    },
+    "view_b": {
+      "left": "low daybed with woven earth-tone throws",
+      "right": "stone water feature with gentle flow",
+      "foreground": "smooth river stone arrangement in planter",
+      "background": "sliding wooden privacy screen with warm glow"
+    }
   },
   "art_deco_elevator": {
     "desc": "art deco elevator lobby, brass and marble",
     "shared": ["brass geometric wall panels, reflective", "marble mosaic floor, sunburst pattern", "warm recessed ceiling cove lighting"],
-    "anchor_a": "polished brass control panel with numbered buttons",
-    "anchor_b": "antique mirror with decorative sunburst frame",
-    "forward_bg": "elevator doors reflecting warm hallway light"
+    "view_a": {
+      "left": "polished brass control panel with numbered buttons",
+      "right": "antique mirror with decorative sunburst frame",
+      "foreground": "brass umbrella stand with walking cane",
+      "background": "elevator doors reflecting warm hallway light"
+    },
+    "view_b": {
+      "left": "antique mirror with decorative sunburst frame",
+      "right": "polished brass control panel with numbered buttons",
+      "foreground": "low marble bench with velvet cushion",
+      "background": "lobby corridor with geometric rug pattern"
+    }
   },
   "zen_room": {
     "desc": "zen meditation room, bamboo and tranquility",
     "shared": ["light bamboo flooring, seamless", "shoji screen walls, rice paper diffusion", "soft diffused paper lantern light overhead"],
-    "anchor_a": "low wooden table with ceramic tea set",
-    "anchor_b": "floor cushions arranged in semi-circle",
-    "forward_bg": "tranquil rock garden visible through open door"
+    "view_a": {
+      "left": "low wooden table with ceramic tea set",
+      "right": "floor cushions arranged in semi-circle",
+      "foreground": "bamboo mat with single orchid",
+      "background": "tranquil rock garden visible through open door"
+    },
+    "view_b": {
+      "left": "floor cushions arranged in semi-circle",
+      "right": "low wooden table with ceramic tea set",
+      "foreground": "stack of meditation books on low shelf",
+      "background": "shoji screen wall with sliding wooden frame"
+    }
   },
   "coastal_lighthouse": {
     "desc": "historic coastal lighthouse interior, nautical and rugged",
     "shared": ["white painted wooden floorboards, worn", "curved stone walls, thick and textured", "nautical lantern glow, warm amber"],
-    "anchor_a": "navigation chart table with brass compass",
-    "anchor_b": "brass telescope mounted on wooden tripod",
-    "forward_bg": "large circular window showing stormy sea"
+    "view_a": {
+      "left": "navigation chart table with brass compass",
+      "right": "brass telescope mounted on wooden tripod",
+      "foreground": "stacked maritime logbooks on crate",
+      "background": "large circular window showing stormy sea"
+    },
+    "view_b": {
+      "left": "brass telescope mounted on wooden tripod",
+      "right": "navigation chart table with brass compass",
+      "foreground": "wrought iron anchor hook on wall",
+      "background": "spiral iron staircase leading upward"
+    }
   }
 }
