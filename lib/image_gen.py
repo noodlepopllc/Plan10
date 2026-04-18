@@ -104,24 +104,26 @@ def GenerateReverseBackground(source_image: str, output: str = "reverse_bg.png",
     if not os.path.exists(source_image): 
         raise FileNotFoundError(f"Source not found: {source_image}")
     
-    # Analysis: explicitly separate lighting properties from visible sources
+    # Analysis: explicitly separate Anchors, Landmarks, and Lighting
     analysis_prompt = (
-        "Describe this scene in two parts:\n"
-        "1. ENVIRONMENT: [indoor/outdoor], lighting quality (soft/hard/diffused), lighting direction (e.g., key light from top-left), time of day, weather, architectural style.\n"
-        "2. VISIBLE LIGHT SOURCES: Is the sun/moon/lamp physically visible in frame? If yes, note its position (LEFT/RIGHT/CENTER, high/low).\n"
-        "3. SPATIAL: structural anchors (railings, walls, windows, pillars) with positions: LEFT/RIGHT/CENTER, FOREGROUND/BACKGROUND.\n"
+        "Describe scene in 4 parts:\n"
+        "1. ENV: Indoor/Outdoor, lighting quality/direction, time/weather, style.\n"
+        "2. SOURCES: Sun/lamp visible in frame? Position?\n"
+        "3. LANDMARKS: Distant/prominent background features visible? Description.\n"
+        "4. SPATIAL: Nearby structural anchors (railings, walls, pillars) with positions: LEFT/RIGHT/CENTER.\n"
         "Keep under 120 words total."
     )
     analysis = AnalyzeImage(source_image, analysis_prompt)
     env_desc = analysis['analysis'].strip()
     
-    # Prompt: lock lighting properties, invert spatial + adjust visible sources
+    # Prompt: Landmarks vanish, Anchors flip, Lighting stays
     prompt = (
         f"{env_desc}\n\n"
         "Generate the reverse shot for a conversation scene: camera rotated 180° around the conversation axis.\n"
-        "PRESERVE EXACTLY: environment type, lighting quality, lighting direction (shadow angles), time of day, weather, materials, color palette, vanishing point.\n"
-        "ADJUST VISIBLE LIGHT SOURCES: If the sun/moon/lamp was visible in the original frame, it should NOT be visible now (camera now faces away from it). Keep only its lighting effect.\n"
-        "INVERT STRICTLY: horizontal placement of all structural anchors—railings, walls, windows that were on the LEFT now appear on the RIGHT, and vice versa.\n"
+        "PRESERVE EXACTLY: environment type, lighting quality/direction, time of day, weather, materials, color palette.\n"
+        "ADJUST SOURCES: Visible sun/lamps are now behind the camera and must NOT appear; keep only their lighting effect.\n"
+        "HANDLE LANDMARKS: Major landmarks visible in the original frame are now behind the camera and must NOT appear. Replace with a background view consistent with the location but facing the opposite direction.\n"
+        "INVERT SPATIAL: Nearby structural anchors (railings, walls, pillars) swap horizontal position—what was on the LEFT is now on the RIGHT, and vice versa.\n"
         "Cinematic, atmospheric, empty of characters or text."
     )
     
