@@ -7,7 +7,6 @@ from config import load_environ
 from locations import LocationPairGenerator
 
 load_environ()
-print(os.environ)
 
 def translate_hairskin(description):
     mapping = {
