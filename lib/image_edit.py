@@ -352,7 +352,7 @@ if __name__ == '__main__':
     parser.add_argument('-T', '--interaction', type=str, default='intimate')
     args = parser.parse_args()
 
-    elif args.compose:
+    if args.compose:
         if not args.background or not args.chars: print("ERROR: -BG and -CHARS required"); exit(1)
         print(CompositeScene(args.background, args.chars, args.shot_type, args.gaze, args.pose, args.expressions, args.interaction, args.width, args.height, args.output))
     else:
