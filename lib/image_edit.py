@@ -8,6 +8,8 @@ from typing import Union
 from image_analysis import AnalyzeImage, EnhancePrompt
 from image_gen import GenerateImage
 from config import load_environ
+import numpy as np
+from pathlib import Path
 
 load_environ()
 
@@ -80,35 +82,6 @@ class ImageEdit(object):
         torch.cuda.empty_cache()
 
 # ─────────────────────────────────────────────────────────────
-# REVERSE BACKGROUND (Uses T2I, not Edit)
-# ─────────────────────────────────────────────────────────────
-def GenerateReverseBackgroundSchema():
-    return {
-        "type": "function", "function": {
-            "name": "generate_reverse_background",
-            "description": "Analyze a background and generate a NEW background from a different angle using text-to-image.",
-            "parameters": {
-                "type": "object", "properties": {
-                    "source_image": {"type": "string", "description": "Path to source background to analyze."},
-                    "output": {"type": "string", "default": "reverse_bg.png"},
-                    "width": {"type": "integer", "default": 1280},
-                    "height": {"type": "integer", "default": 720},
-                    "seed": {"type": "integer", "default": -1}
-                }, "required": ["source_image"]
-            }
-        }
-    }
-
-def GenerateReverseBackground(source_image: str, output: str = "reverse_bg.png", width: int = 1280, height: int = 720, seed: int = -1):
-    if not os.path.exists(source_image): raise FileNotFoundError(f"Source not found: {source_image}")
-    
-    analysis = AnalyzeImage(source_image, "Describe this environment's style, lighting, time of day, weather, and architectural details. Under 60 words.")
-    env_desc = analysis['analysis'].strip()
-    
-    prompt = f"{env_desc}. View from a completely different camera angle in the exact same location. Reverse shot perspective. Different composition, looking in the opposite direction. Cinematic, atmospheric, matching style and lighting. No characters, no text."
-    return GenerateImage(prompt=prompt, output=output, width=width, height=height, seed=seed)
-
-# ─────────────────────────────────────────────────────────────
 # SCHEMAS
 # ─────────────────────────────────────────────────────────────
 def EditImageSchema():
@@ -171,10 +144,12 @@ def CompositeSceneSchema():
         }
     }
 
-import tempfile
 
 import tempfile
 from PIL import Image, ImageFilter
+
+def _clean_expr(expr):
+    return expr.strip() if expr and expr.strip() else "neutral"
 
 def CompositeScene(background_path: str, characters: list[str], shot_type: str = "medium_single", gaze: str = "forward", poses: Union[str, list[str]] = None, expressions: Union[str, list[str]] = "neutral", interaction: str = "tense", width: int = 1024, height: int = 1024, output: str = "composite.png", seed: int = -1):
     width, height, seed = int(width), int(height), int(seed)
@@ -214,13 +189,6 @@ def CompositeScene(background_path: str, characters: list[str], shot_type: str =
     is_ots_tight = shot_type.lower() == "over_shoulder_closeup"  
     is_closeup = any(kw in shot_type.lower() for kw in ["closeup", "split", "over_shoulder"])
     is_profile = shot_type.lower().startswith("profile_single")
-    ots_crop_constraint = ""
-    if is_ots_tight:
-        ots_crop_constraint = (
-            "CRITICAL CROP: Background character MUST be cropped at upper chest/collarbone. "
-            "Do NOT show background character's waist or environment. "
-            "Frame is tight on background face."
-        )
 
     # ─────────────────────────────────────────────────────────────
     # CHARACTER DESCRIPTORS (VISUAL, NOT ABSTRACT)
@@ -262,19 +230,19 @@ def CompositeScene(background_path: str, characters: list[str], shot_type: str =
     # PROMPT BUILDING (EDIT-STYLE, <100 WORDS)
     # ─────────────────────────────────────────────────────────────
     framing_map = {
-        "wide_single": "Full body, character small in frame.",
+        "wide_single": "Full body, character small.",
         "medium_single": "Waist-up, centered.",
-        # 9:16 optimized: forces vertical tight crop + background defocus
-        "closeup_single": "Tight headshot. Frame crops at collarbone. Face occupies top/middle 70% of vertical 9:16 frame. Background heavily blurred (shallow depth of field). Zero torso, waist, or environment details visible. Centered.",
         
-        "profile_single_left": "90° left profile, character facing left. Positioned on right side of frame, looking into empty space on left. Face fills 50% of frame.",
-        "profile_single_right": "90° right profile, character facing right. Positioned on left side of frame, looking into empty space on right. Face fills 50% of frame.",
+        "profile_single_left": "90° left profile, facing left. Right side of frame.",
+        "profile_single_right": "90° right profile, facing right. Left side of frame.",
         
-        "two_shot_wide": "Both full body, balanced framing.",
+        "two_shot_wide": "Both full body, balanced.",
         "two_shot_medium": "Both waist-up, side-by-side.",
-        "two_shot_close": "Both chest-up, intimate framing.",
-        "over_shoulder": "Foreground shoulder blur, background face in-focus.",
-        "over_shoulder_closeup": "Foreground shoulder heavily blurred at bottom edge. Background character face fills 65% of frame. Tight vertical crop on background character. Focus locked on background face. Background environment completely out of focus.",
+        "two_shot_close": "Both chest-up, intimate.",
+        
+        "closeup_single": "Tight headshot.",  # Unused, but keep for consistency
+        "over_shoulder": "Standard over-the-shoulder, waist-up framing.",
+        "over_shoulder_closeup": "Tight over-the-shoulder.", 
         "split_closeup": "Both faces side-by-side, equal framing."
     }
     framing = framing_map.get(shot_type, framing_map["medium_single"])
@@ -307,69 +275,46 @@ def CompositeScene(background_path: str, characters: list[str], shot_type: str =
     char1_pose = pose_list[0]
     char2_pose = pose_list[1] if len(characters) > 1 else None
 
-    '''
     if is_ots and len(characters) == 2:
+        # Only use framing for standard OTS, not tight closeups
+        framing_part = f"{framing}. " if "closeup" not in shot_type.lower() else ""
+        
         task = (
-            f"REFERENCE IMAGE 1: {bg_desc}. Background source. "
-            f"REFERENCE IMAGE 2: {identity_keywords[0]}, Character 1 (Foreground/Blur). "
-            f"REFERENCE IMAGE 3: {identity_keywords[1]}, Character 2 (Background/Focus). "
-            "Prioritize REF 3 visuals for face details. "
-            f"Over-the-shoulder shot. "
-            f"Framing: {framing}. "
-            f"Character 1 Pose: back is to the camera, facing away from the camera towards Character 2. " 
-            f"Character 2 Pose: {char2_pose}. "
-            f"Expression (Character 2): {expr_list[1]}. "
-            f"{interaction_block}"
-            f"{lighting_instruction} Apply shallow depth of field. NO extras, text, or watermarks."
+            f"REF 1: {bg_desc}, FULL-FRAME BACKGROUND. "
+            f"REF 2: {identity_keywords[0]}, back to camera, LEFT FOREGROUND shoulder blur. "
+            f"REF 3: {identity_keywords[1]}, CENTER MIDGROUND face close-up. "
+            f"over-the-shoulder shot. {framing_part}. "
+            f"Character 2 chest-facing camera. "
+            f"Expression: {_clean_expr(expr_list[1])}. {lighting_instruction} NO extras."
         )
-    '''
-    if is_ots and len(characters) == 2:
-        task = (
-            f"REFERENCE IMAGE 1: {bg_desc}. Background source. "
-            f"REFERENCE IMAGE 2: {identity_keywords[0]}, Character 1 (Foreground/Blur). "
-            f"REFERENCE IMAGE 3: {identity_keywords[1]}, Character 2 (Background/Focus). "
-            "Prioritize REF 3 visuals for face details. "
-            "Cinematic over-the-shoulder composition. "
-            f"Framing: {framing}. "
-            "Character 1 (Foreground): Back/shoulder to camera, heavily blurred, occupying lower frame. "
-            "Character 2 (Background/Focus): Standing SQUARE to camera, facing DIRECTLY at Character 1. Full frontal orientation with eyes locked on foreground shoulder. NEVER in profile or turned away. "
-            f"Character 2 Pose: {char2_pose} (maintain front-facing orientation). "
-            f"Expression (Character 2): {expr_list[1]}. "
-            f"{interaction_block}"
-            f"{ots_crop_constraint} "  # <--- Injects tight crop only when needed
-            f"{lighting_instruction} Apply shallow depth of field. NO extras, text, or watermarks."
-        )
+
     elif is_closeup:
+        # Never use framing for pure face closeups - spatial zones handle it
         task = (
-            f"REFERENCE IMAGE 1: {bg_desc}. USE ONLY FOR LIGHTING & COLOR TEMPERATURE. "
-            "DO NOT SHOW BACKGROUND DETAILS. Background must be completely out of focus (heavy bokeh). "
-            f"REFERENCE IMAGE 2: {identity_keywords[0]}, Character to insert. "
-            "TASK: Tight vertical headshot integrated into background lighting. "
-            f"Framing: {framing}. "
-            f"Pose: {char1_pose}. "
-            f"Expression: {expr_list[0]}. "
-            f"{interaction_block}"
-            "Match facial highlights/shadows to REF 1 ambient light. NO environmental details visible. NO extras."
+            f"REF 1: {bg_desc}, FULL-FRAME BACKGROUND. "
+            f"REF 2: {identity_keywords[0]}, EXTREME FACE CLOSE-UP ONLY. "
+            f"Crop just below chin. Face fills 95% of frame. Zero shoulders, hairline at top edge. "
+            f"Expression: {_clean_expr(expr_list[0])}. {lighting_instruction} NO extras."
         )
+        # ~35 words. Zero pose noise.
+        # Word count: ~40-50
+
     else:
-        # Standard / Wide / Two-shots
-        p1 = f"REFERENCE IMAGE 2: {identity_keywords[0]}. Pose: {char1_pose}. Expression: {expr_list[0]}. "
+        # Standard shots can afford slightly more detail
+        p1 = f"REF 2: {identity_keywords[0]}. {char1_pose}. {expr_list[0]}. "
         if len(characters) > 1:
-            p2 = f"REFERENCE IMAGE 3: {identity_keywords[1]}. Pose: {char2_pose}. Expression: {expr_list[1]}. "
-            people_desc = f"{p1} {p2} Prioritize REF 2/3 visuals for face details."
+            p2 = f"REF 3: {identity_keywords[1]}. {char2_pose}. {_clean_expr(expr_list[1])}. "
+            people_desc = f"{p1}{p2}"
         else:
-            people_desc = f"{p1} Prioritize REF 2 visuals for face details."
+            people_desc = p1
 
         task = (
-            f"REFERENCE IMAGE 1: {bg_desc}. Background source. "
-            f"{people_desc} "
-            f"Integrate character(s) into REFERENCE IMAGE 1. "
-            f"Framing: {framing}. Gaze: {gaze_str}. "
-            f"{interaction_block}"
-            f"{lighting_instruction} NO extras."
+            f"REFERENCE IMAGE 1: {bg_desc}. {people_desc}"
+            f"Integrate into background. {framing}. {gaze_str}. {lighting_instruction} NO extras."
         )
+        # Word count: ~55-65
 
-    task += "8K, Photorealistic, Realistic Skin and Textures with pores"
+    task += " 8K, Photorealistic, Realistic Skin and Textures with pores"
 
     # Debug log
     print("\n" + "="*60)
@@ -379,7 +324,9 @@ def CompositeScene(background_path: str, characters: list[str], shot_type: str =
     print(f"🎲 seed: {seed}")
     print("="*60 + "\n")
 
+    Path(output.replace('.png','.txt')).write_text(task)
     status = EditImage(task, ref_paths, output, width, height, seed)
+
     status['prompt'] = task
     return status
 
@@ -403,12 +350,8 @@ if __name__ == '__main__':
     parser.add_argument('-GAZE', '--gaze', type=str, default='forward')
     parser.add_argument('-EXPR', '--expressions', action='append', default=[])
     parser.add_argument('-T', '--interaction', type=str, default='intimate')
-    parser.add_argument('--gen-reverse', action='store_true', help='Generate reverse-angle background (T2I)')
     args = parser.parse_args()
 
-    if args.gen_reverse:
-        if not args.images: print("ERROR: -I required for reverse gen"); exit(1)
-        print(GenerateReverseBackground(args.images[0], args.output, args.width, args.height, args.seed))
     elif args.compose:
         if not args.background or not args.chars: print("ERROR: -BG and -CHARS required"); exit(1)
         print(CompositeScene(args.background, args.chars, args.shot_type, args.gaze, args.pose, args.expressions, args.interaction, args.width, args.height, args.output))

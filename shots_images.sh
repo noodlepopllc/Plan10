@@ -64,19 +64,19 @@ shot_1char() { # <bg> <char> <shot> <gaze> <mood> <expr> <out>
 
 # ─── SHOTS ───
 echo "=== MASTER ==="
-shot_2char "$BG" "$A" "$B" "two_shot_wide" "at_each_other" "tense" "determined" "worried" "master_wide"
-shot_2char "$BG" "$A" "$B" "two_shot_medium" "at_each_other" "" "neutral" "neutral" "master_medium"
-shot_2char "$BG" "$A" "$B" "two_shot_close" "at_each_other" "intimate" "smiling" "neutral" "master_close"
+#shot_2char "$BG" "$A" "$B" "two_shot_wide" "at_each_other" "tense" "determined" "worried" "master_wide"
+#shot_2char "$BG" "$A" "$B" "two_shot_medium" "at_each_other" "" "neutral" "neutral" "master_medium"
+#shot_2char "$BG" "$A" "$B" "two_shot_close" "at_each_other" "intimate" "smiling" "neutral" "master_close"
 
 echo "=== OVER-SHOULDER ==="
-shot_OTS "$BG_REV" "$A" "$B" "over_shoulder_closeup" "a_to_b" "tense" "" "calm" "ots_A_to_B_close"
-shot_OTS "$BG" "$B" "$A" "over_shoulder_closeup" "a_to_b" "tense" "" "worried" "ots_B_to_A_close"
+#shot_OTS "$BG_BLUR_REV" "$A" "$B" "over_shoulder_closeup" "a_to_b" "tense" "" "calm" "ots_A_to_B_close"
+#shot_OTS "$BG_BLUR" "$B" "$A" "over_shoulder_closeup" "a_to_b" "tense" "" "worried" "ots_B_to_A_close"
 shot_OTS "$BG_REV" "$A" "$B" "over_shoulder" "a_to_b" "tense" "" "calm" "ots_A_to_B"
 shot_OTS "$BG" "$B" "$A" "over_shoulder" "a_to_b" "tense" "" "worried" "ots_B_to_A"
 
 echo "=== CLOSEUPS & REACTIONS ==="
-shot_1char "$BG" "$A" "closeup_single" "a_to_b" "surprised" "surprised" "reaction_A"
-shot_1char "$BG_REV" "$B" "closeup_single" "b_to_a" "angry" "angry" "reaction_B"
+shot_1char "$BG_BLUR" "$A" "closeup_single" "a_to_b" "surprised" "surprised" "reaction_A"
+shot_1char "$BG_BLUR_REV" "$B" "closeup_single" "b_to_a" "angry" "angry" "reaction_B"
 
 echo "=== SINGLES & PROFILES ==="
 shot_1char "$BG" "$A" "profile_single_right" "off_camera" "" "neutral" "profile_A_right"

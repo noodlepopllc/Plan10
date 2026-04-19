@@ -221,4 +221,5 @@ if __name__ == '__main__':
         print(f"📍 Location: {location_key} | Seed: {seed}")
         CreateBackground(prompt_a, f'{dirname}/location.png', seed=seed)
         CreateBackground(prompt_b, f'{dirname}/location_reverse.png', seed=seed)
+
         print("#"*100)
