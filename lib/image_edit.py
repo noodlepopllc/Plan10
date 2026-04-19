@@ -241,8 +241,9 @@ def CompositeScene(background_path: str, characters: list[str], shot_type: str =
         "two_shot_close": "Both chest-up, intimate.",
         
         "closeup_single": "Tight headshot.",  # Unused, but keep for consistency
-        "over_shoulder": "Standard over-the-shoulder, waist-up framing.",
-        "over_shoulder_closeup": "Tight over-the-shoulder.", 
+        "over_shoulder": "Foreground in left third, background in center. Clear spatial division.",
+        "over_shoulder_closeup": "Tight over-the-shoulder. Left foreground anchor, right face dominates. Crop at collarbone.",
+
         "split_closeup": "Both faces side-by-side, equal framing."
     }
     framing = framing_map.get(shot_type, framing_map["medium_single"])
@@ -276,15 +277,12 @@ def CompositeScene(background_path: str, characters: list[str], shot_type: str =
     char2_pose = pose_list[1] if len(characters) > 1 else None
 
     if is_ots and len(characters) == 2:
-        # Only use framing for standard OTS, not tight closeups
-        framing_part = f"{framing}. " if "closeup" not in shot_type.lower() else ""
-        
         task = (
             f"REF 1: {bg_desc}, FULL-FRAME BACKGROUND. "
-            f"REF 2: {identity_keywords[0]}, back to camera, LEFT FOREGROUND shoulder blur. "
-            f"REF 3: {identity_keywords[1]}, CENTER MIDGROUND face close-up. "
-            f"over-the-shoulder shot. {framing_part}. "
-            f"Character 2 chest-facing camera. "
+            f"REF 2: {identity_keywords[0]}, back to camera, LEFT FOREGROUND shoulder. "
+            f"REF 3: {identity_keywords[1]}, CENTER face close-up. "
+            f"over-the-shoulder shot. {framing}. "
+            f"Character 2 chest-facing camera. DISTINCT foreground. "  # 🔑 ADD ONLY THIS (2 words)
             f"Expression: {_clean_expr(expr_list[1])}. {lighting_instruction} NO extras."
         )
 
