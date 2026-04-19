@@ -155,7 +155,7 @@ def CompositeSceneSchema():
                 "properties": {
                     "background_path": {"type": "string"},
                     "characters": {"type": "array", "items": {"type": "string"}, "minItems": 1, "maxItems": 2},
-                    "shot_type": {"type": "string", "enum": ["wide_single", "medium_single", "closeup_single", "profile_single_left", "profile_single_right", "two_shot_wide", "two_shot_medium", "two_shot_close", "over_shoulder", "split_closeup"], "default": "medium_single"},
+                    "shot_type": {"type": "string", "enum": ["wide_single", "medium_single", "closeup_single", "profile_single_left", "profile_single_right", "two_shot_wide", "two_shot_medium", "two_shot_close", "over_shoulder", "over_shoulder_closeup", "split_closeup"], "default": "medium_single"},
                     "gaze": {"type": "string", "enum": ["forward", "at_each_other", "a_to_b", "b_to_a", "off_camera"], "default": "forward"},
                     "poses": {"type": "array", "items": {"type": "string"}, "description": "Body pose for each character. Max 2."},
                     "expressions": {"type": "array", "items": {"type": "string"}, "description": "Expression for each character. Max 2."},
@@ -210,9 +210,17 @@ def CompositeScene(background_path: str, characters: list[str], shot_type: str =
     lighting_instruction = "STRICT: Match lighting, color temperature, contact shadows, and atmosphere exactly to REFERENCE IMAGE 1."
 
 
-    is_ots = shot_type.lower() == "over_shoulder"
+    is_ots = shot_type.lower() in ["over_shoulder", "over_shoulder_closeup"]
+    is_ots_tight = shot_type.lower() == "over_shoulder_closeup"  
     is_closeup = any(kw in shot_type.lower() for kw in ["closeup", "split", "over_shoulder"])
     is_profile = shot_type.lower().startswith("profile_single")
+    ots_crop_constraint = ""
+    if is_ots_tight:
+        ots_crop_constraint = (
+            "CRITICAL CROP: Background character MUST be cropped at upper chest/collarbone. "
+            "Do NOT show background character's waist or environment. "
+            "Frame is tight on background face."
+        )
 
     # ─────────────────────────────────────────────────────────────
     # CHARACTER DESCRIPTORS (VISUAL, NOT ABSTRACT)
@@ -256,9 +264,9 @@ def CompositeScene(background_path: str, characters: list[str], shot_type: str =
     framing_map = {
         "wide_single": "Full body, character small in frame.",
         "medium_single": "Waist-up, centered.",
-        "closeup_single": "Tight head & shoulders, face fills 60% of frame.",
+        # 9:16 optimized: forces vertical tight crop + background defocus
+        "closeup_single": "Tight headshot. Frame crops at collarbone. Face occupies top/middle 70% of vertical 9:16 frame. Background heavily blurred (shallow depth of field). Zero torso, waist, or environment details visible. Centered.",
         
-        # UPDATED: Added positioning to create "Lead Room"
         "profile_single_left": "90° left profile, character facing left. Positioned on right side of frame, looking into empty space on left. Face fills 50% of frame.",
         "profile_single_right": "90° right profile, character facing right. Positioned on left side of frame, looking into empty space on right. Face fills 50% of frame.",
         
@@ -266,6 +274,7 @@ def CompositeScene(background_path: str, characters: list[str], shot_type: str =
         "two_shot_medium": "Both waist-up, side-by-side.",
         "two_shot_close": "Both chest-up, intimate framing.",
         "over_shoulder": "Foreground shoulder blur, background face in-focus.",
+        "over_shoulder_closeup": "Foreground shoulder heavily blurred at bottom edge. Background character face fills 65% of frame. Tight vertical crop on background character. Focus locked on background face. Background environment completely out of focus.",
         "split_closeup": "Both faces side-by-side, equal framing."
     }
     framing = framing_map.get(shot_type, framing_map["medium_single"])
@@ -298,6 +307,7 @@ def CompositeScene(background_path: str, characters: list[str], shot_type: str =
     char1_pose = pose_list[0]
     char2_pose = pose_list[1] if len(characters) > 1 else None
 
+    '''
     if is_ots and len(characters) == 2:
         task = (
             f"REFERENCE IMAGE 1: {bg_desc}. Background source. "
@@ -312,16 +322,34 @@ def CompositeScene(background_path: str, characters: list[str], shot_type: str =
             f"{interaction_block}"
             f"{lighting_instruction} Apply shallow depth of field. NO extras, text, or watermarks."
         )
+    '''
+    if is_ots and len(characters) == 2:
+        task = (
+            f"REFERENCE IMAGE 1: {bg_desc}. Background source. "
+            f"REFERENCE IMAGE 2: {identity_keywords[0]}, Character 1 (Foreground/Blur). "
+            f"REFERENCE IMAGE 3: {identity_keywords[1]}, Character 2 (Background/Focus). "
+            "Prioritize REF 3 visuals for face details. "
+            "Cinematic over-the-shoulder composition. "
+            f"Framing: {framing}. "
+            "Character 1 (Foreground): Back/shoulder to camera, heavily blurred, occupying lower frame. "
+            "Character 2 (Background/Focus): Standing SQUARE to camera, facing DIRECTLY at Character 1. Full frontal orientation with eyes locked on foreground shoulder. NEVER in profile or turned away. "
+            f"Character 2 Pose: {char2_pose} (maintain front-facing orientation). "
+            f"Expression (Character 2): {expr_list[1]}. "
+            f"{interaction_block}"
+            f"{ots_crop_constraint} "  # <--- Injects tight crop only when needed
+            f"{lighting_instruction} Apply shallow depth of field. NO extras, text, or watermarks."
+        )
     elif is_closeup:
         task = (
-            f"REFERENCE IMAGE 1: {bg_desc}. Background/Atmosphere source. "
+            f"REFERENCE IMAGE 1: {bg_desc}. USE ONLY FOR LIGHTING & COLOR TEMPERATURE. "
+            "DO NOT SHOW BACKGROUND DETAILS. Background must be completely out of focus (heavy bokeh). "
             f"REFERENCE IMAGE 2: {identity_keywords[0]}, Character to insert. "
-            "TASK: Tight close-up integrated into background atmosphere. "
+            "TASK: Tight vertical headshot integrated into background lighting. "
             f"Framing: {framing}. "
             f"Pose: {char1_pose}. "
             f"Expression: {expr_list[0]}. "
             f"{interaction_block}"
-            f"{lighting_instruction} Match facial highlights to background ambient light. Background softly diffused. NO extras."
+            "Match facial highlights/shadows to REF 1 ambient light. NO environmental details visible. NO extras."
         )
     else:
         # Standard / Wide / Two-shots

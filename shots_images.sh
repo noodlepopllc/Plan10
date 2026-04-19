@@ -28,6 +28,7 @@ shot_2char() { # <bg> <charA> <charB> <shot> <gaze> <mood> <exprA> <exprB> <out>
         python lib/image_edit.py -C -BG "$1" -CHARS "$2" -CHARS "$3" \
             -SHOT "$4" -GAZE "$5" -T "$6" -EXPR "$7" -EXPR "$7" -Z "cute idol pose" -Z "cute idol pose" \
             -O "$out" -E $SEED -H $HEIGHT -W $WIDTH
+        touch "$out"
     else
         echo "⏭️ Skipping $out (already exists)"
     fi
@@ -41,6 +42,7 @@ shot_OTS() { # <bg> <charA> <charB> <shot> <gaze> <mood> <exprA> <exprB> <out>
         python lib/image_edit.py -C -BG "$1" -CHARS "$2" -CHARS "$3" \
             -SHOT "$4" -GAZE "$5" -EXPR "" -EXPR "$7" \
             -O "$out" -E $SEED -H $HEIGHT -W $WIDTH
+        touch "$out"
     else
         echo "⏭️ Skipping $out (already exists)"
     fi
@@ -53,6 +55,7 @@ shot_1char() { # <bg> <char> <shot> <gaze> <mood> <expr> <out>
         python lib/image_edit.py -C -BG "$1" -CHARS "$2" \
             -SHOT "$3" -GAZE "$4" -T "$5" -EXPR "$6" \
             -O "$out" -E $SEED -H $HEIGHT -W $WIDTH
+        touch "$out"
     else
         echo "⏭️ Skipping $out (already exists)"
     fi
@@ -66,6 +69,8 @@ shot_2char "$BG" "$A" "$B" "two_shot_medium" "at_each_other" "" "neutral" "neutr
 shot_2char "$BG" "$A" "$B" "two_shot_close" "at_each_other" "intimate" "smiling" "neutral" "master_close"
 
 echo "=== OVER-SHOULDER ==="
+shot_OTS "$BG_REV" "$A" "$B" "over_shoulder_closeup" "a_to_b" "tense" "" "calm" "ots_A_to_B_close"
+shot_OTS "$BG" "$B" "$A" "over_shoulder_closeup" "a_to_b" "tense" "" "worried" "ots_B_to_A_close"
 shot_OTS "$BG_REV" "$A" "$B" "over_shoulder" "a_to_b" "tense" "" "calm" "ots_A_to_B"
 shot_OTS "$BG" "$B" "$A" "over_shoulder" "a_to_b" "tense" "" "worried" "ots_B_to_A"
 
