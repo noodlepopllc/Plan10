@@ -31,7 +31,6 @@ shot_2char() { # <bg> <charA> <charB> <shot> <gaze> <mood> <exprA> <exprB> <out>
     else
         echo "⏭️ Skipping $out (already exists)"
     fi
-    touch "$out"
 }
 
 # ─── FLEXIBLE WRAPPERS ───
@@ -45,7 +44,6 @@ shot_OTS() { # <bg> <charA> <charB> <shot> <gaze> <mood> <exprA> <exprB> <out>
     else
         echo "⏭️ Skipping $out (already exists)"
     fi
-    touch "$out"
 }
 
 shot_1char() { # <bg> <char> <shot> <gaze> <mood> <expr> <out>
@@ -58,7 +56,6 @@ shot_1char() { # <bg> <char> <shot> <gaze> <mood> <expr> <out>
     else
         echo "⏭️ Skipping $out (already exists)"
     fi
-    touch "$out"
 }
 
 

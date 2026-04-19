@@ -1,9 +1,6 @@
-import sys, random
-from glob import glob
+import sys, random, re, os
 from pathlib import Path
 from json import load
-import re, os
-import sys
 sys.path.append('./lib')
 from image_gen import CreateCharacterSheet, CreateBackground
 from config import load_environ
@@ -136,9 +133,11 @@ class DuoPOVScene:
         
         return {
             "char1_prompt": f'{char1.name.capitalize()} is {char1.character_description} '
-                            f"wearing {colors['char1']} {self.textures.get()} {self.outfits.get()}.",
+                            f"wearing {colors['char1']} {self.textures.get()} {self.outfits.get()}."
+                            "Realistic skin with pores, 8K, studio lighting",
             "char2_prompt": f'{char2.name.capitalize()} is {char2.character_description} '
-                            f"wearing {colors['char2']} {self.textures.get()} {self.outfits.get()}.",
+                            f"wearing {colors['char2']} {self.textures.get()} {self.outfits.get()}." 
+                            "Realistic skin with pores, 8K, studio lighting",
             "data": {
                 "background": colors["background"],
                 "lighting": self.lighting.get(),

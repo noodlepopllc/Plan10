@@ -66,13 +66,12 @@ def GenerateImage(prompt='', output='tmp.png', width=1328, height=1328, seed=42)
 def CreateCharacterSheet(prompt='', output='character_tmp.png',seed=-1):
     seed=int(seed)
     prompt = f'create a character sheet single image with two side by side views (3/4 front view, back view) with plain white background, studio lighting of {prompt}'
-    prompt = EnhancePrompt('',prompt,'system/QwenImage.txt')
     gen = ImageGen()
-    status = gen.generate(prompt['analysis'], output, 1328, 1328, seed)
+    status = gen.generate(prompt, output, 1328, 1328, seed)
     del gen
     analysis = AnalyzeImage(output, "Briefly describe this image, no more than 100 words")
     status['description'] = analysis['analysis']
-    status['prompt'] = prompt['analysis']
+    status['prompt'] = prompt
     return status
 
 def CreateBackground(prompt='', output='location_tmp.png',seed=-1):
@@ -92,13 +91,12 @@ def CreateBackground(prompt='', output='location_tmp.png',seed=-1):
         " Exclude: figures, faces, silhouettes, text, logos, living beings, narrative subjects."
     )
     final_prompt = (combined + exclusion_suffix).strip() + "When enhancing background prompts, preserve all exclusion constraints. Do not add people, animals, or narrative subjects. Maintain environmental/empty scene focus."
-    prompt = EnhancePrompt('',final_prompt,'system/QwenImage.txt')
     gen = ImageGen()
-    status = gen.generate(prompt['analysis'], output, 1328, 1328, seed)
+    status = gen.generate(final_prompt, output, 1328, 1328, seed)
     del gen
     analysis = AnalyzeImage(output, "Briefly describe this image, no more than 100 words")
     status['description'] = analysis['analysis']
-    status['prompt'] = prompt['analysis']
+    status['prompt'] = final_prompt
     return status
 
 
