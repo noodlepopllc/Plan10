@@ -145,6 +145,8 @@ def CompositeSceneSchema():
     }
 
 
+
+
 import tempfile
 from PIL import Image, ImageFilter
 
@@ -153,6 +155,21 @@ def _clean_expr(expr):
 
 def CompositeScene(background_path: str, characters: list[str], shot_type: str = "medium_single", gaze: str = "forward", poses: Union[str, list[str]] = None, expressions: Union[str, list[str]] = "neutral", interaction: str = "tense", width: int = 1024, height: int = 1024, output: str = "composite.png", seed: int = -1):
     width, height, seed = int(width), int(height), int(seed)
+
+    # Closeup expressions: lead with eye descriptors to force tight framing
+    _EYE_FIRST_MAP = {
+        "angry": "intense eyes, direct gaze, sharp iris detail, furrowed brows",
+        "surprised": "wide eyes, focused pupils, high-contrast catchlight, raised brows",
+        "determined": "steady gaze, focused eyes, subtle brow tension",
+        "worried": "searching eyes, slight brow furrow, soft focus",
+        "sad": "heavy eyelids, glistening eyes, downturned gaze",
+        "neutral": "soft eye contact, relaxed gaze, natural resting expression",
+    }
+
+    def _get_eye_first_expr(emotion: str) -> str:
+        return _EYE_FIRST_MAP.get(emotion, _EYE_FIRST_MAP["neutral"])
+
+
     
     if not os.path.exists(background_path): raise FileNotFoundError(f"Background not found: {background_path}")
     if not (1 <= len(characters) <= 2): raise ValueError("characters must be 1 or 2 paths")
@@ -276,6 +293,8 @@ def CompositeScene(background_path: str, characters: list[str], shot_type: str =
     char1_pose = pose_list[0]
     char2_pose = pose_list[1] if len(characters) > 1 else None
 
+    face_expr = _get_eye_first_expr(expr_list[0])
+
     if is_ots and len(characters) == 2:
         task = (
             f"REF 1: {bg_desc}, FULL-FRAME BACKGROUND. "
@@ -287,15 +306,13 @@ def CompositeScene(background_path: str, characters: list[str], shot_type: str =
         )
 
     elif is_closeup:
-        # Never use framing for pure face closeups - spatial zones handle it
+        
         task = (
             f"REF 1: {bg_desc}, FULL-FRAME BACKGROUND. "
             f"REF 2: {identity_keywords[0]}, EXTREME FACE CLOSE-UP ONLY. "
-            f"Crop just below chin. Face fills 95% of frame. Zero shoulders, hairline at top edge. "
-            f"Expression: {_clean_expr(expr_list[0])}. {lighting_instruction} NO extras."
+            f"Crop just below chin. Face fills 95% of frame. Zero shoulders. "
+            f"Expression: {face_expr}. {lighting_instruction} NO extras."
         )
-        # ~35 words. Zero pose noise.
-        # Word count: ~40-50
 
     else:
         # Standard shots can afford slightly more detail
