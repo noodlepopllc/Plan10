@@ -24,3 +24,4 @@ def load_environ():
 
 if __name__ == '__main__':
     load_environ()
+    print("config.json has been created.")
