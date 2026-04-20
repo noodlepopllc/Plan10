@@ -297,12 +297,12 @@ def CompositeScene(background_path: str, characters: list[str], shot_type: str =
 
     if is_ots and len(characters) == 2:
         task = (
-            f"REF 1: {bg_desc}, FULL-FRAME BACKGROUND. "
-            f"REF 2: {identity_keywords[0]}, back to camera, LEFT FOREGROUND shoulder. "
-            f"REF 3: {identity_keywords[1]}, CENTER face close-up. "
-            f"over-the-shoulder shot. {framing}. "
-            f"Character 2 chest-facing camera. DISTINCT foreground. "  # 🔑 ADD ONLY THIS (2 words)
+            f"REF 1: {bg_desc}. Background source. "
+            f"REF 2: Character 1 (foreground character) {identity_keywords[0]}, back to camera, back of head and shoulder visible. "
+            f"REF 3: Character 2 (background character) {identity_keywords[1]}, face towards camera, shoulders squared, visible from shoulders up. "
+            f"Over-the-shoulder of Character 1 facing Character 2. {framing}. "
             f"Expression: {_clean_expr(expr_list[1])}. {lighting_instruction} NO extras."
+            " 8K, Photorealistic, Realistic Skin and Textures with pores"
         )
 
     elif is_closeup:
