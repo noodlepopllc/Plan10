@@ -21,3 +21,6 @@ def load_environ():
         for k, v in cfg.items():
             os.environ[k] = v
         os.environ["LOADED"] = "True"
+
+if __name__ == '__main__':
+    load_environ()
