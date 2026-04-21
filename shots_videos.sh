@@ -42,7 +42,7 @@ shot_1char() { # <bg> <char> <shot> <gaze> <mood> <expr> <out>
         python lib/image_to_video.py -P "" -I "$out" -O "$out_vid" -W $VWIDTH -H $VHEIGHT -S $SEED -D 5.0
         python lib/image_analysis.py -I "$out" -E system/Director_prompt.txt -O tmp.txt
         local prompt=$(< "tmp.txt")
-        python lib/image_to_video.py -P "" -I "$out" -O "alt_$out_vid" -W $VWIDTH -H $VHEIGHT -S $SEED -D 6.0
+        python lib/image_to_video.py -P "$prompt" -I "$out" -O "alt_${out_vid}" -W $VWIDTH -H $VHEIGHT -S $SEED -D 6.0
 
     else
         echo "⏭️ Skipping $out (already exists)"
