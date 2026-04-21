@@ -58,8 +58,10 @@ def GenerateImage(prompt='', output='tmp.png', width=1328, height=1328, seed=42)
     gen = ImageGen()
     status = gen.generate(prompt['analysis'], output, int(width), int(height), int(seed))
     del gen
-    analysis = AnalyzeImage(output, "Briefly describe this image, no more than 100 words")
-    status['description'] = analysis['analysis']
+    status['description'] = ''
+    if os.environ['BATCH'] == 'False':
+        analysis = AnalyzeImage(output, "Briefly describe this image, no more than 100 words")
+        status['description'] = analysis['analysis']
     status['prompt'] = prompt['analysis']
     return status
 

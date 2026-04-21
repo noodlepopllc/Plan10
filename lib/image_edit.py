@@ -71,9 +71,10 @@ class ImageEdit(object):
         )
         image.save(output)
         os.utime(output, None) 
-        status = {"status": "success", "output_path": output, "prompt": prompt}
-        analysis = AnalyzeImage(output, "Briefly describe this image, no more than 100 words")
-        status['description'] = analysis['analysis']
+        status = {"status": "success", "output_path": output, "prompt": prompt, "description": ''}
+        if os.environ['BATCH'] == 'False':
+            analysis = AnalyzeImage(output, "Briefly describe this image, no more than 100 words")
+            status['description'] = analysis['analysis']
         return status
 
     def __del__(self):

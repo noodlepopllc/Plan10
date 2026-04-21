@@ -120,17 +120,19 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
             )
 
             save_video(video, output, fps=15, quality=5)
+            description = ''
                 
             # Post-processing
-            tmp_img = video_to_img(output, width, height)
-            tmp_img.save('tmp.png')
-            analysis = AnalyzeImage('tmp.png', "Briefly describe this image, no more than 100 words")
+            if os.environ['BATCH'] == 'False':
+                tmp_img = video_to_img(output, width, height)
+                tmp_img.save('tmp.png')
+                description = AnalyzeImage('tmp.png', "Briefly describe this image, no more than 100 words")['analysis']
             
             return {
                 "status": "success",
                 "output_path": output,
                 "frames": len(video),
-                "description": analysis['analysis'],
+                "description": description,
                 "prompt": prompt
             }
             
