@@ -1,4 +1,4 @@
-# Plan10
+# Plan10 - Qwen 2512 with Qwen 2511 and Wan 2.1 14B
 Planning and execution of commands to generate images/storyboards
 ```
 git clone https://github.com/noodlepopllc/Plan10.git
