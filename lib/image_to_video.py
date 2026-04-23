@@ -41,7 +41,7 @@ def _ensure_pipeline(vrlimit=14):
         vram_limit=vrlimit,
     )
 
-    _pipe.load_lora(_pipe.dit, './loras/Wan21_CausVid_bidirect2_T2V_1_3B_lora_rank32.safetensors', alpha=1.0)
+    _pipe.load_lora(_pipe.dit, './loras/loras_accelerators/Wan21_CausVid_bidirect2_T2V_1_3B_lora_rank32.safetensors', alpha=1.0)
     return _pipe
 
 
