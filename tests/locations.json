@@ -1,0 +1,501 @@
+{
+  "rooftop_bar": {
+    "desc": "rooftop bar at night",
+    "shared": [
+      "polished concrete floor",
+      "black metal railing",
+      "warm recessed ceiling lights"
+    ],
+    "staging": "wide open center floor area, unobstructed",
+    "view_a": {
+      "left": "",
+      "right": "outdoor bar counter with backlit bottles",
+      "background": "distant city skyline with neon glow"
+    },
+    "view_b": {
+      "left": "simple metal safety railing",
+      "right": "",
+      "background": "plain concrete wall with soft ambient light"
+    }
+  },
+
+  "poolside": {
+    "desc": "luxury outdoor terrace at golden hour",
+    "shared": [
+      "white limestone tiles",
+      "soft golden hour light"
+    ],
+    "staging": "open terrace floor center, unobstructed",
+    "view_a": {
+      "left": "teal lounge chair under umbrella",
+      "right": "",
+      "background": "sunset-reflecting water horizon"
+    },
+    "view_b": {
+      "left": "",
+      "right": "calm turquoise pool edge",
+      "background": "simple limestone privacy wall with warm light"
+    }
+  },
+
+  "neon_alley": {
+    "desc": "narrow neon-lit alley",
+    "shared": [
+      "wet asphalt",
+      "red brick walls",
+      "overhead utility cables"
+    ],
+    "staging": "clear wet asphalt center path",
+    "view_a": {
+      "left": "",
+      "right": "blue glowing vending machine",
+      "background": "distant neon street glow"
+    },
+    "view_b": {
+      "left": "metal fire escape ladder",
+      "right": "",
+      "background": "plain brick wall with faint neon reflections"
+    }
+  },
+
+  "hotel_lobby": {
+    "desc": "grand hotel lobby",
+    "shared": [
+      "polished marble floor",
+      "brass-trimmed pillars",
+      "warm chandelier light"
+    ],
+    "staging": "wide marble lobby floor center",
+    "view_a": {
+      "left": "curved navy velvet seating",
+      "right": "",
+      "background": "glass entrance doors"
+    },
+    "view_b": {
+      "left": "",
+      "right": "ornate concierge desk",
+      "background": "simple marble wall with soft uplighting"
+    }
+  },
+
+  "moroccan_riad": {
+    "desc": "traditional Moroccan riad courtyard",
+    "shared": [
+      "zellige tile floor",
+      "carved wooden arches",
+      "bright natural daylight"
+    ],
+    "staging": "open tiled courtyard center",
+    "view_a": {
+      "left": "potted citrus tree",
+      "right": "",
+      "background": "second-story balcony"
+    },
+    "view_b": {
+      "left": "",
+      "right": "mosaic-tiled bench",
+      "background": "plain stucco wall with soft daylight"
+    }
+  },
+
+  "modern_library": {
+    "desc": "quiet private library",
+    "shared": [
+      "mahogany bookshelves",
+      "green carpet",
+      "brass reading lamps"
+    ],
+    "staging": "clear carpeted center aisle",
+    "view_a": {
+      "left": "",
+      "right": "rolling library ladder",
+      "background": "arched window with twilight sky"
+    },
+    "view_b": {
+      "left": "leather reading armchair",
+      "right": "",
+      "background": "plain bookshelf wall with soft lamp glow"
+    }
+  },
+
+  "jazz_club": {
+    "desc": "intimate jazz club",
+    "shared": [
+      "dark velvet curtains",
+      "mahogany bar top",
+      "warm pendant lighting"
+    ],
+    "staging": "open wooden floor center",
+    "view_a": {
+      "left": "grand piano on small stage",
+      "right": "",
+      "background": "soft stage spotlight haze"
+    },
+    "view_b": {
+      "left": "",
+      "right": "cluster of booth tables",
+      "background": "simple velvet curtain wall with dim warm light"
+    }
+  },
+
+  "greenhouse_cafe": {
+    "desc": "bright greenhouse cafe",
+    "shared": [
+      "terracotta floor tiles",
+      "wrought iron beams",
+      "diffused skylight"
+    ],
+    "staging": "open terracotta tile center area",
+    "view_a": {
+      "left": "",
+      "right": "hanging fern basket",
+      "background": "dense foliage wall"
+    },
+    "view_b": {
+      "left": "wooden bistro table",
+      "right": "",
+      "background": "frosted glass wall with soft daylight"
+    }
+  },
+
+  "penthouse_kitchen": {
+    "desc": "sleek penthouse kitchen",
+    "shared": [
+      "matte charcoal cabinetry",
+      "quartz island",
+      "LED underlighting"
+    ],
+    "staging": "open polished floor center",
+    "view_a": {
+      "left": "espresso machine station",
+      "right": "",
+      "background": "floor-to-ceiling windows"
+    },
+    "view_b": {
+      "left": "",
+      "right": "modern dining table",
+      "background": "charcoal cabinetry wall with soft reflections"
+    }
+  },
+
+  "subway_station": {
+    "desc": "vintage subway platform",
+    "shared": [
+      "white ceramic tiles",
+      "concrete platform",
+      "fluorescent lighting"
+    ],
+    "staging": "clear platform center",
+    "view_a": {
+      "left": "",
+      "right": "metal ticket turnstile",
+      "background": "dark tunnel entrance"
+    },
+    "view_b": {
+      "left": "vintage advertisement lightbox",
+      "right": "",
+      "background": "plain tiled wall with soft fluorescent spill"
+    }
+  },
+
+  "museum_gallery": {
+    "desc": "minimalist art gallery",
+    "shared": [
+      "polished concrete floor",
+      "white gallery walls",
+      "track lighting"
+    ],
+    "staging": "open gallery floor center",
+    "view_a": {
+      "left": "large abstract canvas",
+      "right": "",
+      "background": "softly lit corridor"
+    },
+    "view_b": {
+      "left": "",
+      "right": "sculpture on pedestal",
+      "background": "plain white gallery wall with soft track lighting"
+    }
+  },
+
+  "beach_cabana": {
+    "desc": "coastal beach cabana",
+    "shared": [
+      "weathered teak decking",
+      "white linen drapes",
+      "soft morning light"
+    ],
+    "staging": "open teak deck center",
+    "view_a": {
+      "left": "",
+      "right": "stack of rolled towels",
+      "background": "calm ocean waves"
+    },
+    "view_b": {
+      "left": "low daybed with cushions",
+      "right": "",
+      "background": "simple linen-draped wall with soft daylight"
+    }
+  },
+
+  "mountain_cabin": {
+    "desc": "rustic mountain cabin interior",
+    "shared": [
+      "pine log walls",
+      "stone floor",
+      "warm ambient glow"
+    ],
+    "staging": "open stone floor center",
+    "view_a": {
+      "left": "antler chandelier",
+      "right": "",
+      "background": "frosted window with snowy pines"
+    },
+    "view_b": {
+      "left": "",
+      "right": "woven bearskin rug",
+      "background": "plain log wall with warm lantern light"
+    }
+  },
+
+  "cyberpunk_ramen": {
+    "desc": "neon ramen shop",
+    "shared": [
+      "stainless steel counter",
+      "neon accent lighting",
+      "glossy black floor"
+    ],
+    "staging": "clear glossy floor center",
+    "view_a": {
+      "left": "",
+      "right": "ramen cooking station",
+      "background": "rainy neon city window"
+    },
+    "view_b": {
+      "left": "glass-front vending machine",
+      "right": "",
+      "background": "simple metal wall panel with neon reflections"
+    }
+  },
+
+  "vintage_boutique": {
+    "desc": "warm vintage boutique",
+    "shared": [
+      "distressed oak flooring",
+      "gold-framed mirrors",
+      "warm tungsten lighting"
+    ],
+    "staging": "open boutique floor center",
+    "view_a": {
+      "left": "circular clothing rack",
+      "right": "",
+      "background": "arched doorway to fitting rooms"
+    },
+    "view_b": {
+      "left": "",
+      "right": "velvet ottoman",
+      "background": "simple oak-paneled wall with warm light"
+    }
+  },
+
+  "botanical_path": {
+    "desc": "garden pathway",
+    "shared": [
+      "cobblestone path",
+      "limestone walls",
+      "dappled sunlight"
+    ],
+    "staging": "clear cobblestone center path",
+    "view_a": {
+      "left": "",
+      "right": "ornate wrought iron bench",
+      "background": "glass conservatory dome"
+    },
+    "view_b": {
+      "left": "tall ceramic planter",
+      "right": "",
+      "background": "simple limestone wall with soft natural light"
+    }
+  },
+
+  "yacht_cabin": {
+    "desc": "luxury yacht deck",
+    "shared": [
+      "teak decking",
+      "chrome railings",
+      "cool blue lighting"
+    ],
+    "staging": "open teak deck center",
+    "view_a": {
+      "left": "sun lounger",
+      "right": "",
+      "background": "ocean horizon at dusk"
+    },
+    "view_b": {
+      "left": "",
+      "right": "compact wet bar",
+      "background": "simple chrome railing with soft ocean light"
+    }
+  },
+
+  "industrial_loft": {
+    "desc": "converted industrial loft",
+    "shared": [
+      "polished concrete floor",
+      "exposed brick wall",
+      "steel-framed windows"
+    ],
+    "staging": "open concrete floor center",
+    "view_a": {
+      "left": "",
+      "right": "olive green sofa",
+      "background": "city skyline through windows"
+    },
+    "view_b": {
+      "left": "architect's drafting table",
+      "right": "",
+      "background": "plain brick wall with soft window reflections"
+    }
+  },
+
+  "parisian_bistro": {
+    "desc": "Parisian bistro terrace",
+    "shared": [
+      "checkered tile floor",
+      "rattan chairs",
+      "brass sconce lighting"
+    ],
+    "staging": "open tiled terrace center",
+    "view_a": {
+      "left": "chrome espresso counter",
+      "right": "",
+      "background": "blurred Parisian street"
+    },
+    "view_b": {
+      "left": "",
+      "right": "terrace table with awning",
+      "background": "simple stucco wall with warm sconce light"
+    }
+  },
+
+  "skybridge": {
+    "desc": "corporate skybridge",
+    "shared": [
+      "frosted glass floor panels",
+      "aluminum wall cladding",
+      "linear LED ceiling lights"
+    ],
+    "staging": "open glass floor center",
+    "view_a": {
+      "left": "",
+      "right": "digital directory screen",
+      "background": "executive corridor"
+    },
+    "view_b": {
+      "left": "glass display case",
+      "right": "",
+      "background": "plain aluminum wall with soft LED reflections"
+    }
+  },
+
+  "underground_garage": {
+    "desc": "modern underground garage",
+    "shared": [
+      "sealed concrete floor",
+      "yellow safety markings",
+      "bright fluorescent lighting"
+    ],
+    "staging": "clear concrete center lane",
+    "view_a": {
+      "left": "concrete pillar with fire hose",
+      "right": "",
+      "background": "ramp to daylight"
+    },
+    "view_b": {
+      "left": "",
+      "right": "EV charging station",
+      "background": "plain concrete wall with soft fluorescent spill"
+    }
+  },
+
+  "desert_resort": {
+    "desc": "desert modernist resort",
+    "shared": [
+      "travertine stone floor",
+      "sand-tone stucco walls",
+      "warm sunset light"
+    ],
+    "staging": "open stone floor center",
+    "view_a": {
+      "left": "",
+      "right": "stone water feature",
+      "background": "distant desert mesas"
+    },
+    "view_b": {
+      "left": "woven daybed",
+      "right": "",
+      "background": "simple stucco wall with warm sunset glow"
+    }
+  },
+
+  "art_deco_elevator": {
+    "desc": "art deco elevator lobby",
+    "shared": [
+      "brass geometric wall panels",
+      "marble mosaic floor",
+      "warm cove lighting"
+    ],
+    "staging": "open marble floor center",
+    "view_a": {
+      "left": "brass control panel",
+      "right": "",
+      "background": "polished elevator doors"
+    },
+    "view_b": {
+      "left": "",
+      "right": "sunburst-framed mirror",
+      "background": "simple brass-paneled wall with soft warm light"
+    }
+  },
+
+  "zen_room": {
+    "desc": "zen meditation room",
+    "shared": [
+      "bamboo flooring",
+      "shoji screen walls",
+      "soft lantern light"
+    ],
+    "staging": "open bamboo floor center",
+    "view_a": {
+      "left": "",
+      "right": "low wooden tea table",
+      "background": "open doorway to rock garden"
+    },
+    "view_b": {
+      "left": "floor cushions",
+      "right": "",
+      "background": "plain shoji screen wall with soft lantern glow"
+    }
+  },
+
+  "coastal_lighthouse": {
+    "desc": "historic lighthouse interior",
+    "shared": [
+      "white wooden floorboards",
+      "curved stone walls",
+      "warm lantern glow"
+    ],
+    "staging": "open wooden floor center",
+    "view_a": {
+      "left": "",
+      "right": "navigation chart table",
+      "background": "large circular window with stormy sea"
+    },
+    "view_b": {
+      "left": "brass telescope on tripod",
+      "right": "",
+      "background": "plain curved stone wall with soft lantern light"
+    }
+  }
+}
+
