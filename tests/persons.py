@@ -67,10 +67,10 @@ class DuoPOVScene:
         # Outfits and textures
         self.outfits = ShuffleBag([
             "{color} plunging neckline crop top with matching back coverage and {color} high-waisted mini skirt with continuous back fabric",
-            "sheer mesh top over {color} bralette with same back strap layout and fitted shorts showing two leg openings in back",
+            "sheer mesh top over {color} bralette with same back strap layout, mesh top continuing fully around the back, and fitted shorts showing two leg openings in back",
             "{color} off-shoulder crop top with same back neckline and low-rise jeans with consistent waist height",
             "{color} backless sundress with fully open back and same strap layout, same length front and back",
-            "{color} strappy bralette with identical back strap pattern, unbuttoned shirt, and bike shorts with clear back leg openings",
+            "{color} strappy bralette with identical back strap pattern, unbuttoned shirt continuing around the back with the same drape, and bike shorts with clear back leg openings",
             "{color} deep V-neck bodysuit with matching back coverage and high-cut legs visible from both sides",
             "{color} cropped tank top with same back neckline and low-cut denim shorts with two visible back leg openings",
             "{color} halter neck crop top with same back strap placement and {color} side-tie mini skirt with continuous back fabric",
