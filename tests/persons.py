@@ -66,21 +66,22 @@ class DuoPOVScene:
     def __init__(self):
         # Outfits and textures
         self.outfits = ShuffleBag([
-            "{color} plunging neckline crop top with {color} high-waisted mini skirt",
-            "sheer mesh top over {color} bralette with fitted shorts",
-            "{color} off-shoulder crop top with low-rise jeans",
-            "{color} backless sundress with thigh-high slit",
-            "{color} strappy bralette with unbuttoned shirt and bike shorts",
-            "{color} deep V-neck bodysuit with high-cut legs",
-            "{color} cropped tank top with low-cut denim shorts",
-            "{color} halter neck crop top with {color} side-tie mini skirt",
-            "{color} lace camisole with {color} satin slip skirt",
-            "{color} cutout bodycon dress with strategic openings",
-            "{color} tube top with cargo mini skirt",
-            "{color} wrap top with deep plunge and {color} flowing pants",
-            "{color} mesh panel crop top with leather pants",
-            "{color} asymmetric one-shoulder top with {color} micro mini skirt"
+            "{color} plunging neckline crop top with matching back coverage and {color} high-waisted mini skirt with continuous back fabric",
+            "sheer mesh top over {color} bralette with same back strap layout and fitted shorts showing two leg openings in back",
+            "{color} off-shoulder crop top with same back neckline and low-rise jeans with consistent waist height",
+            "{color} backless sundress with fully open back and same strap layout, same length front and back",
+            "{color} strappy bralette with identical back strap pattern, unbuttoned shirt, and bike shorts with clear back leg openings",
+            "{color} deep V-neck bodysuit with matching back coverage and high-cut legs visible from both sides",
+            "{color} cropped tank top with same back neckline and low-cut denim shorts with two visible back leg openings",
+            "{color} halter neck crop top with same back strap placement and {color} side-tie mini skirt with continuous back fabric",
+            "{color} lace camisole with same back strap layout and {color} satin slip skirt with smooth uninterrupted back panel",
+            "{color} cutout bodycon dress with matching back cutout pattern and identical silhouette front and back",
+            "{color} tube top with same back height and cargo mini skirt with continuous back fabric and no leg openings",
+            "{color} wrap top with matching back coverage and {color} flowing pants with consistent waist height and length",
+            "{color} mesh panel crop top with same back panel layout and leather pants with consistent fit and waist height",
+            "{color} asymmetric one-shoulder top with matching back asymmetry and {color} micro mini skirt with continuous back fabric"
         ])
+
 
 
         self.textures = ShuffleBag([
