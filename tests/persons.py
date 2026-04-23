@@ -176,28 +176,34 @@ def add_metadata_char(imgpath, prompt='', seed=-1):
     target_image = Image.open(imgpath)
     metadata = PngInfo()
     combined_prompt = (
-        "Describe ONLY clearly visible traits. Return a single comma-separated string in this exact order: "
-        "age, ethnicity, skin tone, face shape, jawline, cheekbones, eyes, eyebrows, nose, lips, "
-        "hair, hairline, eyewear, clothing. "
-        "Rules:\n"
-        "- Be accurate. Do NOT guess. If a trait isn't obvious, write 'neutral'.\n"
-        "- Age: child, youth, young adult, adult, elderly, neutral\n"
-        "- Ethnicity: east asian, south asian, middle eastern, african, european, latinx, neutral\n"
-        "- Skin tone: fair, light, medium, tan, deep, neutral\n"
-        "- Face shape: oval, round, heart, square, long, neutral\n"
-        "- Jawline: soft, defined, sharp, angular, neutral\n"
-        "- Cheekbones: low, medium, high, neutral\n"
-        "- Eyes: almond, round, narrow, wide-set, neutral\n"
-        "- Eyebrows: straight, arched, thick, thin, neutral\n"
-        "- Nose: small, medium, large, narrow, wide, neutral\n"
-        "- Lips: thin, medium, full, neutral\n"
-        "- Hair: short, medium, long + color + texture (straight/wavy/curly), or 'neutral'\n"
-        "- Hairline: straight, widow's peak, rounded, neutral\n"
-        "- Eyewear: If clearly wearing glasses, write 'preserve glasses'. If not, write 'none'.\n"
-        "Example: 'adult, european, light, oval, defined jawline, high cheekbones, almond eyes, arched brows, "
-        "medium nose, full lips, long brown wavy hair, straight hairline, navy uniform, none'\n"
-        "Respond ONLY with the string."
-    )
+        '''
+        Describe ONLY clearly visible traits. Return a single comma-separated string in this exact order: 
+        age, ethnicity, skin tone, face shape, jawline, cheekbones, eyes, eyebrows, nose, lips, 
+        hair length/color/texture, hair style, hairline, eyewear, clothing.
+        Rules:
+        - Be accurate. Do NOT guess. If a trait isn't obvious, write 'neutral'.
+        - Age: child, youth, young adult, adult, elderly, neutral
+        - Ethnicity: east asian, south asian, middle eastern, african, european, latinx, neutral
+        - Skin tone: fair, light, medium, tan, deep, neutral
+        - Face shape: oval, round, heart, square, long, neutral
+        - Jawline: soft, defined, sharp, angular, neutral
+        - Cheekbones: low, medium, high, neutral
+        - Eyes: almond, round, narrow, wide-set, neutral
+        - Eyebrows: straight, arched, thick, thin, neutral
+        - Nose: small, medium, large, narrow, wide, neutral
+        - Lips: thin, medium, full, neutral
+        - Hair length/color/texture: short/medium/long + color + straight/wavy/curly, or 'neutral'
+        - Hair style: ponytail, bun, braid, tied-back, loose, half-up, bob, pixie, or 'neutral'
+        - Hairline: straight, widow's peak, rounded, neutral
+        - Eyewear: 'preserve glasses' if clearly wearing glasses, otherwise 'none'
+        - Clothing: yellow sundress, white tshirt, blue jeans, red sneakers, etc.
+
+        Example:
+        "adult, european, light, oval, defined jawline, high cheekbones, almond eyes, arched brows, 
+        medium nose, full lips, long brown wavy hair, low ponytail, straight hairline, none, navy uniform"
+
+        Respond ONLY with the string.
+        ''')
 
     analysis = AnalyzeImage(imgpath, combined_prompt)
     raw = analysis['analysis'].strip().strip('"').strip("'")

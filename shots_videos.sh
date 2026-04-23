@@ -17,7 +17,7 @@ shot_2char() { # <bg> <charA> <charB> <shot> <gaze> <mood> <exprA> <exprB> <out>
     local out="$OUTDIR/${WIDTH}_${HEIGHT}_$9.png"
     local out_vid="$OUTDIR/${WIDTH}_${HEIGHT}_$9.mp4"
     if [[ ! -f "$out_vid" ]]; then
-        python lib/image_analysis.py -I "$out" -E system/I2V_13B.txt -O tmp.txt
+        python lib/image_analysis.py -I "$out" -E system/I2V_13BV2.txt -O tmp.txt
         local prompt=$(< "tmp.txt")
         python lib/image_to_video.py -P "$prompt" -I "$out" -O "$out_vid" -W $VWIDTH -H $VHEIGHT -S $SEED -D 5.0
     else
@@ -30,7 +30,7 @@ shot_OTS() { # <bg> <charA> <charB> <shot> <gaze> <mood> <exprA> <exprB> <out>
     local out="$OUTDIR/${WIDTH}_${HEIGHT}_$9.png"
     local out_vid="$OUTDIR/${WIDTH}_${HEIGHT}_$9.mp4"
     if [[ ! -f "$out_vid" ]]; then
-        python lib/image_analysis.py -I "$out" -E system/I2V_13B.txt -O tmp.txt
+        python lib/image_analysis.py -I "$out" -E system/I2V_13BV2.txt -O tmp.txt
         local prompt=$(< "tmp.txt")
         python lib/image_to_video.py -P "$prompt" -I "$out" -O "$out_vid" -W $VWIDTH -H $VHEIGHT -S $SEED -D 5.0
     else
@@ -42,7 +42,7 @@ shot_1char() { # <bg> <char> <shot> <gaze> <mood> <expr> <out>
     local out="$OUTDIR/${WIDTH}_${HEIGHT}_$7.png"
     local out_vid="$OUTDIR/${WIDTH}_${HEIGHT}_$7.mp4"
     if [[ ! -f "$out_vid" ]]; then
-        python lib/image_analysis.py -I "$out" -E system/I2V_13B.txt -O tmp.txt
+        python lib/image_analysis.py -I "$out" -E system/I2V_13BV2.txt -O tmp.txt
         local prompt=$(< "tmp.txt")
         python lib/image_to_video.py -P "$prompt" -I "$out" -O "$out_vid" -W $VWIDTH -H $VHEIGHT -S $SEED -D 5.0
     else
