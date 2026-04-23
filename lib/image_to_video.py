@@ -12,7 +12,7 @@ load_environ()
 
 def _ensure_pipeline(vrlimit=14):
     model_id = "alibaba-pai/Wan2.1-Fun-V1.1-1.3B-InP"
-    #model_id = "Wan-AI/Wan2.1-VACE-1.3B"
+
     # === Global Pipeline Setup (Wan 2.1 I2V) ===
     vram_config = {
         "offload_dtype": "disk",
@@ -51,6 +51,13 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         
         if isinstance(prompt, list):
             prompt = prompt.pop()
+        
+        start_image = ''
+        end_image = None
+        if isinstance(media, list):
+            start_image = media.pop(0)
+            if len(media) > 0:
+                end_image = video_to_img(media.pop(), width, height)
 
         width = int(width)
         height = int(height)
@@ -69,7 +76,7 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         #print(f"   Sliding window: size={sliding_window_size}, stride={sliding_window_stride}")
         print(f"   Resolution: {width}x{height}")
 
-        current_source = video_to_img(media, width, height)
+        current_source = video_to_img(start_image, width, height)
         current_source.save('tmp.png')
 
         if not prompt:
@@ -83,7 +90,7 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
             video = _pipe(
                 prompt=prompt,
                 input_image=current_source,
-                #vace_reference_image=current_source,
+                end_image=end_image,
                 width=width, height=height,
                 num_frames=total_frames,
                 sliding_window_size=sliding_window_size,
@@ -91,9 +98,6 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
                 cfg_scale=1.0,
                 num_inference_steps=8,
                 seed=seed,
-                #tiled=True,
-                #tile_size=(30, 52),
-                #tile_stride=(15, 26),
             )
 
             save_video(video, output, fps=15, quality=5)
@@ -168,7 +172,7 @@ if __name__ == "__main__":
     import argparse, json
     parser = argparse.ArgumentParser()
     parser.add_argument('-P', '--prompt', type=str, default='', required=False)
-    parser.add_argument('-I', '--image', type=str, required=True)
+    parser.add_argument('-I', '--images', action='append', default=[], help='Input images')
     parser.add_argument('-O', '--output', type=str, default='output.mp4')
     parser.add_argument('-D', '--duration', type=float, default=10)
     parser.add_argument('-W', '--width', type=int, default=768)
@@ -184,7 +188,7 @@ if __name__ == "__main__":
         
     result = GenerateVideo(
         prompt=prompt_input,
-        media=args.image,
+        media=args.images,
         output=args.output,
         duration_sec=args.duration,
         width=args.width,

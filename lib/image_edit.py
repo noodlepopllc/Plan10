@@ -305,9 +305,10 @@ def CompositeScene(background_path: str, characters: list[str], shot_type: str =
         "wide_single": "Full body, character small.",
         "medium_single": "Waist-up, centered.",
         
-        "profile_single_left": "90° left profile, facing left. Right side of frame.",
-        "profile_single_right": "90° right profile, facing right. Left side of frame.",
-        
+        "profile_single_left": "Body turned 90° to the left, head facing left, eyes looking left. Standing on the right third of the frame with empty space on the left.",
+        "profile_single_right": "Body turned 90° to the right, head facing right, eyes looking right. Standing on the left third of the frame with empty space on the right.",
+
+
         "two_shot_wide": "Both full body, balanced.",
         "two_shot_medium": "Both waist-up, side-by-side.",
         "two_shot_close": "Both chest-up, intimate.",
@@ -356,6 +357,7 @@ def CompositeScene(background_path: str, characters: list[str], shot_type: str =
             f"REF 2: Character 1 (foreground character) {identity_keywords[0]}, back to camera, back of head and shoulder visible. "
             f"REF 3: Character 2 (background character) {identity_keywords[1]}, face towards camera, shoulders squared, visible from shoulders up. "
             f"Over-the-shoulder of Character 1 facing Character 2. {framing}. "
+            "Each character has completely different clothing, no matching colors or styles. "
             f"Expression: {_clean_expr(expr_list[1])}. {lighting_instruction} NO extras."
             " 8K, Photorealistic, Realistic Skin and Textures with pores"
         )
