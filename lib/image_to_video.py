@@ -11,7 +11,7 @@ from config import load_environ
 load_environ()
 
 def _ensure_pipeline(vrlimit=14):
-    model_id = "PAI/Wan2.1-Fun-V1.1-1.3B-InP"
+    model_id = "alibaba-pai/Wan2.1-Fun-V1.1-1.3B-InP"
     #model_id = "Wan-AI/Wan2.1-VACE-1.3B"
     # === Global Pipeline Setup (Wan 2.1 I2V) ===
     vram_config = {
