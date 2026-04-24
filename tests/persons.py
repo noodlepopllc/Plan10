@@ -5,9 +5,6 @@ sys.path.append('./lib')
 from image_gen import CreateCharacterSheet, CreateBackground
 from config import load_environ
 from locations import  LocationPairGenerator
-from PIL import Image
-from PIL.PngImagePlugin import PngInfo
-from image_analysis import AnalyzeImage
 
 load_environ()
 
@@ -172,67 +169,6 @@ class DuoPOVScene:
             if isinstance(getattr(self, attr), ShuffleBag):
                 getattr(self, attr).reset()
 
-def add_metadata_char(imgpath, prompt='', seed=-1):
-    target_image = Image.open(imgpath)
-    metadata = PngInfo()
-    combined_prompt = (
-        '''
-        Describe ONLY clearly visible traits. Return a single comma-separated string in this exact order: 
-        age, ethnicity, skin tone, face shape, jawline, cheekbones, eyes, eyebrows, nose, lips, 
-        hair length/color/texture, hair style, hairline, eyewear, clothing.
-        Rules:
-        - Be accurate. Do NOT guess. If a trait isn't obvious, write 'neutral'.
-        - Age: child, youth, young adult, adult, elderly, neutral
-        - Ethnicity: east asian, south asian, middle eastern, african, european, latinx, neutral
-        - Skin tone: fair, light, medium, tan, deep, neutral
-        - Face shape: oval, round, heart, square, long, neutral
-        - Jawline: soft, defined, sharp, angular, neutral
-        - Cheekbones: low, medium, high, neutral
-        - Eyes: almond, round, narrow, wide-set, neutral
-        - Eyebrows: straight, arched, thick, thin, neutral
-        - Nose: small, medium, large, narrow, wide, neutral
-        - Lips: thin, medium, full, neutral
-        - Hair length/color/texture: short/medium/long + color + straight/wavy/curly, or 'neutral'
-        - Hair style: ponytail, bun, braid, tied-back, loose, half-up, bob, pixie, or 'neutral'
-        - Hairline: straight, widow's peak, rounded, neutral
-        - Eyewear: 'preserve glasses' if clearly wearing glasses, otherwise 'none'
-        - Clothing: yellow sundress, white tshirt, blue jeans, red sneakers, etc.
-
-        Example:
-        "adult, european, light, oval, defined jawline, high cheekbones, almond eyes, arched brows, 
-        medium nose, full lips, long brown wavy hair, low ponytail, straight hairline, none, navy uniform"
-
-        Respond ONLY with the string.
-        ''')
-
-    analysis = AnalyzeImage(imgpath, combined_prompt)
-    raw = analysis['analysis'].strip().strip('"').strip("'")
-    
-    # Clean & filter without regex
-    parts = [p.strip() for p in raw.split(",") if p.strip()]
-    # Remove "none"/"no glasses" so diffusion doesn't accidentally render them
-    cleaned = [p for p in parts if p.lower() not in ["none", "no glasses"]]
-    clean_string = ", ".join(cleaned)
-    metadata.add_text("Description", clean_string)
-    metadata.add_text("Prompt", prompt)
-    metadata.add_text("Seed", str(seed))
-    target_image.save(imgpath, pnginfo=metadata)
-    img_with_meta = Image.open(imgpath)
-    print(img_with_meta.info) 
-
-def add_metadata_loc(imgpath, prompt='', seed=-1):
-    target_image = Image.open(imgpath)
-    metadata = PngInfo()
-    bg_analysis = AnalyzeImage(imgpath, "Description, Style, lighting, weather in <15 words.")
-    bg_desc = bg_analysis['analysis'].strip()
-    metadata.add_text("Description", bg_desc)
-    metadata.add_text("Prompt", prompt)
-    metadata.add_text("Seed", str(seed))
-    target_image.save(imgpath, pnginfo=metadata)
-    img_with_meta = Image.open(imgpath)
-    print(img_with_meta.info)
-
-
 if __name__ == '__main__':
     seed = random.randint(0, 100000000)
     random.seed(seed)
@@ -283,10 +219,8 @@ if __name__ == '__main__':
         # Generate Character Sheets
         if not Path(c1path).exists():
             CreateCharacterSheet(result["char1_prompt"], c1path, seed=seed)
-            add_metadata_char(c1path, result["char1_prompt"], seed)
         if not Path(c2path).exists():
             CreateCharacterSheet(result["char2_prompt"], c2path, seed=seed)
-            add_metadata_char(c2path, result["char2_prompt"], seed)
         
         # Extract coordinated dynamic elements
         d = result["data"]
@@ -309,9 +243,7 @@ if __name__ == '__main__':
         l2path= f'{dirname}/location_reverse.png'
         if not Path(l1path).exists():
             CreateBackground(prompt_a, l1path, seed=seed)
-            add_metadata_loc(l1path, prompt_a, seed)
         if not Path(l2path).exists():
             CreateBackground(prompt_b, l2path, seed=seed)
-            add_metadata_loc(l2path, prompt_b, seed)
 
         print("#"*100)

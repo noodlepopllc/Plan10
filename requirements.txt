@@ -5,3 +5,4 @@ torchcodec
 transformers
 bitsandbytes
 opencv-python
+uniface

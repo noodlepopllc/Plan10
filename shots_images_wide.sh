@@ -14,7 +14,7 @@ SEED=$RANDOM
 shot_2char() { # <bg> <charA> <charB> <shot> <gaze> <mood> <exprA> <exprB> <out>
     local out="$OUTDIR/wide_${WIDTH}_${HEIGHT}_$9.png"
     if [[ ! -f "$out" ]]; then
-        python lib/image_edit.py -C -BG "$1" -CHARS "$2" -CHARS "$3" \
+        python lib/compositor.py -BG "$1" -CHARS "$2" -CHARS "$3" \
             -SHOT "$4" -GAZE "$5" -T "$6" -EXPR "$7" -EXPR "$8" -Z "cute idol pose" -Z "cute idol pose" \
             -O "$out" -E $SEED -H $HEIGHT -W $WIDTH
         touch "$out"
@@ -27,7 +27,7 @@ shot_2char() { # <bg> <charA> <charB> <shot> <gaze> <mood> <exprA> <exprB> <out>
 shot_OTS() { # <bg> <charA> <charB> <shot> <gaze> <mood> <exprA> <exprB> <out>
     local out="$OUTDIR/wide_${WIDTH}_${HEIGHT}_$9.png"
     if [[ ! -f "$out" ]]; then
-        python lib/image_edit.py -C -BG "$1" -CHARS "$2" -CHARS "$3" \
+        python lib/compositor.py -BG "$1" -CHARS "$2" -CHARS "$3" \
             -SHOT "$4" -GAZE "$5" -T "$6" -EXPR "$7" -EXPR "$8" \
             -O "$out" -E $SEED -H $HEIGHT -W $WIDTH
         touch "$out"
@@ -39,7 +39,7 @@ shot_OTS() { # <bg> <charA> <charB> <shot> <gaze> <mood> <exprA> <exprB> <out>
 shot_1char() { # <bg> <char> <shot> <gaze> <mood> <expr> <out>
     local out="$OUTDIR/wide_${WIDTH}_${HEIGHT}_$7.png"
     if [[ ! -f "$out" ]]; then
-        python lib/image_edit.py -C -BG "$1" -CHARS "$2" \
+        python lib/compositor.py -C -BG "$1" -CHARS "$2" \
             -SHOT "$3" -GAZE "$4" -T "$5" -EXPR "$6" \
             -O "$out" -E $SEED -H $HEIGHT -W $WIDTH
         touch "$out"

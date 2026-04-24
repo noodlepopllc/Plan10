@@ -6,9 +6,28 @@ from util import video_to_img
 from image_analysis import AnalyzeImage, EnhancePrompt
 from diffsynth.pipelines.wan_video import WanVideoPipeline, ModelConfig
 from diffsynth.utils.data import save_video
+from qwen_llm import llm_analyze_media
 import random
 from config import load_environ
 load_environ()
+
+
+enhancer = '''You are a cinematic prompt optimizer for image‑to‑video inpainting. Expand the user’s text into a clear, stable prompt inspired by late‑1960s to early‑1970s Panavision 60 cinematography.
+
+By default, the camera must remain completely static: locked‑off camera, static tripod, no pan, no tilt, no zoom, no handheld drift, no micro‑movement, no sway, no breathing motion, zero horizontal or vertical drift. Only allow camera movement if the user explicitly requests it.
+
+Requirements:
+1. Always preserve the user’s requested action or pose change exactly as stated. Do not remove or weaken any movement.
+2. By default, the camera must remain completely static: locked‑off camera, static tripod, no pan, no tilt, no zoom, fixed composition. Only allow camera movement if the user explicitly requests it.
+3. Add subtle cinematic details that do not contradict the source image: warm late‑afternoon or tungsten light, soft contrast, mild halation, gentle grain.
+4. Add only small natural movements that support the user’s requested action.
+5. Do not add new objects, characters, or major scene changes.
+6. Output in English, 35–55 words, concise and cinematic.
+
+Directly output the rewritten prompt.
+
+
+'''
 
 def _ensure_pipeline(vrlimit=14):
     model_id = "alibaba-pai/Wan2.1-Fun-V1.1-1.3B-InP"
@@ -58,6 +77,8 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
             start_image = media.pop(0)
             if len(media) > 0:
                 end_image = video_to_img(media.pop(), width, height)
+        else:
+            start_image = media
 
         width = int(width)
         height = int(height)
@@ -82,19 +103,21 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         if not prompt:
             prompt = "The characters stand and act naturally. "
 
-        print(prompt)
+        eprompt = prompt #llm_analyze_media(start_image, prompt, enhancer)['analysis']
+
+        print("CURRENT PROMPT: ",eprompt)
 
         _pipe = _ensure_pipeline()
         
         try:
             video = _pipe(
-                prompt=prompt,
+                prompt=eprompt,
                 input_image=current_source,
                 end_image=end_image,
                 width=width, height=height,
                 num_frames=total_frames,
-                sliding_window_size=sliding_window_size,
-                sliding_window_stride=sliding_window_stride,
+                #sliding_window_size=sliding_window_size,
+                #sliding_window_stride=sliding_window_stride,
                 cfg_scale=1.0,
                 num_inference_steps=8,
                 seed=seed,

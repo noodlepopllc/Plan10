@@ -15,7 +15,7 @@ SEED=$RANDOM
 shot_2char() { # <bg> <charA> <charB> <shot> <gaze> <mood> <exprA> <exprB> <out>
     local out="$OUTDIR/${WIDTH}_${HEIGHT}_$9.png"
     if [[ ! -f "$out" ]]; then
-        python lib/image_edit.py -C -BG "$1" -CHARS "$2" -CHARS "$3" \
+        python lib/compositor.py -BG "$1" -CHARS "$2" -CHARS "$3" \
             -SHOT "$4" -GAZE "$5" -T "$6" -EXPR "$7" -EXPR "$8" -Z "cute idol pose" -Z "cute idol pose" \
             -O "$out" -E $SEED -H $HEIGHT -W $WIDTH
         touch "$out"
@@ -28,7 +28,7 @@ shot_2char() { # <bg> <charA> <charB> <shot> <gaze> <mood> <exprA> <exprB> <out>
 shot_OTS() { # <bg> <charA> <charB> <shot> <gaze> <mood> <exprA> <exprB> <out>
     local out="$OUTDIR/${WIDTH}_${HEIGHT}_$9.png"
     if [[ ! -f "$out" ]]; then
-        python lib/image_edit.py -C -BG "$1" -CHARS "$2" -CHARS "$3" \
+        python lib/compositor.py -BG "$1" -CHARS "$2" -CHARS "$3" \
             -SHOT "$4" -GAZE "$5" -T "$6" -EXPR "$7" -EXPR "$8" \
             -O "$out" -E $SEED -H $HEIGHT -W $WIDTH
         touch "$out"
@@ -40,7 +40,7 @@ shot_OTS() { # <bg> <charA> <charB> <shot> <gaze> <mood> <exprA> <exprB> <out>
 shot_1char() { # <bg> <char> <shot> <gaze> <mood> <expr> <out>
     local out="$OUTDIR/${WIDTH}_${HEIGHT}_$7.png"
     if [[ ! -f "$out" ]]; then
-        python lib/image_edit.py -C -BG "$1" -CHARS "$2" \
+        python lib/compositor.py -BG "$1" -CHARS "$2" \
             -SHOT "$3" -GAZE "$4" -T "$5" -EXPR "$6" \
             -O "$out" -E $SEED -H $HEIGHT -W $WIDTH
         touch "$out"
@@ -52,12 +52,12 @@ shot_1char() { # <bg> <char> <shot> <gaze> <mood> <expr> <out>
 
 # ─── SHOTS ───
 echo "=== MASTER ==="
-shot_2char "$BG" "$A" "$B" "two_shot_close" "at_each_other" "intimate" "smiling" "neutral" "master_close"
-shot_2char "$BG_REV" "$B" "$A" "two_shot_close" "at_each_other" "intimate" "smiling" "neutral" "master_close_rev"
+shot_2char "$BG" "$A" "$B" "two_shot_close" "at_each_other" "" "neutral" "neutral" "master_close"
+shot_2char "$BG_REV" "$B" "$A" "two_shot_close" "at_each_other" "" "neutral" "neutral" "master_close_rev"
 
 echo "=== OVER-SHOULDER ==="
-shot_OTS "$BG_REV" "$A" "$B" "over_shoulder" "a_to_b" "tense" "" "surprised" "ots_A_to_B"
-shot_OTS "$BG" "$B" "$A" "over_shoulder" "a_to_b" "tense" "" "angry" "ots_B_to_A"
+shot_OTS "$BG_REV" "$A" "$B" "over_shoulder" "a_to_b" "" "" "neutral" "ots_A_to_B"
+shot_OTS "$BG" "$B" "$A" "over_shoulder" "a_to_b" "" "" "neutral" "ots_B_to_A"
 
 echo "=== CLOSEUPS & REACTIONS ==="
 shot_1char "$BG" "$A" "closeup_single" "a_to_b" "determined" "determined" "reaction_A"

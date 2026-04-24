@@ -4,6 +4,8 @@ import torch
 import os
 from image_analysis import AnalyzeImage, EnhancePrompt
 from config import load_environ
+from PIL import Image
+from PIL.PngImagePlugin import PngInfo
 
 load_environ()
 
@@ -55,16 +57,74 @@ class ImageGen(object):
         torch.cuda.empty_cache()
 
 def GenerateImage(prompt='', output='tmp.png', width=1328, height=1328, seed=42):
-    prompt = EnhancePrompt('',prompt,'system/QwenImage.txt')
+    #prompt = EnhancePrompt('',prompt,'system/QwenImage.txt')['analysis']
     gen = ImageGen()
-    status = gen.generate(prompt['analysis'], output, int(width), int(height), int(seed))
+    status = gen.generate(prompt, output, int(width), int(height), int(seed))
     del gen
     status['description'] = ''
     if os.environ['BATCH'] == 'False':
         analysis = AnalyzeImage(output, "Briefly describe this image, no more than 100 words")
         status['description'] = analysis['analysis']
-    status['prompt'] = prompt['analysis']
+    status['prompt'] = prompt
     return status
+
+def add_metadata_char(imgpath, prompt='', seed=-1):
+    target_image = Image.open(imgpath)
+    metadata = PngInfo()
+    combined_prompt = (
+        '''
+        Describe ONLY clearly visible traits. Return a single comma-separated string in this exact order: 
+        age, ethnicity, skin tone, face shape, jawline, cheekbones, eyes, eyebrows, nose, lips, 
+        hair length/color/texture, hair style, hairline, eyewear, clothing.
+        Rules:
+        - Be accurate. Do NOT guess. If a trait isn't obvious, write 'neutral'.
+        - Age: child, youth, young adult, adult, elderly, neutral
+        - Ethnicity: east asian, south asian, middle eastern, african, european, latinx, neutral
+        - Skin tone: fair, light, medium, tan, deep, neutral
+        - Face shape: oval, round, heart, square, long, neutral
+        - Jawline: soft, defined, sharp, angular, neutral
+        - Cheekbones: low, medium, high, neutral
+        - Eyes: almond, round, narrow, wide-set, neutral
+        - Eyebrows: straight, arched, thick, thin, neutral
+        - Nose: small, medium, large, narrow, wide, neutral
+        - Lips: thin, medium, full, neutral
+        - Hair length/color/texture: short/medium/long + color + straight/wavy/curly, or 'neutral'
+        - Hair style: ponytail, bun, braid, tied-back, loose, half-up, bob, pixie, or 'neutral'
+        - Hairline: straight, widow's peak, rounded, neutral
+        - Eyewear: 'preserve glasses' if clearly wearing glasses, otherwise 'none'
+        - Clothing: yellow sundress, white tshirt, blue jeans, red sneakers, etc.
+
+        Example:
+        "adult, european, light, oval, defined jawline, high cheekbones, almond eyes, arched brows, 
+        medium nose, full lips, long brown wavy hair, low ponytail, straight hairline, none, navy uniform"
+
+        Respond ONLY with the string.
+        ''')
+
+    analysis = AnalyzeImage(imgpath, combined_prompt)
+    raw = analysis['analysis'].strip().strip('"').strip("'")
+    
+    # Clean & filter without regex
+    parts = [p.strip() for p in raw.split(",") if p.strip()]
+    # Remove "none"/"no glasses" so diffusion doesn't accidentally render them
+    cleaned = [p for p in parts if p.lower() not in ["none", "no glasses"]]
+    clean_string = ", ".join(cleaned)
+    metadata.add_text("Description", clean_string)
+    metadata.add_text("Prompt", prompt)
+    metadata.add_text("Seed", str(seed))
+    target_image.save(imgpath, pnginfo=metadata)
+    return clean_string
+
+def add_metadata_loc(imgpath, prompt='', seed=-1):
+    target_image = Image.open(imgpath)
+    metadata = PngInfo()
+    bg_analysis = AnalyzeImage(imgpath, "Description, Style, lighting, weather in <15 words.")
+    bg_desc = bg_analysis['analysis'].strip()
+    metadata.add_text("Description", bg_desc)
+    metadata.add_text("Prompt", prompt)
+    metadata.add_text("Seed", str(seed))
+    target_image.save(imgpath, pnginfo=metadata)
+    return bg_desc
 
 def CreateCharacterSheet(prompt='', output='character_tmp.png',seed=-1):
     seed=int(seed)
@@ -77,8 +137,10 @@ def CreateCharacterSheet(prompt='', output='character_tmp.png',seed=-1):
     gen = ImageGen()
     status = gen.generate(prompt, output, 1328, 1328, seed)
     del gen
-    analysis = AnalyzeImage(output, "Briefly describe this image, no more than 100 words")
-    status['description'] = analysis['analysis']
+    status['description'] = add_metadata_char(output, prompt, seed)
+    if os.environ['BATCH'] == 'False':
+        analysis = AnalyzeImage(output, "Briefly describe this image, no more than 100 words")
+        status['description'] = analysis['analysis']
     status['prompt'] = prompt
     return status
 
@@ -102,10 +164,48 @@ def CreateBackground(prompt='', output='location_tmp.png',seed=-1):
     gen = ImageGen()
     status = gen.generate(final_prompt, output, 1328, 1328, seed)
     del gen
-    analysis = AnalyzeImage(output, "Briefly describe this image, no more than 100 words")
-    status['description'] = analysis['analysis']
+    status['description'] = add_metadata_loc(output, final_prompt, seed)
+    if os.environ['BATCH'] == 'False':
+        analysis = AnalyzeImage(output, "Briefly describe this image, no more than 100 words")
+        status['description'] = analysis['analysis']
     status['prompt'] = final_prompt
     return status
+
+
+def GenerateRoomBackdrop(
+    source_image: str,
+    zone: str = "new angle of same room",
+    output: str = "room_backdrop.png",
+    width: int = 1328,
+    height: int = 1328,
+    seed: int = -1
+):
+    if not os.path.exists(source_image):
+        raise FileNotFoundError(f"Source not found: {source_image}")
+
+    # Step 1 — Extract global room identity
+    analysis_prompt = (
+        "Describe the room in 4 parts:\n"
+        "1. ENV: Room type, style, materials, color palette, lighting quality/direction.\n"
+        "2. ARCH: Walls, windows, doors, ceiling shape, floor material.\n"
+        "3. FURNITURE: Visible furniture type, style, placement.\n"
+        "4. CONTINUITY: What other areas of this room likely exist.\n"
+        "Keep under 140 words."
+    )
+    analysis = AnalyzeImage(source_image, analysis_prompt)
+    room_desc = analysis['analysis'].strip()
+
+    # Step 2 — Generate a new backdrop inside the same room
+    prompt = (
+        f"{room_desc}\n\n"
+        f"Generate a clean backdrop inside the SAME ROOM, showing {zone}.\n"
+        "PRESERVE: lighting direction/quality, materials, color palette, architectural style.\n"
+        "ALLOW: new furniture or features that logically belong in this room.\n"
+        "NO CHARACTERS. NO TEXT. Photorealistic, cinematic, consistent with the original room."
+    )
+
+    return GenerateImage(prompt=prompt, output=output, width=width, height=height, seed=seed)
+
 
 
 def GenerateReverseBackground(source_image: str, output: str = "reverse_bg.png", width: int = 1328, height: int = 1328, seed: int = -1):
@@ -232,10 +332,14 @@ if __name__ == '__main__':
     parser.add_argument('-C', '--charactersheet', action='store_true')
     parser.add_argument('-L', '--location', action='store_true')
     parser.add_argument('-R', '--gen-reverse', action='store_true', help='Generate reverse-angle background (T2I)')
+    parser.add_argument('-Z', '--zone', type=str, default=None, help='Request different zone other than reverse')
     args = parser.parse_args()
     if args.gen_reverse:
         if not args.images: print("ERROR: -I required for reverse gen"); exit(1)
-        print(GenerateReverseBackground(args.images[0], args.output, args.width, args.height, args.seed))
+        if args.zone:
+            print(GenerateRoomBackdrop(args.images[0], args.zone, args.output, args.width, args.height, args.seed))
+        else:
+            print(GenerateReverseBackground(args.images[0], args.output, args.width, args.height, args.seed))
     elif args.charactersheet:
         print(CreateCharacterSheet(args.prompt, args.output, args.seed))
     elif args.location:
