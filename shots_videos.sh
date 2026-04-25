@@ -19,7 +19,7 @@ shot_2char() { # <bg> <charA> <charB> <shot> <gaze> <mood> <exprA> <exprB> <out>
     if [[ ! -f "$out_vid" ]]; then
         python lib/image_analysis.py -I "$out" -E system/I2V_13BV2.txt -O tmp.txt
         local prompt=$(< "tmp.txt")
-        python lib/image_to_video.py -P "$prompt" -I "$out" -O "$out_vid" -W $VWIDTH -H $VHEIGHT -S $SEED -D 5.0
+        python lib/image_to_video.py -P "$prompt" -I "$out" -O "$out_vid" -W $VWIDTH -H $VHEIGHT -S $SEED -D 3.0
     else
         echo "⏭️ Skipping $out (already exists)"
     fi
@@ -32,7 +32,7 @@ shot_OTS() { # <bg> <charA> <charB> <shot> <gaze> <mood> <exprA> <exprB> <out>
     if [[ ! -f "$out_vid" ]]; then
         python lib/image_analysis.py -I "$out" -E system/I2V_13BV2.txt -O tmp.txt
         local prompt=$(< "tmp.txt")
-        python lib/image_to_video.py -P "$prompt" -I "$out" -O "$out_vid" -W $VWIDTH -H $VHEIGHT -S $SEED -D 5.0
+        python lib/image_to_video.py -P "$prompt" -I "$out" -O "$out_vid" -W $VWIDTH -H $VHEIGHT -S $SEED -D 3.0
     else
         echo "⏭️ Skipping $out (already exists)"
     fi
@@ -44,7 +44,7 @@ shot_1char() { # <bg> <char> <shot> <gaze> <mood> <expr> <out>
     if [[ ! -f "$out_vid" ]]; then
         python lib/image_analysis.py -I "$out" -E system/I2V_13BV2.txt -O tmp.txt
         local prompt=$(< "tmp.txt")
-        python lib/image_to_video.py -P "$prompt" -I "$out" -O "$out_vid" -W $VWIDTH -H $VHEIGHT -S $SEED -D 5.0
+        python lib/image_to_video.py -P "$prompt" -I "$out" -O "$out_vid" -W $VWIDTH -H $VHEIGHT -S $SEED -D 3.0
     else
         echo "⏭️ Skipping $out (already exists)"
     fi
