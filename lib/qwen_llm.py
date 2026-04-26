@@ -158,6 +158,58 @@ def llm_analyze_media(media, prompt="Describe this.", system=None, max_tokens=10
     
     return {"status": "success", "analysis": output_text.strip()}
 
+# ─────────────────────────────────────────
+# 3) Narrative → Pipeline Generator
+# ─────────────────────────────────────────
+def llm_generate_pipeline(story: str, system_file: str = "system/narrative.txt", max_tokens: int = 4096, output_path: str = None):
+    """Generate an alias-driven pipeline script using narrative.txt as the system prompt."""
+    sys_prompt = Path(system_file).read_text().strip()
+    if not sys_prompt:
+        raise ValueError(f"System prompt file '{system_file}' is empty or missing.")
+
+    processor, model = _load_llm()
+
+    messages = [
+        {"role": "system", "content": [{"type": "text", "text": sys_prompt}]},
+        {"role": "user", "content": [{"type": "text", "text": f"INPUT: {story.strip()}\nOUTPUT:"}]}
+    ]
+
+    inputs = processor.apply_chat_template(
+        messages,
+        tokenize=True,
+        add_generation_prompt=True,
+        return_tensors="pt",
+        return_dict=True,
+        enable_thinking=False
+    ).to(model.device)
+
+    with torch.no_grad():
+        out = model.generate(
+            **inputs,
+            max_new_tokens=max_tokens,
+            temperature=0.3,      # 🔑 Strict formatting
+            top_p=0.9,
+            do_sample=True,
+            pad_token_id=processor.tokenizer.eos_token_id,
+        )
+
+    trimmed = out[0][inputs["input_ids"].shape[1]:]
+    text = processor.decode(trimmed, skip_special_tokens=True).strip()
+
+    _unload_llm(model, processor)
+
+    # Strip markdown code blocks if the model wraps the output
+    if text.startswith("```"):
+        text = text.split("```", 2)[1].strip()
+        if text.lower().startswith("text"):
+            text = text[4:].strip()
+
+    if output_path:
+        Path(output_path).write_text(text)
+        print(f"✅ Pipeline saved to: {output_path}")
+
+    return text
+
 
 
 

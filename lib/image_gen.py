@@ -138,9 +138,6 @@ def CreateCharacterSheet(prompt='', output='character_tmp.png',seed=-1):
     status = gen.generate(prompt, output, 1328, 1328, seed)
     del gen
     status['description'] = add_metadata_char(output, prompt, seed)
-    if os.environ['BATCH'] == 'False':
-        analysis = AnalyzeImage(output, "Briefly describe this image, no more than 100 words")
-        status['description'] = analysis['analysis']
     status['prompt'] = prompt
     return status
 
@@ -165,9 +162,6 @@ def CreateBackground(prompt='', output='location_tmp.png',seed=-1):
     status = gen.generate(final_prompt, output, 1328, 1328, seed)
     del gen
     status['description'] = add_metadata_loc(output, final_prompt, seed)
-    if os.environ['BATCH'] == 'False':
-        analysis = AnalyzeImage(output, "Briefly describe this image, no more than 100 words")
-        status['description'] = analysis['analysis']
     status['prompt'] = final_prompt
     return status
 

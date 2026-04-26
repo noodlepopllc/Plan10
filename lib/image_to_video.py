@@ -10,6 +10,7 @@ from qwen_llm import llm_analyze_media
 import random
 from config import load_environ
 load_environ()
+from image_gen import GenerateImage
 
 
 enhancer = '''You are a cinematic prompt optimizer for image‑to‑video inpainting. Expand the user’s text into a clear, stable prompt inspired by late‑1960s to early‑1970s Panavision 60 cinematography.
@@ -45,7 +46,6 @@ def _ensure_pipeline(vrlimit=14):
     }
 
     _pipe = None
-    _STEPS, _CFG = 4, 1.0
 
     _pipe = WanVideoPipeline.from_pretrained(
         torch_dtype=torch.bfloat16,
@@ -65,7 +65,7 @@ def _ensure_pipeline(vrlimit=14):
 
 
 def GenerateVideo(prompt='', media='', output='output.mp4', 
-                  duration_sec=10, width=832, height=480, seed=-1):
+                  duration_sec=5, width=832, height=480, seed=-1):
 
         
         if isinstance(prompt, list):
@@ -73,6 +73,11 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         
         start_image = ''
         end_image = None
+
+        if not media:
+            GenerateImage(prompt = prompt, output='first_frame.png', width=width, height=height, seed=seed)
+            media='first_frame.png'
+
         if isinstance(media, list):
             start_image = media.pop(0)
             if len(media) > 0:
@@ -85,8 +90,6 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         seed = int(seed)
         duration_sec = int(duration_sec)
         fps = 15
-        sliding_window_size=81
-        sliding_window_stride=32
 
         if seed == -1:
             seed = random.randint(0,1000000)
@@ -94,7 +97,6 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         total_frames = (duration_sec * 16) + 1
 
         print(f"\n🎬 Generating {total_frames/fps:.1f}s video ({total_frames} frames)")
-        #print(f"   Sliding window: size={sliding_window_size}, stride={sliding_window_stride}")
         print(f"   Resolution: {width}x{height}")
 
         current_source = video_to_img(start_image, width, height)
@@ -115,9 +117,8 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
                 input_image=current_source,
                 end_image=end_image,
                 width=width, height=height,
+                tiled=True,
                 num_frames=total_frames,
-                #sliding_window_size=sliding_window_size,
-                #sliding_window_stride=sliding_window_stride,
                 cfg_scale=1.0,
                 num_inference_steps=8,
                 seed=seed,
@@ -197,9 +198,9 @@ if __name__ == "__main__":
     parser.add_argument('-P', '--prompt', type=str, default='', required=False)
     parser.add_argument('-I', '--images', action='append', default=[], help='Input images')
     parser.add_argument('-O', '--output', type=str, default='output.mp4')
-    parser.add_argument('-D', '--duration', type=float, default=10)
-    parser.add_argument('-W', '--width', type=int, default=768)
-    parser.add_argument('-H', '--height', type=int, default=448)
+    parser.add_argument('-D', '--duration', type=float, default=5)
+    parser.add_argument('-W', '--width', type=int, default=832)
+    parser.add_argument('-H', '--height', type=int, default=480)
     parser.add_argument('-S', '--seed', type=int, default=42)
     args = parser.parse_args()
     

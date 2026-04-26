@@ -1,0 +1,43 @@
+>> ALIAS: Alice_Sheet
+create a character sheet american gothic style, of a sexy young adult version of Alice from 'Alice in Wonderland' in a version of her iconic dress with the blue white apron, 
+this version is tight fitting and exposes lots of bare skin accentuating her sexiness, the skirt portion is short, the top is low cut, 
+cute black kitten heels, black ribbon tied in her hair, garter belt, stockings, 8K, photorealistic. Seed: 12345
+
+>> ALIAS: Alice_Background_Indoor
+create a background from a scene in the book with a table, fairy tale, vibrant colors, realistic fantasy indoor scene from 'Alice in Wonderland'. Seed: 12345
+
+>> ALIAS: Alice_Background_Outdoor
+create a background from a scene in the book with large mushrooms, fairy tale, vibrant colors, realistic fantasy outdoor scene from 'Alice in Wonderland'. Seed: 12345
+
+>> ALIAS: Alice_Composite
+create a composite by combining Alice_Sheet asset with Alice_Background_Indoor asset she examines a table. MUST SET HEIGHT AND WIDTH, Height: 832, Width: 480, Seed: 12345
+
+>> ALIAS: Alice_Composite_Outside
+create a composite by combining Alice_Sheet asset with Alice_Background_Outdoor asset her she is looking at a mushroom. MUST SET HEIGHT AND WIDTH, Height: 832, Width: 480, Seed: -1
+
+>> ALIAS: Alice_Closeup
+create a composite shot of a closeup of Alice_Sheet asset smiling expression in the Alice_Background_Outdoor asset MUST SET HEIGHT AND WIDTH, Height: 832, Width: 480, Seed: 12345
+
+>> ALIAS: Alice_Closeup_Indoor
+create a composite shot of a closeup of Alice_Sheet asset her mouth is open and eyes are wide in shock expression in the Alice_Background_Indoor asset MUST SET HEIGHT AND WIDTH, Height: 832, Width: 480, Seed: 12345
+
+>> ALIAS: Alice_Film
+Create a 3-second video using the Alice_Composite asset, action she touches the table. MUST SET HEIGHT AND WIDTH, Height: 832, Width: 480, Seed: 12345
+
+>> ALIAS: Alice_Film_Outdoor
+create an image to video 3 second duration using Alice_Composite_Outside asset, action she is examining a mushroom MUST SET HEIGHT AND WIDTH, Height: 832, Width: 480, Seed: -1
+
+>> ALIAS: Alice_Voice
+design_voice, female young woman voice with american accent.
+
+>> ALIAS: Alice_Outdoor_Voice:
+clone_voice, use the description of Alice_Background_Outdoor asset and Alias_Voice asset to generate a short dialog about where she is at, keep it close to 5 seconds in length (12 - 15 words) Duration: 5 seconds
+
+>> ALIAS: Alice_Indoor_Voice:
+clone_voice, use the description of Alice_Background_Indoor asset and Alias_Voice asset to generate a short dialog about where she is at, keep it close to 5 seconds in length (12 - 15 words) Duration: 5 seconds
+
+>> ALIAS: Alice_Dialog
+create a dialog_to_video Alice_Outdoor_voice with Alice_Closeup MUST SET HEIGHT AND WIDTH, Height: 832, Width: 480, Seed: 12345
+
+>> ALIAS: Alice_Dialog_Indoor
+create a dialog_to_video Alice_Indoor_Voice with Alice_Closeup_Indoor MUST SET HEIGHT AND WIDTH, Height: 832, Width: 480, Seed: 12345

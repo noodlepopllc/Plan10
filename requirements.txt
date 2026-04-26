@@ -6,3 +6,6 @@ transformers
 bitsandbytes
 opencv-python
 uniface
+omnivoice
+librosa
+faster-whisper

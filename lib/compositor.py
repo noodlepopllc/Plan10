@@ -1,5 +1,6 @@
 from PIL import Image, PngImagePlugin
 from image_edit import EditImage
+from image_analysis import AnalyzeImage
 import os
 
 def CompositeScene(
@@ -89,7 +90,67 @@ def CompositeScene(
     img.save(output, pnginfo=meta)
 
     status.update({"action": action, "prompt": task})
+    if os.environ['BATCH'] == 'False':
+        analysis = AnalyzeImage(output, "Briefly describe this image, no more than 100 words")
+        status['description'] = analysis['analysis']
+    status['prompt'] = task
     return status
+
+def CompositeSceneSchema():
+    return {
+        "type": "function",
+        "function": {
+            "name": "composite_scene",
+            "description": "Composes 1 or 2 characters into a background reference for storyboarding. Automatically handles lighting matching, framing, and action-aware posing (Frame 0 anticipation) for downstream video generation.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "background_path": {
+                        "type": "string",
+                        "description": "Path to the reference background image (must contain 'Description' metadata)."
+                    },
+                    "characters": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "minItems": 1,
+                        "maxItems": 2,
+                        "description": "List of 1 or 2 paths to character reference images (must contain 'Description' metadata)."
+                    },
+                    "shot_type": {
+                        "type": "string",
+                        "enum": ["medium", "closeup", "profile_left", "profile_right", "ots", "two_shot", "wide"],
+                        "default": "medium",
+                        "description": "Camera framing and composition type."
+                    },
+                    "action": {
+                        "type": "string",
+                        "description": "Description of the 'anticipation pose' (Frame 0) for the characters. This defines the initial state for video motion (e.g., 'hair swaying back', 'weight shifted to step')."
+                    },
+                    "output": {
+                        "type": "string",
+                        "default": "composite.png",
+                        "description": "Output filename."
+                    },
+                    "seed": {
+                        "type": "integer",
+                        "default": -1,
+                        "description": "Random seed for reproducibility. -1 for random."
+                    },
+                    "width": {
+                        "type": "integer",
+                        "default": 832,
+                        "description": "Output image width."
+                    },
+                    "height": {
+                        "type": "integer",
+                        "default": 480,
+                        "description": "Output image height."
+                    }
+                },
+                "required": ["background_path", "characters", "action"]
+            }
+        }
+    }
 
 if __name__ == '__main__':
     import argparse

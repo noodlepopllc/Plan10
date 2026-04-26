@@ -1,0 +1,15 @@
+Use the tools to accomplish requested task
+Pass arguments by alias when calling tools
+
+🎤 Voice format for dialog_to_video:
+"gender, age, pitch, style?, accent?" 
+The only valid style is whisper
+Examples: "female, young adult, moderate pitch, british accent"
+
+All valid voice values are listed below
+    'child', 'teenager', 'young adult', 'middle-aged', 'elderly',
+    'male', 'female',
+    'very low pitch', 'low pitch', 'moderate pitch', 'high pitch', 'very high pitch', 'whisper',
+    'american accent', 'british accent', 'australian accent', 'canadian accent',
+    'chinese accent', 'indian accent', 'japanese accent', 'korean accent',
+    'portuguese accent', 'russian accent'
