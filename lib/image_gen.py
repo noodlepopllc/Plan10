@@ -165,43 +165,6 @@ def CreateBackground(prompt='', output='location_tmp.png',seed=-1):
     status['prompt'] = final_prompt
     return status
 
-
-def GenerateRoomBackdrop(
-    source_image: str,
-    zone: str = "new angle of same room",
-    output: str = "room_backdrop.png",
-    width: int = 1328,
-    height: int = 1328,
-    seed: int = -1
-):
-    if not os.path.exists(source_image):
-        raise FileNotFoundError(f"Source not found: {source_image}")
-
-    # Step 1 — Extract global room identity
-    analysis_prompt = (
-        "Describe the room in 4 parts:\n"
-        "1. ENV: Room type, style, materials, color palette, lighting quality/direction.\n"
-        "2. ARCH: Walls, windows, doors, ceiling shape, floor material.\n"
-        "3. FURNITURE: Visible furniture type, style, placement.\n"
-        "4. CONTINUITY: What other areas of this room likely exist.\n"
-        "Keep under 140 words."
-    )
-    analysis = AnalyzeImage(source_image, analysis_prompt)
-    room_desc = analysis['analysis'].strip()
-
-    # Step 2 — Generate a new backdrop inside the same room
-    prompt = (
-        f"{room_desc}\n\n"
-        f"Generate a clean backdrop inside the SAME ROOM, showing {zone}.\n"
-        "PRESERVE: lighting direction/quality, materials, color palette, architectural style.\n"
-        "ALLOW: new furniture or features that logically belong in this room.\n"
-        "NO CHARACTERS. NO TEXT. Photorealistic, cinematic, consistent with the original room."
-    )
-
-    return GenerateImage(prompt=prompt, output=output, width=width, height=height, seed=seed)
-
-
-
 def GenerateReverseBackground(source_image: str, output: str = "reverse_bg.png", width: int = 1328, height: int = 1328, seed: int = -1):
     if not os.path.exists(source_image): 
         raise FileNotFoundError(f"Source not found: {source_image}")

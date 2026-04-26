@@ -88,7 +88,7 @@ class ImageEdit(object):
     def __del__(self):
         del self.pipe 
         gc.collect()
-        if torch.cuda:
+        if torch.cuda.is_available():  # ✅ Was `if torch.cuda:` (always truthy)
             torch.cuda.empty_cache()
 
 # ─────────────────────────────────────────────────────────────
@@ -126,6 +126,35 @@ def EditImage(prompt='', images=[''], output='tmp_edit.png', width=1328, height=
     status = edit.generate(prompt, images, output, int(width), int(height), int(seed))
     del edit
     return status
+
+def GenerateRoomBackdrop(
+    source_image: str,
+    zone: str = "the opposite side of the room",
+    output: str = "room_backdrop.png",
+    width: int = 1328,
+    height: int = 1328,
+    seed: int = -1
+):
+    if not os.path.exists(source_image):
+        raise FileNotFoundError(f"Source not found: {source_image}")
+
+    prompt = (
+        f"Reposition the camera to frame {zone} inside this exact same room. "
+        "STRICTLY PRESERVE: lighting direction/intensity, wall & floor textures, color grading, "
+        "architectural style, window/door placements, and overall atmosphere. "
+        "SEAMLESSLY extend or reframe the scene to match the existing perspective. "
+        "ALLOW: furniture/fixtures that logically belong in this space. "
+        "NO characters, NO text, NO style drift. Photorealistic cinematic environment shot."
+    )
+
+    return EditImage(
+        prompt=prompt,
+        images=[source_image],
+        output=output,
+        width=width,
+        height=height,
+        seed=seed
+    )
 
 
 

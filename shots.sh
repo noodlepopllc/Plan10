@@ -22,7 +22,7 @@ shot() {
         echo "🎨 Generating T2I: $out_suffix"
         
         # Always pass both chars. Your Python patch handles routing/ignoring.
-        python lib/compositorV2.py -B "$bg" -C "$char1" -C "$char2" \
+        python lib/compositor.py -B "$bg" -C "$char1" -C "$char2" \
             -S "$shot_type" -A "$action" \
             -O "$out" -E "$SEED" -H "$HEIGHT" -W "$WIDTH" || { echo "❌ Compositor failed: $out_suffix"; exit 1; }
             
