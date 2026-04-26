@@ -29,7 +29,7 @@ shot() {
         touch "$out"  # ✅ Refreshes OS thumbnail cache
 
         echo "🎬 Generating I2V: $out_suffix"
-        python lib/image_to_video.py -P "$vid_prompt" -I "$out" -O "$out_vid" -W "$WIDTH" -H "$HEIGHT" -S "$SEED" -D 3.0 || { echo "❌ I2V failed: $out_suffix"; exit 1; }
+        python lib/image_to_video.py -P "$vid_prompt" -I "$out" -O "$out_vid" -W "$WIDTH" -H "$HEIGHT" -S "$SEED" -D 5.0 || { echo "❌ I2V failed: $out_suffix"; exit 1; }
         
         echo "✅ $out_suffix | T2I: $action | I2V: $vid_prompt" >> "$OUTDIR/run_manifest.txt"
     else

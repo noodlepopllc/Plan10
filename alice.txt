@@ -22,10 +22,10 @@ create a composite shot of a closeup of Alice_Sheet asset smiling expression in 
 create a composite shot of a closeup of Alice_Sheet asset her mouth is open and eyes are wide in shock expression in the Alice_Background_Indoor asset MUST SET HEIGHT AND WIDTH, Height: 832, Width: 480, Seed: 12345
 
 >> ALIAS: Alice_Film
-Create a 3-second video using the Alice_Composite asset, action she touches the table. MUST SET HEIGHT AND WIDTH, Height: 832, Width: 480, Seed: 12345
+Create a 5-second video using the Alice_Composite asset, action she touches the table. MUST SET HEIGHT AND WIDTH, Height: 832, Width: 480, Seed: 12345
 
 >> ALIAS: Alice_Film_Outdoor
-create an image to video 3 second duration using Alice_Composite_Outside asset, action she is examining a mushroom MUST SET HEIGHT AND WIDTH, Height: 832, Width: 480, Seed: -1
+create an image to video 5 second duration using Alice_Composite_Outside asset, action she is examining a mushroom MUST SET HEIGHT AND WIDTH, Height: 832, Width: 480, Seed: -1
 
 >> ALIAS: Alice_Voice
 design_voice, female young woman voice with american accent.
