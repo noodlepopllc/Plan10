@@ -8,7 +8,7 @@ def transcribe(path):
 
     model_size = "large-v3"
 
-    model = WhisperModel(model_size, device="cuda", compute_type="float16")
+    model = WhisperModel(model_size, device="cpu", compute_type="int8")
 
     segments, info = model.transcribe(path, beam_size=5)
 
