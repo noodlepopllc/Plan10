@@ -30,8 +30,10 @@ Directly output the rewritten prompt.
 
 '''
 
+model_id = "alibaba-pai/Wan2.1-Fun-V1.1-1.3B-InP"
+model_id = "alibaba-pai/Wan2.1-Fun-V1.1-14B-InP"
+
 def _ensure_pipeline(vrlimit=14):
-    model_id = "alibaba-pai/Wan2.1-Fun-V1.1-1.3B-InP"
 
     # === Global Pipeline Setup (Wan 2.1 I2V) ===
     vram_config = {
@@ -60,7 +62,10 @@ def _ensure_pipeline(vrlimit=14):
         vram_limit=vrlimit,
     )
 
-    _pipe.load_lora(_pipe.dit, './loras/loras_accelerators/Wan21_CausVid_bidirect2_T2V_1_3B_lora_rank32.safetensors', alpha=1.0)
+    if '1.3B' in model_id:
+        _pipe.load_lora(_pipe.dit, './loras/loras_accelerators/Wan21_CausVid_bidirect2_T2V_1_3B_lora_rank32.safetensors', alpha=1.0)
+    else:
+        _pipe.load_lora(pipe.dit, './loras/wan2.1_i2v_lora_rank64_lightx2v_4step.safetensors', alpha=1.0)
     return _pipe
 
 
@@ -110,6 +115,10 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         print("CURRENT PROMPT: ",eprompt)
 
         _pipe = _ensure_pipeline()
+
+        num_steps = 8  if '1.3B' in model_id else 4
+
+
         
         try:
             video = _pipe(
@@ -120,7 +129,7 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
                 tiled=True,
                 num_frames=total_frames,
                 cfg_scale=1.0,
-                num_inference_steps=8,
+                num_inference_steps=num_steps,
                 seed=seed,
             )
 
