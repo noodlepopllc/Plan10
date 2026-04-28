@@ -94,12 +94,12 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         height = int(height)
         seed = int(seed)
         duration_sec = int(duration_sec)
-        fps = 15
+        fps = 16
 
         if seed == -1:
             seed = random.randint(0,1000000)
 
-        total_frames = (duration_sec * 16) + 1
+        total_frames = (duration_sec * fps) + 1
 
         print(f"\n🎬 Generating {total_frames/fps:.1f}s video ({total_frames} frames)")
         print(f"   Resolution: {width}x{height}")
@@ -133,7 +133,7 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
                 seed=seed,
             )
 
-            save_video(video, output, fps=15, quality=5)
+            save_video(video, output, fps=fps, quality=5)
             description = ''
                 
             # Post-processing
