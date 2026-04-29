@@ -20,7 +20,7 @@ create_character_sheet prompt="<appearance, clothing, expression>" Height: 832, 
 composite_scene combining=<bg_alias>, <char_alias>, shot_type="<medium|closeup|profile_left|profile_right|ots|two_shot|wide>", action="<anticipation pose>" Height: 832, Width: 480, Seed: -1
 
 >> ALIAS: voice_<name>
-<design_voice/clone_voice> voice="<timbre, pitch, accent>" OR audio="<MASTER_REF>", text="<in-scene spoken dialog only>"
+<design_voice/clone_voice> voice="<gender,timbre, pitch, accent>" OR audio="<MASTER_REF>", text="<in-scene spoken dialog only>"
 
 >> ALIAS: dialog_<name>
 dialog_to_video using=<comp_alias>, audio=<voice_alias>, prompt="<facial action, lip sync>" Height: 832, Width: 480, Seed: -1
