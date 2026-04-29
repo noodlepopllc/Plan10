@@ -237,3 +237,19 @@ else:
 # Optional: log which backend is active
 print(f"🤖 [qwen_llm] Active backend: {BACKEND.upper()}")
 
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-M','--media', type=str, default=None, help='media to analyze')
+    parser.add_argument('-P', '--prompt', type=str, default='a beautiful woman tanning at the beach', help='prompt')
+    parser.add_argument('-O', '--output', type=str, default=None, help='optionally save to file')
+    args = parser.parse_args()
+    out = llm_analyze_media(args.media if args.media else '', args.prompt)['analysis']
+    if args.output:
+        from pathlib import Path
+        Path(args.output).write_text(out)
+    else:
+        print(out)
+
+
+
