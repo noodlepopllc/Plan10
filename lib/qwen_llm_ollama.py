@@ -47,12 +47,45 @@ def _encode_image(image_data):
         return base64.b64encode(buf.getvalue()).decode("utf-8")
     return None
 
+import json
+import requests
+
+def _normalize_for_ollama(messages):
+    """Convert OpenAI-style messages to Ollama native format."""
+    normalized = []
+    for msg in messages:
+        content = msg.get("content", "")
+        images = []
+        
+        # Handle OpenAI multimodal list format
+        if isinstance(content, list):
+            text_parts = []
+            for item in content:
+                if item.get("type") == "text":
+                    text_parts.append(item["text"])
+                elif item.get("type") in ("image_url", "image"):
+                    img = item.get("image_url", {}).get("url", item.get("image", ""))
+                    # Strip data URI prefix if present
+                    if img.startswith("data:image"):
+                        img = img.split(",", 1)[1]
+                    images.append(img)
+            content = " ".join(text_parts)
+        
+        msg_dict = {"role": msg["role"], "content": content}
+        if images:
+            msg_dict["images"] = images
+        normalized.append(msg_dict)
+    return normalized
+
 def _call_ollama(messages, max_tokens=8192, temperature=0.7, top_p=0.9, tools=None):
+    # ✅ Convert to Ollama's expected format
+    ollama_messages = _normalize_for_ollama(messages)
+    
     payload = {
         "model": OLLAMA_MODEL,
-        "messages": messages,
+        "messages": ollama_messages,
         "stream": False,
-        "keep_alive": -1,  # 🔑 Keep model in VRAM indefinitely
+        "keep_alive": -1,
         "options": {
             "num_predict": max_tokens,
             "temperature": temperature,
@@ -62,7 +95,15 @@ def _call_ollama(messages, max_tokens=8192, temperature=0.7, top_p=0.9, tools=No
     if tools:
         payload["tools"] = tools
 
+    # 🔍 Debug: uncomment to see exactly what Ollama receives
+    # print(json.dumps(payload, indent=2))
+    
     response = requests.post(f"{OLLAMA_URL}/api/chat", json=payload, timeout=300)
+    
+    if response.status_code == 400:
+        print("❌ Ollama 400 Error Response:", response.text)
+        raise ValueError(f"Bad request to Ollama: {response.text}")
+        
     response.raise_for_status()
     return response.json()
 
