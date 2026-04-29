@@ -130,7 +130,7 @@ def execute_task(task_description, max_steps=15, target_alias=None, initial_ctx=
         messages.pop()  # Remove injected state message
         
         # Parse tool call
-        tool_payload = parse_tool_call(response_clean)
+        tool_payload = parse_tool_response(response_clean)
         if not tool_payload:
             messages.append({"role": "assistant", "content": [{"type": "text", "text": response_clean}]})
             messages.append({"role": "user", "content": [{"type": "text", "text": "Call a tool to proceed."}]})
