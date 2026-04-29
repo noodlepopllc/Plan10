@@ -77,7 +77,7 @@ def _normalize_for_ollama(messages):
         normalized.append(msg_dict)
     return normalized
 
-def _call_ollama(messages, max_tokens=8192, temperature=0.7, top_p=0.9, tools=None):
+def _call_ollama(messages, max_tokens=8192, temperature=0.7, top_p=0.9, tools=None, thinking=False):
     # ✅ Convert to Ollama's expected format
     ollama_messages = _normalize_for_ollama(messages)
     
@@ -85,6 +85,7 @@ def _call_ollama(messages, max_tokens=8192, temperature=0.7, top_p=0.9, tools=No
         "model": OLLAMA_MODEL,
         "messages": ollama_messages,
         "stream": False,
+        "thinking": thinking,
         "keep_alive": -1,
         "options": {
             "num_predict": max_tokens,
