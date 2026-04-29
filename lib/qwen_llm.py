@@ -1,6 +1,10 @@
 # qwen_llm.py
 import os
 
+from config import load_environ
+
+load_environ()
+
 # Read at module import time
 BACKEND = os.environ.get("LLM_BACKEND", "transformers").lower().strip()
 
