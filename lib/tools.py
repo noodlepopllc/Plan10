@@ -94,6 +94,7 @@ class ToolHandler(object):
         return alias
 
     def resolve_asset(self, ref, ctx):
+        OUTPUT_DIR = os.environ['OUTPUT_DIR'] if 'OUTPUT_DIR' in os.environ else 'outputs'
         if not ref: return None
         ref = ref.strip('"').strip("'")
         if os.path.exists(ref): return ref
@@ -103,7 +104,7 @@ class ToolHandler(object):
             p = assets[ref].get("path")
             return p if p and os.path.exists(p) else None
         else: 
-            alt = f'outputs/{ref}'
+            alt = f'{OUTPUT_DIR}/{ref}'
             return alt if os.path.exists(alt) else None
         return None
 
@@ -119,7 +120,6 @@ class ToolHandler(object):
         return "\n".join(lines)
 
     def _handle_success(self, tool_name, filtered, chosen_alias, ctx, result, ext_override=None):
-        os.makedirs("outputs", exist_ok=True)
         base = filtered.get("output", f"output_{int(time.time()*1000)}{ext_override or '.png'}")
         result["output_path"] = base
         result.setdefault("status", "success")
@@ -133,6 +133,7 @@ class ToolHandler(object):
         }
 
     def run_tool(self, tool_name, args, ctx):
+        OUTPUT_DIR = os.environ['OUTPUT_DIR'] if 'OUTPUT_DIR' in os.environ else 'outputs'
         print(f"🔧 EXECUTING: {tool_name}")
         chosen_alias = args.pop('alias', None)
         
@@ -166,56 +167,56 @@ class ToolHandler(object):
                 filtered[key] = resolved
 
         try:
-            os.makedirs("outputs", exist_ok=True)
+            os.makedirs(f"{OUTPUT_DIR}", exist_ok=True)
             ts = int(time.time() * 1000)
             
             if tool_name == "create_character_sheet":
-                filtered['output'] = f"outputs/char_{chosen_alias or ''}_{ts}.png"
+                filtered['output'] = f"{OUTPUT_DIR}/char_{chosen_alias or ''}_{ts}.png"
                 result = CreateCharacterSheet(**filtered)
                 return self._handle_success(tool_name, filtered, chosen_alias, ctx, result)
                 
             elif tool_name == "create_background":
-                filtered['output'] = f"outputs/bg_{chosen_alias or ''}_{ts}.png"
+                filtered['output'] = f"{OUTPUT_DIR}/bg_{chosen_alias or ''}_{ts}.png"
                 result = CreateBackground(**filtered)
                 return self._handle_success(tool_name, filtered, chosen_alias, ctx, result)
 
             elif tool_name == "generate_image":
-                filtered['output'] = f"outputs/gen_{chosen_alias or ''}_{ts}.png"
+                filtered['output'] = f"{OUTPUT_DIR}/gen_{chosen_alias or ''}_{ts}.png"
                 result = GenerateImage(**filtered)
                 return self._handle_success(tool_name, filtered, chosen_alias, ctx, result)
                 
             elif tool_name == "composite_scene":
-                filtered['output'] = f"outputs/comp_{chosen_alias or ''}_{ts}.png"
+                filtered['output'] = f"{OUTPUT_DIR}/comp_{chosen_alias or ''}_{ts}.png"
                 result = CompositeScene(**filtered)
                 return self._handle_success(tool_name, filtered, chosen_alias, ctx, result)
                 
             elif tool_name == "generate_reverse_background":
-                filtered['output'] = f"outputs/reverse_{chosen_alias or ''}_{ts}.png"
+                filtered['output'] = f"{OUTPUT_DIR}/reverse_{chosen_alias or ''}_{ts}.png"
                 result = GenerateReverseBackground(**filtered)
                 return self._handle_success(tool_name, filtered, chosen_alias, ctx, result)
 
             elif tool_name == "edit_image":
-                filtered['output'] = f"outputs/edit_{chosen_alias or ''}_{ts}.png"
+                filtered['output'] = f"{OUTPUT_DIR}/edit_{chosen_alias or ''}_{ts}.png"
                 result = EditImage(**filtered)
                 return self._handle_success(tool_name, filtered, chosen_alias, ctx, result)
                 
             elif tool_name == "image_to_video":
-                filtered['output'] = f"outputs/i2v_{chosen_alias or ''}_{ts}.mp4"
+                filtered['output'] = f"{OUTPUT_DIR}/i2v_{chosen_alias or ''}_{ts}.mp4"
                 result = GenerateVideo(**filtered)
                 return self._handle_success(tool_name, filtered, chosen_alias, ctx, result, ext_override=".mp4")
                 
             elif tool_name == "dialog_to_video":
-                filtered['output'] = f"outputs/s2v_{chosen_alias or ''}_{ts}.mp4"
+                filtered['output'] = f"{OUTPUT_DIR}/s2v_{chosen_alias or ''}_{ts}.mp4"
                 result = GenerateTalkingVideo(**filtered)
                 return self._handle_success(tool_name, filtered, chosen_alias, ctx, result, ext_override=".mp4")
 
             elif tool_name == "clone_voice":
-                filtered['output'] = f"outputs/clonevoice_{chosen_alias or ''}_{ts}.wav"
+                filtered['output'] = f"{OUTPUT_DIR}/clonevoice_{chosen_alias or ''}_{ts}.wav"
                 result = CloneVoice(**filtered)
                 return self._handle_success(tool_name, filtered, chosen_alias, ctx, result, ext_override=".wav")
 
             elif tool_name == "design_voice":
-                filtered['output'] = f"outputs/designvoice_{chosen_alias or ''}_{ts}.wav"
+                filtered['output'] = f"{OUTPUT_DIR}/designvoice_{chosen_alias or ''}_{ts}.wav"
                 result = DesignVoice(**filtered)
                 return self._handle_success(tool_name, filtered, chosen_alias, ctx, result, ext_override=".wav")
 

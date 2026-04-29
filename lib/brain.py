@@ -4,7 +4,6 @@ from tools import ToolHandler
 from qwen_llm import llm_chat
 
 CONFIG_FILE = "config.json"
-os.environ['TRANSFORMERS_OFFLINE'] = "1"
 
 def system_prompt(fn='system/bot.txt'):
     prompt = Path(fn).read_text()
@@ -13,24 +12,6 @@ def system_prompt(fn='system/bot.txt'):
     return None
 
 system_prompt = system_prompt() 
-
-
-def get_bnb_config():
-    return BitsAndBytesConfig(
-        load_in_4bit=True, 
-        bnb_4bit_compute_dtype=torch.bfloat16, 
-        bnb_4bit_use_double_quant=True, 
-        bnb_4bit_quant_type="nf4"
-    )
-
-def load_config():
-    # ⚠️ MUST point to a VL model: e.g. "Qwen/Qwen3-VL-8B-Instruct"
-    cfg = {} 
-    if os.path.exists(CONFIG_FILE):
-        try:
-            with open(CONFIG_FILE) as f: cfg.update(json.load(f))
-        except: print(f'{CONFIG_FILE} is missing or broken')
-    return cfg
 
 def _strip_thinking(raw):
     """Extract thinking blocks from Qwen response."""
@@ -72,7 +53,7 @@ def parse_tool_call(raw_text):
 # TASK EXECUTOR
 # =============================================================================
 def execute_task(task_description, max_steps=15, target_alias=None, initial_ctx=None):
-    ctx = initial_ctx or load_context()
+    ctx = initial_ctx
     ctx["target_alias"] = target_alias  # Fallback if LLM forgets to pass alias
     toolhandler = ToolHandler()
     

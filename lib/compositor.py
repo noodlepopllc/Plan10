@@ -48,11 +48,13 @@ def CompositeScene(
     }.get(shot_type, "medium shot")
 
     # 4. Route to specific prompt logic
+    # In the prompt construction section, replace the "REF 1" handling:
+
     if shot_type == 'ots':
-        # OTS requires specific depth cues and REF separation
-        # FIX: Removed "8K Photorealistic" to prevent cartoon/style clash
         task = (
             f"REF 1: {bg_desc}. Background source. "
+            # 🆕 Add crop permission
+            "ALLOW CROPPING: Background elements may be partially cropped or extend off-frame to maintain composition. DO NOT force-fit entire objects. "
             "Cinematic close-up, camera is eye level, over-the-shoulder shot of "
             f"REF 2: Character 1 (foreground character) {descriptions[0]} blurred, face is away from the camera and "
             "focusing on "
@@ -63,9 +65,10 @@ def CompositeScene(
             f"NO flat lighting, NO foreground sharpness, NO cartoon shading. --no dark faces, no merged depth"
         )
     else:
-        # Standard logic for other shots
         task = (
             f"REF 1: {bg_desc}. "
+            # 🆕 Add crop permission + priority
+            "COMPOSITION RULE: Characters are the focal point. Background elements may be cropped, truncated, or extend beyond frame edges naturally. NEVER shrink background objects to fit—allow natural cropping instead. "
             f"REF 2: {chars_desc} "
             f"Action: {action}. "
             f"Framing: {framing}. "

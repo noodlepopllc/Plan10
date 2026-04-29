@@ -14,7 +14,6 @@ from diffsynth.utils.data import VideoData, save_video_with_audio
 from diffsynth.pipelines.wan_video import WanVideoPipeline, ModelConfig, WanVideoUnit_S2V
 from glob import glob
 from pathlib import Path
-from omnivoice import OmniVoice
 import torchaudio.functional as F
 from util import video_to_img
 from image_analysis import AnalyzeImage
@@ -55,44 +54,6 @@ def load_s2v_pipe():
 
 
     return pipe
-
-def speech_to_video2(
-    pipe,
-    prompt,
-    input_image,
-    input_audio,
-    sample_rate,
-    max_frames_per_clip=80,
-    height=832,
-    width=448,
-    cfg_scale=1.0,
-    num_inference_steps=4,
-    fps=16,
-    motion_frames=73,
-    chunk_size=16,
-    save_path=None,
-    add_smile_outro=False,
-    outro_duration=0.5,
-    seed=-1
-):
-
-    # Speech-to-video
-    video = pipe(
-        prompt=prompt,
-        input_image=input_image,
-        seed=seed,
-        num_frames=97,
-        height=height,
-        width=width,
-        audio_sample_rate=sample_rate,
-        input_audio=input_audio,
-        num_inference_steps=4,
-    )
-    save_video_with_audio(video[1:], save_path, "temp.wav", fps=16, quality=5)
-    video_to_img(save_path).save('tmp.png')
-    analysis = AnalyzeImage('tmp.png', "Briefly describe this image, no more than 100 words")
-    return {"status":"success", "output_path": save_path, "frames": len(video), "description": analysis['analysis'], "prompt": prompt }
-
 
 # =============================================================================
 # 2. S2V GENERATION FUNCTION (NO AUDIO PADDING)
@@ -235,140 +196,6 @@ def speech_to_video(
         print(f"    Output: {len(video)} frames, {len(video)/fps:.2f}s")
     return {"status":"success", "output_path": save_path, "frames": len(video), "description": analysis['analysis'], "prompt": prompt }
 
-def create_audio_and_free_vram(
-    text, 
-    instruct='female, low pitch, british accent', 
-    max_retries=2,
-    max_duration_seconds=5.0,  # ← New configurable limit
-    target_sr=16000,            # ← Your workflow's target sample rate
-    seed=-1
-):
-    """
-    Generate audio via OmniVoice with automatic duration enforcement.
-    If output exceeds max_duration_seconds, regenerate with duration= parameter.
-    """
-    start_silence_ms=300    # ← NEW: Silence before speech (ms)
-    end_silence_ms=500      # ← NEW: Silence after speech (ms)
-    speed = 0.85
-    for attempt in range(1, max_retries + 1):
-        torch.cuda.empty_cache()
-        model = OmniVoice.from_pretrained("k2-fsa/OmniVoice", device_map="cuda:0", dtype=torch.float32)
-        if seed != -1:
-            torch.cuda.manual_seed(seed)
-        
-        try:
-            with torch.no_grad():
-                # First attempt: natural generation (no duration limit)
-                audio = model.generate(text=text, instruct=instruct, speed=speed)
-            
-            # Save and load for inspection
-            torchaudio.save("temp.wav", audio[0], 24000)
-            input_audio, sr = librosa.load("temp.wav", sr=target_sr, mono=True, dtype=np.float32)
-            
-            # Sanity check: weak/corrupt output
-            if np.max(np.abs(input_audio)) < 0.02 or np.isnan(input_audio).any():
-                print(f"⚠️ Weak/corrupt output (attempt {attempt}), retrying...")
-                continue
-
-            # ← NEW: Add silence padding
-            start_samples = int((start_silence_ms / 1000) * sr)
-            end_samples = int((end_silence_ms / 1000) * sr)
-            
-            input_audio = np.concatenate([
-                np.zeros(start_samples),  # Start silence
-                input_audio,
-                np.zeros(end_samples)      # End silence
-            ])
-            
-            # ← NEW: Duration enforcement
-            actual_duration = len(input_audio) / sr
-            if actual_duration > max_duration_seconds:
-                print(f"⚠️ Audio too long ({actual_duration:.2f}s > {max_duration_seconds}s), regenerating with duration limit...")
-                
-                # Regenerate with explicit duration parameter [[1]][[3]]
-                with torch.no_grad():
-                    audio = model.generate(
-                        text=text, 
-                        instruct=instruct,
-                        duration=max_duration_seconds  # ← Enforce hard cap
-                    )
-                
-                # Re-save and reload the constrained output
-                torchaudio.save("temp.wav", audio[0], 24000)
-                input_audio, sr = librosa.load("temp.wav", sr=target_sr, mono=True, dtype=np.float32)
-                
-                # Final sanity check on constrained output
-                if np.max(np.abs(input_audio)) < 0.02 or np.isnan(input_audio).any():
-                    print(f"⚠️ Constrained output weak, retrying...")
-                    continue
-                    
-                print(f"✅ Duration-constrained audio: {len(input_audio)/sr:.2f}s")
-            else:
-                print(f"✅ Clean audio generated (attempt {attempt}, {actual_duration:.2f}s)")
-            
-            # Cleanup and return
-            del model, audio
-            gc.collect()
-            torch.cuda.empty_cache()
-            return input_audio, sr
-            
-        except Exception as e:
-            print(f"❌ Failed (attempt {attempt}): {e}")
-        finally:
-            try: del model, audio
-            except: pass
-            gc.collect()
-            torch.cuda.empty_cache()
-            
-    raise RuntimeError(f"Failed to generate valid audio ≤{max_duration_seconds}s after {max_retries} retries.")
-
-
-def GenerateTalkingVideoV2(
-    prompt='',
-    dialog='Hello, how are you, I am pleased to meet you.',
-    voice='female, low pitch, british accent',
-    media='',
-    output='output.mp4',
-    width=480,
-    height=832,
-    seed=-1):
-
-    width = int(width)
-    height = int(height)
-    seed = int(seed)
-
-    input_image  = video_to_img(media, width, height, True)
-    input_audio, sample_rate = create_audio_and_free_vram(dialog, voice, seed=seed)
-    cfg_scale = 1.0 
-    num_inference_steps = 4
-    fps = 16
-    motion_frames = 73
-    chunk_size = 16
-    max_frames_per_clip = 80
-    add_smile_outro=True
-    outro_duration=0.5
-
-    pipe = load_s2v_pipe()
-    return speech_to_video(
-        pipe,
-        prompt,
-        input_image,
-        input_audio,
-        sample_rate,
-        max_frames_per_clip,
-        height,
-        width,
-        cfg_scale,
-        num_inference_steps,
-        fps,
-        motion_frames,
-        chunk_size,
-        output,
-        add_smile_outro,
-        outro_duration,
-        seed
-    )
-
 
 def GenerateTalkingVideo(
     prompt='',
@@ -459,13 +286,12 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('-P', '--prompt', type=str, default='')
-    parser.add_argument('-T', '--text', type=str, default='Hello, how are you, I am pleased to meet you.')
-    parser.add_argument('-V', '--voice', type=str, default='female, low pitch, british accent')
+    parser.add_arguemtn('-A', '--audio', type=str, default='')
     parser.add_argument('-I', '--image', type=str, required=True)
     parser.add_argument('-O', '--output', type=str, default='output.mp4')
     parser.add_argument('-W', '--width', type=int, default=832)
     parser.add_argument('-H', '--height', type=int, default=480)
     parser.add_argument('-S', '--seed', type=int, default=42)
     args = parser.parse_args()
-    GenerateTalkingVideoV2(args.prompt, args.text, args.voice, args.image, args.output, args.width, args.height,args.seed)
+    GenerateTalkingVideo(args.prompt, args.audio, args.image, args.output, args.width, args.height,args.seed)
 

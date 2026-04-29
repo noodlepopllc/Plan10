@@ -86,7 +86,7 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         if isinstance(media, list):
             start_image = media.pop(0)
             if len(media) > 0:
-                end_image = video_to_img(media.pop(), width, height)
+                end_image = video_to_img(media.pop(), width, height, True, False)
         else:
             start_image = media
 
@@ -104,7 +104,7 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         print(f"\n🎬 Generating {total_frames/fps:.1f}s video ({total_frames} frames)")
         print(f"   Resolution: {width}x{height}")
 
-        current_source = video_to_img(start_image, width, height)
+        current_source = video_to_img(start_image, width, height, True, True)
         current_source.save('tmp.png')
 
         if not prompt:
@@ -119,7 +119,7 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         num_steps = 8  if '1.3B' in model_id else 4
 
 
-        
+        video = None
         try:
             video = _pipe(
                 prompt=eprompt,
@@ -137,7 +137,7 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
             description = ''
                 
             # Post-processing
-            if os.environ['BATCH'] == 'False':
+            if os.environ.get('BATCH', 'False') == 'False':
                 tmp_img = video_to_img(output, width, height)
                 tmp_img.save('tmp.png')
                 description = AnalyzeImage('tmp.png', "Briefly describe this image, no more than 100 words")['analysis']

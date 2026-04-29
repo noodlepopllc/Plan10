@@ -91,12 +91,13 @@ def add_metadata_char(imgpath, prompt='', seed=-1):
         - Hair length/color/texture: short/medium/long + color + straight/wavy/curly, or 'neutral'
         - Hair style: ponytail, bun, braid, tied-back, loose, half-up, bob, pixie, or 'neutral'
         - Hairline: straight, widow's peak, rounded, neutral
+        - Hair Accessories: ribbon's, bandana, hats, etc. 
         - Eyewear: 'preserve glasses' if clearly wearing glasses, otherwise 'none'
         - Clothing: yellow sundress, white tshirt, blue jeans, red sneakers, etc.
 
         Example:
         "adult, european, light, oval, defined jawline, high cheekbones, almond eyes, arched brows, 
-        medium nose, full lips, long brown wavy hair, low ponytail, straight hairline, none, navy uniform"
+        medium nose, full lips, long brown wavy hair, low ponytail, straight hairline, black ribbons, none, navy uniform"
 
         Respond ONLY with the string.
         ''')

@@ -3,22 +3,20 @@ import torch, os, sys, gc, json, re, time, argparse
 sys.path.append('./lib')
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
 from brain import execute_task
+from config import load_environ
 
-os.environ['TRANSFORMERS_OFFLINE'] = "1"
-
-CONFIG_FILE = "config.json"
-CONTEXT_FILE = Path("context.json")
-OUTPUT_DIR = Path("outputs")
-OUTPUT_DIR.mkdir(exist_ok=True)
+load_environ()
 
 # =============================================================================
 # CONTEXT
 # =============================================================================
 def save_context(ctx):
+    CONTEXT_FILE = Path(os.environ['CONTEXT_FILE']) if 'CONTEXT_FILE' in os.environ else Path("context.json")
     with open(CONTEXT_FILE, "w") as f:
         json.dump(ctx, f, indent=2)
 
 def load_context():
+    CONTEXT_FILE = Path(os.environ['CONTEXT_FILE']) if 'CONTEXT_FILE' in os.environ else Path("context.json")
     if os.path.exists(CONTEXT_FILE):
         with open(CONTEXT_FILE) as f:
             data = json.load(f)
@@ -57,6 +55,20 @@ if __name__ == "__main__":
     p.add_argument('--context', '-K', action='store_true', help='Keep existing context/assets')
     p.add_argument('-F', '--fileprompt', action='store_true')
     args = p.parse_args()
+
+    if args.fileprompt:
+        OUTPUT_DIR = args.prompt.replace('.txt','')
+        CONTEXT_FILE = f"{OUTPUT_DIR}/context.json"
+    else:
+        OUTPUT_DIR = "outputs"
+        CONTEXT_FILE = f"{OUTPUT_DIR}/context.json"
+
+    outdir = Path(OUTPUT_DIR)
+    outdir.mkdir(exist_ok=True)
+
+    os.environ['CONTEXT_FILE'] = CONTEXT_FILE
+    os.environ['OUTPUT_DIR'] = OUTPUT_DIR
+
 
     # Reset context unless -K is passed
     if not args.context and os.path.exists(CONTEXT_FILE):
