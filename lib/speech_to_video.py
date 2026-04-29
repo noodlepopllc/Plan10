@@ -186,8 +186,12 @@ def speech_to_video(
     
         # Now save with extended audio
         save_video_with_audio(video, save_path, temp_audio, fps=fps, quality=5)
+        del video
+        gc.collect()
+        torch.cuda.empty_cache()
 
         video_to_img(save_path).save('tmp.png')
+
         analysis = AnalyzeImage('tmp.png', "Briefly describe this image, no more than 100 words")
     
         # Clean up
