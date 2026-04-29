@@ -104,6 +104,7 @@ def add_metadata_char(imgpath, prompt='', seed=-1):
 
     analysis = AnalyzeImage(imgpath, combined_prompt)
     raw = analysis['analysis'].strip().strip('"').strip("'")
+    print(raw)
     
     # Clean & filter without regex
     parts = [p.strip() for p in raw.split(",") if p.strip()]

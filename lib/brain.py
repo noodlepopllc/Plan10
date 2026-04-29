@@ -61,8 +61,7 @@ def parse_tool_response(response_json={}, raw_content=""):
     Returns: [{"name": str, "arguments": dict}, ...]
     """
     # 1️⃣ Try Ollama's structured tool_calls first
-    message = response_json.get("message", {})
-    tool_calls = message.get("tool_calls", [])
+    tool_calls = response_json.get("tool_calls", [])
     
     if tool_calls:
         for tc in tool_calls:
