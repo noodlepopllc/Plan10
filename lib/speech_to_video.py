@@ -183,6 +183,8 @@ def speech_to_video(
         with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmp:
             temp_audio = tmp.name
             sf.write(temp_audio, input_audio, sample_rate)  # input_audio includes silence
+
+        frames = len(video)
     
         # Now save with extended audio
         save_video_with_audio(video, save_path, temp_audio, fps=fps, quality=5)
@@ -197,7 +199,7 @@ def speech_to_video(
         # Clean up
         os.remove(temp_audio)
     
-    return {"status":"success", "output_path": save_path, "frames": len(video), "description": analysis['analysis'], "prompt": prompt }
+    return {"status":"success", "output_path": save_path, "frames": frames, "description": analysis['analysis'], "prompt": prompt }
 
 
 def GenerateTalkingVideo(
