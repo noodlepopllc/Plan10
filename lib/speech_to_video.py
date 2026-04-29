@@ -197,7 +197,6 @@ def speech_to_video(
         # Clean up
         os.remove(temp_audio)
     
-        print(f"    Output: {len(video)} frames, {len(video)/fps:.2f}s")
     return {"status":"success", "output_path": save_path, "frames": len(video), "description": analysis['analysis'], "prompt": prompt }
 
 
