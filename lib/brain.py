@@ -54,7 +54,7 @@ def parse_tool_call(raw_text):
 import json
 import re
 
-def parse_tool_response(response_json, raw_content=""):
+def parse_tool_response(response_json={}, raw_content=""):
     """
     Parses tool calls from Ollama's structured response.
     Falls back to Qwen XML format if the model outputs it in text instead.
@@ -130,7 +130,10 @@ def execute_task(task_description, max_steps=15, target_alias=None, initial_ctx=
         messages.pop()  # Remove injected state message
         
         # Parse tool call
-        tool_payload = parse_tool_response(response_clean if response_clean else response)
+        if response_clean:
+            tool_payload = parse_tool_response(raw_content=response_clean)
+        else:
+            tool_payload = parse_tool_response(response_json=response)
         if not tool_payload:
             messages.append({"role": "assistant", "content": [{"type": "text", "text": response_clean}]})
             messages.append({"role": "user", "content": [{"type": "text", "text": "Call a tool to proceed."}]})
