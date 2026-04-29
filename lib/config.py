@@ -13,7 +13,7 @@ def load_config():
         "DIFFSYNTH_SKIP_DOWNLOAD": "False", 
         "BITSNBYTES":"True","BATCH":"False", 
         "BACKEND": "transformers",
-        "OLLAMA_URL", "http://localhost:11434"
+        "OLLAMA_URL": "http://localhost:11434"
     }
     if os.path.exists(CONFIG_FILE):
         try:
