@@ -3,7 +3,18 @@ import os, json
 CONFIG_FILE = "config.json"
 
 def load_config():
-    cfg = {"VRAM": "14", "QWEN": "Qwen/Qwen3.5-4B", "TRANSFORMERS_OFFLINE": "0", "HF_HUB_OFFLINE": "0", "HF_HOME": "./models", "DIFFSYNTH_DOWNLOAD_SOURCE": "huggingface", "DIFFSYNTH_SKIP_DOWNLOAD": "False", "BITSNBYTES":"True","BATCH":"False"}
+    cfg = {
+        "VRAM": "14", 
+        "QWEN": "Qwen/Qwen3.5-4B", 
+        "TRANSFORMERS_OFFLINE": "0", 
+        "HF_HUB_OFFLINE": "0", 
+        "HF_HOME": "./models", 
+        "DIFFSYNTH_DOWNLOAD_SOURCE": "huggingface", 
+        "DIFFSYNTH_SKIP_DOWNLOAD": "False", 
+        "BITSNBYTES":"True","BATCH":"False", 
+        "BACKEND" "transformers",
+        "OLLAMA_URL", "http://localhost:11434"
+    }
     if os.path.exists(CONFIG_FILE):
         try:
             with open(CONFIG_FILE) as f: cfg.update(json.load(f))
