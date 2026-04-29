@@ -25,6 +25,7 @@ def _strip_thinking(raw):
 # =============================================================================
 # PARSING
 # =============================================================================
+'''
 def parse_tool_call(raw_text):
     """Parse Qwen XML tool format."""
     func_match = re.search(r'<function=(.*?)>', raw_text)
@@ -48,6 +49,56 @@ def parse_tool_call(raw_text):
             params[name] = value
     
     return {"name": func_name, "arguments": params}
+'''
+
+import json
+import re
+
+def parse_tool_response(response_json, raw_content=""):
+    """
+    Parses tool calls from Ollama's structured response.
+    Falls back to Qwen XML format if the model outputs it in text instead.
+    Returns: [{"name": str, "arguments": dict}, ...]
+    """
+    # 1️⃣ Try Ollama's structured tool_calls first
+    message = response_json.get("message", {})
+    tool_calls = message.get("tool_calls", [])
+    
+    if tool_calls:
+        parsed = []
+        for tc in tool_calls:
+            func = tc.get("function", {})
+            name = func.get("name", "")
+            args_raw = func.get("arguments", "{}")
+            
+            # Ollama sometimes returns args as dict, sometimes as JSON string
+            if isinstance(args_raw, str):
+                try:
+                    args = json.loads(args_raw)
+                except json.JSONDecodeError:
+                    args = {}
+            else:
+                args = args_raw if isinstance(args_raw, dict) else {}
+                
+            parsed.append({"name": name, "arguments": args})
+        return parsed
+
+    # 2️⃣ Fallback: Qwen XML format (if model outputs it in content instead)
+    if raw_content:
+        func_match = re.search(r'<function=(.*?)>', raw_content)
+        if func_match:
+            func_name = func_match.group(1).strip()
+            params = {}
+            for match in re.finditer(r'<parameter=(.*?)>(.*?)</parameter>', raw_content, re.DOTALL):
+                n, v = match.groups()
+                n, v = n.strip(), v.strip()
+                try:
+                    params[n] = json.loads(v) if v.startswith(('[', '{')) else v
+                except:
+                    params[n] = v
+            return [{"name": func_name, "arguments": params}]
+
+    return []
 
 # =============================================================================
 # TASK EXECUTOR
