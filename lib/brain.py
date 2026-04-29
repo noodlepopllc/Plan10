@@ -65,7 +65,6 @@ def parse_tool_response(response_json={}, raw_content=""):
     tool_calls = message.get("tool_calls", [])
     
     if tool_calls:
-        parsed = []
         for tc in tool_calls:
             func = tc.get("function", {})
             name = func.get("name", "")
@@ -80,8 +79,7 @@ def parse_tool_response(response_json={}, raw_content=""):
             else:
                 args = args_raw if isinstance(args_raw, dict) else {}
                 
-            parsed.append({"name": name, "arguments": args})
-        return parsed
+            return {"name": name, "arguments": args}
 
     # 2️⃣ Fallback: Qwen XML format (if model outputs it in content instead)
     if raw_content:
@@ -96,9 +94,9 @@ def parse_tool_response(response_json={}, raw_content=""):
                     params[n] = json.loads(v) if v.startswith(('[', '{')) else v
                 except:
                     params[n] = v
-            return [{"name": func_name, "arguments": params}]
+            return {"name": func_name, "arguments": params}
 
-    return []
+    return {}
 
 # =============================================================================
 # TASK EXECUTOR
