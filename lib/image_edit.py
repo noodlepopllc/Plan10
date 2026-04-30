@@ -36,7 +36,54 @@ def _normalize_expr(expr: str) -> str:
 # ─────────────────────────────────────────────────────────────
 # IMAGE EDIT PIPELINE
 # ─────────────────────────────────────────────────────────────
-class ImageEdit(object):
+class ImageEditQwen(object):
+    def __init__(self, vrlimit=14):
+        if "VRAM" in os.environ:
+            vrlimit = int(os.environ["VRAM"])
+        vram_config = {
+            "offload_dtype": "disk", "offload_device": "disk",
+            "onload_dtype": torch.float8_e4m3fn, "onload_device": "cpu",
+            "preparing_dtype": torch.float8_e4m3fn, "preparing_device": "cuda",
+            "computation_dtype": torch.bfloat16, "computation_device": "cuda",
+        }
+        self.pipe = QwenImagePipeline.from_pretrained(
+            torch_dtype=torch.bfloat16, device="cuda",
+            model_configs=[
+                ModelConfig(model_id="Qwen/Qwen-Image-Edit-2511", origin_file_pattern="transformer/diffusion_pytorch_model*.safetensors", **vram_config),
+                ModelConfig(model_id="Qwen/Qwen-Image", origin_file_pattern="text_encoder/model*.safetensors", **vram_config),
+                ModelConfig(model_id="Qwen/Qwen-Image", origin_file_pattern="vae/diffusion_pytorch_model.safetensors", **vram_config),
+            ],
+            processor_config=ModelConfig(model_id="Qwen/Qwen-Image-Edit", origin_file_pattern="processor/"),
+            vram_limit=vrlimit,
+        )
+        self.pipe.load_lora(self.pipe.dit, "./loras/Qwen-Image-Edit-2511-Lightning-8steps-V1.0-bf16.safetensors", alpha=1.0)
+        self.pipe.scheduler = FlowMatchScheduler("Qwen-Image-Lightning")
+
+    def generate(self, prompt, images, output, width, height, seed):
+        # Safely handle empty/character-only lists
+        edit_image = [Image.open(x) for x in images] if images else []
+        if seed == -1: seed = random.randint(0, 1000000)
+
+        image = self.pipe(
+            prompt, edit_image=edit_image, seed=seed, num_inference_steps=8,
+            height=height, width=width, edit_image_auto_resize=True,
+            zero_cond_t=True, cfg_scale=1.0,
+        )
+        image.save(output)
+        os.utime(output, None) 
+        status = {"status": "success", "output_path": output, "prompt": prompt, "description": ''}
+        if os.environ['BATCH'] == 'False':
+            analysis = AnalyzeImage(output, "Briefly describe this image, no more than 100 words")
+            status['description'] = analysis['analysis']
+        return status
+
+    def __del__(self):
+        del self.pipe 
+        gc.collect()
+        if torch.cuda.is_available():  # ✅ Was `if torch.cuda:` (always truthy)
+            torch.cuda.empty_cache()
+    
+class ImageEditKlein(object):
     def __init__(self, vrlimit=14):
         if "VRAM" in os.environ:
             vrlimit = int(os.environ["VRAM"])
@@ -90,6 +137,8 @@ class ImageEdit(object):
         gc.collect()
         if torch.cuda.is_available():  # ✅ Was `if torch.cuda:` (always truthy)
             torch.cuda.empty_cache()
+
+ImageEdit = ImageEditKlein
 
 # ─────────────────────────────────────────────────────────────
 # SCHEMAS

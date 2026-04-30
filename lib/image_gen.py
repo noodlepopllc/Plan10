@@ -9,10 +9,56 @@ from PIL.PngImagePlugin import PngInfo
 
 load_environ()
 
-model = "black-forest-labs/FLUX.2-klein-4B"
-
-class ImageGen(object):
+class ImageGenQwen(object):
     def __init__(self,vrlimit=14):
+        if "VRAM" in os.environ:
+            vrlimit = int(os.environ["VRAM"])
+        vram_config = {
+                "offload_dtype": "disk",
+                "offload_device": "disk",
+                "onload_dtype": torch.float8_e4m3fn,
+                "onload_device": "cpu",
+                "preparing_dtype": torch.float8_e4m3fn,
+                "preparing_device": "cuda",
+                "computation_dtype": torch.bfloat16,
+                "computation_device": "cuda",
+            }
+        self.pipe = QwenImagePipeline.from_pretrained(
+                torch_dtype=torch.bfloat16,
+                device="cuda",
+                model_configs=[
+                    ModelConfig(model_id="Qwen/Qwen-Image-2512", origin_file_pattern="transformer/diffusion_pytorch_model*.safetensors", **vram_config),
+                    ModelConfig(model_id="Qwen/Qwen-Image", origin_file_pattern="text_encoder/model*.safetensors", **vram_config),
+                    ModelConfig(model_id="Qwen/Qwen-Image", origin_file_pattern="vae/diffusion_pytorch_model.safetensors", **vram_config),
+               ],
+                tokenizer_config=ModelConfig(model_id="Qwen/Qwen-Image", origin_file_pattern="tokenizer/"),
+                vram_limit=vrlimit,
+            )
+        self.pipe.load_lora(self.pipe.dit, "./loras/Qwen-Image-2512-Lightning-8steps-V1.0-bf16.safetensors", alpha=1.0)
+        self.pipe.scheduler = FlowMatchScheduler("Qwen-Image-Lightning")
+
+    def generate(self, prompt, output, width, height, seed):
+        image = self.pipe(
+                prompt=prompt,
+                seed=seed,
+                num_inference_steps=8,
+                cfg_scale=1.0,
+                height=height,
+                width=width
+            )
+        image.save(output)
+        return {"status":"success", "output_path":output}
+
+
+    def __del__(self):
+        del self.pipe 
+        gc.collect()
+        if torch.cuda.is_available():  # ✅ Was `if torch.cuda:` (always truthy)
+            torch.cuda.empty_cache()
+
+class ImageGenKlein(object):
+    def __init__(self,vrlimit=14):
+        model = "black-forest-labs/FLUX.2-klein-4B"
         if "VRAM" in os.environ:
             vrlimit = int(os.environ["VRAM"])
         vram_config = {
@@ -52,9 +98,12 @@ class ImageGen(object):
 
 
     def __del__(self):
-        del self.pipe
+        del self.pipe 
         gc.collect()
-        torch.cuda.empty_cache()
+        if torch.cuda.is_available():  # ✅ Was `if torch.cuda:` (always truthy)
+            torch.cuda.empty_cache()
+
+ImageGen = ImageGenKlein
 
 def GenerateImage(prompt='', output='tmp.png', width=1328, height=1328, seed=42):
     #prompt = EnhancePrompt('',prompt,'system/QwenImage.txt')['analysis']
