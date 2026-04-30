@@ -35,7 +35,7 @@ Create a 5-second video using the Alice_Composite asset, action she touches the 
 create an image to video 5 second duration using Alice_Composite_Outside asset, action she is examining a mushroom MUST SET HEIGHT AND WIDTH, Height: 832, Width: 480, Seed: -1
 
 >> ALIAS: Alice_Voice
-design_voice, female young woman voice with australian accent.
+design_voice, female young woman voice with australian accent Keep the text for the audio as a short intro (8 - 12 words).
 
 >> ALIAS: Alice_Outdoor_Voice
 clone_voice, use the description of Alice_Background_Outdoor asset and Alias_Voice asset to generate a short dialog of Alice introducing herself, keep it close to 5 seconds in length (12 - 15 words) Duration: 5 seconds
