@@ -1,4 +1,5 @@
 from diffsynth.pipelines.flux2_image import Flux2ImagePipeline, ModelConfig
+from diffsynth.pipelines.qwen_image import QwenImagePipeline, ModelConfig, FlowMatchScheduler
 import gc
 import torch
 import os
@@ -103,7 +104,10 @@ class ImageGenKlein(object):
         if torch.cuda.is_available():  # ✅ Was `if torch.cuda:` (always truthy)
             torch.cuda.empty_cache()
 
-ImageGen = ImageGenKlein
+if os.environ.get("IMAGE_GEN", "KLEIN") == "KLEIN":
+    ImageGen = ImageGenKlein
+else:
+    ImageGen = ImageGenQwen
 
 def GenerateImage(prompt='', output='tmp.png', width=1328, height=1328, seed=42):
     #prompt = EnhancePrompt('',prompt,'system/QwenImage.txt')['analysis']

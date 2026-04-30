@@ -1,4 +1,5 @@
 from diffsynth.pipelines.flux2_image import Flux2ImagePipeline, ModelConfig
+from diffsynth.pipelines.qwen_image import QwenImagePipeline, ModelConfig, FlowMatchScheduler
 from modelscope import dataset_snapshot_download
 from PIL import Image
 from PIL.PngImagePlugin import PngInfo
@@ -138,7 +139,10 @@ class ImageEditKlein(object):
         if torch.cuda.is_available():  # ✅ Was `if torch.cuda:` (always truthy)
             torch.cuda.empty_cache()
 
-ImageEdit = ImageEditKlein
+if os.environ.get("IMAGE_EDIT", "KLEIN") == "KLEIN":
+    ImageEdit = ImageEditKlein
+else:
+    ImageEdit = ImageEditQwen
 
 # ─────────────────────────────────────────────────────────────
 # SCHEMAS

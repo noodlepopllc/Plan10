@@ -14,7 +14,9 @@ def load_config():
         "BITSNBYTES":"True","BATCH":"False", 
         "LLM_BACKEND": "transformers",
         "OLLAMA_URL": "http://localhost:11434",
-        "OLLAMA_MODEL": "qwen3.5:latest"
+        "OLLAMA_MODEL": "qwen3.5:latest",
+        "IMAGE_GEN": "KLEIN",
+        "IMAGE_EDIT": "KLEIN"
     }
     if os.path.exists(CONFIG_FILE):
         try:
