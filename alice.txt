@@ -1,3 +1,10 @@
+>> ALIAS: Alice_Title
+generate_graphic a movie poster for the new adult version of Alice in Wonderland, the title of the poster (Alice's New Adventures in Wonderland), 
+featuring merican gothic style, of an adult (26 year old, blonde hair, blue eyes) version of Alice from 'Alice in Wonderland' 
+in a version of her iconic baby blue dress with the blue white apron, 
+this version is tight fitting, the skirt portion is short, the top is low cut, in front of a mushroom forest with a look of innocent surprise 
+on her face as she leans on a mushroom,  width: 848, height: 1264
+
 >> ALIAS: Alice_Sheet
 create a character sheet american gothic style, of an adult (26 year old, blonde hair, blue eyes) version of Alice from 'Alice in Wonderland' in a version of her iconic baby blue dress with the blue white apron, 
 this version is tight fitting, the skirt portion is short, the top is low cut, 

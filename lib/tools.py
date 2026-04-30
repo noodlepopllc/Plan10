@@ -11,6 +11,7 @@ from image_gen import (
     GenerateReverseBackgroundSchema, 
     GenerateReverseBackground
 ) 
+from graphics_gen import GenerateGraphic, GenerateGraphicSchema
 from image_to_video import GenerateVideoSchema, GenerateVideo
 from speech_to_video import GenerateTalkingVideo, GenerateTalkingVideoSchema
 from image_analysis import EnhancePrompt
@@ -58,7 +59,8 @@ class ToolHandler(object):
         GenerateVideoSchema(),
         GenerateTalkingVideoSchema(),
         VoiceDesignSchema(),
-        VoiceCloneSchema()
+        VoiceCloneSchema(),
+        GenerateGraphicSchema()
     ]
 
     def detect_asset_type(self, path, tool_name):
@@ -149,6 +151,7 @@ class ToolHandler(object):
             "dialog_to_video": ["prompt", "media", "audio", "width", "height", "seed", "output", "alias"],
             "design_voice": ["text", "voice", "output", "duration", "seed"],
             "clone_voice": ["text", "audio", "output", "duration", "seed"],
+            "generate_graphic": ["prompt", "output", "width", "height", "seed", "target_video_size", "padding_style", "alias"]
         }
         
         filtered = {k: v for k, v in args.items() if k in VALID.get(tool_name, [])}
@@ -219,6 +222,11 @@ class ToolHandler(object):
                 filtered['output'] = f"{OUTPUT_DIR}/designvoice_{chosen_alias or ''}_{ts}.wav"
                 result = DesignVoice(**filtered)
                 return self._handle_success(tool_name, filtered, chosen_alias, ctx, result, ext_override=".wav")
+
+            elif tool_name == "generate_graphic":
+                filtered['output'] = f"{OUTPUT_DIR}/graphic_{chosen_alias or ''}_{ts}.png"
+                result = GenerateGraphic(**filtered)
+                return self._handle_success(tool_name, filtered, chosen_alias, ctx, result, ext_override=".png")
 
             return {"status": "error", "message": f"Unknown tool: {tool_name}"}
             
