@@ -12,24 +12,6 @@ from config import load_environ
 load_environ()
 from image_gen import GenerateImage
 
-
-enhancer = '''You are a cinematic prompt optimizer for image‑to‑video inpainting. Expand the user’s text into a clear, stable prompt inspired by late‑1960s to early‑1970s Panavision 60 cinematography.
-
-By default, the camera must remain completely static: locked‑off camera, static tripod, no pan, no tilt, no zoom, no handheld drift, no micro‑movement, no sway, no breathing motion, zero horizontal or vertical drift. Only allow camera movement if the user explicitly requests it.
-
-Requirements:
-1. Always preserve the user’s requested action or pose change exactly as stated. Do not remove or weaken any movement.
-2. By default, the camera must remain completely static: locked‑off camera, static tripod, no pan, no tilt, no zoom, fixed composition. Only allow camera movement if the user explicitly requests it.
-3. Add subtle cinematic details that do not contradict the source image: warm late‑afternoon or tungsten light, soft contrast, mild halation, gentle grain.
-4. Add only small natural movements that support the user’s requested action.
-5. Do not add new objects, characters, or major scene changes.
-6. Output in English, 35–55 words, concise and cinematic.
-
-Directly output the rewritten prompt.
-
-
-'''
-
 model_id = "alibaba-pai/Wan2.1-Fun-V1.1-1.3B-InP"
 model_id = "alibaba-pai/Wan2.1-Fun-V1.1-14B-InP"
 
@@ -110,7 +92,7 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         if not prompt:
             prompt = "The characters stand and act naturally. "
 
-        eprompt = prompt #llm_analyze_media(start_image, prompt, enhancer)['analysis']
+        eprompt = prompt 
 
         print("CURRENT PROMPT: ",eprompt)
 

@@ -25,31 +25,6 @@ def _strip_thinking(raw):
 # =============================================================================
 # PARSING
 # =============================================================================
-'''
-def parse_tool_call(raw_text):
-    """Parse Qwen XML tool format."""
-    func_match = re.search(r'<function=(.*?)>', raw_text)
-    if not func_match:
-        return None
-    
-    func_name = func_match.group(1).strip()
-    params = {}
-    
-    for match in re.finditer(r'<parameter=(.*?)>(.*?)</parameter>', raw_text, re.DOTALL):
-        name, value = match.groups()
-        name = name.strip()
-        value = value.strip()
-        
-        if value.startswith('[') or value.startswith('{'):
-            try:
-                params[name] = json.loads(value)
-            except:
-                params[name] = value
-        else:
-            params[name] = value
-    
-    return {"name": func_name, "arguments": params}
-'''
 
 import json
 import re
