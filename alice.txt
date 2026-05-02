@@ -64,3 +64,9 @@ clone_voice, use the description of Alice_Background_Outdoor asset and Alias_Voi
 >> ALIAS: Alice_Dialog_2
 create a dialog_to_video Alice_Outdoor_voice_2 with Alice_Film_Outdoor_4 MUST SET HEIGHT AND WIDTH, Height: 832, Width: 480, Seed: 12345
 
+>> ALIAS: Alice_VIETNAMESE_Voice
+clone_voice, Alias_Voice asset to generate a short introduction from Alice in the Vietnamese language, (10 - 12 words)
+
+>> ALIAS: Alice_Dialog_INDOOR_2
+create a dialog_to_video Alice_VIETNAMESE_Voice with Alice_Dialog_Indoor asset MUST SET HEIGHT AND WIDTH, Height: 832, Width: 480, Seed: 12345
+

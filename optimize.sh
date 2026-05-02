@@ -12,13 +12,13 @@
 # CONFIG
 # ============================================
 INPUT_DIR="${1:-./output_videos}"
-OUTPUT_DIR="${2:-./shorts_ready}"
+OUTPUT_DIR="${2:-$INPUT_DIR/optimized}"
 CRF="19"
 PRESET="slow"
 AUDIO_BITRATE="192k"
 TARGET_WIDTH="1080"
 TARGET_HEIGHT="1920"
-FPS="24"
+FPS="60"
 
 # Colors
 GREEN='\033[0;32m'
@@ -64,7 +64,7 @@ fi
 for input_path in "${files[@]}"; do
     filename=$(basename "$input_path")
     name="${filename%.*}"
-    output_path="$OUTPUT_DIR/${name}_shorts.mp4"
+    output_path="$OUTPUT_DIR/${name}_optimized.mp4"
     
     if [ -f "$output_path" ]; then
         echo -e "${YELLOW}⊘ Skipping $filename (already exists)${NC}"
@@ -87,7 +87,7 @@ for input_path in "${files[@]}"; do
         "$output_path" > /dev/null 2>&1; then
         
         size=$(du -h "$output_path" | cut -f1)
-        echo -e "${GREEN}✓ Saved: ${name}_shorts.mp4 (${size})${NC}"
+        echo -e "${GREEN}✓ Saved: ${name}_optimized.mp4 (${size})${NC}"
         count=$((count + 1))  # FIXED: Use $(( )) instead of (( ))
     else
         echo -e "${RED}✗ Failed: $filename${NC}"
