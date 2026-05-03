@@ -146,11 +146,12 @@ def add_metadata_char(imgpath, prompt='', seed=-1):
         - Hairline: straight, widow's peak, rounded, neutral
         - Hair Accessories: ribbon's, bandana, hats, etc. 
         - Eyewear: 'preserve glasses' if clearly wearing glasses, otherwise 'none'
-        - Clothing: yellow sundress, white tshirt, blue jeans, red sneakers, etc.
+        - Clothing: yellow sundress, white tshirt, blue jeans, etc.
+        - Footwear: white tennis shoes, red heels, etc. 
 
         Example:
         "adult, european, light, oval, defined jawline, high cheekbones, almond eyes, arched brows, 
-        medium nose, full lips, long brown wavy hair, low ponytail, straight hairline, black ribbons, none, navy uniform"
+        medium nose, full lips, long brown wavy hair, low ponytail, straight hairline, black ribbons, none, navy uniform, black kitten heels"
 
         Respond ONLY with the string.
         ''')

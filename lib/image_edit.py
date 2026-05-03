@@ -38,7 +38,7 @@ def _normalize_expr(expr: str) -> str:
 # IMAGE EDIT PIPELINE
 # ─────────────────────────────────────────────────────────────
 class ImageEditQwen(object):
-    def __init__(self, vrlimit=14):
+    def __init__(self, vrlimit=14, loras=[]):
         if "VRAM" in os.environ:
             vrlimit = int(os.environ["VRAM"])
         vram_config = {
@@ -57,16 +57,27 @@ class ImageEditQwen(object):
             processor_config=ModelConfig(model_id="Qwen/Qwen-Image-Edit", origin_file_pattern="processor/"),
             vram_limit=vrlimit,
         )
+        for lora in loras:
+            self.pipe.load_lora(self.pipe.dit, lora, alpha=1.0)
         self.pipe.load_lora(self.pipe.dit, "./loras/Qwen-Image-Edit-2511-Lightning-8steps-V1.0-bf16.safetensors", alpha=1.0)
         self.pipe.scheduler = FlowMatchScheduler("Qwen-Image-Lightning")
 
     def generate(self, prompt, images, output, width, height, seed):
         # Safely handle empty/character-only lists
-        edit_image = [Image.open(x) for x in images] if images else []
+        edit_images = []
+        for item in images:
+            if isinstance(item, Image.Image):
+                # Already a PIL image → use directly
+                edit_images.append(item)
+            elif isinstance(item, str):
+                # File path → load it
+                edit_images.append(Image.open(item))
+            else:
+                raise TypeError(f"Unsupported image type: {type(item)}")
         if seed == -1: seed = random.randint(0, 1000000)
 
         image = self.pipe(
-            prompt, edit_image=edit_image, seed=seed, num_inference_steps=8,
+            prompt, edit_image=edit_images, seed=seed, num_inference_steps=8,
             height=height, width=width, edit_image_auto_resize=True,
             zero_cond_t=True, cfg_scale=1.0,
         )
@@ -81,7 +92,7 @@ class ImageEditQwen(object):
     def __del__(self):
         del self.pipe 
         gc.collect()
-        if torch.cuda.is_available():  # ✅ Was `if torch.cuda:` (always truthy)
+        if torch.cuda and torch.cuda.is_available():  # ✅ Was `if torch.cuda:` (always truthy)
             torch.cuda.empty_cache()
     
 class ImageEditKlein(object):
@@ -136,7 +147,7 @@ class ImageEditKlein(object):
     def __del__(self):
         del self.pipe 
         gc.collect()
-        if torch.cuda.is_available():  # ✅ Was `if torch.cuda:` (always truthy)
+        if torch.cuda and torch.cuda.is_available():  # ✅ Was `if torch.cuda:` (always truthy)
             torch.cuda.empty_cache()
 
 if os.environ.get("IMAGE_EDIT", "KLEIN") == "KLEIN":

@@ -15,9 +15,9 @@ from woosh.model.video_kontext import VideoKontext
 from woosh.utils.video import SynchformerProcessor
 from woosh.utils.videoio import extract_video_frames, remux_video
 
-output = './outputs_woosh2'
+output = './outputs_qwen'
 count = 0
-duration = 3
+duration = 5
 
 AUDIO_SYSTEM_PROMPT = """
 Convert this visual scene into a comma-separated list of diegetic sound effects only.
@@ -144,6 +144,9 @@ with open('MovieGenVideoBench.txt', 'r') as mov:
         if not prompt.strip():
             continue
         count += 1
+        p = Path(f'{output}/{count}_prompt.txt')
+        if p.exists():
+            continue
         Path(f'{output}/{count}_prompt.txt').write_text(prompt)
         this_prompt = prompt.strip()
         for w, h in res:
@@ -151,5 +154,5 @@ with open('MovieGenVideoBench.txt', 'r') as mov:
             i2v = f'{output}/{count}_{w}_{h}_I2V'
             print(GenerateImage(this_prompt, f'{i2v}.png', w, h, -1))
             print(GenerateVideo(this_prompt, f'{i2v}.png', f'{i2v}.mp4', duration, w, h, -1))
-            add_audio(f'{i2v}.mp4', this_prompt)
+            #add_audio(f'{i2v}.mp4', this_prompt)
             #add_audio(f'{i2v}.mp4', '')

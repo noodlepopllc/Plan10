@@ -9,6 +9,7 @@ def load_config():
         "TRANSFORMERS_OFFLINE": "0", 
         "HF_HUB_OFFLINE": "0", 
         "HF_HOME": "./models", 
+        "WAN21": "14B", # or 1.3B
         "DIFFSYNTH_DOWNLOAD_SOURCE": "huggingface", 
         "DIFFSYNTH_SKIP_DOWNLOAD": "False", 
         "BITSNBYTES":"True","BATCH":"False", 

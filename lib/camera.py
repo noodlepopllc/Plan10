@@ -3,11 +3,12 @@ import numpy as np
 from PIL import Image
 from uniface.detection import RetinaFace
 
-import numpy as np
-from PIL import Image
 from image_analysis import AnalyzeImage
-
 from image_edit import ImageEdit
+from image_gen import add_metadata_char
+from util import video_to_img, wait_for_file
+import torch
+from safetensors import safe_open
 
 class CameraMoveEngine:
     def __init__(self, step=0.10):
@@ -138,44 +139,188 @@ class CameraZoomEngine:
 
         return self.cv2_to_pil(zoomed)
 
-prompt = '''
-    Extend the scene naturally into the masked region only.
-    Do not modify the existing character, pose, face, skin texture, clothing, lighting, or framing.
-    Preserve all visible pixels exactly as they are.
-    Only generate new background/environment details inside the masked area.
-    Do not move, rotate, resize, or re-center the character.
-    Do not add tattoos, markings, or new features.
-    Match the style, lighting, and perspective of the original image.
-    '''
+
+import torch
+from safetensors import safe_open
+
+def find_submodule(root, path):
+    parts = path.split(".")
+    module = root
+    for p in parts:
+        if p.isdigit():
+            module = module[int(p)]
+        else:
+            module = getattr(module, p)
+    return module
+
+
+def make_lora_hook(A, B, alpha):
+    # keep A/B on CPU; we’ll move them lazily to the right device
+    A_cpu = A.clone()
+    B_cpu = B.clone()
+
+    def hook(module, inputs, output):
+        # During tracing / fake tensor passes, output is on 'meta' → skip LoRA
+        if getattr(output, "device", None) is not None and output.device.type == "meta":
+            return output
+
+        x = inputs[0]
+
+        # Make sure we’re on the same device/dtype as the output
+        device = output.device
+        dtype = output.dtype
+
+        A_ = A_cpu.to(device=device, dtype=dtype)
+        B_ = B_cpu.to(device=device, dtype=dtype)
+
+        # x: (..., in_features)
+        # A_: (rank, in_features) → A_.t(): (in_features, rank)
+        # B_: (out_features, rank) → B_.t(): (rank, out_features)
+        lora_out = (x @ A_.t()) @ B_.t()
+
+        return output + alpha * lora_out
+
+    return hook
+
+
+
+def attach_qwen_lora_runtime(pipe, lora_path, alpha=1.0):
+    from safetensors import safe_open
+
+    dit = pipe.dit
+
+    with safe_open(lora_path, framework="pt") as f:
+        keys = list(f.keys())
+        groups = {}
+        for k in keys:
+            if k.endswith("lora_A.weight"):
+                base = k[:-len(".lora_A.weight")]
+                groups.setdefault(base, {})["A"] = f.get_tensor(k)
+            elif k.endswith("lora_B.weight"):
+                base = k[:-len(".lora_B.weight")]
+                groups.setdefault(base, {})["B"] = f.get_tensor(k)
+
+        attached = 0
+        for base, tensors in groups.items():
+            if "A" not in tensors or "B" not in tensors:
+                continue
+
+            if base.startswith("transformer."):
+                module_path = base.split(".", 1)[1]
+            else:
+                module_path = base
+
+            try:
+                module = find_submodule(pipe.dit, module_path)
+            except Exception:
+                continue
+
+            hook = make_lora_hook(tensors["A"], tensors["B"], alpha)
+            module.register_forward_hook(hook)
+            attached += 1
+
+    print(f"[Qwen-LoRA] Attached runtime LoRA to {attached} modules.")
+    return attached
+
+
+
+class CameraGimbal:
+
+    azimuth = {0: 'front view', 45: 'front-right quarter view', 90: 'right side view', 
+                135: 'back-right quarter view', 180: 'back view',  225: 'back-left quarter view', 
+                270: 'left side view', 315: ' 	front-left quarter view'}
+
+    elevation = {-30: 'low-angle shot', 0: 'eye-level shot', 30: 'elevated shot', 60: 'high-angle shot' }
+
+    distance = {0.6: 'close-up', 1.0: 'medium shot', 1.8: 'wide shot'}
+
+    def __init__(self, azimuth, elevation, distance):
+        self.azimuth = azimuth
+        self.elevation = elevation
+        self.distance = distance
+
+    def get_prompt(self):
+        return f"<sks> {CameraGimbal.azimuth[self.azimuth]} {CameraGimbal.elevation[self.elevation]} {CameraGimbal.distance[self.distance]}"
+
+    def generate(self, image, output, width, height, seed):
+        from image_edit import ImageEditQwen
+        editor = ImageEditQwen()
+        attach_qwen_lora_runtime(
+            editor.pipe,
+            "./loras/qwen-image-edit-2511-multiple-angles-lora.safetensors",
+            alpha=1.0,
+        )
+
+        prompt = self.get_prompt()
+        return editor.generate(prompt, [image], output, width, height, seed)
+
+zoom_prompt = (
+    "Enhance the face in the main image using the second image strictly as a texture and feature detail swatch. "
+    "Keep the exact framing, camera distance, head size, and shoulder placement from the main image completely unchanged. "
+    "Keep the same outfit and pose. "
+    "Do not zoom, crop, reframe, or alter the subject's scale. "
+    "Only refine micro-details: skin pores, hair strands, eye reflections, and subtle lighting. "
+    "Character context: {chars_desc}"
+)
 
 if __name__ == '__main__':
     from PIL import Image
     import sys
     import argparse
     parser = argparse.ArgumentParser(description='Cinematic Image Pipeline')
-    parser.add_argument('-I', '--image', type=str, default='', help='Input images')
+    parser.add_argument('-I', '--images', action='append', default=[], help='Input images')
     parser.add_argument('-T', '--target', type=str, default=None, help='Target of the zoom, left, center, right or none')
     parser.add_argument('-S', '--steps', type=float, default=10, help='Percent of the frame to move, max 30')
-    parser.add_argument('-C', '--camera-move', type=str, default='zoom', help='type of camera movement zoom, pan-left, pan-right')
+    parser.add_argument('-C', '--camera-move', type=str, default='zoom', help='type of camera movement zoom, pan-left, pan-right, gimbal')
     parser.add_argument('-E', '--seed', type=int, default=42)
     parser.add_argument('-O', '--output', type=str, default='output.png')
+    parser.add_argument('-A', '--azimuth', type=int, default=0, help='45 degree increments 0-315')
+    parser.add_argument('-L', '--elevation', type=int, default=0, help='30 degree increments -30 - 60')
+    parser.add_argument('-D', '--distance', type=float, default=1.0, help='scale factor for zoom 0.6, 1.0, 1.8')
     args = parser.parse_args()
     steps = 0.10
+    status = {}
     if args.steps > 9 and args.steps < 31:
         steps = args.steps / 100.0
-    img = Image.open(args.image)
+    wait_for_file(args.images[0])
+    img = video_to_img(args.images[0])
+    img2 = None
+    if len(args.images) > 1:
+        img2 = video_to_img(args.images[1])
     shifted_image = None
     if args.camera_move == 'zoom':
         camera = CameraZoomEngine(steps)
-        camera.zoom_in(img, character=args.target).save(args.output)
+        print(args.output)
+        camera.zoom_in(img, character=args.target).save('tmp.png')
+        output1 = video_to_img('tmp.png')
+        desc = img2.info.get('Description', 'character')
+        if desc == 'character':
+            desc = add_metadata_char(args.images[1])
+        desc = f"{desc}. Preserve adult facial proportions, light cheekbone definition, and subtle jawline contour."
+        edit = ImageEdit()
+        status = edit.generate(zoom_prompt.format(chars_desc=desc), [output1, img2], args.output, output1.width, output1.height, args.seed)
+    elif args.camera_move == 'gimbal':
+        camera = CameraGimbal(args.azimuth, args.elevation, args.distance)
+        status = camera.generate(img, args.output, img.width, img.height, args.seed)
     else:
+        prompt = '''
+            Inpaint ONLY the masked region on the {side} edge.
+            Preserve all non-masked pixels exactly as they are—do not modify, warp, stretch, or reinterpret them.
+            If any subject, face, or object touches the masked boundary, leave it partially cropped exactly as-is.
+            Do NOT complete, regenerate, pull back into frame, or re-center any existing elements.
+            If the masked region contains only background, extend walls, floor, sky, props, or lighting naturally to match perspective and style.
+            Match the original image's color palette, lighting direction, grain, and perspective exactly.
+            '''.format(side='left' if 'left' in args.camera_move else 'right')
         camera = CameraMoveEngine(steps)
         if 'left' in args.camera_move:
-            shifted_image = camera2.pan_left(img)
+            print('pan left')
+            shifted_image = camera.pan_left(img)
         else:
-            shifted_image = camera2.pan_left(img)
+            print('pan right')
+            shifted_image = camera.pan_right(img)
     
     if shifted_image:
-        shifted_image.save(args.output)
+        shifted_image.save(f'{args.camera_move}.png')
         edit = ImageEdit()
         status = edit.generate(prompt, [shifted_image], args.output, img.width, img.height, -1)
+    print(status)
