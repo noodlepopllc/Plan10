@@ -28,7 +28,7 @@ shot() {
             
         touch "$out"  # ✅ Refreshes OS thumbnail cache
         
-        echo "✅ $out_suffix | T2I: $action >> "$OUTDIR/run_manifest.txt"
+        echo "✅ $out_suffix | T2I: $action" >> "$OUTDIR/run_manifest.txt"
     else
         echo "⏭️ Skipping $out_suffix (exists)"
     fi
