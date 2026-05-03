@@ -182,8 +182,6 @@ def make_lora_hook(A, B, alpha):
 
     return hook
 
-
-
 def attach_qwen_lora_runtime(pipe, lora_path, alpha=1.0):
     from safetensors import safe_open
 

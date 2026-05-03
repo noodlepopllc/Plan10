@@ -27,11 +27,8 @@ shot() {
             -O "$out" -E "$SEED" -H "$HEIGHT" -W "$WIDTH" || { echo "❌ Compositor failed: $out_suffix"; exit 1; }
             
         touch "$out"  # ✅ Refreshes OS thumbnail cache
-
-        echo "🎬 Generating I2V: $out_suffix"
-        python lib/image_to_video.py -P "$vid_prompt" -I "$out" -O "$out_vid" -W "$WIDTH" -H "$HEIGHT" -S "$SEED" -D 5.0 || { echo "❌ I2V failed: $out_suffix"; exit 1; }
         
-        echo "✅ $out_suffix | T2I: $action | I2V: $vid_prompt" >> "$OUTDIR/run_manifest.txt"
+        echo "✅ $out_suffix | T2I: $action >> "$OUTDIR/run_manifest.txt"
     else
         echo "⏭️ Skipping $out_suffix (exists)"
     fi
@@ -75,8 +72,6 @@ pan() {
         touch "$out" 
         python lib/image_to_video.py -I "$target" -I "$out" -P "Camera $movetype slowly" -O "$out_vid" -W "$WIDTH" -H "$HEIGHT" -S "$SEED" -D 5.0
         
-        
-
         echo "✅ $out_suffix | Pan: ${input1} ${movetype}" >> "$OUTDIR/run_manifest.txt" 
     else
         echo "⏭️ Skipping $out_suffix (exists)"
@@ -93,28 +88,22 @@ shot "$BG" "$A" "$A" "closeup" "She smiles happily." "reaction_A" "eyes blinking
 shot "$BG_REV" "$B" "$B" "closeup" "She smiles happily." "reaction_B" "eyes blinking naturally, soft exhale"
 
 pan "master_close" "pan-left" "master_close_pan_left"
-zoom "master_close_pan_left" "reaction_A" "left" "master_close_pan_left_zoom"
 pan "master_close" "pan-right" "master_close_pan_right"
-zoom "master_close_pan_right" "reaction_B" "right" "master_close_pan_right_zoom"
 
 pan "master_close_rev" "pan-left" "master_close_pan_left_rev"
-zoom "master_close_pan_left_rev" "reaction_B" "left" "master_close_pan_left_zoom_rev"
 pan "master_close_rev" "pan-right" "master_close_pan_right_rev"
-zoom "master_close_pan_right_rev" "reaction_B" "right" "master_close_pan_right_zoom_rev"
 
 echo "=== OVER-SHOULDER ==="
 shot "$BG_REV" "$A" "$B" "ots" "She speaks in a friendly manner" "ots_A_to_B" "hair softly swaying, subtle breathing"
 shot "$BG" "$B" "$A" "ots" "She speaks in a friendly manner" "ots_B_to_A" "hair softly swaying, relaxed posture"
 
-echo "=== SINGLES & PROFILES ==="
-shot "$BG" "$A" "$A" "profile_right" "She points to something out of frame." "profile_A" "hair gently swaying, arm relaxed"
-shot "$BG" "$A" "$A" "medium" "She poses like a model." "single_A" "subtle stance shift"
-shot "$BG" "$B" "$B" "profile_left" "She looks up above her." "profile_B" "hair gently swaying, subtle head lift"
-shot "$BG_REV" "$B" "$B" "medium" "She poses like a model." "single_B" "subtle breathing"
-
-echo "=== ZOOM ==="
 zoom "ots_A_to_B" "reaction_B" "" "zoom_ots_A_to_B"
 zoom "ots_B_to_A" "reaction_A" "" "zoom_ots_B_to_A"
+
+echo "=== SINGLES & PROFILES ==="
+shot "$BG" "$A" "$A" "medium" "She poses like a model." "single_A" "subtle stance shift"
+shot "$BG_REV" "$B" "$B" "medium" "She poses like a model." "single_B" "subtle breathing"
+
 zoom "single_A" "reaction_A" "" "zoom_A"
 zoom "single_B" "reaction_B" "" "zoom_B"
 
