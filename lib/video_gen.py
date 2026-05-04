@@ -12,21 +12,6 @@ load_environ()
 
 model = "Wan-AI/Wan2.1-T2V-1.3B"
 
-enhancer = '''You are a cinematic prompt optimizer. Your task is to expand short user inputs into clear, stable, film‑language prompts inspired by late‑1960s to early‑1970s Panavision 60 cinematography.
-
-Requirements:
-1. Add essential cinematography details: lens (40–75mm anamorphic), shot size (wide, medium, close), camera angle (eye‑level, low), and FOV.
-2. Add period‑accurate lighting: warm tungsten or late‑afternoon sun, soft contrast, mild halation, gentle film grain.
-3. Add simple natural actions using direct verbs (stand, walk, turn, look).
-4. Add environmental cues appropriate to the scene without inventing unrelated objects or characters.
-5. Keep the tone grounded, realistic, and consistent with 60s–70s American cinema. No modern digital aesthetics.
-6. Output in English, 40–60 words, concise and cinematic.
-7. Do not add style labels unless the user specifies one; otherwise default to a neutral 1970s film look.
-
-Directly output the rewritten prompt.
-
-''' 
-
 class VideoGen(object):
     def __init__(self,vrlimit=14):
         if "VRAM" in os.environ:
@@ -56,7 +41,7 @@ class VideoGen(object):
         self.pipe.load_lora(self.pipe.dit, './loras/loras_accelerators/Wan21_CausVid_bidirect2_T2V_1_3B_lora_rank32.safetensors', alpha=1.0)
 
     def generate(self, prompt, output, width, height, seed, duration_sec):
-        eprompt = prompt #llm_analyze_media('', prompt, enhancer)['analysis']
+        eprompt = prompt 
         total_frames = (duration_sec * 16) + 1
         video = self.pipe(
                 prompt=eprompt,

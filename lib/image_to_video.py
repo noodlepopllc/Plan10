@@ -14,9 +14,6 @@ from image_gen import GenerateImage
 
 WAN21 = os.environ.get("WAN21","14B")
 
-model_id = "alibaba-pai/Wan2.1-Fun-V1.1-1.3B-InP"
-#model_id = "alibaba-pai/Wan2.1-Fun-V1.1-14B-InP"
-
 model_id = f"alibaba-pai/Wan2.1-Fun-V1.1-{WAN21}-InP"
 
 def _ensure_pipeline(vrlimit=14):
