@@ -1,0 +1,206 @@
+ {
+  "HEIGHT" : {
+    "short": {
+      "jawlineContour": {
+        "allowed": ["round", "soft", "short", "oval"],
+        "default": "round"
+      },
+      "mandibleAngle": {
+        "allowed": ["soft", "wide", "rounded"],
+        "default": "soft"
+      },
+      "cheekboneHeight": {
+        "allowed": ["low", "low-mid"],
+        "default": "low-mid"
+      },
+      "chinPadShape": {
+        "allowed": ["short", "rounded", "soft"],
+        "default": "rounded"
+      },
+      "noseBridgeShape": {
+        "allowed": ["low", "low-mid"],
+        "default": "low-mid"
+      },
+      "noseTipShape": {
+        "allowed": ["rounded", "soft", "upturned"],
+        "default": "rounded"
+      },
+      "eyeShape": {
+        "allowed": ["round", "round-almond"],
+        "default": "round-almond"
+      },
+      "browShape": {
+        "allowed": ["soft", "curved", "low-set"],
+        "default": "soft"
+      },
+      "lipFullness": {
+        "allowed": ["medium", "medium-full"],
+        "default": "medium"
+      },
+      "lipBorderDefinition": {
+        "allowed": ["soft", "natural"],
+        "default": "natural"
+      }
+    },
+
+    "average": {
+      "jawlineContour": {
+        "allowed": ["oval", "balanced", "tapered"],
+        "default": "oval"
+      },
+      "mandibleAngle": {
+        "allowed": ["neutral", "balanced", "soft-angular", "tapered"],
+        "default": "balanced"
+      },
+      "cheekboneHeight": {
+        "allowed": ["mid"],
+        "default": "mid"
+      },
+      "chinPadShape": {
+        "allowed": ["medium", "oval", "balanced"],
+        "default": "medium"
+      },
+      "noseBridgeShape": {
+        "allowed": ["mid"],
+        "default": "mid"
+      },
+      "noseTipShape": {
+        "allowed": ["neutral", "straight", "defined"],
+        "default": "neutral"
+      },
+      "eyeShape": {
+        "allowed": ["almond", "balanced-almond"],
+        "default": "almond"
+      },
+      "browShape": {
+        "allowed": ["neutral", "soft-arched"],
+        "default": "neutral"
+      },
+      "lipFullness": {
+        "allowed": ["medium", "medium-full"],
+        "default": "medium-full"
+      },
+      "lipBorderDefinition": {
+        "allowed": ["defined", "natural"],
+        "default": "defined"
+      }
+    },
+
+    "tall": {
+      "jawlineContour": {
+        "allowed": ["long", "narrow", "angular"],
+        "default": "long"
+      },
+      "mandibleAngle": {
+        "allowed": ["sharp", "angular", "narrow", "defined"],
+        "default": "angular"
+      },
+      "cheekboneHeight": {
+        "allowed": ["high", "high-mid"],
+        "default": "high"
+      },
+      "chinPadShape": {
+        "allowed": ["elongated", "pointed", "structured"],
+        "default": "elongated"
+      },
+      "noseBridgeShape": {
+        "allowed": ["high", "high-straight"],
+        "default": "high"
+      },
+      "noseTipShape": {
+        "allowed": ["defined", "downturned", "structured"],
+        "default": "defined"
+      },
+      "eyeShape": {
+        "allowed": ["narrow-almond", "deep-set-almond"],
+        "default": "narrow-almond"
+      },
+      "browShape": {
+        "allowed": ["pronounced", "high-arched"],
+        "default": "pronounced"
+      },
+      "lipFullness": {
+        "allowed": ["thin-medium", "medium"],
+        "default": "medium"
+      },
+      "lipBorderDefinition": {
+        "allowed": ["defined", "sharp"],
+        "default": "defined"
+      }
+    }
+  },
+  "BODY_TYPE" : {
+    "thin": {
+        "shoulderWidth": "narrow",
+        "torsoProportion": "long",
+        "waistDefinition": "soft",
+        "hipWidth": "narrow",
+        "muscleDefinition": "low"
+    },
+
+    "fit": {
+        "shoulderWidth": "balanced",
+        "torsoProportion": "balanced",
+        "waistDefinition": "defined",
+        "hipWidth": "balanced",
+        "muscleDefinition": "medium"
+    },
+
+    "athletic": {
+        "shoulderWidth": "broad",
+        "torsoProportion": "balanced",
+        "waistDefinition": "defined",
+        "hipWidth": "medium",
+        "muscleDefinition": "high"
+    },
+
+    "soft": {
+        "shoulderWidth": "balanced",
+        "torsoProportion": "short-mid",
+        "waistDefinition": "soft",
+        "hipWidth": "medium-wide",
+        "muscleDefinition": "low"
+    }
+  },
+  "AGE_MORPHOLOGY" : {
+    "youthful": {
+        "softTissueVolume": "high",
+        "cheekFullness": "full",
+        "underEyeDefinition": "minimal",
+        "nasolabialFoldDepth": "shallow",
+        "skinTexture": "smooth",
+        "jawlineContourModifier": "soft",
+        "browRidgeVisibility": "low"
+    },
+
+    "young_adult": {
+        "softTissueVolume": "medium",
+        "cheekFullness": "medium",
+        "underEyeDefinition": "light",
+        "nasolabialFoldDepth": "light",
+        "skinTexture": "smooth",
+        "jawlineContourModifier": "neutral",
+        "browRidgeVisibility": "medium"
+    },
+
+    "adult": {
+        "softTissueVolume": "medium-low",
+        "cheekFullness": "defined",
+        "underEyeDefinition": "moderate",
+        "nasolabialFoldDepth": "moderate",
+        "skinTexture": "fine-lines",
+        "jawlineContourModifier": "defined",
+        "browRidgeVisibility": "medium-high"
+    },
+
+    "mature": {
+        "softTissueVolume": "low",
+        "cheekFullness": "reduced",
+        "underEyeDefinition": "pronounced",
+        "nasolabialFoldDepth": "deep",
+        "skinTexture": "textured",
+        "jawlineContourModifier": "angular",
+        "browRidgeVisibility": "high"
+    }
+  }
+}

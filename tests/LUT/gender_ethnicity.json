@@ -1,0 +1,337 @@
+{
+    "GENDER_FACE" : {
+        "masculine": {
+            "jawlineContour": {
+                "allowed": ["angular", "tapered", "long"],
+                "default": "angular"
+            },
+            "mandibleAngle": {
+                "allowed": ["sharp", "defined", "angular"],
+                "default": "defined"
+            },
+            "cheekboneHeight": {
+                "allowed": ["mid", "high-mid"],
+                "default": "mid"
+            },
+            "chinPadShape": {
+                "allowed": ["structured", "elongated"],
+                "default": "structured"
+            },
+            "browShape": {
+                "allowed": ["pronounced", "straight-heavy"],
+                "default": "pronounced"
+            },
+            "lipFullness": {
+                "allowed": ["thin-medium", "medium"],
+                "default": "thin-medium"
+            }
+        },
+
+        "feminine": {
+            "jawlineContour": {
+                "allowed": ["soft", "oval", "rounded"],
+                "default": "oval"
+            },
+            "mandibleAngle": {
+                "allowed": ["soft", "rounded"],
+                "default": "soft"
+            },
+            "cheekboneHeight": {
+                "allowed": ["mid", "high"],
+                "default": "high"
+            },
+            "chinPadShape": {
+                "allowed": ["rounded", "soft"],
+                "default": "rounded"
+            },
+            "browShape": {
+                "allowed": ["soft-arched", "curved"],
+                "default": "soft-arched"
+            },
+            "lipFullness": {
+                "allowed": ["medium", "medium-full"],
+                "default": "medium-full"
+            }
+        },
+
+        "androgynous": {
+            "jawlineContour": {
+                "allowed": ["balanced", "soft-angular"],
+                "default": "balanced"
+            },
+            "mandibleAngle": {
+                "allowed": ["neutral", "soft-angular"],
+                "default": "neutral"
+            },
+            "cheekboneHeight": {
+                "allowed": ["mid"],
+                "default": "mid"
+            },
+            "chinPadShape": {
+                "allowed": ["medium", "balanced"],
+                "default": "medium"
+            },
+            "browShape": {
+                "allowed": ["neutral", "soft"],
+                "default": "neutral"
+            },
+            "lipFullness": {
+                "allowed": ["medium"],
+                "default": "medium"
+            }
+        }
+    },
+    "ETHNICITY_DEFAULTS" : {
+        "east_asian": {
+            "eyeShape": {
+                "allowed": ["monolid", "almond", "tapered-almond"],
+                "default": "monolid"
+            },
+            "noseBridgeShape": {
+                "allowed": ["low", "low-mid"],
+                "default": "low"
+            },
+            "noseTipShape": {
+                "allowed": ["rounded", "soft"],
+                "default": "rounded"
+            },
+            "skinTone": {
+                "allowed": ["light-yellow", "medium-yellow", "tan-golden"],
+                "default": "medium-yellow"
+            },
+            "hairTexture": {
+                "allowed": ["straight", "coarse-straight"],
+                "default": "straight"
+            },
+            "hairSilhouette": {
+                "allowed": [
+                    "straight shoulder-length",
+                    "blunt bob",
+                    "soft bob",
+                    "low ponytail",
+                    "tight bun",
+                    "short",
+                    "undercut",
+                    "buzzed"
+                ],
+                "default": "straight shoulder-length"
+            }
+        },
+
+        "south_asian": {
+            "eyeShape": {
+                "allowed": ["almond", "balanced-almond"],
+                "default": "almond"
+            },
+            "noseBridgeShape": {
+                "allowed": ["mid", "high-mid"],
+                "default": "mid"
+            },
+            "noseTipShape": {
+                "allowed": ["rounded", "defined"],
+                "default": "defined"
+            },
+            "skinTone": {
+                "allowed": ["medium-brown", "deep-brown", "golden-brown"],
+                "default": "medium-brown"
+            },
+            "hairTexture": {
+                "allowed": ["straight", "wavy"],
+                "default": "wavy"
+            },
+            "hairSilhouette": {
+                "allowed": [
+                    "long straight",
+                    "long wavy",
+                    "mid-length layered",
+                    "low ponytail",
+                    "short",
+                    "undercut",
+                    "buzzed"
+                ],
+                "default": "long wavy"
+            }
+        },
+
+        "sub_saharan_african": {
+            "eyeShape": {
+                "allowed": ["round", "round-almond"],
+                "default": "round-almond"
+            },
+            "noseBridgeShape": {
+                "allowed": ["low", "low-wide"],
+                "default": "low-wide"
+            },
+            "noseTipShape": {
+                "allowed": ["rounded", "broad"],
+                "default": "rounded"
+            },
+            "skinTone": {
+                "allowed": ["deep-brown", "rich-brown", "dark-umber"],
+                "default": "rich-brown"
+            },
+            "hairTexture": {
+                "allowed": ["coily", "kinky-coily"],
+                "default": "coily"
+            },
+            "hairSilhouette": {
+                "allowed": [
+                    "short coils",
+                    "medium coils",
+                    "afro",
+                    "braided bun",
+                    "box braids",
+                    "short",
+                    "undercut",
+                    "buzzed"
+                ],
+                "default": "short coils"
+            }
+        },
+
+        "middle_eastern": {
+            "eyeShape": {
+                "allowed": ["almond", "deep-set-almond"],
+                "default": "deep-set-almond"
+            },
+            "noseBridgeShape": {
+                "allowed": ["high", "high-straight"],
+                "default": "high-straight"
+            },
+            "noseTipShape": {
+                "allowed": ["defined", "downturned"],
+                "default": "defined"
+            },
+            "skinTone": {
+                "allowed": ["light-olive", "medium-olive", "tan-olive"],
+                "default": "medium-olive"
+            },
+            "hairTexture": {
+                "allowed": ["wavy", "curly"],
+                "default": "wavy"
+            },
+            "hairSilhouette": {
+                "allowed": [
+                    "long waves",
+                    "mid-length waves",
+                    "high ponytail",
+                    "low bun",
+                    "braided ponytail",
+                    "short",
+                    "undercut",
+                    "buzzed"
+                ],
+                "default": "long waves"
+            }
+        },
+
+        "northern_european": {
+            "eyeShape": {
+                "allowed": ["almond", "balanced-almond"],
+                "default": "balanced-almond"
+            },
+            "noseBridgeShape": {
+                "allowed": ["high", "high-straight"],
+                "default": "high"
+            },
+            "noseTipShape": {
+                "allowed": ["straight", "defined"],
+                "default": "straight"
+            },
+            "skinTone": {
+                "allowed": ["fair-pink", "fair-neutral", "light-neutral"],
+                "default": "fair-neutral"
+            },
+            "hairTexture": {
+                "allowed": ["straight", "wavy"],
+                "default": "straight"
+            },
+            "hairSilhouette": {
+                "allowed": [
+                    "shoulder-length waves",
+                    "long waves",
+                    "bobcut",
+                    "messy bun",
+                    "high ponytail",
+                    "short",
+                    "undercut",
+                    "buzzed"
+                ],
+                "default": "shoulder-length waves"
+            }
+        },
+
+        "southern_european": {
+            "eyeShape": {
+                "allowed": ["almond", "deep-set-almond"],
+                "default": "almond"
+            },
+            "noseBridgeShape": {
+                "allowed": ["mid", "high-mid"],
+                "default": "high-mid"
+            },
+            "noseTipShape": {
+                "allowed": ["defined", "downturned"],
+                "default": "defined"
+            },
+            "skinTone": {
+                "allowed": ["light-olive", "medium-olive", "tan"],
+                "default": "light-olive"
+            },
+            "hairTexture": {
+                "allowed": ["wavy", "curly"],
+                "default": "wavy"
+            },
+            "hairSilhouette": {
+                "allowed": [
+                    "long waves",
+                    "deep waves",
+                    "low bun",
+                    "high ponytail",
+                    "mid-length layered",
+                    "short",
+                    "undercut",
+                    "buzzed"
+                ],
+                "default": "long waves"
+            }
+        },
+
+        "latinx_mestizo": {
+            "eyeShape": {
+                "allowed": ["almond", "round-almond"],
+                "default": "almond"
+            },
+            "noseBridgeShape": {
+                "allowed": ["mid", "low-mid"],
+                "default": "mid"
+            },
+            "noseTipShape": {
+                "allowed": ["rounded", "neutral"],
+                "default": "neutral"
+            },
+            "skinTone": {
+                "allowed": ["light-brown", "medium-brown", "tan-golden"],
+                "default": "tan-golden"
+            },
+            "hairTexture": {
+                "allowed": ["straight", "wavy"],
+                "default": "straight"
+            },
+            "hairSilhouette": {
+                "allowed": [
+                    "long straight",
+                    "long wavy",
+                    "mid-length layered",
+                    "low ponytail",
+                    "high ponytail",
+                    "short",
+                    "undercut",
+                    "buzzed"
+                ],
+                "default": "long straight"
+            }
+
+        }
+    }
+}

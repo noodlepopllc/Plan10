@@ -1,0 +1,98 @@
+{
+  "HAIR_SILHOUETTE": {
+    "default": "straight shoulder-length (pinned)",
+    "allowed": [
+      "blunt bob",
+      "bobcut",
+      "pixie cut",
+      "tight bun",
+      "low bun",
+      "high bun",
+      "short crop",
+      "straight shoulder-length (pinned)",
+      "tight single ponytail"
+    ]
+  },
+  "GENDER_HAIR": {
+      "feminine": {
+          "silhouetteBias": [
+              "straight shoulder-length",
+              "blunt bob",
+              "soft bob",
+              "long straight",
+              "long wavy",
+              "mid-length layered",
+              "shoulder-length waves",
+              "long waves",
+              "deep waves",
+              "high ponytail",
+              "low ponytail",
+              "braided ponytail",
+              "messy bun",
+              "low bun",
+              "tight bun",
+              "short coils",
+              "medium coils",
+              "afro",
+              "braided bun",
+              "box braids"
+          ]
+      },
+
+      "masculine": {
+          "silhouetteBias": [
+              "short coils",
+              "medium coils",
+              "afro",
+              "tapered",
+              "short",
+              "buzzed",
+              "undercut"
+          ]
+      },
+
+      "androgynous": {
+          "silhouetteBias": [
+              "blunt bob",
+              "soft bob",
+              "mid-length layered",
+              "shoulder-length waves",
+              "short coils",
+              "medium coils",
+              "low ponytail"
+          ]
+      }
+  },
+  "HAIR_DESCRIPTION": {
+    "blunt_bob": "chin-length blunt bob with sharp horizontal cut terminating precisely at jawline",
+    "soft_bob": "soft bob with gentle rounded ends grazing collarbone",
+    "bobcut": "asymmetric bobcut with longest point at jawline, shortest at nape",
+    "pixie_cut": "ultra-short pixie cut with tapered sides exposing ears, crown volume only",
+    "tight_bun": "tight bun coiled precisely at crown of head with zero stray strands",
+    "low_bun": "low bun gathered at nape of neck with smooth wrap",
+    "high_bun": "high bun positioned at crown with tension pull from temples",
+    "short_crop": "short crop with textured top grazing earlobes, tapered sides",
+    "straight_shoulder_length": "straight shoulder-length hair with ends grazing collarbone and subtle inward tuck",
+    "straight_shoulder_length_(pinned)": "straight shoulder-length hair pinned back at temples, ends grazing collarbone",
+    "tight_single_ponytail": "tight single ponytail gathered precisely at nape with straight fall",
+    "high_ponytail": "high ponytail gathered at crown with taut pull from temples",
+    "low_ponytail": "low ponytail gathered at nape with relaxed fall to mid-back",
+    "braided_ponytail": "single braided ponytail gathered at nape extending to mid-back",
+    "messy_bun": "messy bun with intentional flyaways, base positioned at mid-occiput",
+    "short_coils": "short coils with tight curl pattern terminating at jawline",
+    "medium_coils": "medium coils with defined curl clumps extending to shoulders",
+    "afro": "full afro with spherical volume extending 4 inches from scalp perimeter",
+    "braided_bun": "braided bun with cornrow feed-in terminating in coiled crown bun",
+    "box_braids": "waist-length box braids with uniform thickness, parting visible at scalp",
+    "long_straight": "long straight hair with ends terminating at mid-back",
+    "long_wavy": "long wavy hair with S-pattern waves terminating at mid-back",
+    "mid_length_layered": "mid-length layered cut with shortest layers at jawline, longest at shoulders",
+    "shoulder_length_waves": "shoulder-length waves with soft undulation grazing collarbone",
+    "long_waves": "long waves with deep undulation terminating at waist",
+    "deep_waves": "deep waves with pronounced S-pattern terminating at hips",
+    "tapered": "tapered cut with gradual fade from temple to nape, top length 2 inches",
+    "short": "short cut with uniform 1.5 inch length across entire head",
+    "buzzed": "buzzed cut with #2 guard length, zero taper",
+    "undercut": "undercut with shaved sides exposing ear contour, top length 3 inches combed forward"
+  }
+}

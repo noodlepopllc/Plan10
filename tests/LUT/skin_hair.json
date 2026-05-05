@@ -1,0 +1,16 @@
+{
+    "SKIN_TONE" : {
+        "fair": ["fair", "fair-neutral"],
+        "light": ["light", "light-olive"],
+        "medium": ["medium", "medium-olive"],
+        "tan": ["tan", "brown"],
+        "deep": ["deep-brown", "dark"]
+    },
+    "HAIR_COLOR" : {
+        "black": ["black"],
+        "brown": ["dark-brown", "medium-brown", "light-brown"],
+        "blonde": ["dark-blonde", "blonde", "platinum"],
+        "red": ["auburn"],
+        "gray": ["gray"]
+    }
+}

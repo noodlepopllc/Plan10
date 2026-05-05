@@ -1,0 +1,23 @@
+{
+    "LOW": {
+        "shadowResponse": "soft",
+        "browDensity": "medium",
+        "lashDefinition": "soft",
+        "eyeValue": "medium",
+        "lipValue": "low"
+    },
+    "MEDIUM": {
+        "shadowResponse": "standard",
+        "browDensity": "medium_high",
+        "lashDefinition": "standard",
+        "eyeValue": "medium_dark",
+        "lipValue": "medium"
+    },
+    "HIGH": {
+        "shadowResponse": "strong",
+        "browDensity": "high",
+        "lashDefinition": "sharp",
+        "eyeValue": "dark",
+        "lipValue": "high"
+    }
+}

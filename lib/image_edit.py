@@ -38,31 +38,37 @@ def _normalize_expr(expr: str) -> str:
 # IMAGE EDIT PIPELINE
 # ─────────────────────────────────────────────────────────────
 class ImageEditQwen(object):
-    def __init__(self, vrlimit=14, loras=[]):
+    def __init__(self,vrlimit=14):
         if "VRAM" in os.environ:
             vrlimit = int(os.environ["VRAM"])
-        vram_config = {
-            "offload_dtype": "disk", "offload_device": "disk",
-            "onload_dtype": torch.float8_e4m3fn, "onload_device": "cpu",
-            "preparing_dtype": torch.float8_e4m3fn, "preparing_device": "cuda",
-            "computation_dtype": torch.bfloat16, "computation_device": "cuda",
-        }
-        self.pipe = QwenImagePipeline.from_pretrained(
-            torch_dtype=torch.bfloat16, device="cuda",
-            model_configs=[
-                ModelConfig(model_id="Qwen/Qwen-Image-Edit-2511", origin_file_pattern="transformer/diffusion_pytorch_model*.safetensors", **vram_config),
-                ModelConfig(model_id="Qwen/Qwen-Image", origin_file_pattern="text_encoder/model*.safetensors", **vram_config),
-                ModelConfig(model_id="Qwen/Qwen-Image", origin_file_pattern="vae/diffusion_pytorch_model.safetensors", **vram_config),
-            ],
-            processor_config=ModelConfig(model_id="Qwen/Qwen-Image-Edit", origin_file_pattern="processor/"),
-            vram_limit=vrlimit,
-        )
-        for lora in loras:
-            self.pipe.load_lora(self.pipe.dit, lora, alpha=1.0)
-        self.pipe.load_lora(self.pipe.dit, "./loras/Qwen-Image-Edit-2511-Lightning-8steps-V1.0-bf16.safetensors", alpha=1.0)
-        self.pipe.scheduler = FlowMatchScheduler("Qwen-Image-Lightning")
+        self.vrlimit = vrlimit
+        self.pipe = None
+    
+    def __enter__(self):
+        if not self.pipe:
+            vram_config = {
+                "offload_dtype": "disk", "offload_device": "disk",
+                "onload_dtype": torch.float8_e4m3fn, "onload_device": "cpu",
+                "preparing_dtype": torch.float8_e4m3fn, "preparing_device": "cuda",
+                "computation_dtype": torch.bfloat16, "computation_device": "cuda",
+            }
+            self.pipe = QwenImagePipeline.from_pretrained(
+                torch_dtype=torch.bfloat16, device="cuda",
+                model_configs=[
+                    ModelConfig(model_id="Qwen/Qwen-Image-Edit-2511", origin_file_pattern="transformer/diffusion_pytorch_model*.safetensors", **vram_config),
+                    ModelConfig(model_id="Qwen/Qwen-Image", origin_file_pattern="text_encoder/model*.safetensors", **vram_config),
+                    ModelConfig(model_id="Qwen/Qwen-Image", origin_file_pattern="vae/diffusion_pytorch_model.safetensors", **vram_config),
+                ],
+                processor_config=ModelConfig(model_id="Qwen/Qwen-Image-Edit", origin_file_pattern="processor/"),
+                vram_limit=self.vrlimit,
+            )
+            self.pipe.load_lora(self.pipe.dit, "./loras/Qwen-Image-Edit-2511-Lightning-8steps-V1.0-bf16.safetensors", alpha=1.0)
+            self.pipe.scheduler = FlowMatchScheduler("Qwen-Image-Lightning")
+            return self
 
     def generate(self, prompt, images, output, width, height, seed):
+        if not self.pipe:
+            self.__enter__(self)
         # Safely handle empty/character-only lists
         edit_images = []
         for item in images:
@@ -89,35 +95,46 @@ class ImageEditQwen(object):
             status['description'] = analysis['analysis']
         return status
 
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.__del__()
+
     def __del__(self):
-        del self.pipe 
         gc.collect()
         if torch.cuda and torch.cuda.is_available():  # ✅ Was `if torch.cuda:` (always truthy)
             torch.cuda.empty_cache()
     
 class ImageEditKlein(object):
-    def __init__(self, vrlimit=14):
+    def __init__(self,vrlimit=14):
         if "VRAM" in os.environ:
             vrlimit = int(os.environ["VRAM"])
-        vram_config = {
-            "offload_dtype": "disk", "offload_device": "disk",
-            "onload_dtype": torch.float8_e4m3fn, "onload_device": "cpu",
-            "preparing_dtype": torch.float8_e4m3fn, "preparing_device": "cuda",
-            "computation_dtype": torch.bfloat16, "computation_device": "cuda",
-        }
-        self.pipe = Flux2ImagePipeline.from_pretrained(
-            torch_dtype=torch.bfloat16,
-            device="cuda",
-            model_configs=[
-                ModelConfig(model_id="black-forest-labs/FLUX.2-klein-4B", origin_file_pattern="text_encoder/*.safetensors", **vram_config),
-                ModelConfig(model_id="black-forest-labs/FLUX.2-klein-4B", origin_file_pattern="transformer/*.safetensors", **vram_config),
-                ModelConfig(model_id="black-forest-labs/FLUX.2-klein-4B", origin_file_pattern="vae/diffusion_pytorch_model.safetensors"),
-            ],
-            tokenizer_config=ModelConfig(model_id="black-forest-labs/FLUX.2-klein-4B", origin_file_pattern="tokenizer/"),
-            vram_limit=vrlimit,
-        )
+        self.vrlimit = vrlimit
+        self.pipe = None
+
+    def __enter__(self):
+        if not self.pipe:
+            vram_config = {
+                "offload_dtype": "disk", "offload_device": "disk",
+                "onload_dtype": torch.float8_e4m3fn, "onload_device": "cpu",
+                "preparing_dtype": torch.float8_e4m3fn, "preparing_device": "cuda",
+                "computation_dtype": torch.bfloat16, "computation_device": "cuda",
+            }
+            self.pipe = Flux2ImagePipeline.from_pretrained(
+                torch_dtype=torch.bfloat16,
+                device="cuda",
+                model_configs=[
+                    ModelConfig(model_id="black-forest-labs/FLUX.2-klein-4B", origin_file_pattern="text_encoder/*.safetensors", **vram_config),
+                    ModelConfig(model_id="black-forest-labs/FLUX.2-klein-4B", origin_file_pattern="transformer/*.safetensors", **vram_config),
+                    ModelConfig(model_id="black-forest-labs/FLUX.2-klein-4B", origin_file_pattern="vae/diffusion_pytorch_model.safetensors"),
+                ],
+                tokenizer_config=ModelConfig(model_id="black-forest-labs/FLUX.2-klein-4B", origin_file_pattern="tokenizer/"),
+                vram_limit=self.vrlimit,
+            )
+        return self
 
     def generate(self, prompt, images, output, width, height, seed):
+        if not self.pipe:
+            self.__enter__()
+
         edit_images = []
 
         for item in images:
@@ -144,8 +161,10 @@ class ImageEditKlein(object):
             status['description'] = analysis['analysis']
         return status
 
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.__del__()
+
     def __del__(self):
-        del self.pipe 
         gc.collect()
         if torch.cuda and torch.cuda.is_available():  # ✅ Was `if torch.cuda:` (always truthy)
             torch.cuda.empty_cache()
@@ -185,10 +204,14 @@ def EditImageSchema():
         }
     }
 
-def EditImage(prompt='', images=[''], output='tmp_edit.png', width=1328, height=1328, seed=42):
-    edit = ImageEdit()
+def EditImage(prompt='', images=[''], output='tmp_edit.png', width=1328, height=1328, seed=42, img_edit=None):
+    if not img_edit:
+        edit = ImageEdit()
+    else:
+        edit = img_edit
     status = edit.generate(prompt, images, output, int(width), int(height), int(seed))
-    del edit
+    if not img_edit:
+        del edit
     return status
 
 def GenerateRoomBackdrop(

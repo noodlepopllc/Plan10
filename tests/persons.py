@@ -8,40 +8,17 @@ from locations import  LocationPairGenerator
 
 load_environ()
 
-def translate_hairskin(description):
-    mapping = {
-        "fair-neutral": "fair", "fair-pink": "fair",
-        "light-olive": "light", "light-neutral": "light", "light-yellow": "light",
-        "medium-olive": "medium", "medium-yellow": "medium", "medium-brown": "medium",
-        "golden-brown": "tan", "tan-golden": "tan", "tan-olive": "tan",
-        "brown": "tan", "light-brown": "tan",
-        "dark-brown": "brown", "deep-brown": "deep", "rich-brown": "deep",
-        "dark-umber": "deep", "dark": "deep",
-        "dark-blonde": "blonde", "platinum": "blonde", "auburn": "red",
-    }
-
-    def normalize_token(token):
-        match = re.match(r"^([^\w\-]*)([\w\-]+)([^\w\-]*)$", token)
-        if not match:
-            return token
-        prefix, core, suffix = match.groups()
-        normalized_core = mapping.get(core, core)
-        return f"{prefix}{normalized_core}{suffix}"
-
-    tokens = description.split()
-    normalized = [normalize_token(t) for t in tokens]
-    return " ".join(normalized)
-
-
 class CharacterRecord:
-    def __init__(self, name, gender, character_description):
+    def __init__(self, name, gender, character_description, clothing_description):
         self.name = name
         self.gender = gender
-        self.character_description = "light adult facial definition around the jawline and cheekbones, clearly adult proportions. " + translate_hairskin(character_description)
+        self.character_description = "light adult facial definition around the jawline and cheekbones, clearly adult proportions. " + character_description
+        self.clothing_description = clothing_description
+
 
     @classmethod
     def from_json(cls, data):
-        return cls(name=data["name"], gender=data["gender"], character_description=data["characterDescription"])
+        return cls(name=data["name"], gender=data["gender"], character_description=data["characterDescription"], clothing_description=data["clothingDescription"])
 
 
 class ShuffleBag:
@@ -173,35 +150,19 @@ if __name__ == '__main__':
     seed = random.randint(0, 100000000)
     random.seed(seed)
     VARIATIONS_PER_PAIR = 1
-    
-    with open(sys.argv[1], 'r') as ch:
-        output = load(ch) 
+
+    char1_data = ''
+    char2_data = ''
+
+    with open(f'./tests/{sys.argv[1]}/{sys.argv[1]}.json') as ch1:
+        char1_data = load(ch1)['characters'].pop()
+
+    with open(f'./tests/{sys.argv[2]}/{sys.argv[2]}.json') as ch2:
+        char2_data = load(ch2)['characters'].pop()
+
+    character_pairs = [(char1_data, char2_data)]
     
     scene = DuoPOVScene()
-
-    # --- Argument handling for two characters ---
-    if len(sys.argv) >= 4:
-        char1_name = sys.argv[2].lower()
-        char2_name = sys.argv[3].lower()
-        characters = [x for x in output['characters'] 
-                     if x['name'].lower() == char1_name or x['name'].lower() == char2_name]
-        if len(characters) != 2:
-            print(f"❌ Error: Could not find both '{sys.argv[2]}' and '{sys.argv[3]}' in character data")
-            sys.exit(1)
-        char1_data = [c for c in characters if c['name'].lower() == char1_name][0]
-        char2_data = [c for c in characters if c['name'].lower() == char2_name][0]
-        character_pairs = [(char1_data, char2_data)]
-    elif len(sys.argv) >= 3:
-        char_name = sys.argv[2].lower()
-        primary_chars = [x for x in output['characters'] if char_name in x['name'].lower()]
-        if not primary_chars:
-            print(f"❌ Error: Could not find '{sys.argv[2]}' in character data")
-            sys.exit(1)
-        other_chars = [c for c in output['characters'] if c not in primary_chars]
-        character_pairs = [(primary_chars[0], random.choice(other_chars)) for _ in range(5)]
-    else:
-        all_chars = output['characters']
-        character_pairs = [random.sample(all_chars, 2) for _ in range(5)]
 
     location_gen = LocationPairGenerator()
 

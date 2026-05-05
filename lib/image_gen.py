@@ -14,7 +14,12 @@ class ImageGenQwen(object):
     def __init__(self,vrlimit=14):
         if "VRAM" in os.environ:
             vrlimit = int(os.environ["VRAM"])
-        vram_config = {
+        self.vrlimit = vrlimit
+        self.pipe = None
+
+    def __enter__(self):
+        if not self.pipe:
+            vram_config = {
                 "offload_dtype": "disk",
                 "offload_device": "disk",
                 "onload_dtype": torch.float8_e4m3fn,
@@ -24,21 +29,24 @@ class ImageGenQwen(object):
                 "computation_dtype": torch.bfloat16,
                 "computation_device": "cuda",
             }
-        self.pipe = QwenImagePipeline.from_pretrained(
-                torch_dtype=torch.bfloat16,
-                device="cuda",
-                model_configs=[
-                    ModelConfig(model_id="Qwen/Qwen-Image-2512", origin_file_pattern="transformer/diffusion_pytorch_model*.safetensors", **vram_config),
-                    ModelConfig(model_id="Qwen/Qwen-Image", origin_file_pattern="text_encoder/model*.safetensors", **vram_config),
-                    ModelConfig(model_id="Qwen/Qwen-Image", origin_file_pattern="vae/diffusion_pytorch_model.safetensors", **vram_config),
-               ],
-                tokenizer_config=ModelConfig(model_id="Qwen/Qwen-Image", origin_file_pattern="tokenizer/"),
-                vram_limit=vrlimit,
-            )
-        self.pipe.load_lora(self.pipe.dit, "./loras/Qwen-Image-2512-Lightning-8steps-V1.0-bf16.safetensors", alpha=1.0)
-        self.pipe.scheduler = FlowMatchScheduler("Qwen-Image-Lightning")
+            self.pipe = QwenImagePipeline.from_pretrained(
+                    torch_dtype=torch.bfloat16,
+                    device="cuda",
+                    model_configs=[
+                        ModelConfig(model_id="Qwen/Qwen-Image-2512", origin_file_pattern="transformer/diffusion_pytorch_model*.safetensors", **vram_config),
+                        ModelConfig(model_id="Qwen/Qwen-Image", origin_file_pattern="text_encoder/model*.safetensors", **vram_config),
+                        ModelConfig(model_id="Qwen/Qwen-Image", origin_file_pattern="vae/diffusion_pytorch_model.safetensors", **vram_config),
+                ],
+                    tokenizer_config=ModelConfig(model_id="Qwen/Qwen-Image", origin_file_pattern="tokenizer/"),
+                    vram_limit=self.vrlimit,
+                )
+            self.pipe.load_lora(self.pipe.dit, "./loras/Qwen-Image-2512-Lightning-8steps-V1.0-bf16.safetensors", alpha=1.0)
+            self.pipe.scheduler = FlowMatchScheduler("Qwen-Image-Lightning")
+
 
     def generate(self, prompt, output, width, height, seed):
+        if not self.pipe:
+            self.__enter__()
         image = self.pipe(
                 prompt=prompt,
                 seed=seed,
@@ -50,19 +58,25 @@ class ImageGenQwen(object):
         image.save(output)
         return {"status":"success", "output_path":output}
 
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.__del__()
 
     def __del__(self):
-        del self.pipe 
         gc.collect()
         if torch.cuda.is_available():  # ✅ Was `if torch.cuda:` (always truthy)
             torch.cuda.empty_cache()
 
 class ImageGenKlein(object):
     def __init__(self,vrlimit=14):
-        model = "black-forest-labs/FLUX.2-klein-4B"
         if "VRAM" in os.environ:
             vrlimit = int(os.environ["VRAM"])
-        vram_config = {
+        self.vrlimit = vrlimit
+        self.pipe = None
+
+    def __enter__(self):
+        model = "black-forest-labs/FLUX.2-klein-4B"
+        if not self.pipe:
+            vram_config = {
                 "offload_dtype": "disk",
                 "offload_device": "disk",
                 "onload_dtype": torch.float8_e4m3fn,
@@ -73,19 +87,23 @@ class ImageGenKlein(object):
                 "computation_device": "cuda",
             }
 
-        self.pipe = Flux2ImagePipeline.from_pretrained(
-            torch_dtype=torch.bfloat16,
-            device="cuda",
-            model_configs=[
-                ModelConfig(model_id=model, origin_file_pattern="text_encoder/*.safetensors", **vram_config),
-                ModelConfig(model_id=model, origin_file_pattern="transformer/*.safetensors", **vram_config),
-                ModelConfig(model_id=model, origin_file_pattern="vae/diffusion_pytorch_model.safetensors"),
-            ],
-            tokenizer_config=ModelConfig(model_id=model, origin_file_pattern="tokenizer/"),
-            vram_limit=vrlimit,
-        )
+            self.pipe = Flux2ImagePipeline.from_pretrained(
+                torch_dtype=torch.bfloat16,
+                device="cuda",
+                model_configs=[
+                    ModelConfig(model_id=model, origin_file_pattern="text_encoder/*.safetensors", **vram_config),
+                    ModelConfig(model_id=model, origin_file_pattern="transformer/*.safetensors", **vram_config),
+                    ModelConfig(model_id=model, origin_file_pattern="vae/diffusion_pytorch_model.safetensors"),
+                ],
+                tokenizer_config=ModelConfig(model_id=model, origin_file_pattern="tokenizer/"),
+                vram_limit=self.vrlimit,
+            )
+        return self
 
     def generate(self, prompt, output, width, height, seed):
+        if not self.pipe:
+            self.__enter__()
+
         image = self.pipe(
                 prompt=prompt,
                 seed=seed,
@@ -97,11 +115,12 @@ class ImageGenKlein(object):
         image.save(output)
         return {"status":"success", "output_path":output}
 
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.__del__()
 
     def __del__(self):
-        del self.pipe 
         gc.collect()
-        if torch.cuda.is_available():  # ✅ Was `if torch.cuda:` (always truthy)
+        if torch.cuda and torch.cuda.is_available():  # ✅ Was `if torch.cuda:` (always truthy)
             torch.cuda.empty_cache()
 
 if os.environ.get("IMAGE_GEN", "KLEIN") == "KLEIN":
@@ -181,7 +200,7 @@ def add_metadata_loc(imgpath, prompt='', seed=-1):
     target_image.save(imgpath, pnginfo=metadata)
     return bg_desc
 
-def CreateCharacterSheet(prompt='', output='character_tmp.png',seed=-1):
+def CreateCharacterSheet(prompt='', output='character_tmp.png',seed=-1, imagegen=None):
     seed=int(seed)
     prompt = (
     "create a character sheet single image with two side by side views "
@@ -189,9 +208,10 @@ def CreateCharacterSheet(prompt='', output='character_tmp.png',seed=-1):
     "Ensure the clothing, legwear, sock length, and garment structure match exactly "
     "between the front and back views. "
     f"of {prompt}")
-    gen = ImageGen()
+    gen = imagegen if imagegen else ImageGen()
     status = gen.generate(prompt, output, 1328, 1328, seed)
-    del gen
+    if not imagegen:
+        del gen
     status['description'] = add_metadata_char(output, prompt, seed)
     status['prompt'] = prompt
     return status
