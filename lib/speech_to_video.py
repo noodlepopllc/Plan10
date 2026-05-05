@@ -277,7 +277,7 @@ def GenerateTalkingVideoSchema():
                     }
                     "audio": {
                         "type": "string",
-                        "description": "Path to audio file to for reference audio,
+                        "description": "Path to audio file to for reference audio"
                     },
                     "width": {"type": "integer", "description": "Video width (divisible by 64). Default: 480."},
                     "height": {"type": "integer", "description": "Video height (divisible by 64). Default: 832."},
