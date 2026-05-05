@@ -22,7 +22,6 @@ The REQUIREMENTS block is BINDING. You MUST satisfy it exactly.
     char_<index>
     comp_<index>
     design_<index>   (base voices)
-    voice_<index>    (cloned speaking voices)
     dialog_<index>
     video_<index>
 - NEVER reuse an alias.
@@ -38,12 +37,9 @@ The REQUIREMENTS block is BINDING. You MUST satisfy it exactly.
 - Each character MUST have one base voice:
     - Base voices MUST be named design_<char_index>.
     - Base voices MUST use design_voice.
-- All speaking voices MUST be clones:
-    - Speaking voices MUST be named voice_<index>.
-    - Each voice_<index> MUST use clone_voice referencing the correct design_<char_index>.
-- design_<index> MUST NEVER be used directly in dialog_to_video.
+- design_<index> MUST ALWAYS be used directly in dialog_to_video.
 - You MUST generate EXACTLY speaking_moments dialog_<index> / dialog_to_video pairs.
-- dialog_<index> MUST always use a voice_<index> alias as its audio.
+- dialog_<index> MUST always use a design_<index> alias as its audio.
 
 When generating dialog, make sure to use punctiation in order to specify pauses and enthusiasm. Convey the emotion through word choice, periods for pauses
 exclamation marks for excitement and qwestion marks as appropriate.
@@ -104,18 +100,15 @@ composite_scene combining=<bg_alias>, <char_alias>, shot_type="<medium|closeup|p
 >> ALIAS: design_<index>
 design_voice voice="<gender, timbre, pitch, accent>"
 
->> ALIAS: voice_<index>
-clone_voice audio=<design_alias> text="<in-scene spoken dialog only>"
-
 >> ALIAS: dialog_<index>
-dialog_to_video using=<comp_alias>, audio=<voice_alias>, prompt="<facial action, lip sync>" Height: 832, Width: 480, Seed: -1
+dialog_to_video using=<comp_alias>, audio=<design_alias>, text="hello, it is such a pleasure to meet you!", prompt="<facial action, lip sync>" Height: 832, Width: 480, Seed: -1
 
 >> ALIAS: video_<index>
 image_to_video using=<comp_alias>, prompt="<motion description>", duration_sec=3 Height: 832, Width: 480, Seed: -1
 
 ──────────────── HARD RULES ────────────────
 - EVERY visual/video line MUST end with EXACTLY: ` Height: 832, Width: 480, Seed: -1`
-- VOICE aliases (design_<index>, voice_<index>) NEVER get the resolution suffix.
+- VOICE aliases (design_<index>) NEVER get the resolution suffix.
 - EVERY voice_<index> alias MUST be immediately followed by its matching dialog_<index> alias.
 - LEAVE EXACTLY ONE blank line between blocks.
 - NO markdown, NO prose, NO comments.

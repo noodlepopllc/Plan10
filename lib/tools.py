@@ -59,7 +59,7 @@ class ToolHandler(object):
         GenerateVideoSchema(),
         GenerateTalkingVideoSchema(),
         VoiceDesignSchema(),
-        VoiceCloneSchema(),
+        #VoiceCloneSchema(),
         GenerateGraphicSchema()
     ]
 
@@ -148,9 +148,9 @@ class ToolHandler(object):
             "generate_reverse_background": ["source_image", "width", "height", "seed", "output", "alias"],
             "edit_image": ["images", "prompt", "width", "height", "seed", "output", "alias"],
             "image_to_video": ["prompt", "media", "width", "height", "seed", "duration_sec", "output", "alias"],
-            "dialog_to_video": ["prompt", "media", "audio", "width", "height", "seed", "output", "alias"],
+            "dialog_to_video": ["prompt", "text", "media", "audio", "width", "height", "seed", "output", "alias"],
             "design_voice": ["text", "voice", "output", "duration", "seed"],
-            "clone_voice": ["text", "audio", "output", "duration", "seed"],
+            #"clone_voice": ["text", "audio", "output", "duration", "seed"],
             "generate_graphic": ["prompt", "output", "width", "height", "seed", "target_video_size", "padding_style", "alias"]
         }
         

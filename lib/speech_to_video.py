@@ -18,6 +18,7 @@ import torchaudio.functional as F
 from util import video_to_img
 from image_analysis import AnalyzeImage
 import random
+from dialog import CloneVoice
 
 from config import load_environ
 load_environ()
@@ -204,6 +205,7 @@ def speech_to_video(
 
 def GenerateTalkingVideo(
     prompt='',
+    text='',
     audio='',
     media='',
     output='output.mp4',
@@ -219,6 +221,8 @@ def GenerateTalkingVideo(
         seed = random.randint(0,1000000)
 
     input_image  = video_to_img(media, width, height, True)
+    if text:
+        audio = CloneVoice(text, audio, 'tmp.wav', duration=5.0, seed=-1)['output_path']
     input_audio, sample_rate = librosa.load(audio, sr=16000, mono=True, dtype=np.float32)
     cfg_scale = 1.5 
     num_inference_steps = 4
@@ -267,9 +271,13 @@ def GenerateTalkingVideoSchema():
                         "type": "string", 
                         "description": "Path or alias of source image/video."
                     },
+                    "text": {
+                        "type": "string",
+                        "description": "Text that will be spoken in the video"
+                    }
                     "audio": {
                         "type": "string",
-                        "description": "Path to audio file to use for audio",
+                        "description": "Path to audio file to for reference audio,
                     },
                     "width": {"type": "integer", "description": "Video width (divisible by 64). Default: 480."},
                     "height": {"type": "integer", "description": "Video height (divisible by 64). Default: 832."},
@@ -291,6 +299,7 @@ if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('-P', '--prompt', type=str, default='')
+    parser.add_argument('-T', '--text', type=str, default='')
     parser.add_arguemtn('-A', '--audio', type=str, default='')
     parser.add_argument('-I', '--image', type=str, required=True)
     parser.add_argument('-O', '--output', type=str, default='output.mp4')
