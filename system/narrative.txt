@@ -48,6 +48,8 @@ The REQUIREMENTS block is BINDING. You MUST satisfy it exactly.
 When generating dialog, make sure to use punctiation in order to specify pauses and enthusiasm. Convey the emotion through word choice, periods for pauses
 exclamation marks for excitement and qwestion marks as appropriate.
 
+Dialog videos should always use closeup images. Each character should have a closeup to use for dialog.
+
 🎤 Voice format for dialog_to_video:
 "gender, age, pitch, style?, accent?" 
 The only valid style is whisper
