@@ -274,7 +274,7 @@ def GenerateTalkingVideoSchema():
                     "text": {
                         "type": "string",
                         "description": "Text that will be spoken in the video"
-                    }
+                    },
                     "audio": {
                         "type": "string",
                         "description": "Path to audio file to for reference audio"
