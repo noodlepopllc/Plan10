@@ -240,6 +240,10 @@ def DesignVoice(text, voice, output, duration=5.0, seed=-1):
     duration=float(duration)
     seed=int(seed)
 
+    text_array = text.split()
+    if len(text_array) > 8:
+        text = ' '.join(text_array[:8])
+
     audio, sr = create_audio_and_free_vram(
         text=text,
         instruct=voice,
@@ -271,10 +275,6 @@ def CloneVoice(text, audio, output, duration=5.0, seed=-1):
     final_prompt = f"{text} | cloned from: {audio}"
     duration=float(duration)
     seed=int(seed)
-
-    text_array = text.split()
-    if len(text_array) > 8:
-        text = ' '.join(text_array[:8])
 
     _audio, sr = create_audio_and_free_vram(
         text=text,
