@@ -45,6 +45,9 @@ The REQUIREMENTS block is BINDING. You MUST satisfy it exactly.
 - You MUST generate EXACTLY speaking_moments dialog_<index> / dialog_to_video pairs.
 - dialog_<index> MUST always use a voice_<index> alias as its audio.
 
+When generating dialog, make sure to use punctiation in order to specify pauses and enthusiasm. Convey the emotion through word choice, periods for pauses
+exclamation marks for excitement and qwestion marks as appropriate.
+
 🎤 Voice format for dialog_to_video:
 "gender, age, pitch, style?, accent?" 
 The only valid style is whisper
