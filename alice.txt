@@ -37,17 +37,11 @@ create an image to video 5 second duration using Alice_Composite_Outside asset, 
 >> ALIAS: Alice_Voice
 design_voice, female young woman voice with australian accent Keep the text for the audio as a short intro (8 - 12 words).
 
->> ALIAS: Alice_Outdoor_Voice
-clone_voice, use the description of Alice_Background_Outdoor asset and Alias_Voice asset to generate a short dialog of Alice introducing herself, keep it close to 5 seconds in length (12 - 15 words) Duration: 5 seconds
-
->> ALIAS: Alice_Indoor_Voice
-clone_voice, use the description of Alice_Background_Indoor asset and Alias_Voice asset to generate a short dialog about where she is at the tone of the dialog should be of surprise, keep it close to 5 seconds in length (12 - 15 words) Duration: 5 seconds
-
 >> ALIAS: Alice_Dialog
-create a dialog_to_video Alice_Outdoor_voice with Alice_Closeup MUST SET HEIGHT AND WIDTH, Height: 832, Width: 480, Seed: 12345
+create a dialog_to_video Alice_voice asset with Alice_Closeup asset generate a short dialog of Alice introducing herself (12 - 15 words) MUST SET HEIGHT AND WIDTH, Height: 832, Width: 480, Seed: 12345
 
 >> ALIAS: Alice_Dialog_Indoor
-create a dialog_to_video Alice_Indoor_Voice with Alice_Closeup_Indoor, her mouth is wide open in surprise MUST SET HEIGHT AND WIDTH, Height: 832, Width: 480, Seed: 12345
+create a dialog_to_video Alice_Voice asset with Alice_Closeup_Indoor asset, she is surprised by what she sees and expresses it (12 - 15 words) MUST SET HEIGHT AND WIDTH, Height: 832, Width: 480, Seed: 12345
 
 >> ALIAS: Alice_Film_Outdoor_2
 create an image to video 5 second duration using Alice_Film_Outdoor asset, the young woman gets on her knees you can clearly see her kneeling on the ground MUST SET HEIGHT AND WIDTH, Height: 832, Width: 480, Seed: -1
@@ -55,18 +49,6 @@ create an image to video 5 second duration using Alice_Film_Outdoor asset, the y
 >> ALIAS: Alice_Film_Outdoor_3
 create an image to video 5 second duration using Alice_Film_Outdoor_2 asset, the young woman places her knees on the ground and looks up as she kneels MUST SET HEIGHT AND WIDTH, Height: 832, Width: 480, Seed: -1
 
->> ALIAS: Alice_Film_Outdoor_4
-create an image to video 5 second duration using Alice_Film_Outdoor_3 asset, the camera zooms in on the woan's face MUST SET HEIGHT AND WIDTH, Height: 832, Width: 480, Seed: -1
-
->> ALIAS: Alice_Outdoor_Voice_2
-clone_voice, use the description of Alice_Background_Outdoor asset and Alias_Voice asset the woman says "Oh what a crazy and wonderous wilderness!! " Duration: 5 seconds
-
->> ALIAS: Alice_Dialog_2
-create a dialog_to_video Alice_Outdoor_voice_2 with Alice_Film_Outdoor_4 MUST SET HEIGHT AND WIDTH, Height: 832, Width: 480, Seed: 12345
-
->> ALIAS: Alice_VIETNAMESE_Voice
-clone_voice, Alias_Voice asset to generate a short introduction from Alice in the Vietnamese language, (10 - 12 words)
-
 >> ALIAS: Alice_Dialog_INDOOR_2
-create a dialog_to_video Alice_VIETNAMESE_Voice with Alice_Dialog_Indoor asset MUST SET HEIGHT AND WIDTH, Height: 832, Width: 480, Seed: 12345
+create a dialog_to_video Alice_Voice asset to generate a short introduction from Alice in the Vietnamese language, (10 - 12 words) with Alice_Dialog_Indoor asset MUST SET HEIGHT AND WIDTH, Height: 832, Width: 480, Seed: 12345
 
