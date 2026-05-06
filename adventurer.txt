@@ -9,8 +9,8 @@ Dialogs should be 8 - 12 words.
 
 NARRATIVE:
 Elara is an elven adventurer (blonde hair female, wearing chainmail with light leather armor) who is sitting in the fantasy setting tavern. 
-Nadia the local bar maid of the tavern (early 20s, Asian half elf, red hair, beautiful in tattered short dress with sandals and a short leather apron, 
-there is a thin silver choker around her neck with a red gem stone in the center). Nadia brings a beer to Elara. 
+Nadia the local bar maid of the tavern (early 20s, Asian half elf, red hair, beautiful in tattered short dress with sandals and a short leather apron). 
+Nadia brings a beer to Elara. 
 Nadia captures Elara's eye and she begins to flirt with the young maiden. Boasting about her latest adventure. 
 Nadia politely laughs and smiles beautifully. Nadia in response tells a joke and Elara laughs as if it is the funniest thing she has ever heard. 
 It gets awkward and Nadia walks off. 
