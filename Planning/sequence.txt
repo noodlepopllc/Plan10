@@ -42,3 +42,11 @@ PLANNING RULES:
 - len(visible_chars) == 2 → shot_type MUST be "ots" or "two_shot" ONLY.
 - FIRST ID in visible_chars = focus character for shot composition and voice binding.
 - NEVER invent character IDs. Use only IDs from the Asset Registry.
+
+All valid voice values are listed below
+    'child', 'teenager', 'young adult', 'middle-aged', 'elderly',
+    'male', 'female',
+    'very low pitch', 'low pitch', 'moderate pitch', 'high pitch', 'very high pitch', 'whisper',
+    'american accent', 'british accent', 'australian accent', 'canadian accent',
+    'chinese accent', 'indian accent', 'japanese accent', 'korean accent',
+    'portuguese accent', 'russian accent'
