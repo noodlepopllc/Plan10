@@ -162,32 +162,3 @@ def llm_analyze_media(media, prompt="Describe this.", system=None, max_tokens=10
 
     return {"status": "success", "analysis": output_text}
 
-# ─────────────────────────────────────────
-# 3) Narrative → Pipeline Generator
-# ─────────────────────────────────────────
-def llm_generate_pipeline(story: str, system_file: str = "system/narrative.txt", max_tokens: int = 8192, output_path: str = None):
-    sys_prompt = Path(system_file).read_text().strip()
-    if not sys_prompt:
-        raise ValueError(f"System prompt file '{system_file}' is empty or missing.")
-
-    messages = [
-        {"role": "system", "content": sys_prompt},
-        {"role": "user", "content": f"INPUT: {story.strip()}\nOUTPUT:"}
-    ]
-
-    res = _call_ollama(messages, max_tokens=max_tokens, temperature=0.3, top_p=0.9)
-    text = res.get("message", {}).get("content", "").strip()
-
-    # Strip markdown code blocks if wrapped
-    if text.startswith("```"):
-        parts = text.split("```", 2)
-        if len(parts) >= 2:
-            text = parts[1].strip()
-            if text.lower().startswith(("python", "yaml", "json", "text", "bash")):
-                text = text.split("\n", 1)[1].strip() if "\n" in text else text[4:].strip()
-
-    if output_path:
-        Path(output_path).write_text(text)
-        print(f"✅ Pipeline saved to: {output_path}")
-
-    return {"status": "success", "pipeline": text}
