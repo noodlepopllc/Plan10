@@ -239,12 +239,18 @@ print(f"🤖 [qwen_llm] Active backend: {BACKEND.upper()}")
 
 if __name__ == '__main__':
     import argparse
+    from pathlib import Path
     parser = argparse.ArgumentParser()
     parser.add_argument('-M','--media', type=str, default=None, help='media to analyze')
     parser.add_argument('-P', '--prompt', type=str, default='a beautiful woman tanning at the beach', help='prompt')
     parser.add_argument('-O', '--output', type=str, default=None, help='optionally save to file')
+    parser.add_argument('-S', '--system', type=str, default='None', help='path to system prompt')
     args = parser.parse_args()
-    out = llm_analyze_media(args.media if args.media else '', args.prompt)['analysis']
+    system_prompt = None
+    if Path(args.system).exists():
+        system_prompt = Path(args.system).read_text().strip()
+    max_tokens = 4096 if system_prompt else 1024
+    out = llm_analyze_media(args.media if args.media else '', args.prompt, system_prompt, max_tokens=max_tokens)['analysis']
     if args.output:
         from pathlib import Path
         Path(args.output).write_text(out)

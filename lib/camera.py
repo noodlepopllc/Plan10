@@ -9,6 +9,7 @@ from image_gen import add_metadata_char
 from util import video_to_img, wait_for_file
 import torch
 from safetensors import safe_open
+from image_to_video GenerateVideo
 
 class CameraMoveEngine:
     def __init__(self, step=0.10):
@@ -139,7 +140,6 @@ class CameraZoomEngine:
 
         return self.cv2_to_pil(zoomed)
 
-
 import torch
 from safetensors import safe_open
 
@@ -251,6 +251,61 @@ class CameraGimbal:
 
         prompt = self.get_prompt()
         return editor.generate(prompt, [image], output, width, height, seed)
+
+def ApplyGimbalShot(input="", output="", angle="front", height="eye", distance="medium", seed=-1):
+    AZ_MAP = {"front": 0, "front_right": 45, "right": 90, "back_right": 135, 
+              "back": 180, "back_left": 225, "left": 270, "front_left": 315}
+    EL_MAP = {"low": -30, "eye": 0, "high": 30, "very_high": 60}
+    DIST_MAP = {"closeup": 0.6, "medium": 1.0, "wide": 1.8}
+
+    if not os.path.exists(input):
+        raise FileNotFoundError(f"Source image not found: {input}")
+
+    img = video_to_img(input)
+    
+    # Your existing class handles LoRA attachment + Qwen pipeline
+    gimbal = CameraGimbal(AZ_MAP.get(angle, 0), EL_MAP.get(height, 0), DIST_MAP.get(distance, 1.0))
+    
+    # generate() already saves to disk and returns a dict/status
+    result =  gimbal.generate(img, 'tmp.png', img.width, img.height, seed)
+    end_frame = video_to_img(result['output_path'])
+
+    return GenerateVideo(prompt='Camera moves to a new field of view', media=[img, end_Frame], output=output, 
+                  duration_sec=5, width=img.width, height=img.height, seed=seed)
+
+
+def GimbalShotSchema():
+    return {
+        "type": "function",
+        "function": {
+            "name": "apply_gimbal_shot",
+            "description": "Reframe a character using a validated multi-angle LoRA. Generates a clean keyframe for video interpolation.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "input": {"type": "string", "description": "Source image alias or path"},
+                    "output": {"type": "string", "description": "Output path for result"},
+                    "angle": {
+                        "type": "string",
+                        "enum": ["front", "front_right", "right", "back_right", "back", "back_left", "left", "front_left"],
+                        "description": "Horizontal camera angle"
+                    },
+                    "height": {
+                        "type": "string",
+                        "enum": ["low", "eye", "high", "very_high"],
+                        "description": "Vertical camera height"
+                    },
+                    "distance": {
+                        "type": "string",
+                        "enum": ["closeup", "medium", "wide"],
+                        "description": "Camera distance/focal length"
+                    },
+                    "seed": {"type": "integer", "default": -1}
+                },
+                "required": ["input", "output", "angle", "height", "distance"]
+            }
+        }
+    }
 
 zoom_prompt = (
     "Enhance the face in the main image using the second image strictly as a texture and feature detail swatch. "

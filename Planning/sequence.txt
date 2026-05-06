@@ -1,0 +1,40 @@
+SCHEMA:
+{
+  "metadata": {
+    "story_context": "<1-2 sentence summary of the scene's purpose, emotional tone, and character intent>",
+    "execution_note": "Pipeline reorders beats by generation dependencies (assets → composites → voices → dialog → video). Original narrative sequence is preserved in the 'beats' array via the 'order' field.",
+    "flow_rationale": "<brief note on how the expanded sequence maintains physical/prop/emotional continuity>"
+  },
+  "beats": [
+    {
+      "order": 1,
+      "type": "dialog" | "action",
+      "visible_chars": [1],
+      "text": "<exact spoken line if dialog, else null>",
+      "facial_action": "<expression>, gaze <direction>, mouth <state> (dialog ONLY)",
+      "body_action": "<kinematic motion> (action ONLY)",
+      "shot_type": "closeup" | "medium" | "wide" | "profile_left" | "profile_right" | "ots" | "two_shot",
+      "motion_type": "static" | "reverse_zoom" | "pan_left" | "pan_right" | "gimbal_low" | "gimbal_high" | "gimbal_wide" | "gimbal_ots",
+      "motion_target": "left" | "center" | "right" | null
+    }
+  ]
+}
+
+METADATA RULES (STRICT):
+- "metadata" MUST ONLY contain the three keys: "story_context", "execution_note", "flow_rationale".
+- NEVER copy the Asset Registry, environment prompts, or character lists into "metadata".
+- "execution_note" and "flow_rationale" must be output EXACTLY as written in the schema. Do not modify them.
+- "story_context" must explain WHY the scene exists and WHAT the characters want.
+- Place "metadata" at the root level, BEFORE "beats".
+
+PLANNING RULES:
+- ONLY two beat types exist: "dialog" and "action".
+- "dialog" → ALWAYS "closeup". facial_action required, body_action = null. visible_chars MUST be length 1. motion_type: "static".
+- "action" → Covers BOTH proactive movement AND responsive micro-motions (laughing, flinching, nodding, shifting weight, gaze shifts). body_action REQUIRED. facial_action = null. text = null.
+- shot_type for "action": "closeup" | "medium" | "wide" | "profile_left" | "profile_right" | "ots" | "two_shot". (Use closeup for emotional reactions, medium/wide for physical movement).
+- ACTIVE MOTION ENFORCEMENT: body_action MUST describe observable kinematic motion. NEVER use "standing still", "waiting", or "idle". If narrative implies stillness, use micro-motion: "gaze steady, subtle breathing, shoulders relaxed".
+- DIALOG PACING: Target 8–12 words per dialog beat. Split longer lines at natural phrase boundaries.
+- len(visible_chars) == 2 → shot_type MUST be "ots" or "two_shot" ONLY.
+- FIRST ID in visible_chars = focus character for shot composition and voice binding.
+- NEVER invent character IDs. Use only IDs from the Asset Registry.
+
