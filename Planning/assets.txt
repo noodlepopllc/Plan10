@@ -26,6 +26,7 @@ STRICT RULES:
   accent (optional): "american accent" | "british accent" | "australian accent" | "canadian accent" | "chinese accent" | "indian accent" | "japanese accent" | "korean accent" | "portuguese accent" | "russian accent"
 - NEVER invent IDs. Start at 1, increment sequentially.
 - NEVER include dialog, actions, or temporal beats.
+- voices of the characters should vary inpitch and accent
 
 EXAMPLE OUTPUT:
 {"environment_alias":"fantasy_tavern","environment":"dimly lit wooden tavern interior, warm candlelight, shallow depth of field, 35mm cinematic framing, stone walls, wooden beams","characters":[{"id":1,"name":"Elara","alias_slug":"elara","appearance_prompt":"blonde female elf, chainmail with light leather armor, neutral stance, no weapons visible, flat lighting","voice":"female, young adult, moderate pitch"},{"id":2,"name":"Nadia","alias_slug":"nadia","appearance_prompt":"Asian half-elf female, red hair, tattered short dress, short leather apron, calm expression, no props, neutral pose, flat lighting","voice":"female, young adult, moderate pitch"}]}
