@@ -165,7 +165,7 @@ def llm_analyze_media(media, prompt="Describe this.", system=None, max_tokens=10
 # ─────────────────────────────────────────
 # 3) Narrative → Pipeline Generator
 # ─────────────────────────────────────────
-def llm_generate_pipeline(story: str, system_file: str = "system/narrative.txt", max_tokens: int = 4096, output_path: str = None):
+def llm_generate_pipeline(story: str, system_file: str = "system/narrative.txt", max_tokens: int = 8192, output_path: str = None):
     sys_prompt = Path(system_file).read_text().strip()
     if not sys_prompt:
         raise ValueError(f"System prompt file '{system_file}' is empty or missing.")

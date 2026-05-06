@@ -177,7 +177,7 @@ elif BACKEND == "transformers":
     # ─────────────────────────────────────────
     # 3) Narrative → Pipeline Generator
     # ─────────────────────────────────────────
-    def llm_generate_pipeline(story: str, system_file: str = "system/narrative.txt", max_tokens: int = 4096, output_path: str = None):
+    def llm_generate_pipeline(story: str, system_file: str = "system/narrative.txt", max_tokens: int = 8192, output_path: str = None):
         """Generate an alias-driven pipeline script using narrative.txt as the system prompt."""
         sys_prompt = Path(system_file).read_text().strip()
         if not sys_prompt:

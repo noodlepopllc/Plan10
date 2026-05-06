@@ -1,14 +1,13 @@
-# REQUIREMENTS
-shots: 3
-speaking_moments: 6
-movements: ["hand beer", "drink beer", "laughter"]
-backgrounds: ["tavern"]
-characters: ["elara","nadia"]
-voice_strategy: "design_then_clone"
-alias_budget: 12
 
-For cloned dialog should use 8 - 12 words. 
+REQUIREMENTS:
+speaking_moments=6
+movements=["maid hands beer", "adventurer drinks beer", "laugh"]
+alias_budget=12
+richness=high
 
+Dialogs should be 8 - 12 words.
+
+NARRATIVE:
 Elara is an elven adventurer (blonde hair female, wearing chainmail with light leather armor) who is sitting in the fantasy setting tavern. 
 Nadia the local bar maid of the tavern (early 20s, Asian half elf, red hair, beautiful in tattered short dress with sandals and a short leather apron, 
 there is a thin silver choker around her neck with a red gem stone in the center). Nadia brings a beer to Elara. 
