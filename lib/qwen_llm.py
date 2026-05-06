@@ -11,8 +11,7 @@ BACKEND = os.environ.get("LLM_BACKEND", "transformers").lower().strip()
 if BACKEND == "ollama":
     from qwen_llm_ollama import (
         llm_chat,
-        llm_analyze_media,
-        llm_generate_pipeline,
+        llm_analyze_media
     )
 elif BACKEND == "transformers":
     import gc, json, re, torch
