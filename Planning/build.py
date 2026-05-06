@@ -34,7 +34,6 @@ def render_pipeline(registry_path: str, sequence_path: str) -> str:
     # ========================================================================
     compd_refs = []
     compv_refs = []
-    compv_cache = {}
     char_seq = {cid: {"compd": 0, "compv": 0} for cid in char_map}
 
     for beat in sequence["beats"]:
@@ -62,22 +61,27 @@ def render_pipeline(registry_path: str, sequence_path: str) -> str:
             shot = beat.get("shot_type") or "medium"
             if shot == "closeup": shot = "medium"
 
-            body = beat.get("body_action") or "gaze steady, subtle breathing, shoulders relaxed"
-            if "no mouth movement" not in body.lower() and "no speech" not in body.lower():
-                body += ", NO mouth movement, NO speech animation"
+            # 🎯 FRAME 0: Compositor sets the exact starting position
+            starting_pose = beat.get("starting_pose") or "standing relaxed, weight centered, hands at sides"
+            if "no mouth movement" not in starting_pose.lower() and "no speech" not in starting_pose.lower():
+                starting_pose += ", NO mouth movement, NO speech animation"
 
-            key = (focus_cid, shot)
-            if key in compv_cache:
-                alias = compv_cache[key]
-            else:
-                char_seq[focus_cid]["compv"] += 1
-                idx = char_seq[focus_cid]["compv"]
-                alias = f"compv_{slug}_{idx:02d}"
-                compv_cache[key] = alias
-                out.append(f'\n>> ALIAS: {alias}')
-                out.append(f'composite_scene combining={combining_str}, shot_type="{shot}", action="{body}" Height: 832, Width: 480, Seed: -1')
+            # 🎯 FRAMES 1→N: Video model handles temporal motion
+            motion = beat.get("motion_prompt") or starting_pose
+            if "subtle camera drift" not in motion.lower():
+                motion += ", subtle camera drift"
+            if "no mouth movement" not in motion.lower() and "no speech" not in motion.lower():
+                motion += ", NO mouth movement, NO speech animation"
+
+            # NO CACHE: Every action beat gets a fresh composite for its exact starting pose
+            char_seq[focus_cid]["compv"] += 1
+            idx = char_seq[focus_cid]["compv"]
+            alias = f"compv_{slug}_{idx:02d}"
             
-            compv_refs.append({"alias": alias, "body": body})
+            out.append(f'\n>> ALIAS: {alias}')
+            out.append(f'composite_scene combining={combining_str}, shot_type="{shot}", action="{starting_pose}" Height: 832, Width: 480, Seed: -1')
+            
+            compv_refs.append({"alias": alias, "motion": motion})
 
     # ========================================================================
     # PHASE 3: VOICES (design)
@@ -97,16 +101,12 @@ def render_pipeline(registry_path: str, sequence_path: str) -> str:
         dialog_idx += 1
 
     # ========================================================================
-    # PHASE 5: VIDEO (action clips) — Fixed 3.0s duration
+    # PHASE 5: VIDEO (action clips) — 3.0s duration, motion prompt only
     # ========================================================================
     video_idx = 1
     for ref in compv_refs:
         out.append(f'\n>> ALIAS: video_{video_idx:03d}')
-        motion = ref["body"].strip()
-        if "subtle camera drift" not in motion.lower():
-            motion += ", subtle camera drift"
-            
-        out.append(f'image_to_video using={ref["alias"]}, prompt="{motion}", duration_sec=3.0 Height: 832, Width: 480, Seed: -1')
+        out.append(f'image_to_video using={ref["alias"]}, prompt="{ref["motion"]}", duration_sec=3.0 Height: 832, Width: 480, Seed: -1')
         video_idx += 1
 
     return "\n".join(out)

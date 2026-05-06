@@ -12,9 +12,10 @@ SCHEMA:
       "visible_chars": [1],
       "text": "<exact spoken line if dialog, else null>",
       "facial_action": "<expression>, gaze <direction>, mouth <state> (dialog ONLY)",
-      "body_action": "<kinematic motion> (action ONLY)",
+      "starting_pose": "<exact physical pose at FRAME 0> (action ONLY)",
+      "motion_prompt": "<kinematic movement over 3s duration> (action ONLY)",
       "shot_type": "closeup" | "medium" | "wide" | "profile_left" | "profile_right" | "ots" | "two_shot",
-      "motion_type": "static" | "reverse_zoom" | "pan_left" | "pan_right" | "gimbal_low" | "gimbal_high" | "gimbal_wide" | "gimbal_ots",
+      "motion_type": "static" | "pan_left" | "pan_right" | "gimbal_low" | "gimbal_high" | "gimbal_wide" | "gimbal_ots",
       "motion_target": "left" | "center" | "right" | null
     }
   ]
@@ -29,12 +30,15 @@ METADATA RULES (STRICT):
 
 PLANNING RULES:
 - ONLY two beat types exist: "dialog" and "action".
-- "dialog" → ALWAYS "closeup". facial_action required, body_action = null. visible_chars MUST be length 1. motion_type: "static".
-- "action" → Covers BOTH proactive movement AND responsive micro-motions (laughing, flinching, nodding, shifting weight, gaze shifts). body_action REQUIRED. facial_action = null. text = null.
-- shot_type for "action": "closeup" | "medium" | "wide" | "profile_left" | "profile_right" | "ots" | "two_shot". (Use closeup for emotional reactions, medium/wide for physical movement).
-- ACTIVE MOTION ENFORCEMENT: body_action MUST describe observable kinematic motion. NEVER use "standing still", "waiting", or "idle". If narrative implies stillness, use micro-motion: "gaze steady, subtle breathing, shoulders relaxed".
-- DIALOG PACING: Target 8–12 words per dialog beat. Split longer lines at natural phrase boundaries.
+- "dialog" → ALWAYS "closeup". facial_action required, starting_pose = null, motion_prompt = null. visible_chars MUST be length 1. motion_type: "static".
+- "action" → shot_type: "medium" | "wide" | "profile_left" | "profile_right" | "ots" | "two_shot". starting_pose REQUIRED, motion_prompt REQUIRED. facial_action = null. text = null.
+- starting_pose: Exact physical state at FRAME 0. Used by compositor to position the character correctly before animation begins.
+  ✅ "sitting on bed edge, feet flat, hands resting on knees"
+- motion_prompt: Kinematic movement occurring over the 3s video duration. Used by video model for interpolation.
+  ✅ "standing up smoothly, adjusting shirt, turning toward door"
+- NEVER merge them. The starting pose must be physically before the motion begins.
+- ACTIVE MOTION ENFORCEMENT: Both fields MUST describe observable kinematic states. NEVER use "standing still", "waiting", or "idle".
+- DIALOG PACING: Target 8–12 words per dialog beat. Split longer lines at natural phrase boundaries (commas, periods, conjunctions).
 - len(visible_chars) == 2 → shot_type MUST be "ots" or "two_shot" ONLY.
 - FIRST ID in visible_chars = focus character for shot composition and voice binding.
 - NEVER invent character IDs. Use only IDs from the Asset Registry.
-
