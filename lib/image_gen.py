@@ -212,7 +212,7 @@ def add_metadata_char(imgpath, prompt='', seed=-1):
             '''
         )
         """
-        combined_prompt = (
+    combined_prompt = (
         '''
         Analyze the subject and describe ONLY clearly visible traits. Return a single comma-separated string in this exact order: 
         subject_type, age_stage, ethnicity_origin, skin_surface, face_shape, jawline, cheekbones, eyes, eyebrows, nose, lips, 
