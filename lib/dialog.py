@@ -169,10 +169,6 @@ def VoiceDesignSchema():
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "text": {
-                        "type": "string",
-                        "description": "The text to speak, 14 - 24 words"
-                    },
                     "voice": {
                         "type": "string",
                         "description": "Voice description (timbre, pitch, accent, energy, etc.)."
@@ -220,10 +216,6 @@ def VoiceCloneSchema():
                         "type": "string",
                         "description": "Output WAV file path."
                     },
-                    "duration": {
-                        "type": "number",
-                        "description": "Optional target duration in seconds."
-                    },
                     "seed": {
                         "type": "integer",
                         "description": "Optional seed for deterministic output."
@@ -234,8 +226,10 @@ def VoiceCloneSchema():
         }
     }
 
-def DesignVoice(text, voice, output, duration=10.0, seed=-1):
+def DesignVoice(voice, output, seed=-1):
+    duration=10.0
     # The actual prompt fed into the model
+    text = "The quick, anxious boy judged the rough wizard's vibrant, icy voice as a huge, sharp, mellow echo drifting through the quiet, yellow forest."
     final_prompt = f"{text} | voice: {voice}"
     duration=float(duration)
     seed=int(seed)

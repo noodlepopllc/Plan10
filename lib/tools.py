@@ -149,7 +149,7 @@ class ToolHandler(object):
             "edit_image": ["images", "prompt", "width", "height", "seed", "output", "alias"],
             "image_to_video": ["prompt", "media", "width", "height", "seed", "duration_sec", "output", "alias"],
             "dialog_to_video": ["prompt", "text", "media", "audio", "width", "height", "seed", "output", "alias"],
-            "design_voice": ["text", "voice", "output", "duration", "seed"],
+            "design_voice": ["voice", "output", "seed"],
             #"clone_voice": ["text", "audio", "output", "duration", "seed"],
             "generate_graphic": ["prompt", "output", "width", "height", "seed", "target_video_size", "padding_style", "alias"]
         }
