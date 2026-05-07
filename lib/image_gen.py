@@ -143,6 +143,7 @@ def GenerateImage(prompt='', output='tmp.png', width=1328, height=1328, seed=42)
 def add_metadata_char(imgpath, prompt='', seed=-1):
     target_image = Image.open(imgpath)
     metadata = PngInfo()
+    """
     combined_prompt = (
         '''
         Describe ONLY clearly visible traits. Return a single comma-separated string in this exact order: 
@@ -174,6 +175,43 @@ def add_metadata_char(imgpath, prompt='', seed=-1):
 
         Respond ONLY with the string.
         ''')
+        """
+
+        combined_prompt = (
+            '''
+            Describe ONLY clearly visible traits. Return a single comma-separated string in this exact order: 
+            age, ethnicity, skin tone, face shape, jawline, cheekbones, eyes, eyebrows, nose, lips, 
+            hair length/color/texture, hair style, hairline, facial hair, hair accessories, eyewear, clothing, footwear.
+            Rules:
+            - Be accurate. Do NOT guess. If a trait isn't obvious, write 'neutral'.
+            - Age: child, youth, young adult, adult, elderly, neutral
+            - Ethnicity: east asian, south asian, middle eastern, african, european, latinx, neutral
+            - Skin tone: fair, light, medium, tan, deep, neutral
+            - Face shape: oval, round, heart, square, long, neutral
+            - Jawline: soft, defined, sharp, angular, neutral
+            - Cheekbones: low, medium, high, neutral
+            - Eyes: almond, round, narrow, wide-set, neutral
+            - Eyebrows: straight, arched, thick, thin, neutral
+            - Nose: small, medium, large, narrow, wide, neutral
+            - Lips: thin, medium, full, neutral
+            - Hair length/color/texture: short/medium/long + color + straight/wavy/curly/coarse, or 'neutral'
+            - Hair style: ONLY use what is clearly visible. Options: ponytail, bun, braid, tied-back, loose, half-up, bob, pixie, crew cut, buzz cut, fade, undercut, slicked back, messy, short crop, comb over, or 'neutral'. NEVER default to bob/pixie for short male hair unless clearly styled that way.
+            - Hairline: straight, widow's peak, rounded, receding, neutral
+            - Facial hair: clean-shaven, stubble, mustache, beard, goatee, sideburns, neutral
+            - Hair accessories: ribbons, bandana, hats, clips, none, neutral
+            - Eyewear: 'preserve glasses' if clearly wearing glasses, otherwise 'none'
+            - Clothing: yellow sundress, white tshirt, blue jeans, etc.
+            - Footwear: white tennis shoes, red heels, etc. 
+
+            Example (Female):
+            "adult, european, light, oval, defined jawline, high cheekbones, almond eyes, arched brows, medium nose, full lips, long brown wavy hair, low ponytail, straight hairline, clean-shaven, black ribbons, none, navy uniform, black kitten heels"
+
+            Example (Male):
+            "young adult, east asian, light, square, sharp jawline, medium cheekbones, narrow eyes, thick straight brows, medium nose, thin lips, short black straight hair, short crop with fade, straight hairline, clean-shaven, none, none, gray button-up shirt, black leather shoes"
+
+            Respond ONLY with the string.
+            '''
+        )
 
     analysis = AnalyzeImage(imgpath, combined_prompt)
     raw = analysis['analysis'].strip().strip('"').strip("'")
