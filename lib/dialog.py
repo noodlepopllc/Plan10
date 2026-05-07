@@ -171,7 +171,7 @@ def VoiceDesignSchema():
                 "properties": {
                     "text": {
                         "type": "string",
-                        "description": "The text to speak."
+                        "description": "The text to speak, 14 - 24 words"
                     },
                     "voice": {
                         "type": "string",
@@ -183,7 +183,7 @@ def VoiceDesignSchema():
                     },
                     "duration": {
                         "type": "number",
-                        "description": "Optional target duration in seconds."
+                        "description": "Optional target duration in seconds default is 10 seconds"
                     },
                     "seed": {
                         "type": "integer",
@@ -241,8 +241,8 @@ def DesignVoice(text, voice, output, duration=10.0, seed=-1):
     seed=int(seed)
 
     text_array = text.split()
-    if len(text_array) > 20:
-        text = ' '.join(text_array[:20])
+    if len(text_array) > 24:
+        text = ' '.join(text_array[:24])
 
     audio, sr = create_audio_and_free_vram(
         text=text,
