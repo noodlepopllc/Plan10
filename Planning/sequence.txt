@@ -41,6 +41,15 @@ METADATA RULES (STRICT):
 - "story_context" must explain WHY the scene exists and WHAT the characters want.
 - Place "metadata" at the root level, BEFORE "beats".
 
+NARRATIVE SEQUENCING RULES (MANDATORY):
+- The scene MUST follow a 3-phase arc across beats: 
+  1. SETUP/SEGUE (Beats 1-2): Physical discovery or casual moment → tone shift → first spoken line.
+  2. CONFLICT (Beats 3-6): Escalating Image vs Vertigo debate.
+  3. RESOLUTION (Beats 7-8): Physical retreat → husband asleep on couch.
+- The segue MUST be visible in Beat 1 as an ACTION beat (e.g., flipping pages, posture shift, noticing cover). DIALOG cannot begin until Beat 2.
+- NEVER start with argument or exposition. Beat 1 must show, not tell, the transition into debate.
+- Maintain all schema rules exactly. This narrative mapping overrides default pacing.
+
 PLANNING RULES:
 - ONLY two beat types exist: "dialog" and "action".
 - "dialog" → ALWAYS "closeup". facial_action required, starting_pose = null, motion_prompt = null. visible_chars MUST be length 1. motion_type: "static".
