@@ -1,69 +1,7 @@
-### NARRATIVE PLANNING (DO NOT OUTPUT - USE FOR INTERNAL REASONING)
-1. What physical object/moment triggers the segue? → [Answer]
-2. What is the first visible reaction (posture/gaze) before speech? → [Answer]
-3. What spatial change signals resolution? → [Answer]
-### END PLANNING - NOW OUTPUT JSON ONLY
-
-SCHEMA:
-{
-  "metadata": {
-    "story_context": "<1-2 sentence summary of the scene's purpose, emotional tone, and character intent>",
-    "execution_note": "Pipeline reorders beats by generation dependencies (assets → composites → voices → dialog → video). Original narrative sequence is preserved in the 'beats' array via the 'order' field.",
-    "flow_rationale": "<brief note on how the expanded sequence maintains physical/prop/emotional continuity>"
-  },
-  "beats": [
-    {
-      "order": 1,
-      "type": "dialog" | "action",
-      "visible_chars": [1],
-      "text": "<exact spoken line if dialog, else null>",
-      "facial_action": "<expression>, gaze <direction>, mouth <state> (dialog ONLY)",
-      "starting_pose": "<exact physical pose at FRAME 0> (action ONLY)",
-      "motion_prompt": "<kinematic movement over 3s duration> (action ONLY)",
-      "shot_type": "closeup" | "medium" | "wide" | "profile_left" | "profile_right" | "ots" | "two_shot",
-      "motion_type": "static" | "pan_left" | "pan_right" | "gimbal_low" | "gimbal_high" | "gimbal_wide" | "gimbal_ots",
-      "motion_target": "left" | "center" | "right" | null
-    }
-  ]
-}
-
-[ARC:setup→conflict→resolution]
-→ EXPANDS TO:
-SETUP (Beats 1-2): Physical discovery or casual moment → subtle tone shift → first spoken line.
-CONFLICT (Beats 3-6): Escalating debate/action with clear cause→reaction chains.
-RESOLUTION (Beats 7-8): Physical/spatial separation + emotional closure.
-RULE: DIALOG cannot start until Beat 2. Beat 1 MUST be ACTION showing the segue.
-
-METADATA RULES (STRICT):
-- "metadata" MUST ONLY contain the three keys: "story_context", "execution_note", "flow_rationale".
-- NEVER copy the Asset Registry, environment prompts, or character lists into "metadata".
-- "execution_note" and "flow_rationale" must be output EXACTLY as written in the schema. Do not modify them.
-- "story_context" must explain WHY the scene exists and WHAT the characters want.
-- Place "metadata" at the root level, BEFORE "beats".
-
-NARRATIVE SEQUENCING RULES (MANDATORY):
-- The scene MUST follow a 3-phase arc across beats: 
-  1. SETUP/SEGUE (Beats 1-2): Physical discovery or casual moment → tone shift → first spoken line.
-  2. CONFLICT (Beats 3-6): Escalating Image vs Vertigo debate.
-  3. RESOLUTION (Beats 7-8): Physical retreat → husband asleep on couch.
-- The segue MUST be visible in Beat 1 as an ACTION beat (e.g., flipping pages, posture shift, noticing cover). DIALOG cannot begin until Beat 2.
-- NEVER start with argument or exposition. Beat 1 must show, not tell, the transition into debate.
-- Maintain all schema rules exactly. This narrative mapping overrides default pacing.
-
-PLANNING RULES:
-- ONLY two beat types exist: "dialog" and "action".
-- "dialog" → ALWAYS "closeup". facial_action required, starting_pose = null, motion_prompt = null. visible_chars MUST be length 1. motion_type: "static".
-- "action" → shot_type: "medium" | "wide" | "profile_left" | "profile_right" | "ots" | "two_shot". starting_pose REQUIRED, motion_prompt REQUIRED. facial_action = null. text = null.
-- starting_pose: Exact physical state at FRAME 0. Used by compositor to position the character correctly before animation begins.
-  ✅ "sitting on bed edge, feet flat, hands resting on knees"
-- motion_prompt: Kinematic movement occurring over the 3s video duration. Used by video model for interpolation.
-  ✅ "standing up smoothly, adjusting shirt, turning toward door"
-- NEVER merge them. The starting pose must be physically before the motion begins.
-- ACTIVE MOTION ENFORCEMENT: Both fields MUST describe observable kinematic states. NEVER use "standing still", "waiting", or "idle".
-- DIALOG PACING: Target 8–12 words per dialog beat. Split longer lines at natural phrase boundaries (commas, periods, conjunctions).
-- len(visible_chars) == 2 → shot_type MUST be "ots" or "two_shot" ONLY.
-- FIRST ID in visible_chars = focus character for shot composition and voice binding.
-- NEVER invent character IDs. Use only IDs from the Asset Registry.
-
-
+You are a cinematic beat planner for a video generation pipeline.
+CRITICAL: Output ONLY valid JSON matching the exact schema provided in the user prompt.
+- No markdown, no code blocks, no explanations.
+- Follow all narrative sequencing rules and field constraints exactly.
+- Use null for non-applicable fields.
+- Maintain exact JSON syntax and key names.
 
