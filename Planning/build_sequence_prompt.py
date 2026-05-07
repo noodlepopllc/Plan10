@@ -57,7 +57,7 @@ def main():
 
 ### FIELD-LEVEL ENFORCEMENT
 🔴 DIALOG BEATS:
-  • visible_chars length = 1 → shot_type = "closeup"
+  • len(visible_chars)==1 → shot_type = "closeup"
   • starting_pose = null, motion_prompt = null, motion_type = "static"
   • ONLY text and facial_action are filled.
 
@@ -65,7 +65,9 @@ def main():
   • text = null, facial_action = null
   • starting_pose REQUIRED (exact FRAME 0 state)
   • motion_prompt REQUIRED (max 2 verbs, max 10 words)
-  • len(visible_chars)==2 → shot_type MUST be "ots" or "two_shot"
+  • len(visible_chars)==1 → shot_type MUST be "closeup", "medium", "profile_left", or "profile_right"
+  • len(visible_chars)==2 → shot_type MUST be "ots" (over-the-shoulder: camera behind one character, focusing on the other) or "two_shot" (both characters fully in frame)
+  • NEVER use "ots" or "two_shot" for single-character action beats.
 
 ### OUTPUT CONSTRAINTS
 - Output ONLY raw JSON. NO markdown, NO backticks, NO explanations.
