@@ -1,3 +1,9 @@
+### NARRATIVE PLANNING (DO NOT OUTPUT - USE FOR INTERNAL REASONING)
+1. What physical object/moment triggers the segue? → [Answer]
+2. What is the first visible reaction (posture/gaze) before speech? → [Answer]
+3. What spatial change signals resolution? → [Answer]
+### END PLANNING - NOW OUTPUT JSON ONLY
+
 SCHEMA:
 {
   "metadata": {
@@ -21,21 +27,19 @@ SCHEMA:
   ]
 }
 
+[ARC:setup→conflict→resolution]
+→ EXPANDS TO:
+SETUP (Beats 1-2): Physical discovery or casual moment → subtle tone shift → first spoken line.
+CONFLICT (Beats 3-6): Escalating debate/action with clear cause→reaction chains.
+RESOLUTION (Beats 7-8): Physical/spatial separation + emotional closure.
+RULE: DIALOG cannot start until Beat 2. Beat 1 MUST be ACTION showing the segue.
+
 METADATA RULES (STRICT):
 - "metadata" MUST ONLY contain the three keys: "story_context", "execution_note", "flow_rationale".
 - NEVER copy the Asset Registry, environment prompts, or character lists into "metadata".
 - "execution_note" and "flow_rationale" must be output EXACTLY as written in the schema. Do not modify them.
 - "story_context" must explain WHY the scene exists and WHAT the characters want.
 - Place "metadata" at the root level, BEFORE "beats".
-
-NARRATIVE SEQUENCING RULES (MANDATORY):
-- The scene MUST follow a 3-phase arc across beats: 
-  1. SETUP/SEGUE (Beats 1-2): Physical discovery or casual moment → tone shift → first spoken line.
-  2. CONFLICT (Beats 3-6): Escalating Image vs Vertigo debate.
-  3. RESOLUTION (Beats 7-8): Physical retreat → husband asleep on couch.
-- The segue MUST be visible in Beat 1 as an ACTION beat (e.g., flipping pages, posture shift, noticing cover). DIALOG cannot begin until Beat 2.
-- NEVER start with argument or exposition. Beat 1 must show, not tell, the transition into debate.
-- Maintain all schema rules exactly. This narrative mapping overrides default pacing.
 
 PLANNING RULES:
 - ONLY two beat types exist: "dialog" and "action".
