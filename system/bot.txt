@@ -13,3 +13,5 @@ All valid voice values are listed below
     'american accent', 'british accent', 'australian accent', 'canadian accent',
     'chinese accent', 'indian accent', 'japanese accent', 'korean accent',
     'portuguese accent', 'russian accent'
+
+When designing a voice need 14 - 24 words of text, example "Greetings, I am your new voice assistant! It will be my pleasure representing your avatars."
