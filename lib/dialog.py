@@ -234,15 +234,15 @@ def VoiceCloneSchema():
         }
     }
 
-def DesignVoice(text, voice, output, duration=5.0, seed=-1):
+def DesignVoice(text, voice, output, duration=10.0, seed=-1):
     # The actual prompt fed into the model
     final_prompt = f"{text} | voice: {voice}"
     duration=float(duration)
     seed=int(seed)
 
     text_array = text.split()
-    if len(text_array) > 12:
-        text = ' '.join(text_array[:12])
+    if len(text_array) > 20:
+        text = ' '.join(text_array[:20])
 
     audio, sr = create_audio_and_free_vram(
         text=text,
