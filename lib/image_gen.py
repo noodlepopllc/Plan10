@@ -175,7 +175,6 @@ def add_metadata_char(imgpath, prompt='', seed=-1):
 
         Respond ONLY with the string.
         ''')
-        """
 
         combined_prompt = (
             '''
@@ -212,6 +211,53 @@ def add_metadata_char(imgpath, prompt='', seed=-1):
             Respond ONLY with the string.
             '''
         )
+        """
+        combined_prompt = (
+        '''
+        Analyze the subject and describe ONLY clearly visible traits. Return a single comma-separated string in this exact order: 
+        subject_type, age_stage, ethnicity_origin, skin_surface, face_shape, jawline, cheekbones, eyes, eyebrows, nose, lips, 
+        hair_fur_length_color_texture, hair_style, hairline, facial_hair_features, head_accessories, eyewear, clothing, footwear.
+        
+        Rules:
+        - Be accurate. Do NOT guess. If a trait isn't visible or doesn't apply, write 'neutral'.
+        - subject_type: human, anthropomorphic, android, masked, heavily_stylized, neutral
+        - age_stage: child, youth, young adult, adult, elderly, timeless, neutral
+        - ethnicity_origin: east asian, south asian, middle eastern, african, european, latinx, fantasy_race, machine_origin, neutral
+        - skin_surface: fair, light, medium, tan, deep, metallic, synthetic, fur, scales, painted, masked, neutral
+        - face_shape: oval, round, heart, square, long, muzzle, angular, geometric, neutral
+        - jawline: soft, defined, sharp, angular, mechanical, fur-lined, hidden, neutral
+        - cheekbones: low, medium, high, structural, hidden, neutral
+        - eyes: almond, round, narrow, wide-set, glowing, lens, visor, painted, hidden, neutral
+        - eyebrows: straight, arched, thick, thin, painted, mechanical, fur, hidden, neutral
+        - nose: small, medium, large, narrow, wide, snout, vent, painted, hidden, neutral
+        - lips: thin, medium, full, painted, sealed, mechanical, hidden, neutral
+        - hair_fur_length_color_texture: short/medium/long + color + straight/wavy/curly/coarse, OR fur: short/long + color + dense/patchy, OR synthetic: fiber/metallic + color, OR 'neutral'
+        - hair_style: ponytail, bun, braid, tied-back, loose, half-up, bob, pixie, crew cut, buzz cut, fade, undercut, slicked back, messy, short crop, comb over, mane, tufted, helmet-integrated, none, neutral
+        - hairline: straight, widow's peak, rounded, receding, fur-edge, seam-line, masked, neutral
+        - facial_hair_features: clean-shaven, stubble, mustache, beard, goatee, sideburns, fur_muzzle, mechanical_grille, painted, hidden, neutral
+        - head_accessories: ribbons, bandana, hats, helmet, mask_partial, mask_full, crown, none, neutral
+        - eyewear: glasses, sunglasses, visor, goggles, none, neutral
+        - clothing: describe visible items simply: yellow sundress, white tshirt, armored vest, etc.
+        - footwear: white tennis shoes, red heels, mechanical boots, paw-pads, none, neutral
+
+        Critical Rules:
+        1. If subject_type is masked/heavily_stylized: prioritize describing what is VISIBLE through/around the mask or makeup.
+        2. If subject_type is anthropomorphic: map human-equivalent terms (e.g., muzzle for nose, fur for hair, paw-pads for footwear).
+        3. If subject_type is android: use mechanical/synthetic descriptors where applicable; 'neutral' for biological terms that don't apply.
+        4. NEVER force human defaults: if hair isn't visible, write 'none' or 'neutral', NOT 'bob' or 'pixie'.
+        5. For heavy makeup: describe the painted/applied appearance, not the underlying biology.
+
+        Examples:
+        Human female: "human, adult, european, light, oval, defined, high, almond, arched, medium, full, long brown wavy hair, low ponytail, straight, clean-shaven, black ribbons, none, navy uniform, black kitten heels"
+        Human male: "human, young adult, east asian, light, square, sharp, medium, narrow, thick straight, medium, thin, short black straight hair, short crop fade, straight, clean-shaven, none, none, gray button-up, black shoes"
+        Anthropomorphic wolf: "anthropomorphic, adult, fantasy_race, gray fur, muzzle, defined, structural, almond glowing, fur brows, snout, hidden, long gray dense fur, loose mane, fur-edge, fur_muzzle, none, none, leather harness, paw-pads"
+        Android: "android, timeless, machine_origin, metallic silver, geometric, angular, structural, lens eyes, mechanical, vent, sealed, none, none, seam-line, mechanical_grille, helmet-integrated, visor, armored plating, magnetic boots"
+        Masked hero: "masked, adult, neutral, masked, neutral, hidden, hidden, almond visible, neutral, hidden, painted, neutral, neutral, masked, hidden, mask_partial, none, none, tactical suit, combat boots"
+        Heavy makeup drag: "heavily_stylized, adult, neutral, painted fair, heart, sharp, high, wide painted, arched thick, small contoured, full painted, long blonde straight wig, high ponytail, straight, painted, crown, dramatic lashes, sequined gown, platform heels"
+
+        Respond ONLY with the string.
+        '''
+    )
 
     analysis = AnalyzeImage(imgpath, combined_prompt)
     raw = analysis['analysis'].strip().strip('"').strip("'")
