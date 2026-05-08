@@ -96,20 +96,36 @@ def render_pipeline(registry_path: str, sequence_path: str) -> str:
         out.append(f'design_voice voice="{c["voice"]}"')
 
     # ========================================================================
-    # PHASE 4: DIALOG (dialog)
+    # PHASE 4: DIALOG (3-Pass: Mood Base → I2V Motion → S2V Lip-Sync)
     # ========================================================================
     dialog_idx = 1
     for ref in compd_refs:
-        # 🧹 SANITIZE: Move leaked [bracketed actions] from text -> prompt
         raw_text = ref.get("text") or ""
-        leaked_actions = re.findall(r'\[(.*?)\]', raw_text)
-        if leaked_actions:
-            clean_text = re.sub(r'\s*\[.*?\]\s*', ' ', raw_text).strip()
-            ref["face"] = ", ".join(leaked_actions) + ", " + ref.get("face", "neutral expression")
-            raw_text = clean_text
+        slug = ref["alias"].split("_")[1]  # Extract character slug from alias
+        full_action = ref.get("face", "neutral expression")
+        
+        # 🧹 Parse mood (first word) and motion (everything else)
+        parts = full_action.split(",", 1)
+        mood = parts[0].strip()
+        motion = parts[1].strip() if len(parts) > 1 else "subtle breathing"
 
-        out.append(f'\n>> ALIAS: dialog_{dialog_idx:03d}')
-        out.append(f'dialog_to_video using={ref["alias"]}, audio={ref["design"]}, text="{raw_text}", prompt="{ref["face"]}, lips moving naturally, NO head turns, NO hand gestures, NO prop interaction" Height: 832, Width: 480, Seed: -1')
+        # PASS 1: Base Headshot (Static expression)
+        out.append(f'\n>> ALIAS: compd_{slug}_{dialog_idx:02d}')
+        out.append(f'composite_scene combining=bg_{env_slug}, char_{slug}, shot_type="closeup", action="{mood}, cropped at shoulders, NO hands, NO props, static pose" Height: 832, Width: 480, Seed: -1')
+
+        # PASS 2: Motion Pass (I2V animates posture/gaze/action)
+        i2v_prompt = f"{motion}, subtle camera drift, mouth completely closed and still, lips sealed shut, zero lip motion, static facial expression"
+        out.append(f'\n>> ALIAS: vid_motion_{dialog_idx:03d}')
+        out.append(f'image_to_video using=compd_{slug}_{dialog_idx:02d}, prompt="{i2v_prompt}", duration_sec=2 Height: 832, Width: 480, Seed: -1')
+
+        # PASS 3: Lip-Sync Pass (S2V adds speech, preserves motion)
+        if raw_text.strip():
+            out.append(f'\n>> ALIAS: dialog_{dialog_idx:03d}')
+            out.append(f'dialog_to_video using=vid_motion_{dialog_idx:03d}, audio=design_{slug}, text="{raw_text}", prompt="lips moving naturally, preserve existing head motion, NO extra gestures, NO facial drift" Height: 832, Width: 480, Seed: -1')
+        else:
+            # Pure reaction: I2V is the final output
+            out.append(f'// Pure reaction: vid_motion_{dialog_idx:03d} is final output')
+
         dialog_idx += 1
 
     # ========================================================================

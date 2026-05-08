@@ -6,8 +6,9 @@ mkdir -p Planning/outputs
 python lib/qwen_llm.py -P "$(cat "$1")" -S Planning/assets.txt | tail -n +2 > Planning/outputs/registry.json
 
 # 2. Plain English Visual Expansion
-python Planning/beat_expansion.py "$(cat "$1")" 6 > Planning/outputs/visual_prompt.txt
-python lib/qwen_llm.py -P "$(cat Planning/outputs/visual_prompt.txt)" -S Planning/sequence.txt | tail -n +2 > Planning/outputs/beats_raw.txt
+#python Planning/beat_expansion.py "$(cat "$1")" 6 > Planning/outputs/visual_prompt.txt
+#python lib/qwen_llm.py -P "$(cat Planning/outputs/visual_prompt.txt)" -S Planning/sequence.txt | tail -n +2 > Planning/outputs/beats_raw.txt
+touch Planning/outputs/beats_raw.txt
 
 # 3. Generate Dialog (EXACTLY as you had it)
 DIALOG_PROMPT=$(python Planning/dialog_headshot.py "$1" Planning/outputs/registry.json 8)
