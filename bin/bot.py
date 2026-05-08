@@ -126,7 +126,6 @@ if __name__ == "__main__":
         task_ctx["assets"] = relevant_assets
         task_ctx["target_alias"] = target_alias
         task_ctx["messages"] = [{"role": "user", "content": f"Available assets: {', '.join(relevant_assets.keys())}\n\n{clean_prompt}"}]
-        save_context(task_ctx)
 
         print(f"\n🚀 [{i}/{len(tasks_to_run)}] Running [{target_alias}] (scoped: {len(relevant_assets)} assets): {clean_prompt[:60]}...")
 
