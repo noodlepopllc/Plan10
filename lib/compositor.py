@@ -16,7 +16,9 @@ def CompositeScene(
     # 1. Validate
     if not os.path.exists(background_path): raise FileNotFoundError(f"Background not found: {background_path}")
     for c in characters:
-        if not os.path.exists(c): raise FileNotFoundError(f"Character not found: {c}")
+        if not os.path.exists(c): 
+            print(f"Character not found: {c}")
+            raise FileNotFoundError(f"Character not found: {c}")
 
     # 2. Extract metadata (source of truth)
     bg_desc = Image.open(background_path).info.get('Description', 'cinematic environment')
