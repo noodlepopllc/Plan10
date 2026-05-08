@@ -18,22 +18,17 @@ SCHEMA:
 STRICT RULES:
 - "voice" is MANDATORY for EVERY character. Place it BEFORE "appearance_prompt". NEVER omit.
 - Voice MUST be a single comma-separated string. Format: "gender, age, pitch, [style], [accent]"
-  • gender: "male" | "female"
-  • age: "child" | "teenager" | "young adult" | "middle-aged" | "elderly"
-  • pitch: "very low pitch" | "low pitch" | "moderate pitch" | "high pitch" | "very high pitch"
-  • style (opt): "whisper"
-  • accent (opt): "american" | "british" | "australian" | "canadian" | "chinese" | "indian" | "japanese" | "korean" | "portuguese" | "russian" accent
 - Each character MUST have a DISTINCT pitch/accent. NEVER copy character 1's voice.
 - alias_slug: lowercase, underscore-separated from actual name. NO placeholders.
 - environment_alias: matches actual setting. NO generics.
-- environment: wide spatial zone, motivated lighting, Panavision 70mm optics, atmospheric mood, NO characters/occlusions.
-- appearance_prompt (TYPE-AWARE):
-  • BASE: 1:1 reference, neutral relaxed pose, flat even studio lighting, NO harsh shadows/motion blur/props.
-  • ANDROID: flawless mechanical, tight synthetic weave/revealing panels, uniform reflection, precise geometry, crisp digital timbre.
-  • ANIMORPHIC: exceptional hybrid, minimal/form-fitting harness, detailed fur/scales, consistent texture direction, clean edges.
-  • HUMAN FEMALE: exceptional/striking, revealing/form-fitting, accentuated curves, polished styling.
-  • HUMAN MALE: average/nerdy contrast, conservative/ill-fitting, reserved posture, soft-featured.
+- environment: DO NOT summarize. Output a highly detailed prompt (40+ words). Must include: wide spatial composition zone, motivated cinematic lighting (volumetric rays, specific color temperature), Panavision 70mm optics (cinematic depth of field, smooth highlight roll-off, wide 16:9 framing), atmospheric mood (dust, haze, rain, etc.). Explicitly state "NO characters, NO foreground occlusions".
+- appearance_prompt: DO NOT summarize. Output a highly detailed prompt (35+ words). Must include: character type traits, exact clothing/materials, neutral relaxed stance (3/4 or waist-up), hands visible resting at sides, flat even studio lighting, NO harsh shadows/motion blur/props near face.
+- TYPE-AWARE EXPANSION (apply relevant rules per character):
+  • ANDROID: flawless mechanical design, precision-engineered chassis, tight form-fitting/revealing synthetic weave, glowing optical accents, uniform surface reflection, crisp digital timbre, NO pores/biological asymmetry.
+  • ANIMORPHIC: exceptional hybrid anatomy, elegant beast-people features, minimal/form-fitting harness, detailed fur/scale texture, consistent directionality, clean compositing edges, humanoid posture with animal traits.
+  • HUMAN FEMALE: exceptional/striking presence, revealing/form-fitting attire, accentuated curves, slim waist, polished glamorous styling, graceful posture.
+  • HUMAN MALE: average/nerdy contrast, soft-featured, ill-fitting conservative clothing, thick-rimmed glasses, reserved posture, non-threatening presence.
 - Output ONLY valid JSON starting with { and ending with }.
 
 EXAMPLE:
-{"environment_alias":"neon_warehouse","environment":"dimly lit industrial space, volumetric neon lighting, Panavision 70mm optics, atmospheric mist, NO characters","characters":[{"id":1,"name":"Kai","alias_slug":"kai","voice":"male, young adult, moderate pitch, whisper, australian accent","appearance_prompt":"slight build, ill-fitting blazer, thick-rimmed glasses, reserved posture, flat studio lighting"},{"id":2,"name":"Unit-7","alias_slug":"unit_7","voice":"female, young adult, high pitch, korean accent","appearance_prompt":"seamless synthetic chassis, tight low-cut bodysuit, glowing optical accents, uniform surface reflection, flat studio lighting"}]}
+{"environment_alias":"abandoned_castle_corridor","environment":"dimly lit stone corridor with vaulted ceilings, volumetric torchlight casting warm amber highlights, cool blue moonlight spilling from high arched windows, Panavision 70mm optics: cinematic depth of field, smooth highlight roll-off, wide 16:9 composition space, dust motes suspended in air, moody atmospheric haze, NO characters, NO foreground occlusions","characters":[{"id":1,"name":"Professor Vance","alias_slug":"vance","voice":"male, middle-aged, low pitch, british accent","appearance_prompt":"middle-aged male human, average build, soft features, thick-rimmed glasses, ill-fitting charcoal blazer over wrinkled button-down shirt, slouchy cardigan draped over shoulders, neutral relaxed stance, hands resting at sides, flat even studio lighting, NO harsh directional shadows, NO motion blur, 1:1 reference framing"},{"id":2,"name":"Lyra","alias_slug":"lyra","voice":"female, young adult, high pitch, american accent","appearance_prompt":"young adult female android, stunning captivating presence, flawless synthetic porcelain skin, sleek chrome-and-obsidian chassis plating, tight-fitting low-cut synthetic bodysuit with exposed articulated shoulder joints, backless chassis design, glowing cyan optical ring around left eye, uniform surface reflection, precise geometric proportions, NO pores or organic fatigue, neutral relaxed stance, flat even studio lighting, NO directional shadows, 1:1 reference framing"}]}
