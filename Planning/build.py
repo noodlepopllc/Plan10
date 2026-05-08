@@ -96,8 +96,16 @@ def render_pipeline(registry_path: str, sequence_path: str) -> str:
     # ========================================================================
     dialog_idx = 1
     for ref in compd_refs:
+        # 🧹 SANITIZE: Move leaked [bracketed actions] from text -> prompt
+        raw_text = ref.get("text") or ""
+        leaked_actions = re.findall(r'\[(.*?)\]', raw_text)
+        if leaked_actions:
+            clean_text = re.sub(r'\s*\[.*?\]\s*', ' ', raw_text).strip()
+            ref["face"] = ", ".join(leaked_actions) + ", " + ref.get("face", "neutral expression")
+            raw_text = clean_text
+
         out.append(f'\n>> ALIAS: dialog_{dialog_idx:03d}')
-        out.append(f'dialog_to_video using={ref["alias"]}, audio={ref["design"]}, text="{ref["text"]}", prompt="{ref["face"]}, lips moving naturally, NO head turns, NO hand gestures, NO prop interaction" Height: 832, Width: 480, Seed: -1')
+        out.append(f'dialog_to_video using={ref["alias"]}, audio={ref["design"]}, text="{raw_text}", prompt="{ref["face"]}, lips moving naturally, NO head turns, NO hand gestures, NO prop interaction" Height: 832, Width: 480, Seed: -1')
         dialog_idx += 1
 
     # ========================================================================
