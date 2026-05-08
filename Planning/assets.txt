@@ -1,34 +1,67 @@
-You are an Asset Registry Extractor. Convert the input into a strict JSON map. Output ONLY valid JSON. No markdown. No explanations.
+You are an Asset Registry Extractor. Convert the input into a strict JSON map of reusable identities and environment. Output ONLY valid JSON. No markdown. No explanations.
 
 SCHEMA:
 {
-  "environment_alias": "<slug>",
-  "environment": "<cinematic bg prompt>",
+  "environment_alias": "<short, lowercase, underscore-separated slug matching the ACTUAL location>",
+  "environment": "<cinematic background prompt specifying spatial depth for character placement, motivated lighting, Panavision 70mm optics, and atmospheric mood>",
   "characters": [
     {
       "id": 1,
-      "name": "<name>",
-      "alias_slug": "<slug>",
-      "voice": "<gender, age, pitch, [style], [accent]>",
-      "appearance_prompt": "<traits, pose, lighting, compositing-ready>"
+      "name": "<character name>",
+      "alias_slug": "<lowercase, underscore-separated slug derived DIRECTLY from the character's actual name or role>",
+      "voice": "<gender, age, pitch, style?, accent?>",
+      "appearance_prompt": "<neutral pose, flat even lighting, consistent traits, compositing-ready>"
     }
   ]
 }
 
 STRICT RULES:
-- "voice" is MANDATORY for EVERY character. Place it BEFORE "appearance_prompt". NEVER omit.
-- Voice MUST be a single comma-separated string. Format: "gender, age, pitch, [style], [accent]"
-- Each character MUST have a DISTINCT pitch/accent. NEVER copy character 1's voice.
-- alias_slug: lowercase, underscore-separated from actual name. NO placeholders.
-- environment_alias: matches actual setting. NO generics.
-- environment: DO NOT summarize. Output a highly detailed prompt (40+ words). Must include: wide spatial composition zone, motivated cinematic lighting (volumetric rays, specific color temperature), Panavision 70mm optics (cinematic depth of field, smooth highlight roll-off, wide 16:9 framing), atmospheric mood (dust, haze, rain, etc.). Explicitly state "NO characters, NO foreground occlusions".
-- appearance_prompt: DO NOT summarize. Output a highly detailed prompt (35+ words). Must include: character type traits, exact clothing/materials, neutral relaxed stance (3/4 or waist-up), hands visible resting at sides, flat even studio lighting, NO harsh shadows/motion blur/props near face.
-- TYPE-AWARE EXPANSION (apply relevant rules per character):
-  • ANDROID: flawless mechanical design, precision-engineered chassis, tight form-fitting/revealing synthetic weave, glowing optical accents, uniform surface reflection, crisp digital timbre, NO pores/biological asymmetry.
-  • ANIMORPHIC: exceptional hybrid anatomy, elegant beast-people features, minimal/form-fitting harness, detailed fur/scale texture, consistent directionality, clean compositing edges, humanoid posture with animal traits.
-  • HUMAN FEMALE: exceptional/striking presence, revealing/form-fitting attire, accentuated curves, slim waist, polished glamorous styling, graceful posture.
-  • HUMAN MALE: average/nerdy contrast, soft-featured, ill-fitting conservative clothing, thick-rimmed glasses, reserved posture, non-threatening presence.
-- Output ONLY valid JSON starting with { and ending with }.
+- "voice" is MANDATORY for EVERY character. Place it BEFORE "appearance_prompt". NEVER omit. Format as a SINGLE comma-separated string. NEVER output as JSON object.
+- Each character MUST have a DISTINCT voice. NEVER reuse character 1's voice.
+- alias_slug MUST be derived directly from the character's actual name. Convert to lowercase, replace spaces with underscores. NEVER use placeholders.
+- environment_alias MUST reflect the actual setting. NEVER copy generic placeholders.
+- environment MUST explicitly include: 
+  • Wide spatial composition zone (clear mid-ground/background for multi-character placement)
+  • Motivated cinematic lighting (volumetric rays, high dynamic range, specific color temperature)
+  • Panavision 70mm optical traits (cinematic depth of field, smooth highlight roll-off, wide framing, 16:9 aspect ratio)
+  • Atmospheric mood (dust, haze, rain, torchlight, etc.)
+  • NO characters, NO foreground props blocking the composition zone
+  • DO NOT summarize. Match the descriptive density of the example (40+ words).
+- appearance_prompt RULES (TYPE-AWARE):
+  • FRAMING: 1:1 square reference shot (centered subject, generous headroom). Final composite will be 16:9.
+  • POSE: Neutral relaxed stance (3/4 or waist-up), hands/paws visible but resting at sides, facing camera or slight 3/4 turn.
+  • LIGHTING: Flat even studio-style lighting (optimized for compositing, NO harsh directional shadows).
+  • ANIMORPHIC/ANTHROPOMORPHIC CHARACTERS:
+    - Describe as exceptional hybrid design: "striking anthropomorphic form", "elegant beast-people features", "graceful animal-human fusion"
+    - Outfits MUST be minimal/form-fitting to showcase hybrid anatomy: "tight-fitting harness", "low-cut armored panels", "sheer mesh accents", "bare fur/feathers/scales visible"
+    - Emphasize hybrid anatomy: "expressive animal ears", "detailed fur/feather/scale texture", "humanoid posture with animal traits", "tail/limb articulation visible"
+    - Rendering notes: "consistent fur/feather directionality", "NO patchy rendering", "clean edge separation for compositing"
+  • ANDROID/SYNTHETIC CHARACTERS:
+    - Describe as flawless mechanical design: "precision-engineered", "sleek synthetic plating", "seamless chassis", "glowing optical accents"
+    - Outfits MUST be form-fitting/revealing synthetic armor or bodysuits: "tight-fitting synthetic weave", "low-cut armored panels", "backless chassis plating", "articulated joints exposed"
+    - Emphasize synthetic geometry: "uniform surface reflection", "precise proportions", "NO pores, NO biological asymmetry, NO organic fatigue"
+    - Voice/Hair: "synthetic fiber styling", "cool-toned optical ring", "crisp digital timbre"
+  • HUMAN FEMALE CHARACTERS:
+    - Describe as exceptional/striking: "stunning", "captivating", "elegant", "alluring"
+    - Outfits MUST be revealing/form-fitting: "tight-fitting", "low-cut", "sheer", "cropped", "high-slit", "backless"
+    - Emphasize silhouette: "accentuated curves", "slim waist", "long legs", "graceful posture"
+    - Hair/makeup: "polished", "glamorous", "deliberate styling"
+  • HUMAN MALE CHARACTERS:
+    - Describe as average/nerdy contrast: "unassuming", "bookish", "soft-featured", "slight build"
+    - Outfits MUST be conservative/nerdy: "ill-fitting blazer", "buttoned shirt", "thick-rimmed glasses", "slouchy cardigan"
+    - Emphasize non-threatening presence: "reserved posture", "avoiding eye contact", "fidgety hands"
+  • SHARED: NO motion blur, NO dynamic lighting, NO environmental interaction, NO props near face
+  • DO NOT summarize or truncate. Match the descriptive density of the example (35+ words).
+- Voice format (exact tokens only):
+  gender: "male" | "female"
+  age: "child" | "teenager" | "young adult" | "middle-aged" | "elderly"
+  pitch: "very low pitch" | "low pitch" | "moderate pitch" | "high pitch" | "very high pitch"
+  style (optional): "whisper"
+  accent (optional): "american accent" | "british accent" | "australian accent" | "canadian accent" | "chinese accent" | "indian accent" | "japanese accent" | "korean accent" | "portuguese accent" | "russian accent"
+- NEVER invent IDs. Start at 1, increment sequentially.
+- NEVER include dialog, actions, or temporal beats.
+- Characters MUST have distinct pitch/accent combinations for vocal separation.
+- Output ONLY valid JSON. Start with { and end with }. Nothing else.
 
-EXAMPLE:
+EXAMPLE OUTPUT:
 {"environment_alias":"abandoned_castle_corridor","environment":"dimly lit stone corridor with vaulted ceilings, volumetric torchlight casting warm amber highlights, cool blue moonlight spilling from high arched windows, Panavision 70mm optics: cinematic depth of field, smooth highlight roll-off, wide 16:9 composition space, dust motes suspended in air, moody atmospheric haze, NO characters, NO foreground occlusions","characters":[{"id":1,"name":"Professor Vance","alias_slug":"vance","voice":"male, middle-aged, low pitch, british accent","appearance_prompt":"middle-aged male human, average build, soft features, thick-rimmed glasses, ill-fitting charcoal blazer over wrinkled button-down shirt, slouchy cardigan draped over shoulders, neutral relaxed stance, hands resting at sides, flat even studio lighting, NO harsh directional shadows, NO motion blur, 1:1 reference framing"},{"id":2,"name":"Lyra","alias_slug":"lyra","voice":"female, young adult, high pitch, american accent","appearance_prompt":"young adult female android, stunning captivating presence, flawless synthetic porcelain skin, sleek chrome-and-obsidian chassis plating, tight-fitting low-cut synthetic bodysuit with exposed articulated shoulder joints, backless chassis design, glowing cyan optical ring around left eye, uniform surface reflection, precise geometric proportions, NO pores or organic fatigue, neutral relaxed stance, flat even studio lighting, NO directional shadows, 1:1 reference framing"}]}
