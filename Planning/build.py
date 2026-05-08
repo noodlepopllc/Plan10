@@ -118,7 +118,7 @@ def render_pipeline(registry_path: str, sequence_path: str) -> str:
     video_idx = 1
     for ref in compv_refs:
         out.append(f'\n>> ALIAS: video_{video_idx:03d}')
-        out.append(f'image_to_video using={ref["alias"]}, prompt="{ref["motion"]}", duration_sec=5.0 Height: 832, Width: 480, Seed: -1')
+        out.append(f'image_to_video using={ref["alias"]}, prompt="{ref["motion"]}", duration_sec=5 Height: 832, Width: 480, Seed: -1')
         video_idx += 1
 
     return "\n".join(out)
