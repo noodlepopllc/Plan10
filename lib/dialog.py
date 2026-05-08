@@ -186,7 +186,7 @@ def VoiceDesignSchema():
                         "description": "Optional seed for deterministic output."
                     }
                 },
-                "required": ["text", "voice", "output"]
+                "required": ["voice", "output"]
             }
         }
     }

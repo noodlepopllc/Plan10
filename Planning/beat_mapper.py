@@ -32,7 +32,13 @@ SCENE CONTEXT:
 
 MAPPING RULES (NON-NEGOTIABLE):
 1. EVERY [ACTION] LINE → 1 JSON beat with type="action", text=null, facial_action=null.
-2. EVERY DIALOG LINE → 1 JSON beat with type="dialog", motion_prompt=null, motion_type="static".
+2. DIALOG PARSING: Lines follow "Speaker: Mood [Action] Spoken Text". Extract strictly:
+   • text = ONLY the final spoken words. NEVER include "Speaker:", Mood, or [brackets].
+   • facial_action = Mood + Action combined (e.g., "confident, adjusts glasses, smiles").
+   • visible_chars = "Teacher"/"Instructor" → [1]. "Assistant"/"Kitten" → [2].
+   • motion_prompt = null, motion_type = "static".
+   • Example: "Husband: nostalgic [flips page] You know how much I love this?" 
+     → text="You know how much I love this?", facial_action="nostalgic, flips page", visible_chars=[1]
 3. CHARACTER IDENTIFICATION: Map descriptive phrases in [ACTION] lines to EXACT registry characters.
    • "teacher", "woman in blazer", "instructor", "glasses" → visible_chars: [1]
    • "assistant", "kitten dress", "red dress", "cat ears" → visible_chars: [2]
@@ -43,12 +49,13 @@ MAPPING RULES (NON-NEGOTIABLE):
    • If only one moves, omit the other tag. MAX 2 verbs per character.
 5. SHOT TYPE: len(visible_chars)==1 → "closeup"|"medium"|"profile_left"|"profile_right". len==2 → "two_shot"|"ots".
 6. ASSET ROUTING: base_composite MUST be an EXACT registry alias matching the visual description. Keyword-match starting_pose against registry descriptions. If no match, set null.
-7. ORDERING: Maintain narrative flow. Do not skip, merge, or reorder lines.
+7. ORDERING: Maintain exact narrative sequence. Do not skip, merge, or reorder lines.
 8. OUTPUT ONLY RAW JSON. NO MARKDOWN. NO EXPLANATIONS.
 
 SCHEMA:
 {SCHEMA}
 Respond ONLY with the JSON:"""
+
     print(prompt)
 
 if __name__ == "__main__":
