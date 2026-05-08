@@ -111,17 +111,35 @@ if __name__ == "__main__":
         if ctx.get("messages"):
             ctx["history"].extend(ctx["messages"])
             ctx["messages"] = []
-            
-        # 2. Inject Clean Prompt & Alias
-        ctx["target_alias"] = target_alias
-        ctx["messages"].append({"role": "user", "content": clean_prompt})
-        save_context(ctx)
 
-        print(f"\n🚀 [{i}/{len(tasks_to_run)}] Running [{target_alias or 'Unnamed'}]: {clean_prompt[:60]}...")
-        
+        # 2. Create TEMPORARY scoped context for this task
+        task_ctx = {**ctx}  # Copy master state
+        current_assets = ctx.get("assets", {})
+        clean_lower = clean_prompt.lower()
+        import re
+        relevant_assets = {
+            k: v for k, v in current_assets.items()
+            if re.search(rf'\b{re.escape(k.lower())}\b', clean_lower) or k == target_alias
+        }
+
+        # Inject available list + scoped assets into temp context
+        task_ctx["assets"] = relevant_assets
+        task_ctx["target_alias"] = target_alias
+        task_ctx["messages"] = [{"role": "user", "content": f"Available assets: {', '.join(relevant_assets.keys())}\n\n{clean_prompt}"}]
+        save_context(task_ctx)
+
+        print(f"\n🚀 [{i}/{len(tasks_to_run)}] Running [{target_alias}] (scoped: {len(relevant_assets)} assets): {clean_prompt[:60]}...")
+
         # 3. Execute
-        ctx, log = execute_task(clean_prompt, max_steps=args.max_steps, target_alias=target_alias, initial_ctx=ctx)
-        print(f"✅ Result: {log['completed_steps'][-1] if log['completed_steps'] else 'Done'}")
+        result_ctx, log = execute_task(clean_prompt, max_steps=args.max_steps, target_alias=target_alias, initial_ctx=task_ctx)
+
+        # 4. Merge ONLY the newly created asset back into MASTER context
+        new_assets = result_ctx.get("assets", {})
+        for alias, info in new_assets.items():
+            ctx["assets"][alias] = info  # Add or update without dropping other assets
+
+        ctx["messages"] = result_ctx.get("messages", [])
+        ctx["history"] = result_ctx.get("history", ctx["history"])
         save_context(ctx)
 
     path = Path("./logs")
