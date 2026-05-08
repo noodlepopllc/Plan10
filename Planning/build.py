@@ -68,14 +68,14 @@ def render_pipeline(registry_path: str, sequence_path: str) -> str:
             # 🎯 FRAME 0: Compositor sets the exact starting position
             starting_pose = beat.get("starting_pose") or "standing relaxed, weight centered, hands at sides"
             if "no mouth movement" not in starting_pose.lower() and "no speech" not in starting_pose.lower():
-                starting_pose += ", NO mouth movement, NO speech animation"
+                starting_pose += ", mouth completely closed and still, lips sealed shut, zero lip motion, static facial expression"
 
             # 🎯 FRAMES 1→N: Video model handles temporal motion
             motion = beat.get("motion_prompt") or starting_pose
             if "subtle camera drift" not in motion.lower():
                 motion += ", subtle camera drift"
             if "no mouth movement" not in motion.lower() and "no speech" not in motion.lower():
-                motion += ", NO mouth movement, NO speech animation"
+                motion += ", mouth completely closed and still, lips sealed shut, zero lip motion, static facial expression"
 
             # NO CACHE: Every action beat gets a fresh composite for its exact starting pose
             char_seq[focus_cid]["compv"] += 1
@@ -116,7 +116,7 @@ def render_pipeline(registry_path: str, sequence_path: str) -> str:
         # PASS 2: Motion Pass (I2V animates posture/gaze/action)
         i2v_prompt = f"{motion}, subtle camera drift, mouth completely closed and still, lips sealed shut, zero lip motion, static facial expression"
         out.append(f'\n>> ALIAS: vid_motion_{dialog_idx:03d}')
-        out.append(f'image_to_video using=compd_{slug}_{dialog_idx:02d}, prompt="{i2v_prompt}", duration_sec=2 Height: 832, Width: 480, Seed: -1')
+        out.append(f'image_to_video using=compd_{slug}_{dialog_idx:02d}, prompt="{i2v_prompt}", duration_sec=5.0 Height: 832, Width: 480, Seed: -1')
 
         # PASS 3: Lip-Sync Pass (S2V adds speech, preserves motion)
         if raw_text.strip():
