@@ -38,6 +38,9 @@ def render_pipeline(registry_path: str, sequence_path: str) -> str:
 
     for beat in sequence["beats"]:
         visible_ids = beat.get("visible_chars") or [beat.get("char_id")]
+        if shot == "ots" or shot == "two_shot" and len(valid_visible) == 1:
+            visible_ids = [1,2]
+    
         valid_visible = [cid for cid in visible_ids if cid in char_map and cid is not None][:2]
         if not valid_visible: continue
 

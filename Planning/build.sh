@@ -6,11 +6,11 @@ mkdir -p Planning/outputs
 python lib/qwen_llm.py -P "$(cat "$1")" -S Planning/assets.txt | tail -n +2 > Planning/outputs/registry.json
 
 # 2. Plain English Visual Expansion
-python Planning/beat_expansion.py "$(cat "$1")" 14 > Planning/outputs/visual_prompt.txt
+python Planning/beat_expansion.py "$(cat "$1")" 6 > Planning/outputs/visual_prompt.txt
 python lib/qwen_llm.py -P "$(cat Planning/outputs/visual_prompt.txt)" -S Planning/sequence.txt | tail -n +2 > Planning/outputs/beats_raw.txt
 
 # 3. Generate Dialog (EXACTLY as you had it)
-DIALOG_PROMPT=$(python Planning/dialog_headshot.py "$1" Planning/outputs/registry.json 14)
+DIALOG_PROMPT=$(python Planning/dialog_headshot.py "$1" Planning/outputs/registry.json 8)
 python lib/qwen_llm.py -P "$DIALOG_PROMPT" -S Planning/dialog_system.txt | tail -n +2 > Planning/outputs/dialog.txt
 
 # 4. Schema Mapper (combines visuals + dialog + registry → final JSON)
