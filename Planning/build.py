@@ -116,7 +116,7 @@ def render_pipeline(registry_path: str, sequence_path: str) -> str:
         # PASS 2: Motion Pass (I2V animates posture/gaze/action)
         i2v_prompt = f"{motion}, subtle camera drift, mouth completely closed and still, lips sealed shut, zero lip motion, static facial expression"
         out.append(f'\n>> ALIAS: vid_motion_{dialog_idx:03d}')
-        out.append(f'image_to_video using=compd_{slug}_{dialog_idx:02d}, prompt="{i2v_prompt}", duration_sec=5.0 Height: 832, Width: 480, Seed: -1')
+        out.append(f'image_to_video using=compd_{slug}_{dialog_idx:02d}, prompt="{i2v_prompt}", duration_sec=2, Height: 832, Width: 480, Seed: -1')
 
         # PASS 3: Lip-Sync Pass (S2V adds speech, preserves motion)
         if raw_text.strip():

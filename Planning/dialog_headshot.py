@@ -1,6 +1,15 @@
 #!/usr/bin/env python3
 import sys, json
 
+# 🔑 CLOSED MOOD VOCABULARY (Source of truth for asset routing)
+ALLOWED_MOODS = [
+    "neutral", "confident", "skeptical", "encouraging", "curious", 
+    "supportive", "shy", "reassuring", "amused", "eager", 
+    "nervous", "patient", "relieved", "stern", "defensive", 
+    "frustrated", "overwhelmed", "playful"
+]
+MOOD_LIST_STR = ", ".join(ALLOWED_MOODS)
+
 def main():
     scene_path = sys.argv[1]
     registry_path = sys.argv[2]
@@ -28,8 +37,8 @@ OUTPUT FORMAT (STRICT):
 
 RULES:
 - Output ONLY the {beats} lines. NO markdown, NO numbers, NO bullets, NO extra text.
-- <mood> = EXACTLY ONE word. Used ONLY for initial headshot image generation.
-- Emotion is conveyed through pacing, punctuation, ellipsis, capitalization, or word density.
+- <mood> MUST be EXACTLY ONE word from this list: {MOOD_LIST_STR}
+- NEVER invent new moods. If emotional nuance is needed, convey it through word choice, punctuation, or pacing.
 - One utterance = one line. Multiple consecutive lines for the same character are allowed when the scene demands it.
 - Spoken lines: natural conversational length. Let TTS handle pacing (~2-5s per line).
 - Nonverbal: brackets ONLY for head/eye/mouth micro-movements. Example: [nods slowly], [averts gaze, exhales]
@@ -38,11 +47,10 @@ RULES:
 - Setting: {env}
 
 EXAMPLE:
-{name1}: stern How did you think this would end?
-{name2}: defensive [looks away, jaw tightens]
-{name1}: frustrated I gave you clear instructions.
-{name1}: disappointed And you chose to ignore them.
-{name2}: overwhelmed [bites lip, eyes drop]
+{name1}: confident [adjusts glasses] Welcome to our Vietnamese lesson.
+{name2}: playful [tilts head] Chào mừng đến với lớp học.
+{name1}: thoughtful That means welcome to class.
+{name2}: shy [fidgets with dress hem]
 
 BEGIN OUTPUT:"""
     print(prompt)
