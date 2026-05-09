@@ -11,6 +11,7 @@ SCHEMA:
       "alias_slug": "<lowercase, underscore-separated slug derived DIRECTLY from the character's actual name or role>",
       "voice": "<gender, age, pitch, style?, accent?>",
       "background_zone": "<spatial location within the master environment for per-character camera repositioning>",
+      "zone_prompt": "<full environment prompt with unique zone anchor injected, style locked>",
       "appearance_prompt": "<neutral pose, flat even lighting, consistent traits, compositing-ready>"
     }
   ]
@@ -22,17 +23,22 @@ STRICT RULES:
 - alias_slug MUST be derived directly from the character's actual name. Convert to lowercase, replace spaces with underscores. NEVER use placeholders.
 - environment_alias MUST reflect the actual setting. NEVER copy generic placeholders.
 - environment MUST explicitly include: 
-  • EXPLICIT SPATIAL ANCHORS: Describe 3+ distinct architectural landmarks distributed across the frame (e.g., "left wall lined with iron-bound bookshelves", "center wide stone floor with scattered props", "right arched alcove with glowing brazier"). These anchors MUST be physically separated to enable true camera repositioning.
-  • Motivated cinematic lighting (volumetric rays, high dynamic range, specific color temperature, clear light direction relative to anchors)
+  • NEUTRAL SPATIAL FOUNDATION: Wide, open establishing view describing ONLY broad architectural boundaries (walls, ceiling, floor, distant doorways). NO dominant focal anchors, counters, altars, or specific landmarks. Prevents geometry conflicts during zone generation.
+  • Motivated cinematic lighting (volumetric rays, high dynamic range, specific color temperature, clear light direction)
   • Panavision 70mm optical traits (cinematic depth of field, smooth highlight roll-off, wide framing, 16:9 aspect ratio)
   • Atmospheric mood (dust, haze, rain, torchlight, etc.)
   • NO characters, NO foreground props blocking the composition zone
   • DO NOT summarize. Match the descriptive density of the example (45+ words).
 - background_zone RULES:
-  • MANDATORY for EVERY character. Place BEFORE "appearance_prompt".
-  • MUST explicitly target ONE of the spatial anchors defined in the environment. NEVER use vague directions like "center" or "opposite side" without naming the specific landmark.
+  • MANDATORY for EVERY character. Place BEFORE "zone_prompt".
+  • EACH zone MUST introduce ONE UNIQUE, DISTINCT architectural focal anchor NOT present in the master environment (e.g., "polished mahogany bar counter with brass rail", "vaulted stone alcove with iron sconces", "raised wooden dais with carved lectern").
+  • These anchors define the spatial perspective for that character's backdrop. NEVER reuse the same anchor or landmark phrase across characters.
   • MUST imply camera repositioning within the same physical space. NO characters, NO actions, NO new rooms.
-  • Each character MUST have a DISTINCT zone. NEVER reuse the same location phrase.
+- zone_prompt RULES (MANDATORY CONSTRUCTION):
+  • CONSTRUCT BY TEMPLATE: Copy the master "environment" prompt EXACTLY.
+  • INJECT UNIQUE ANCHOR: Replace the broad central space with the zone's specific focal anchor.
+  • LOCK EVERYTHING ELSE: Lighting, color temperature, Panavision traits, atmospheric mood, and material textures MUST remain identical.
+  • WORD COUNT CHECK: zone_prompt length must be within ±5 words of master environment prompt.
 - appearance_prompt RULES (TYPE-AWARE - APPLY EXACTLY ONE PER CHARACTER):
   • FRAMING: 1:1 square reference shot (centered subject, generous headroom). Final composite will be 16:9.
   • POSE: Neutral relaxed stance (3/4 or waist-up), hands/paws visible but resting at sides, facing camera or slight 3/4 turn.
@@ -65,4 +71,4 @@ STRICT RULES:
 - Output ONLY valid JSON. Start with { and end with }. Nothing else.
 
 EXAMPLE OUTPUT:
-{"environment_alias":"abandoned_castle_corridor","environment":"dimly lit stone corridor with vaulted ceilings, left wall lined with heavy oak bookshelves, center wide stone floor with scattered parchment, right side arched alcove containing a glowing iron brazier, volumetric torchlight casting warm amber highlights, cool blue moonlight spilling from high slit windows, Panavision 70mm optics: cinematic depth of field, smooth highlight roll-off, wide 16:9 composition space, dust motes suspended in air, moody atmospheric haze, NO characters, NO foreground occlusions","characters":[{"id":1,"name":"Professor Vance","alias_slug":"vance","voice":"male, middle-aged, low pitch, british accent","background_zone":"near the arched alcove with the glowing iron brazier","appearance_prompt":"middle-aged male human, average build, soft features, thick-rimmed glasses, ill-fitting charcoal blazer over wrinkled button-down shirt, slouchy cardigan draped over shoulders, neutral relaxed stance, hands resting at sides, flat even studio lighting, NO harsh directional shadows, NO motion blur, 1:1 reference framing"},{"id":2,"name":"Lyra","alias_slug":"lyra","voice":"female, young adult, high pitch, american accent","background_zone":"beside the heavy oak bookshelves lining the left wall","appearance_prompt":"young adult female human, stunning captivating presence, elegant alluring features, tight-fitting low-cut emerald velvet dress with sheer
+{"environment_alias":"abandoned_castle_hall","environment":"vast stone hall with vaulted ceilings, smooth limestone walls extending to shadowed periphery, wide flagstone floor stretching into dim distance, distant arched doorways framing deep negative space, cool blue moonlight filtering through high clerestory windows, Panavision 70mm optics: cinematic depth of field, smooth highlight roll-off, wide 16:9 composition space, dust motes suspended in air, moody atmospheric haze, NO characters, NO foreground occlusions, NO focal landmarks","characters":[{"id":1,"name":"Professor Vance","alias_slug":"vance","voice":"male, middle-aged, low pitch, british accent","background_zone":"polished mahogany lectern with brass rail and scattered parchment","zone_prompt":"vast stone hall with vaulted ceilings, smooth limestone walls extending to shadowed periphery, polished mahogany lectern with brass rail and scattered parchment, distant arched doorways framing deep negative space, cool blue moonlight filtering through high clerestory windows, Panavision 70mm optics: cinematic depth of field, smooth highlight roll-off, wide 16:9 composition space, dust motes suspended in air, moody atmospheric haze, NO characters, NO foreground occlusions","appearance_prompt":"middle-aged male human, average build, soft features, thick-rimmed glasses, ill-fitting charcoal blazer over wrinkled button-down shirt, slouchy cardigan draped over shoulders, neutral relaxed stance, hands resting at sides, flat even studio lighting, NO harsh directional shadows, NO motion blur, 1:1 reference framing"},{"id":2,"name":"Lyra","alias_slug":"lyra","voice":"female, young adult, high pitch, american accent","background_zone":"vaulted stone alcove with iron sconces and woven tapestry","zone_prompt":"vast stone hall with vaulted ceilings, smooth limestone walls extending to shadowed periphery, vaulted stone alcove with iron sconces and woven tapestry, distant arched doorways framing deep negative space, cool blue moonlight filtering through high clerestory windows, Panavision 70mm optics: cinematic depth of field, smooth highlight roll-off, wide 16:9 composition space, dust motes suspended in air, moody atmospheric haze, NO characters, NO foreground occlusions","appearance_prompt":"young adult female human, stunning captivating presence, elegant alluring features, tight-fitting low-cut emerald velvet dress with sheer mesh accents, accentuated curves and slim waist highlighted by tailored silhouette, long legs visible beneath high-slit hem, polished glamorous makeup with deliberate styling, graceful posture, neutral relaxed stance, hands resting at sides, flat even studio lighting, NO harsh directional shadows, NO motion blur, 1:1 reference framing"}]}
