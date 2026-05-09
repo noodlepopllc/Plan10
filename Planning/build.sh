@@ -19,13 +19,13 @@ touch Planning/outputs/dialog_tmp.txt
 
 # 4. Schema Mapper (combines visuals + dialog + registry → final JSON)
 python Planning/beat_mapper.py Planning/outputs/registry.json Planning/outputs/beats_raw.txt Planning/outputs/dialog.txt "$1" > Planning/outputs/map_prompt.txt
-python lib/qwen_llm.py -P "$(cat Planning/outputs/map_prompt.txt)" -S Planning/sequence.txt | tail -n +2 > Planning/outputs/sequence.json
+python lib/qwen_llm.py -P "$(cat Planning/outputs/map_prompt.txt)" -S Planning/sequence.txt | tail -n +2 > Planning/outputs/sequence_dialog.json
 
 python Planning/beat_mapper.py Planning/outputs/registry.json Planning/outputs/beats_raw_tmp.txt Planning/outputs/dialog_tmp.txt "$1" > Planning/outputs/map_prompt_tmp.txt
-python lib/qwen_llm.py -P "$(cat Planning/outputs/map_prompt_tmp.txt)" -S Planning/sequence.txt | tail -n +2 > Planning/outputs/sequence_tmp.json
+python lib/qwen_llm.py -P "$(cat Planning/outputs/map_prompt_tmp.txt)" -S Planning/sequence.txt | tail -n +2 > Planning/outputs/sequence_action.json
 
 # 5. Final Build
-python Planning/build.py Planning/outputs/registry.json Planning/outputs/sequence.json > "$2"
+python Planning/build.py Planning/outputs/registry.json Planning/outputs/sequence_action.json Planning/outputs/sequence_dialog.json > "$2"
 python Planning/cinematic_establishing.py Planning/outputs/registry.json >> "$2"
 
 echo "✅ Pipeline complete: $2"
