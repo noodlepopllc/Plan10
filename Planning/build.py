@@ -87,24 +87,25 @@ def render_pipeline(registry_path: str, actions_path: str, dialog_path: str = No
     zone_backdrop_map = {}
     base_seed = 42  # Deterministic base for zone consistency
     
+    # PHASE 1b: Per-character zone backdrops
+    zone_backdrop_map = {}
+    master_prompt = registry["environment"]  # The prompt used to generate the master env
+
     for c in registry["characters"]:
         slug = slugify(c.get("alias_slug", c["name"]))
-        zone_prompt = c.get("zone_prompt")
-        
-        if not zone_prompt:
-            # Fallback: skip zone generation if no zone_prompt defined
-            zone_backdrop_map[slug] = master_env_alias
-            continue
-            
-        zone_slug = slugify(c.get("background_zone", slug))[:20]
+        zone = c.get("background_zone", "center of the room")
+        zone_slug = slugify(zone)[:20]
         zone_alias = f"{master_env_alias}_zone_{zone_slug}"
         zone_backdrop_map[slug] = zone_alias
-        
-        # Deterministic seed offset for visual consistency across zones
-        seed_offset = base_seed + (hash(zone_prompt) % 1000)
-        
+
+        char_ref_path = f"assets/char_{slug}.png"
+        should_bake = c.get("staged_character", False) and os.path.exists(char_ref_path)
+
         out.append(f'\n>> ALIAS: {zone_alias}')
-        out.append(f'create_background prompt="{zone_prompt}" Height: 832, Width: 480, Seed: {seed_offset}')
+        if should_bake:
+            out.append(f'generate_backdrop media={master_env_alias}, zone="{zone}", master_prompt="{master_prompt}", char_image="{char_ref_path}", output={zone_alias}, Width: 1328, Height: 1328, Seed: -1')
+        else:
+            out.append(f'generate_backdrop media={master_env_alias}, zone="{zone}", master_prompt="{master_prompt}", output={zone_alias}, Width: 1328, Height: 1328, Seed: -1')
 
     # 1c. Character reference sheets
     char_map = {}
