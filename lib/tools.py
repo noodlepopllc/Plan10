@@ -9,7 +9,9 @@ from image_gen import (
     GenerateImage, 
     GenerateImageSchema, 
     GenerateReverseBackgroundSchema, 
-    GenerateReverseBackground
+    GenerateReverseBackground,
+    GenerateBackdropSchema,
+    GenerateZoneBackdrop
 ) 
 from graphics_gen import GenerateGraphic, GenerateGraphicSchema
 from image_to_video import GenerateVideoSchema, GenerateVideo
@@ -23,8 +25,7 @@ import traceback
 from image_edit import (
     EditImageSchema, 
     EditImage,
-    GenerateBackdropSchema,
-    GenerateZoneBackdrop
+
 )
 
 # =============================================================================

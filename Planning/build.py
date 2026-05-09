@@ -6,69 +6,9 @@ import os
 from PIL import Image
 
 # ============================================================================
-# 🔧 IMPORT OR DEFINE GenerateZoneBackdrop
-# If you have it in a separate module (e.g., backdrop_gen.py), uncomment:
-# from backdrop_gen import GenerateZoneBackdrop
+# 🔧 GenerateZoneBackdrop REMOVED
+# Zone backdrops are now generated via create_background + zone_prompt
 # ============================================================================
-def GenerateZoneBackdrop(
-    media: str,
-    zone: str,
-    output: str = "zone_backdrop.png",
-    width: int = 1328,
-    height: int = 1328,
-    seed: int = -1,
-    char_image: str = None,
-):
-    """Generate a repositioned zone backdrop from a master environment.
-    Optionally bake a character into the plate using their reference PNG + metadata."""
-    if not os.path.exists(media):
-        raise FileNotFoundError(f"Environment source not found: {media}")
-
-    # Handle video->frame if needed (your existing helper)
-    background = video_to_img(media) if media.lower().endswith(('.mp4', '.mov')) else media
-
-    images = [background]
-    char_desc = ""
-
-    # 🔑 CONDITIONAL CHARACTER INJECTION
-    if char_image and os.path.exists(char_image):
-        with Image.open(char_image) as img:
-            images.append(char_image)  # Pass path, not PIL object, for EditImage compatibility
-            raw_desc = img.info.get('Description', 'character')
-            char_desc = (
-                f"A single {raw_desc}. "
-                "Preserve adult facial proportions, light cheekbone definition, and subtle jawline contour. "
-                "Position naturally within the space, matching environmental lighting and perspective. "
-            )
-
-    # 🎥 AGGRESSIVE CAMERA REPOSITIONING PROMPT
-    prompt_parts = [
-        f"CHANGE CAMERA ANGLE: dolly/pan to frame {zone} inside this exact same room.",
-        "COMPLETELY ERASE the original framing: remove all foreground crowds, subjects, and objects from the source view.",
-        "Generate a NOVEL VIEWPOINT: shift perspective, change focal depth, reveal previously unseen architecture.",
-        char_desc,
-        "STRICTLY PRESERVE: lighting direction/intensity, wall & floor textures, color grading, "
-        "architectural style, window/door placements, and overall atmosphere.",
-        "SEAMLESSLY extend or reframe the scene to match the existing perspective.",
-        "ALLOW: logical counters, registers, or fixtures that belong in this zone.",
-        "NO text, NO style drift. Photorealistic cinematic environment shot."
-    ]
-
-    if char_image:
-        prompt_parts.append("NO additional characters beyond the specified subject, NO foreground occlusions.")
-
-    prompt = " ".join([p.strip() for p in prompt_parts if p.strip()])
-
-    # 🎯 Route to your EditImage backend (adjust signature if needed)
-    return EditImage(
-        prompt=prompt,
-        images=images,
-        output=output,
-        width=width,
-        height=height,
-        seed=seed
-    )
-
 
 def slugify(text: str) -> str:
     text = str(text).lower().strip()
@@ -143,23 +83,28 @@ def render_pipeline(registry_path: str, actions_path: str, dialog_path: str = No
     out.append(f'>> ALIAS: {master_env_alias}')
     out.append(f'create_background prompt="{registry["environment"]}" Height: 832, Width: 480, Seed: -1')
 
-    # 1b. Per-character zone backdrops
+    # 1b. Per-character zone backdrops: DIRECT TEXT-TO-IMAGE GENERATION
     zone_backdrop_map = {}
+    base_seed = 42  # Deterministic base for zone consistency
+    
     for c in registry["characters"]:
         slug = slugify(c.get("alias_slug", c["name"]))
-        zone = c.get("background_zone", "center of the room")
-        zone_slug = slugify(zone)[:20]
+        zone_prompt = c.get("zone_prompt")
+        
+        if not zone_prompt:
+            # Fallback: skip zone generation if no zone_prompt defined
+            zone_backdrop_map[slug] = master_env_alias
+            continue
+            
+        zone_slug = slugify(c.get("background_zone", slug))[:20]
         zone_alias = f"{master_env_alias}_zone_{zone_slug}"
         zone_backdrop_map[slug] = zone_alias
-
-        char_ref_path = f"assets/char_{slug}.png"
-        should_bake = c.get("staged_character", False) and os.path.exists(char_ref_path)
-
+        
+        # Deterministic seed offset for visual consistency across zones
+        seed_offset = base_seed + (hash(zone_prompt) % 1000)
+        
         out.append(f'\n>> ALIAS: {zone_alias}')
-        if should_bake:
-            out.append(f'generate_zone_backdrop media={master_env_alias}, zone="{zone}", char_image="{char_ref_path}", output={zone_alias}, Width: 1328, Height: 1328, Seed: -1')
-        else:
-            out.append(f'generate_zone_backdrop media={master_env_alias}, zone="{zone}", output={zone_alias}, Width: 1328, Height: 1328, Seed: -1')
+        out.append(f'create_background prompt="{zone_prompt}" Height: 832, Width: 480, Seed: {seed_offset}')
 
     # 1c. Character reference sheets
     char_map = {}
@@ -285,6 +230,26 @@ def render_pipeline(registry_path: str, actions_path: str, dialog_path: str = No
         # PASS 1: Base Headshot
         base_alias = f"compd_{slug}_{mood}"
         backdrop = zone_backdrop_map.get(slug, master_env_alias)
+
+        # PHASE 1b: Per-character zone backdrops
+        zone_backdrop_map = {}
+        master_prompt = registry["environment"]  # Original prompt used for master env
+
+        for c in registry["characters"]:
+            slug = slugify(c.get("alias_slug", c["name"]))
+            zone = c.get("background_zone", "center of the room")
+            zone_slug = slugify(zone)[:20]
+            zone_alias = f"{master_env_alias}_zone_{zone_slug}"
+            zone_backdrop_map[slug] = zone_alias
+
+            char_ref_path = f"assets/char_{slug}.png"
+            should_bake = c.get("staged_character", False) and os.path.exists(char_ref_path)
+
+            out.append(f'\n>> ALIAS: {zone_alias}')
+            if should_bake:
+                out.append(f'generate_backdrop source_image={master_env_alias}, zone="{zone}", master_prompt="{master_prompt}", char_image="{char_ref_path}", output={zone_alias}, Width: 1328, Height: 1328, Seed: -1')
+            else:
+                out.append(f'generate_backdrop source_image={master_env_alias}, zone="{zone}", master_prompt="{master_prompt}", output={zone_alias}, Width: 1328, Height: 1328, Seed: -1')
         
         # PASS 2: Motion Pass (I2V)
         i2v_prompt = f"{mood}, {final_motion}, subtle camera drift, mouth completely closed and still, lips sealed shut, zero lip motion"
