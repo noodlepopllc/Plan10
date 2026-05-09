@@ -46,7 +46,7 @@ def main():
 
         vid_alias = f"vid_{alias}"
         out.append(f"\n>> ALIAS: {vid_alias}")
-        out.append(f"image_to_video using={alias}, prompt=\"subtle camera drift, atmospheric light shift, NO mouth movement, NO speech animation\", duration_sec=5.0 Height: 832, Width: 480, Seed: -1")
+        out.append(f"image_to_video using={alias}, prompt=\"subtle camera drift, atmospheric light shift, NO mouth movement, NO speech animation\", duration_sec=5 Height: 832, Width: 480, Seed: -1")
 
     print("\n".join(out))
 
