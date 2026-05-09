@@ -14,8 +14,10 @@ def main():
     templates = [
         {"shot_type": "two_shot", "desc": "wide environmental framing, both characters centered"},
         {"shot_type": "ots",      "desc": "over-the-shoulder perspective, cinematic focus separation"},
-        {"shot_type": "closeup",  "desc": "tight single portrait, shallow depth, expression focused"},
-        {"shot_type": "medium",   "desc": "waist-up single framing, relaxed posture, soft background"}
+        #{"shot_type": "closeup",  "desc": "tight single portrait, shallow depth, expression focused"},
+        {"shot_type": "medium",   "desc": "waist-up single framing, relaxed posture, soft background"},
+        {"shot_type": "medium",   "desc": "waist-up single framing, relaxed posture, soft background"},
+        #{"shot_type": "closeup",  "desc": "tight single portrait, shallow depth, expression focused"},
     ]
 
     out = []
