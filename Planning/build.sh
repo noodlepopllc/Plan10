@@ -26,6 +26,6 @@ python lib/qwen_llm.py -P "$(cat Planning/outputs/map_prompt_tmp.txt)" -S Planni
 
 # 5. Final Build
 python Planning/build.py Planning/outputs/registry.json Planning/outputs/sequence.json > "$2"
-python Planning/cinematic_establishing.py >> "$2"
+python Planning/cinematic_establishing.py Planning/outputs/registry.json >> "$2"
 
 echo "✅ Pipeline complete: $2"
