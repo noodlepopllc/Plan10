@@ -363,8 +363,8 @@ def GenerateZoneBackdrop(
 ):
     """Generate a zone backdrop via structured image analysis + targeted prompt construction."""
     
-    if not os.path.exists(source_image):
-        raise FileNotFoundError(f"Source not found: {source_image}")
+    if not os.path.exists(media):
+        raise FileNotFoundError(f"Source not found: {media}")
     
     # ========================================================================
     # 🔍 STAGE 1: ANALYZE SOURCE IMAGE (structured extraction)
@@ -379,7 +379,7 @@ def GenerateZoneBackdrop(
         "Keep under 150 words total. Use concise phrases, not full sentences."
     )
     
-    analysis = AnalyzeImage(source_image, analysis_prompt)
+    analysis = AnalyzeImage(media, analysis_prompt)
     analysis_text = analysis['analysis'].strip()
     
     # ========================================================================
