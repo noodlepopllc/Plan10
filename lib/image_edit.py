@@ -241,6 +241,9 @@ def GenerateBackdropSchema():
         }
     }
 
+import os
+from PIL import Image
+
 def GenerateZoneBackdrop(
     media: str,
     zone: str,
@@ -250,6 +253,9 @@ def GenerateZoneBackdrop(
     seed: int = -1,
     char_image: str = None,
 ):
+    """Generate a harmonized sibling environment for a specific zone.
+    Shares atmospheric DNA with source media but introduces distinct landmarks."""
+    
     if not os.path.exists(media):
         raise FileNotFoundError(f"Environment source not found: {media}")
 
@@ -261,7 +267,7 @@ def GenerateZoneBackdrop(
     # 🔑 CONDITIONAL CHARACTER INJECTION
     if char_image and os.path.exists(char_image):
         with Image.open(char_image) as img:
-            images.append(img)
+            images.append(char_image)  # Pass path for EditImage compatibility
             raw_desc = img.info.get('Description', 'character')
             char_desc = (
                 f"A single {raw_desc}. "
@@ -269,31 +275,27 @@ def GenerateZoneBackdrop(
                 "Position naturally within the space, matching environmental lighting and perspective. "
             )
 
-    # 🎥 AGGRESSIVE CAMERA REPOSITIONING PROMPT
+    # 🎨 ATMOSPHERIC CONTINUITY + NEW LANDMARKS PROMPT
+    # Key shift: Don't ask for camera movement. Ask for a harmonized sibling shot.
     prompt_parts = [
-        f"CHANGE CAMERA ANGLE: dolly/pan to frame {zone} inside this exact same room.",
-        "COMPLETELY ERASE the original framing: remove all foreground crowds, subjects, and objects from the source view.",
-        "Generate a NOVEL VIEWPOINT: shift perspective, change focal depth, reveal previously unseen architecture.",
+        f"Generate a cinematic environment shot of {zone}.",
+        "This is a DISTINCT AREA within the same overall location as the reference image.",
+        "ATMOSPHERIC CONTINUITY (MANDATORY): Match the reference's color grading, lighting temperature, volumetric atmosphere, architectural style, and material textures exactly.",
+        "NEW LANDMARKS (MANDATORY): Introduce 2-3 focal architectural features unique to this zone (e.g., 'polished mahogany bar counter with brass rail', 'vaulted alcove with flickering sconces', 'floor-to-ceiling stained glass window').",
+        "SPATIAL LOGIC: The new landmarks must feel physically connected to the reference space (same building, same era, same design language) but occupy a different compositional zone.",
         char_desc,
-        "STRICTLY PRESERVE: lighting direction/intensity, wall & floor textures, color grading, "
-        "architectural style, window/door placements, and overall atmosphere.",
-        "SEAMLESSLY extend or reframe the scene to match the existing perspective.",
-        "ALLOW: logical counters, registers, or fixtures that belong in this zone.",
-        "NO text, NO style drift. Photorealistic cinematic environment shot."
+        "COMPOSITION: Wide 16:9 Panavision 70mm framing, cinematic depth of field, clear mid-ground for character placement, NO foreground occlusions.",
+        "NO characters (unless specified via char_image), NO text, NO style drift. Photorealistic cinematic environment shot."
     ]
 
     if char_image:
-        prompt_parts.append("NO additional characters beyond the specified subject, NO foreground occlusions.")
+        prompt_parts.append("NO additional characters beyond the specified subject.")
 
     prompt = " ".join([p.strip() for p in prompt_parts if p.strip()])
 
-    # 🎯 OPTIONAL: Add depth/structure guidance if your backend supports it
-    # control_image = generate_depth_map(background)  # if available
-    # return EditImage(prompt=prompt, images=images, control=control_image, ...)
-
     return EditImage(
         prompt=prompt,
-        images=images,
+        images=images,  # Reference image for atmospheric/style guidance
         output=output,
         width=width,
         height=height,
