@@ -8,7 +8,7 @@ def main():
     with open(registry_path) as f:
         reg = json.load(f)
 
-    env_slug = reg["environment_alias"]
+    env_slug = 'bg_' + reg["environment_alias"]
     chars = reg.get("characters", [])
 
     templates = [
