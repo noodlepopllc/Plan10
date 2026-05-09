@@ -119,8 +119,10 @@ if __name__ == "__main__":
         import re
         relevant_assets = {
             k: v for k, v in current_assets.items()
-            if re.search(rf'\b{re.escape(k.lower())}\b', clean_lower) or k == target_alias
+            if re.search(rf'\b{re.escape(k.lower())}\b', clean_lower) or k == target_alias or k.startswith('bg') or k.startswith('char')
         }
+
+        print("RELEVANT ASSETS: ", [x for x in relevant_assets.keys()])
 
         # Inject available list + scoped assets into temp context
         task_ctx["assets"] = relevant_assets

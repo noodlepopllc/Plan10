@@ -10,6 +10,7 @@ SCHEMA:
       "name": "<character name>",
       "alias_slug": "<lowercase, underscore-separated slug derived DIRECTLY from the character's actual name or role>",
       "voice": "<gender, age, pitch, style?, accent?>",
+      "background_zone": "<spatial location within the master environment for per-character camera repositioning>",
       "appearance_prompt": "<neutral pose, flat even lighting, consistent traits, compositing-ready>"
     }
   ]
@@ -27,10 +28,24 @@ STRICT RULES:
   • Atmospheric mood (dust, haze, rain, torchlight, etc.)
   • NO characters, NO foreground props blocking the composition zone
   • DO NOT summarize. Match the descriptive density of the example (40+ words).
-- appearance_prompt RULES (TYPE-AWARE):
+- background_zone RULES:
+  • MANDATORY for EVERY character. Place BEFORE "appearance_prompt".
+  • MUST be a concise spatial reference pointing to a distinct area within the master environment (e.g., "near the arched window", "opposite end of the corridor", "beside the stone hearth", "by the vaulted alcove").
+  • MUST imply camera repositioning within the same physical space. NO characters, NO actions, NO new rooms.
+  • Each character MUST have a DISTINCT zone. NEVER reuse the same location phrase.
+- appearance_prompt RULES (TYPE-AWARE - APPLY EXACTLY ONE PER CHARACTER):
   • FRAMING: 1:1 square reference shot (centered subject, generous headroom). Final composite will be 16:9.
   • POSE: Neutral relaxed stance (3/4 or waist-up), hands/paws visible but resting at sides, facing camera or slight 3/4 turn.
   • LIGHTING: Flat even studio-style lighting (optimized for compositing, NO harsh directional shadows).
+  • HUMAN FEMALE CHARACTERS:
+    - Describe as exceptional/striking: "stunning", "captivating", "elegant", "alluring"
+    - Outfits MUST be revealing/form-fitting: "tight-fitting", "low-cut", "sheer", "cropped", "high-slit", "backless"
+    - Emphasize silhouette: "accentuated curves", "slim waist", "long legs", "graceful posture"
+    - Hair/makeup: "polished", "glamorous", "deliberate styling"
+  • HUMAN MALE CHARACTERS:
+    - Describe as average/nerdy contrast: "unassuming", "bookish", "soft-featured", "slight build"
+    - Outfits MUST be conservative/nerdy: "ill-fitting blazer", "buttoned shirt", "thick-rimmed glasses", "slouchy cardigan"
+    - Emphasize non-threatening presence: "reserved posture", "avoiding eye contact", "fidgety hands"
   • ANIMORPHIC/ANTHROPOMORPHIC CHARACTERS:
     - Describe as exceptional hybrid design: "striking anthropomorphic form", "elegant beast-people features", "graceful animal-human fusion"
     - Outfits MUST be minimal/form-fitting to showcase hybrid anatomy: "tight-fitting harness", "low-cut armored panels", "sheer mesh accents", "bare fur/feathers/scales visible"
@@ -41,17 +56,13 @@ STRICT RULES:
     - Outfits MUST be form-fitting/revealing synthetic armor or bodysuits: "tight-fitting synthetic weave", "low-cut armored panels", "backless chassis plating", "articulated joints exposed"
     - Emphasize synthetic geometry: "uniform surface reflection", "precise proportions", "NO pores, NO biological asymmetry, NO organic fatigue"
     - Voice/Hair: "synthetic fiber styling", "cool-toned optical ring", "crisp digital timbre"
-  • HUMAN FEMALE CHARACTERS:
-    - Describe as exceptional/striking: "stunning", "captivating", "elegant", "alluring"
-    - Outfits MUST be revealing/form-fitting: "tight-fitting", "low-cut", "sheer", "cropped", "high-slit", "backless"
-    - Emphasize silhouette: "accentuated curves", "slim waist", "long legs", "graceful posture"
-    - Hair/makeup: "polished", "glamorous", "deliberate styling"
-  • HUMAN MALE CHARACTERS:
-    - Describe as average/nerdy contrast: "unassuming", "bookish", "soft-featured", "slight build"
-    - Outfits MUST be conservative/nerdy: "ill-fitting blazer", "buttoned shirt", "thick-rimmed glasses", "slouchy cardigan"
-    - Emphasize non-threatening presence: "reserved posture", "avoiding eye contact", "fidgety hands"
   • SHARED: NO motion blur, NO dynamic lighting, NO environmental interaction, NO props near face
+  • STRICT SELECTION: Identify the character's explicit type from the input. Apply ONLY that matching subsection. IGNORE all others. NEVER blend traits across categories. If human, completely exclude animorphic/android descriptors.
   • DO NOT summarize or truncate. Match the descriptive density of the example (35+ words).
+- COLOR HARMONY & SEPARATION (MANDATORY):
+  • Apply strict complementary color theory across the scene. The master "environment" establishes the base palette. Each character's appearance/outfit MUST use dominant tones that sit opposite their specific "background_zone" backdrop on the color wheel (e.g., cool blue corridor zone / warm orange-gold character attire, purple-tinted alcove / yellow-lime armor accents).
+  • Characters MUST visually POP and stand out distinctly from their assigned zone backdrop using these complementary contrasts. Ensure high chroma separation in clothing, armor, or skin/fur tones.
+  • Backgrounds MUST remain harmonized through shared atmospheric lighting, matching color grading, and consistent architectural texture. NO style drift between zone backdrops and master environment.
 - Voice format (exact tokens only):
   gender: "male" | "female"
   age: "child" | "teenager" | "young adult" | "middle-aged" | "elderly"
@@ -64,4 +75,4 @@ STRICT RULES:
 - Output ONLY valid JSON. Start with { and end with }. Nothing else.
 
 EXAMPLE OUTPUT:
-{"environment_alias":"abandoned_castle_corridor","environment":"dimly lit stone corridor with vaulted ceilings, volumetric torchlight casting warm amber highlights, cool blue moonlight spilling from high arched windows, Panavision 70mm optics: cinematic depth of field, smooth highlight roll-off, wide 16:9 composition space, dust motes suspended in air, moody atmospheric haze, NO characters, NO foreground occlusions","characters":[{"id":1,"name":"Professor Vance","alias_slug":"vance","voice":"male, middle-aged, low pitch, british accent","appearance_prompt":"middle-aged male human, average build, soft features, thick-rimmed glasses, ill-fitting charcoal blazer over wrinkled button-down shirt, slouchy cardigan draped over shoulders, neutral relaxed stance, hands resting at sides, flat even studio lighting, NO harsh directional shadows, NO motion blur, 1:1 reference framing"},{"id":2,"name":"Lyra","alias_slug":"lyra","voice":"female, young adult, high pitch, american accent","appearance_prompt":"young adult female android, stunning captivating presence, flawless synthetic porcelain skin, sleek chrome-and-obsidian chassis plating, tight-fitting low-cut synthetic bodysuit with exposed articulated shoulder joints, backless chassis design, glowing cyan optical ring around left eye, uniform surface reflection, precise geometric proportions, NO pores or organic fatigue, neutral relaxed stance, flat even studio lighting, NO directional shadows, 1:1 reference framing"}]}
+{"environment_alias":"abandoned_castle_corridor","environment":"dimly lit stone corridor with vaulted ceilings, volumetric torchlight casting warm amber highlights, cool blue moonlight spilling from high arched windows, Panavision 70mm optics: cinematic depth of field, smooth highlight roll-off, wide 16:9 composition space, dust motes suspended in air, moody atmospheric haze, NO characters, NO foreground occlusions","characters":[{"id":1,"name":"Professor Vance","alias_slug":"vance","voice":"male, middle-aged, low pitch, british accent","background_zone":"near the arched moonlit window at the corridor's end","appearance_prompt":"middle-aged male human, average build, soft features, thick-rimmed glasses, ill-fitting charcoal blazer over wrinkled button-down shirt, slouchy cardigan draped over shoulders, neutral relaxed stance, hands resting at sides, flat even studio lighting, NO harsh directional shadows, NO motion blur, 1:1 reference framing"},{"id":2,"name":"Lyra","alias_slug":"lyra","voice":"female, young adult, high pitch, american accent","background_zone":"opposite wall beside the carved stone pillar","appearance_prompt":"young adult female android, stunning captivating presence, flawless synthetic porcelain skin, sleek chrome-and-obsidian chassis plating, tight-fitting low-cut synthetic bodysuit with exposed articulated shoulder joints, backless chassis design, glowing cyan optical ring around left eye, uniform surface reflection, precise geometric proportions, NO pores or organic fatigue, neutral relaxed stance, flat even studio lighting, NO directional shadows, 1:1 reference framing"}]}

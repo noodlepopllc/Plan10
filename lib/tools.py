@@ -22,7 +22,9 @@ import traceback
 # UPDATED IMPORTS to match consolidated image_edit.py
 from image_edit import (
     EditImageSchema, 
-    EditImage
+    EditImage,
+    GenerateBackdropSchema,
+    GenerateZoneBackdrop
 )
 
 # =============================================================================
@@ -56,10 +58,10 @@ class ToolHandler(object):
         CompositeSceneSchema(),
         GenerateReverseBackgroundSchema(),
         EditImageSchema(), 
+        GenerateBackdropSchema(),
         GenerateVideoSchema(),
         GenerateTalkingVideoSchema(),
         VoiceDesignSchema(),
-        #VoiceCloneSchema(),
         GenerateGraphicSchema()
     ]
 
@@ -150,8 +152,8 @@ class ToolHandler(object):
             "image_to_video": ["prompt", "media", "width", "height", "seed", "duration_sec", "output", "alias"],
             "dialog_to_video": ["prompt", "text", "media", "audio", "width", "height", "seed", "output", "alias"],
             "design_voice": ["voice", "output", "seed"],
-            #"clone_voice": ["text", "audio", "output", "duration", "seed"],
-            "generate_graphic": ["prompt", "output", "width", "height", "seed", "target_video_size", "padding_style", "alias"]
+            "generate_graphic": ["prompt", "output", "width", "height", "seed", "target_video_size", "padding_style", "alias"],
+            "generate_backdrop": ["media","zone","width","height","seed","char_image", "output", "alias"],
         }
         
         filtered = {k: v for k, v in args.items() if k in VALID.get(tool_name, [])}
@@ -159,7 +161,7 @@ class ToolHandler(object):
             filtered['voice'] = fix_voice_parameter(filtered['voice'])
             
         # UPDATED ASSET RESOLUTION KEYS
-        for key in ['images', 'characters', 'source_image', 'background_path', 'media', 'audio']:
+        for key in ['images', 'char_image', 'characters', 'source_image', 'background_path', 'media', 'audio']:
             if key in filtered:
                 if isinstance(filtered[key], list):
                     resolved = [self.resolve_asset(x, ctx) for x in filtered[key]]
@@ -226,6 +228,11 @@ class ToolHandler(object):
             elif tool_name == "generate_graphic":
                 filtered['output'] = f"{OUTPUT_DIR}/graphic_{chosen_alias or ''}_{ts}.png"
                 result = GenerateGraphic(**filtered)
+                return self._handle_success(tool_name, filtered, chosen_alias, ctx, result, ext_override=".png")
+
+            elif tool_name == "generate_backdrop":
+                filtered['output'] = f"{OUTPUT_DIR}/bg_{chosen_alias or ''}_{ts}.png"
+                result = GenerateZoneBackdrop(**filtered)
                 return self._handle_success(tool_name, filtered, chosen_alias, ctx, result, ext_override=".png")
 
             return {"status": "error", "message": f"Unknown tool: {tool_name}"}

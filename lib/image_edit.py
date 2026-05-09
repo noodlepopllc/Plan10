@@ -1,16 +1,14 @@
 from diffsynth.pipelines.flux2_image import Flux2ImagePipeline, ModelConfig
 from diffsynth.pipelines.qwen_image import QwenImagePipeline, ModelConfig, FlowMatchScheduler
-from modelscope import dataset_snapshot_download
 from PIL import Image
-from PIL.PngImagePlugin import PngInfo
 import random
 import torch
 import os, gc
-from typing import Union
 from image_analysis import AnalyzeImage
 from config import load_environ
 import numpy as np
 from pathlib import Path
+from util import video_to_img
 
 load_environ()
 
@@ -195,6 +193,7 @@ def EditImageSchema():
                         "type": "string",
                         "description": "Detailed composition instructions. Refer to the images from the 'images' array by their order: 'first image' (index 0), 'second image' (index 1), 'third image' (index 2)."
                     },
+                    "output": {"type": "string", "default": "edited.png"},
                     "width": {"type": "integer"},
                     "height": {"type": "integer"},
                     "seed": {"type": "integer"}
@@ -214,29 +213,87 @@ def EditImage(prompt='', images=[''], output='tmp_edit.png', width=1328, height=
         del edit
     return status
 
-def GenerateRoomBackdrop(
-    source_image: str,
-    zone: str = "the opposite side of the room",
-    output: str = "room_backdrop.png",
+def GenerateBackdropSchema():
+    return {
+        "type": "function",
+        "function": {
+            "name": "generate_backdrop",  # Matches function name for direct routing
+            "description": "Take a master environment image and generate a repositioned viewpoint of a specific zone within the same room.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "media": {
+                        "type": "string", 
+                        "description": "Absolute or relative file path to the source master environment image."
+                    },
+                    "zone": {
+                        "type": "string",
+                        "description": "Text description of the specific area to frame within the same room. Example: 'the opposite side of the room near the arched window'"
+                    },
+                    "output": {"type": "string", "default": "zone_backdrop.png"},
+                    "width": {"type": "integer", "description": "Output image width in pixels"},
+                    "height": {"type": "integer", "description": "Output image height in pixels"},
+                    "seed": {"type": "integer", "description": "Random seed for reproducibility (-1 for random)"},
+                    "image": {"type": "string", "description": "character to inject into the new backdrop"}
+                },
+                "required": ["media", "zone"]
+            }
+        }
+    }
+
+def GenerateZoneBackdrop(
+    media: str,
+    zone: str,
+    output: str = "zone_backdrop.png",
     width: int = 1328,
     height: int = 1328,
-    seed: int = -1
+    seed: int = -1,
+    char_image: str = None,
 ):
-    if not os.path.exists(source_image):
-        raise FileNotFoundError(f"Source not found: {source_image}")
+    if not os.path.exists(media):
+        raise FileNotFoundError(f"Environment source not found: {media}")
 
-    prompt = (
-        f"Reposition the camera to frame {zone} inside this exact same room. "
+    background = video_to_img(media)
+
+    images = [background]
+    char_desc = ""
+
+    # 🔑 CONDITIONAL CHARACTER INJECTION
+    if char_image and os.path.exists(char_image):
+        with Image.open(char_image) as img:
+            images.append(img)
+            raw_desc = img.info.get('Description', 'character')
+            char_desc = (
+                f"A single {raw_desc}. "
+                "Preserve adult facial proportions, light cheekbone definition, and subtle jawline contour. "
+                "Position naturally within the space, matching environmental lighting and perspective. "
+            )
+
+    # 🎥 AGGRESSIVE CAMERA REPOSITIONING PROMPT
+    prompt_parts = [
+        f"CHANGE CAMERA ANGLE: dolly/pan to frame {zone} inside this exact same room.",
+        "COMPLETELY ERASE the original framing: remove all foreground crowds, subjects, and objects from the source view.",
+        "Generate a NOVEL VIEWPOINT: shift perspective, change focal depth, reveal previously unseen architecture.",
+        char_desc,
         "STRICTLY PRESERVE: lighting direction/intensity, wall & floor textures, color grading, "
-        "architectural style, window/door placements, and overall atmosphere. "
-        "SEAMLESSLY extend or reframe the scene to match the existing perspective. "
-        "ALLOW: furniture/fixtures that logically belong in this space. "
-        "NO characters, NO text, NO style drift. Photorealistic cinematic environment shot."
-    )
+        "architectural style, window/door placements, and overall atmosphere.",
+        "SEAMLESSLY extend or reframe the scene to match the existing perspective.",
+        "ALLOW: logical counters, registers, or fixtures that belong in this zone.",
+        "NO text, NO style drift. Photorealistic cinematic environment shot."
+    ]
+
+    if char_image:
+        prompt_parts.append("NO additional characters beyond the specified subject, NO foreground occlusions.")
+
+    prompt = " ".join([p.strip() for p in prompt_parts if p.strip()])
+
+    # 🎯 OPTIONAL: Add depth/structure guidance if your backend supports it
+    # control_image = generate_depth_map(background)  # if available
+    # return EditImage(prompt=prompt, images=images, control=control_image, ...)
 
     return EditImage(
         prompt=prompt,
-        images=[source_image],
+        images=images,
         output=output,
         width=width,
         height=height,

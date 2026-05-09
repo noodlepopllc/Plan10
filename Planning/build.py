@@ -2,6 +2,73 @@
 import json
 import sys
 import re
+import os
+from PIL import Image
+
+# ============================================================================
+# 🔧 IMPORT OR DEFINE GenerateZoneBackdrop
+# If you have it in a separate module (e.g., backdrop_gen.py), uncomment:
+# from backdrop_gen import GenerateZoneBackdrop
+# ============================================================================
+def GenerateZoneBackdrop(
+    media: str,
+    zone: str,
+    output: str = "zone_backdrop.png",
+    width: int = 1328,
+    height: int = 1328,
+    seed: int = -1,
+    char_image: str = None,
+):
+    """Generate a repositioned zone backdrop from a master environment.
+    Optionally bake a character into the plate using their reference PNG + metadata."""
+    if not os.path.exists(media):
+        raise FileNotFoundError(f"Environment source not found: {media}")
+
+    # Handle video->frame if needed (your existing helper)
+    background = video_to_img(media) if media.lower().endswith(('.mp4', '.mov')) else media
+
+    images = [background]
+    char_desc = ""
+
+    # 🔑 CONDITIONAL CHARACTER INJECTION
+    if char_image and os.path.exists(char_image):
+        with Image.open(char_image) as img:
+            images.append(char_image)  # Pass path, not PIL object, for EditImage compatibility
+            raw_desc = img.info.get('Description', 'character')
+            char_desc = (
+                f"A single {raw_desc}. "
+                "Preserve adult facial proportions, light cheekbone definition, and subtle jawline contour. "
+                "Position naturally within the space, matching environmental lighting and perspective. "
+            )
+
+    # 🎥 AGGRESSIVE CAMERA REPOSITIONING PROMPT
+    prompt_parts = [
+        f"CHANGE CAMERA ANGLE: dolly/pan to frame {zone} inside this exact same room.",
+        "COMPLETELY ERASE the original framing: remove all foreground crowds, subjects, and objects from the source view.",
+        "Generate a NOVEL VIEWPOINT: shift perspective, change focal depth, reveal previously unseen architecture.",
+        char_desc,
+        "STRICTLY PRESERVE: lighting direction/intensity, wall & floor textures, color grading, "
+        "architectural style, window/door placements, and overall atmosphere.",
+        "SEAMLESSLY extend or reframe the scene to match the existing perspective.",
+        "ALLOW: logical counters, registers, or fixtures that belong in this zone.",
+        "NO text, NO style drift. Photorealistic cinematic environment shot."
+    ]
+
+    if char_image:
+        prompt_parts.append("NO additional characters beyond the specified subject, NO foreground occlusions.")
+
+    prompt = " ".join([p.strip() for p in prompt_parts if p.strip()])
+
+    # 🎯 Route to your EditImage backend (adjust signature if needed)
+    return EditImage(
+        prompt=prompt,
+        images=images,
+        output=output,
+        width=width,
+        height=height,
+        seed=seed
+    )
+
 
 def slugify(text: str) -> str:
     text = str(text).lower().strip()
@@ -55,13 +122,38 @@ def render_pipeline(registry_path: str, sequence_path: str) -> str:
 
     out = []
     env_slug = slugify(registry.get("environment_alias", "environment"))
+    master_env_alias = f"bg_{env_slug}"
 
     # ========================================================================
-    # PHASE 1: ASSETS (bg + char)
+    # PHASE 1: ASSETS (master env + zone backdrops + character sheets)
     # ========================================================================
-    out.append(f'>> ALIAS: bg_{env_slug}')
+    
+    # 1a. Master environment (establishing shot)
+    out.append(f'>> ALIAS: {master_env_alias}')
     out.append(f'create_background prompt="{registry["environment"]}" Height: 832, Width: 480, Seed: -1')
 
+    # 1b. Per-character zone backdrops (with optional character baking)
+    zone_backdrop_map = {}  # alias_slug -> zone_backdrop_alias
+    for c in registry["characters"]:
+        slug = slugify(c.get("alias_slug", c["name"]))
+        zone = c.get("background_zone", "center of the room")
+        zone_slug = slugify(zone)[:20]  # Keep aliases CLI-safe
+        zone_alias = f"{master_env_alias}_zone_{zone_slug}"
+        zone_backdrop_map[slug] = zone_alias
+
+        # Check if this character should be baked into their zone plate
+        char_ref_path = f"assets/char_{slug}.png"  # Adjust to your asset structure
+        should_bake = c.get("staged_character", False) and os.path.exists(char_ref_path)
+
+        out.append(f'\n>> ALIAS: {zone_alias}')
+        if should_bake:
+            # Generate zone backdrop WITH character baked in (metadata + visual ref)
+            out.append(f'generate_zone_backdrop media={master_env_alias}, zone="{zone}", char_image="{char_ref_path}", output={zone_alias}, Width: 1328, Height: 1328, Seed: -1')
+        else:
+            # Generate empty zone backdrop
+            out.append(f'generate_zone_backdrop media={master_env_alias}, zone="{zone}", output={zone_alias}, Width: 1328, Height: 1328, Seed: -1')
+
+    # 1c. Character reference sheets (for compositing)
     char_map = {}
     for c in registry["characters"]:
         slug = slugify(c.get("alias_slug", c["name"]))
@@ -76,8 +168,10 @@ def render_pipeline(registry_path: str, sequence_path: str) -> str:
     for slug, mood in sorted(required):
         alias = f"compd_{slug}_{mood}"
         action = f"{mood}, mouth completely closed and still, lips sealed shut, zero lip motion, static facial expression, cropped at shoulders, NO hands, NO props"
+        # 🔑 ROUTE TO CHARACTER'S ZONE BACKDROP FOR COMPOSITING
+        backdrop = zone_backdrop_map.get(slug, master_env_alias)
         out.append(f'\n>> ALIAS: {alias}')
-        out.append(f'composite_scene combining=bg_{env_slug}, char_{slug}, shot_type="closeup", action="{action}" Height: 832, Width: 480, Seed: -1')
+        out.append(f'composite_scene combining={backdrop}, char_{slug}, shot_type="closeup", action="{action}" Height: 832, Width: 480, Seed: -1')
 
     # ========================================================================
     # PHASE 3: VOICES (design)
@@ -125,8 +219,9 @@ def render_pipeline(registry_path: str, sequence_path: str) -> str:
             fallback = MOOD_REACTIONS.get(mood, "subtle breathing, steady gaze")
             final_motion = fallback if isinstance(fallback, str) else fallback[dialog_idx % len(fallback)]
 
-        # PASS 1: Base Headshot (predictable alias)
+        # PASS 1: Base Headshot (predictable alias) - USE ZONE BACKDROP
         base_alias = f"compd_{slug}_{mood}"
+        backdrop = zone_backdrop_map.get(slug, master_env_alias)
         
         # PASS 2: Motion Pass (I2V) - duration_sec as INT
         i2v_prompt = f"{mood}, {final_motion}, subtle camera drift, mouth completely closed and still, lips sealed shut, zero lip motion"
