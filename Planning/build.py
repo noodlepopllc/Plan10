@@ -221,7 +221,7 @@ def render_pipeline(registry_path: str, actions_path: str, dialog_path: str = No
             motion_alias = f"vid_action_{action_idx:03d}"
             motion_prompt_clean = re.sub(r'^\w+:\s*', '', motion_prompt).strip()
             out.append(f'\n>> ALIAS: {motion_alias}')
-            out.append(f'image_to_video using={alias}, prompt="{motion_prompt_clean}, subtle camera drift, preserve facial expression, NO lip movement", duration_sec=2 Height: 832, Width: 480, Seed: -1')
+            out.append(f'image_to_video using={alias}, prompt="{motion_prompt_clean}, subtle camera drift, preserve facial expression", duration_sec=5 Height: 832, Width: 480, Seed: -1')
         
         action_idx += 1
 
