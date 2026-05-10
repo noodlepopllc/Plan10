@@ -5,6 +5,9 @@ import re
 import os
 from PIL import Image
 
+WIDTH = 832
+HEIGHT = 480
+
 # ============================================================================
 # 🔧 GenerateZoneBackdrop REMOVED
 # Zone backdrops are now generated via create_background + zone_prompt
@@ -81,7 +84,7 @@ def render_pipeline(registry_path: str, actions_path: str, dialog_path: str = No
     
     # 1a. Master environment
     out.append(f'>> ALIAS: {master_env_alias}')
-    out.append(f'create_background prompt="{registry["environment"]}" Height: 832, Width: 480, Seed: -1')
+    out.append(f'create_background prompt="{registry["environment"]}" Height: {HEIGHT}, Width: {WIDTH}, Seed: -1')
 
     # 1b. Per-character zone backdrops: DIRECT TEXT-TO-IMAGE GENERATION
     zone_backdrop_map = {}
@@ -126,7 +129,7 @@ def render_pipeline(registry_path: str, actions_path: str, dialog_path: str = No
         slug = slugify(c.get("alias_slug", c["name"]))
         char_map[c["id"]] = {"slug": slug, "design": f"design_{slug}", "voice": c["voice"]}
         out.append(f'\n>> ALIAS: char_{slug}')
-        out.append(f'create_character_sheet prompt="{c["appearance_prompt"]}" Height: 832, Width: 480, Seed: -1')
+        out.append(f'create_character_sheet prompt="{c["appearance_prompt"]}" Height: {HEIGHT}, Width: {WIDTH}, Seed: -1')
 
     # ========================================================================
     # PHASE 2: ACTION BEATS (from merged, sorted list)
@@ -173,14 +176,14 @@ def render_pipeline(registry_path: str, actions_path: str, dialog_path: str = No
         
         alias = f"action_{action_idx:03d}"
         out.append(f'\n>> ALIAS: {alias}')
-        out.append(f'composite_scene combining={backdrop}, {char_refs}, shot_type="{shot_type}", action="{action}" Height: 832, Width: 480, Seed: -1')
+        out.append(f'composite_scene combining={backdrop}, {char_refs}, shot_type="{shot_type}", action="{action}" Height: {HEIGHT}, Width: {WIDTH}, Seed: -1')
         
         # Optional I2V motion pass
         if motion_prompt and beat.get("motion_type") != "static":
             motion_alias = f"vid_action_{action_idx:03d}"
             motion_prompt_clean = re.sub(r'^\w+:\s*', '', motion_prompt).strip()
             out.append(f'\n>> ALIAS: {motion_alias}')
-            out.append(f'image_to_video using={alias}, prompt="{motion_prompt_clean}, subtle camera drift, preserve facial expression", duration_sec=5 Height: 832, Width: 480, Seed: -1')
+            out.append(f'image_to_video using={alias}, prompt="{motion_prompt_clean}, subtle camera drift, preserve facial expression", duration_sec=5 Height: {HEIGHT}, Width: {WIDTH}, Seed: -1')
         
         action_idx += 1
 
@@ -193,7 +196,7 @@ def render_pipeline(registry_path: str, actions_path: str, dialog_path: str = No
         action = f"{mood}, mouth completely closed and still, lips sealed shut, zero lip motion, static facial expression, cropped at shoulders, NO hands, NO props"
         backdrop = zone_backdrop_map.get(slug, master_env_alias)
         out.append(f'\n>> ALIAS: {alias}')
-        out.append(f'composite_scene combining={backdrop}, char_{slug}, shot_type="closeup", action="{action}" Height: 832, Width: 480, Seed: -1')
+        out.append(f'composite_scene combining={backdrop}, char_{slug}, shot_type="closeup", action="{action}" Height: {HEIGHT}, Width: {WIDTH}, Seed: -1')
 
     # ========================================================================
     # PHASE 4: VOICES (design)
@@ -269,17 +272,17 @@ def render_pipeline(registry_path: str, actions_path: str, dialog_path: str = No
         i2v_prompt = f"{mood}, {final_motion}, subtle camera drift, mouth completely closed and still, lips sealed shut, zero lip motion"
         i2v_alias = f"vid_motion_{dialog_idx:03d}"
         out.append(f'\n>> ALIAS: {i2v_alias}')
-        out.append(f'image_to_video using={base_alias}, prompt="{i2v_prompt}", duration_sec=2 Height: 832, Width: 480, Seed: -1')
+        out.append(f'image_to_video using={base_alias}, prompt="{i2v_prompt}", duration_sec=2 Height: {HEIGHT}, Width: {WIDTH}, Seed: -1')
 
         # PASS 3a: Dialog from STATIC image (fallback)
         dialog_static_alias = f"dialog_static_{dialog_idx:03d}"
         out.append(f'\n>> ALIAS: {dialog_static_alias}')
-        out.append(f'dialog_to_video using={base_alias}, audio={ch["design"]}, text="{raw_text}", prompt="lips moving naturally, preserve facial structure, NO head motion, NO background drift, mouth articulation matches audio phonemes" Height: 832, Width: 480, Seed: -1')
+        out.append(f'dialog_to_video using={base_alias}, audio={ch["design"]}, text="{raw_text}", prompt="lips moving naturally, preserve facial structure, NO head motion, NO background drift, mouth articulation matches audio phonemes" Height: {HEIGHT}, Width: {WIDTH}, Seed: -1')
 
         # PASS 3b: Dialog from MOTION video (primary)
         dialog_motion_alias = f"dialog_motion_{dialog_idx:03d}"
         out.append(f'\n>> ALIAS: {dialog_motion_alias}')
-        out.append(f'dialog_to_video using={i2v_alias}, audio={ch["design"]}, text="{raw_text}", prompt="lips moving naturally, preserve existing head motion, NO extra gestures, NO facial drift, mouth articulation matches audio phonemes" Height: 832, Width: 480, Seed: -1')
+        out.append(f'dialog_to_video using={i2v_alias}, audio={ch["design"]}, text="{raw_text}", prompt="lips moving naturally, preserve existing head motion, NO extra gestures, NO facial drift, mouth articulation matches audio phonemes" Height: {HEIGHT}, Width: {WIDTH}, Seed: -1')
 
         out.append(f'// DIALOG SELECT: use {dialog_motion_alias} (motion) OR {dialog_static_alias} (static) based on end-frame quality')
         dialog_idx += 1

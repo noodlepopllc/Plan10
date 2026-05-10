@@ -43,6 +43,11 @@ STRICT RULES:
   • FRAMING: 1:1 square reference shot (centered subject, generous headroom). Final composite will be 16:9.
   • POSE: Neutral relaxed stance (3/4 or waist-up), hands/paws visible but resting at sides, facing camera or slight 3/4 turn.
   • LIGHTING: Flat even studio-style lighting (optimized for compositing, NO harsh directional shadows).
+  • ANDROID/SYNTHETIC CHARACTERS:
+    - Describe as flawless mechanical design: "precision-engineered", "sleek synthetic plating", "seamless chassis", "glowing optical accents"
+    - Outfits MUST be form-fitting/revealing synthetic armor or bodysuits: "tight-fitting synthetic weave", "low-cut armored panels", "backless chassis plating", "articulated joints exposed"
+    - Emphasize synthetic geometry: "uniform surface reflection", "precise proportions", "NO pores, NO biological asymmetry, NO organic fatigue"
+    - Voice/Hair: "synthetic fiber styling", "cool-toned optical ring", "crisp digital timbre"
   • FEMALE CHARACTERS:
     - Describe as exceptional/striking: "stunning", "captivating", "elegant", "alluring"
     - Outfits MUST be revealing/form-fitting: "tight-fitting", "low-cut", "sheer", "cropped", "high-slit", "backless"
