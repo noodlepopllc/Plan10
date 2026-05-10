@@ -88,12 +88,25 @@ def render_pipeline(registry_path: str, actions_path: str, dialog_path: str = No
     base_seed = 42  # Deterministic base for zone consistency
     
     # PHASE 1b: Per-character zone backdrops
+        # PHASE 1b: Per-character zone backdrops with prop-injected zone strings
     zone_backdrop_map = {}
-    master_prompt = registry["environment"]  # The prompt used to generate the master env
+    master_prompt = registry["environment"]
 
+    # 🔑 1. AGGREGATE PROPS FROM SEQUENCE
+    scene_props = set()
+    for beat in all_beats:
+        if beat.get("props"):
+            scene_props.update(p.strip() for p in beat["props"].split(","))
+    props_suffix = f", featuring {', '.join(sorted(scene_props))}" if scene_props else ""
+
+    # 🔑 2. BUILD & GENERATE ZONE BACKDROPS
     for c in registry["characters"]:
         slug = slugify(c.get("alias_slug", c["name"]))
-        zone = c.get("background_zone", "center of the room")
+        base_zone = c.get("background_zone", "center of the room")
+        
+        # 🎯 INJECT PROPS DIRECTLY INTO ZONE STRING
+        zone = f"{base_zone.rstrip('.')}{props_suffix}"
+        
         zone_slug = slugify(zone)[:20]
         zone_alias = f"{master_env_alias}_zone_{zone_slug}"
         zone_backdrop_map[slug] = zone_alias
