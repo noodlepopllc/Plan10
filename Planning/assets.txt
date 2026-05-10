@@ -43,12 +43,12 @@ STRICT RULES:
   • FRAMING: 1:1 square reference shot (centered subject, generous headroom). Final composite will be 16:9.
   • POSE: Neutral relaxed stance (3/4 or waist-up), hands/paws visible but resting at sides, facing camera or slight 3/4 turn.
   • LIGHTING: Flat even studio-style lighting (optimized for compositing, NO harsh directional shadows).
-  • HUMAN FEMALE CHARACTERS:
+  • FEMALE CHARACTERS:
     - Describe as exceptional/striking: "stunning", "captivating", "elegant", "alluring"
     - Outfits MUST be revealing/form-fitting: "tight-fitting", "low-cut", "sheer", "cropped", "high-slit", "backless"
     - Emphasize silhouette: "accentuated curves", "slim waist", "long legs", "graceful posture"
     - Hair/makeup: "polished", "glamorous", "deliberate styling"
-  • HUMAN MALE CHARACTERS:
+  • MALE CHARACTERS:
     - Describe as average/nerdy contrast: "unassuming", "bookish", "soft-featured", "slight build"
     - Outfits MUST be conservative/nerdy: "ill-fitting blazer", "buttoned shirt", "thick-rimmed glasses", "slouchy cardigan"
     - Emphasize non-threatening presence: "reserved posture", "avoiding eye contact", "fidgety hands"
