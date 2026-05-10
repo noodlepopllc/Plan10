@@ -52,11 +52,6 @@ STRICT RULES:
     - If input specifies ethnicity, skin tone, undertone, eye shape, facial structure, or hair traits, these MUST appear verbatim or as direct synonyms in appearance_prompt.
     - Example: Input "East Asian, monolids, low nasal bridge, porcelain skin with cool undertone" → appearance_prompt MUST include "East Asian ethnicity, monolid eyes, low nasal bridge, porcelain skin with cool undertone".
     - NEVER default to generic terms like "fair skin" if input specifies "porcelain with pink undertone".
-  • ANDROID/SYNTHETIC CHARACTERS:
-    - Describe as flawless mechanical design: "precision-engineered", "sleek synthetic plating", "seamless chassis", "glowing optical accents"
-    - Outfits MUST be form-fitting/revealing synthetic armor or bodysuits: "tight-fitting synthetic weave", "low-cut armored panels", "backless chassis plating", "articulated joints exposed"
-    - Emphasize synthetic geometry: "uniform surface reflection", "precise proportions", "NO pores, NO biological asymmetry, NO organic fatigue"
-    - Voice/Hair: "synthetic fiber styling", "cool-toned optical ring", "crisp digital timbre"
   • FEMALE CHARACTERS:
     - Describe as exceptional/striking: "stunning", "captivating", "elegant", "alluring"
     - Outfits MUST be revealing/form-fitting: "tight-fitting", "low-cut", "sheer", "cropped", "high-slit", "backless"
@@ -66,6 +61,16 @@ STRICT RULES:
     - Describe as average/nerdy contrast: "unassuming", "bookish", "soft-featured", "slight build"
     - Outfits MUST be conservative/nerdy: "ill-fitting blazer", "buttoned shirt", "thick-rimmed glasses", "slouchy cardigan"
     - Emphasize non-threatening presence: "reserved posture", "avoiding eye contact", "fidgety hands"
+  • ANDROID/SYNTHETIC CHARACTERS:
+    - Describe as flawless mechanical design: "precision-engineered", "sleek synthetic plating", "seamless chassis", "glowing optical accents"
+    - Outfits MUST be form-fitting/revealing synthetic armor or bodysuits: "tight-fitting synthetic weave", "low-cut armored panels", "backless chassis plating", "articulated joints exposed"
+    - Emphasize synthetic geometry: "uniform surface reflection", "precise proportions", "NO pores, NO biological asymmetry, NO organic fatigue"
+    - Voice/Hair: "synthetic fiber styling", "cool-toned optical ring", "crisp digital timbre"
+  • ANIMORPHIC/ANTHROPOMORPHIC CHARACTERS:
+    - Describe as exceptional hybrid design: "striking anthropomorphic form", "elegant beast-people features", "graceful animal-human fusion"
+    - Outfits MUST be minimal/form-fitting to showcase hybrid anatomy: "tight-fitting harness", "low-cut armored panels", "sheer mesh accents", "bare fur/feathers/scales visible"
+    - Emphasize hybrid anatomy: "expressive animal ears", "detailed fur/feather/scale texture", "humanoid posture with animal traits", "tail/limb articulation visible"
+    - Rendering notes: "consistent fur/feather directionality", "NO patchy rendering", "clean edge separation for compositing"
   • SHARED: NO motion blur, NO dynamic lighting, NO environmental interaction, NO props near face
   • STRICT SELECTION: Identify the character's explicit type from the input. Apply ONLY that matching subsection. IGNORE all others. NEVER blend traits across categories. If human, completely exclude animorphic/android descriptors.
   • DO NOT summarize or truncate. Match the descriptive density of the example (35+ words).
