@@ -22,6 +22,11 @@ STRICT RULES:
 - Each character MUST have a DISTINCT voice. NEVER reuse character 1's voice.
 - alias_slug MUST be derived directly from the character's actual name. Convert to lowercase, replace spaces with underscores. NEVER use placeholders.
 - environment_alias MUST reflect the actual setting. NEVER copy generic placeholders.
+- INPUT FIDELITY LOCK (MANDATORY):
+  • Extract EVERY explicit descriptor from the input: ethnicity, skin tone, undertone, eye shape/color, hair texture/color/style, facial structure, body proportions, clothing details, accessories, and any stated visual traits.
+  • NEVER drop, generalize, or substitute input descriptors. If input says "East Asian with monolids and dark brown irises", appearance_prompt MUST include those exact terms.
+  • NEVER invent traits not present in the input. If ethnicity is unspecified, omit it—do not assume.
+  • Preserve input phrasing for critical identity markers. Paraphrase only for grammatical integration into appearance_prompt structure.
 - environment MUST explicitly include: 
   • NEUTRAL SPATIAL FOUNDATION: Wide, open establishing view describing ONLY broad architectural boundaries (walls, ceiling, floor, distant doorways). NO dominant focal anchors, counters, altars, or specific landmarks. Prevents geometry conflicts during zone generation.
   • Motivated cinematic lighting (volumetric rays, high dynamic range, specific color temperature, clear light direction)
@@ -39,10 +44,14 @@ STRICT RULES:
   • INJECT UNIQUE ANCHOR: Replace the broad central space with the zone's specific focal anchor.
   • LOCK EVERYTHING ELSE: Lighting, color temperature, Panavision traits, atmospheric mood, and material textures MUST remain identical.
   • WORD COUNT CHECK: zone_prompt length must be within ±5 words of master environment prompt.
-- appearance_prompt RULES (TYPE-AWARE - APPLY EXACTLY ONE PER CHARACTER):
+- appearance_prompt RULES (TYPE-AWARE + ETHNICITY PRESERVATION - APPLY EXACTLY ONE PER CHARACTER):
   • FRAMING: 1:1 square reference shot (centered subject, generous headroom). Final composite will be 16:9.
   • POSE: Neutral relaxed stance (3/4 or waist-up), hands/paws visible but resting at sides, facing camera or slight 3/4 turn.
   • LIGHTING: Flat even studio-style lighting (optimized for compositing, NO harsh directional shadows).
+  • ETHNICITY & IDENTITY LOCK:
+    - If input specifies ethnicity, skin tone, undertone, eye shape, facial structure, or hair traits, these MUST appear verbatim or as direct synonyms in appearance_prompt.
+    - Example: Input "East Asian, monolids, low nasal bridge, porcelain skin with cool undertone" → appearance_prompt MUST include "East Asian ethnicity, monolid eyes, low nasal bridge, porcelain skin with cool undertone".
+    - NEVER default to generic terms like "fair skin" if input specifies "porcelain with pink undertone".
   • ANDROID/SYNTHETIC CHARACTERS:
     - Describe as flawless mechanical design: "precision-engineered", "sleek synthetic plating", "seamless chassis", "glowing optical accents"
     - Outfits MUST be form-fitting/revealing synthetic armor or bodysuits: "tight-fitting synthetic weave", "low-cut armored panels", "backless chassis plating", "articulated joints exposed"
@@ -74,6 +83,3 @@ STRICT RULES:
 - NEVER include dialog, actions, or temporal beats.
 - Characters MUST have distinct pitch/accent combinations for vocal separation.
 - Output ONLY valid JSON. Start with { and end with }. Nothing else.
-
-EXAMPLE OUTPUT:
-{"environment_alias":"abandoned_castle_hall","environment":"vast stone hall with vaulted ceilings, smooth limestone walls extending to shadowed periphery, wide flagstone floor stretching into dim distance, distant arched doorways framing deep negative space, cool blue moonlight filtering through high clerestory windows, Panavision 70mm optics: cinematic depth of field, smooth highlight roll-off, wide 16:9 composition space, dust motes suspended in air, moody atmospheric haze, NO characters, NO foreground occlusions, NO focal landmarks","characters":[{"id":1,"name":"Professor Vance","alias_slug":"vance","voice":"male, middle-aged, low pitch, british accent","background_zone":"polished mahogany lectern with brass rail and scattered parchment","zone_prompt":"vast stone hall with vaulted ceilings, smooth limestone walls extending to shadowed periphery, polished mahogany lectern with brass rail and scattered parchment, distant arched doorways framing deep negative space, cool blue moonlight filtering through high clerestory windows, Panavision 70mm optics: cinematic depth of field, smooth highlight roll-off, wide 16:9 composition space, dust motes suspended in air, moody atmospheric haze, NO characters, NO foreground occlusions","appearance_prompt":"middle-aged male human, average build, soft features, thick-rimmed glasses, ill-fitting charcoal blazer over wrinkled button-down shirt, slouchy cardigan draped over shoulders, neutral relaxed stance, hands resting at sides, flat even studio lighting, NO harsh directional shadows, NO motion blur, 1:1 reference framing"},{"id":2,"name":"Lyra","alias_slug":"lyra","voice":"female, young adult, high pitch, american accent","background_zone":"vaulted stone alcove with iron sconces and woven tapestry","zone_prompt":"vast stone hall with vaulted ceilings, smooth limestone walls extending to shadowed periphery, vaulted stone alcove with iron sconces and woven tapestry, distant arched doorways framing deep negative space, cool blue moonlight filtering through high clerestory windows, Panavision 70mm optics: cinematic depth of field, smooth highlight roll-off, wide 16:9 composition space, dust motes suspended in air, moody atmospheric haze, NO characters, NO foreground occlusions","appearance_prompt":"young adult female human, stunning captivating presence, elegant alluring features, tight-fitting low-cut emerald velvet dress with sheer mesh accents, accentuated curves and slim waist highlighted by tailored silhouette, long legs visible beneath high-slit hem, polished glamorous makeup with deliberate styling, graceful posture, neutral relaxed stance, hands resting at sides, flat even studio lighting, NO harsh directional shadows, NO motion blur, 1:1 reference framing"}]}
