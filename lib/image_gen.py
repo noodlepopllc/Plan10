@@ -289,8 +289,8 @@ def CreateCharacterSheet(prompt='', output='character_tmp.png',seed=-1, imagegen
     prompt = (
     "create a character sheet single image with two side by side views "
     "(3/4 front view, back view) with plain white background, studio lighting. "
-    "Ensure the clothing, legwear, sock length, and garment structure match exactly "
-    "between the front and back views. "
+    "Ensure the clothing and garment structure match exactly "
+    "between the front and back views."
     f"of {prompt}")
     gen = imagegen if imagegen else ImageGen()
     status = gen.generate(prompt, output, 1328, 1328, seed)
