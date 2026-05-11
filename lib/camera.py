@@ -7,7 +7,7 @@ from image_analysis import AnalyzeImage
 from image_edit import ImageEdit
 from image_gen import add_metadata_char
 from util import video_to_img, wait_for_file
-import torch
+import torch, os, sys
 from safetensors import safe_open
 from image_to_video import GenerateVideo
 
