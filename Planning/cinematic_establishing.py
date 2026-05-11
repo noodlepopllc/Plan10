@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 import sys, json, re
 
-WIDTH = 832
-HEIGHT = 480
+sys.path.append('./lib')
+
+from config import load_environ
+
+load_environ()
+WIDTH = int(os.environ.get("WIDTH", "832"))
+HEIGHT = int(os.environ.get("WIDTH", "480"))
 
 def main():
     registry_path = sys.argv[1]

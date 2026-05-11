@@ -7,8 +7,10 @@ BG="$OUTDIR/location.png"
 A="$OUTDIR/char1.png"
 B="$OUTDIR/char2.png"
 BG_REV="$OUTDIR/location_reverse.png"
-HEIGHT=832
-WIDTH=480
+
+source .env
+HEIGHT=$HEIGHT
+WIDTH=$WIDTH
 
 SEED=${SEED:-$RANDOM}
 echo "🎲 Seed: $SEED | Date: $(date)" > "$OUTDIR/run_manifest.txt"

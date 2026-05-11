@@ -23,6 +23,9 @@ from dialog import CloneVoice
 from config import load_environ
 load_environ()
 
+WIDTH = int(os.environ.get("WIDTH", "832"))
+HEIGHT = int(os.environ.get("WIDTH", "480"))
+
 # =============================================================================
 # 1. LOAD S2V PIPELINE
 # =============================================================================
@@ -66,8 +69,8 @@ def speech_to_video(
     input_audio,
     sample_rate,
     max_frames_per_clip=80,
-    height=768,
-    width=448,
+    height=HEIGHT,
+    width=WIDTH,
     cfg_scale=1.0,
     num_inference_steps=4,
     fps=16,
@@ -209,8 +212,8 @@ def GenerateTalkingVideo(
     audio='',
     media='',
     output='output.mp4',
-    width=480,
-    height=832,
+    width=WIDTH,
+    height=HEIGHT,
     seed=-1):
 
     width = int(width)
@@ -303,8 +306,8 @@ if __name__ == "__main__":
     parser.add_arguemtn('-A', '--audio', type=str, default='')
     parser.add_argument('-I', '--image', type=str, required=True)
     parser.add_argument('-O', '--output', type=str, default='output.mp4')
-    parser.add_argument('-W', '--width', type=int, default=832)
-    parser.add_argument('-H', '--height', type=int, default=480)
+    parser.add_argument('-W', '--width', type=int, default=WIDTH)
+    parser.add_argument('-H', '--height', type=int, default=HEIGHT)
     parser.add_argument('-S', '--seed', type=int, default=42)
     args = parser.parse_args()
     GenerateTalkingVideo(args.prompt, args.audio, args.image, args.output, args.width, args.height,args.seed)

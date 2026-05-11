@@ -12,6 +12,9 @@ from config import load_environ
 load_environ()
 from image_gen import GenerateImage
 
+WIDTH = int(os.environ.get("WIDTH", "832"))
+HEIGHT = int(os.environ.get("WIDTH", "480"))
+
 WAN21 = os.environ.get("WAN21","14B")
 
 model_id = f"alibaba-pai/Wan2.1-Fun-V1.1-{WAN21}-InP"
@@ -53,7 +56,7 @@ def _ensure_pipeline(vrlimit=14):
 
 
 def GenerateVideo(prompt='', media='', output='output.mp4', 
-                  duration_sec=5, width=832, height=480, seed=-1):
+                  duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
 
         
         if isinstance(prompt, list):
@@ -191,8 +194,8 @@ if __name__ == "__main__":
     parser.add_argument('-I', '--images', action='append', default=[], help='Input images')
     parser.add_argument('-O', '--output', type=str, default='output.mp4')
     parser.add_argument('-D', '--duration', type=float, default=5)
-    parser.add_argument('-W', '--width', type=int, default=832)
-    parser.add_argument('-H', '--height', type=int, default=480)
+    parser.add_argument('-W', '--width', type=int, default=WIDTH)
+    parser.add_argument('-H', '--height', type=int, default=HEIGHT)
     parser.add_argument('-S', '--seed', type=int, default=42)
     args = parser.parse_args()
     

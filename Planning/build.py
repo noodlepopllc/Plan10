@@ -5,8 +5,13 @@ import re
 import os
 from PIL import Image
 
-WIDTH = 832
-HEIGHT = 480
+sys.path.append('./lib')
+
+from config import load_environ
+
+load_environ()
+WIDTH = int(os.environ.get("WIDTH", "832"))
+HEIGHT = int(os.environ.get("WIDTH", "480"))
 
 # ============================================================================
 # 🔧 GenerateZoneBackdrop REMOVED

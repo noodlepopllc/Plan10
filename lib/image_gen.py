@@ -9,6 +9,8 @@ from PIL import Image
 from PIL.PngImagePlugin import PngInfo
 
 load_environ()
+WIDTH = int(os.environ.get("WIDTH", "832"))
+HEIGHT = int(os.environ.get("WIDTH", "480"))
 
 class ImageGenQwen(object):
     def __init__(self,vrlimit=14):
@@ -128,7 +130,7 @@ if os.environ.get("IMAGE_GEN", "KLEIN") == "KLEIN":
 else:
     ImageGen = ImageGenQwen
 
-def GenerateImage(prompt='', output='tmp.png', width=1328, height=1328, seed=42):
+def GenerateImage(prompt='', output='tmp.png', width=WIDTH, height=HEIGHT, seed=42):
     #prompt = EnhancePrompt('',prompt,'system/QwenImage.txt')['analysis']
     gen = ImageGen()
     status = gen.generate(prompt, output, int(width), int(height), int(seed))
@@ -547,8 +549,8 @@ if __name__ == '__main__':
                     prog='GenerateImages',
                     description='Generate images from prompt',
                     epilog='')
-    parser.add_argument('-W', '--width', type=int, default=1024, help='width of output')
-    parser.add_argument('-H', '--height', type=int, default=1024, help='height of output')
+    parser.add_argument('-W', '--width', type=int, default=WIDTH, help='width of output')
+    parser.add_argument('-H', '--height', type=int, default=HEIGHT, help='height of output')
     parser.add_argument('-E', '--seed', type=int, default=42, help='seed')
     parser.add_argument('-P', '--prompt', type=str, default='a beautiful woman tanning at the beach', help='prompt')
     parser.add_argument('-O', '--output', type=str, default='output.png')

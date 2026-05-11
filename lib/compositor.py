@@ -3,6 +3,12 @@ from image_edit import EditImage
 from image_analysis import AnalyzeImage
 import os
 
+from config import load_environ
+
+load_environ()
+WIDTH = int(os.environ.get("WIDTH", "832"))
+HEIGHT = int(os.environ.get("WIDTH", "480"))
+
 def CompositeScene(
     background_path: str,
     characters: list[str],
@@ -10,8 +16,8 @@ def CompositeScene(
     action: str = "hair swaying gently",
     output: str = "composite.png",
     seed: int = -1,
-    width: int = 832,
-    height: int = 480
+    width: int = WIDTH,
+    height: int = HEIGHT
 ):
     # 1. Validate
     if not os.path.exists(background_path): raise FileNotFoundError(f"Background not found: {background_path}")

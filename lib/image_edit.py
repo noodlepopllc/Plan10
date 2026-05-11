@@ -11,6 +11,8 @@ from pathlib import Path
 from util import video_to_img
 
 load_environ()
+WIDTH = int(os.environ.get("WIDTH", "832"))
+HEIGHT = int(os.environ.get("WIDTH", "480"))
 
 # ─────────────────────────────────────────────────────────────
 # EXPRESSION MAPPING
@@ -203,7 +205,7 @@ def EditImageSchema():
         }
     }
 
-def EditImage(prompt='', images=[''], output='tmp_edit.png', width=1328, height=1328, seed=42, img_edit=None):
+def EditImage(prompt='', images=[''], output='tmp_edit.png', width=WIDTH, height=HEIGHT, seed=42, img_edit=None):
     if not img_edit:
         edit = ImageEdit()
     else:
@@ -221,8 +223,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Cinematic Image Pipeline')
     parser.add_argument('-I', '--images', action='append', default=[], help='Input images')
     parser.add_argument('-P', '--prompt', type=str, default='remove text', help='Edit prompt')
-    parser.add_argument('-W', '--width', type=int, default=1024)
-    parser.add_argument('-H', '--height', type=int, default=1024)
+    parser.add_argument('-W', '--width', type=int, default=WIDTH)
+    parser.add_argument('-H', '--height', type=int, default=HEIGHT)
     parser.add_argument('-E', '--seed', type=int, default=42)
     parser.add_argument('-O', '--output', type=str, default='output.png')
     args = parser.parse_args()

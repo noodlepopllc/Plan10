@@ -17,7 +17,9 @@ def load_config():
         "OLLAMA_URL": "http://localhost:11434",
         "OLLAMA_MODEL": "qwen3.5:latest",
         "IMAGE_GEN": "KLEIN",
-        "IMAGE_EDIT": "KLEIN"
+        "IMAGE_EDIT": "KLEIN",
+        "WIDTH": "832",
+        "HEIGHT": "480"
     }
     if os.path.exists(CONFIG_FILE):
         try:
@@ -29,6 +31,7 @@ def load_config():
     return cfg
 
 def load_environ():
+    from pathlib import Path
     if "LOADED" not in os.environ:
         # If need something from modelscope, try international first, much faster
         # os.environ["MODELSCOPE_DOMAIN"] = "www.modelscope.ai"
@@ -36,6 +39,11 @@ def load_environ():
         for k, v in cfg.items():
             os.environ[k] = v
         os.environ["LOADED"] = "True"
+    cfg = load_config()
+    os.remove('.env')
+    with Path('.env').open('a') as fp:
+        for k, v in cfg.items():
+            fp.write(f'export {k}="{v}"\n')
 
 if __name__ == '__main__':
     load_environ()
