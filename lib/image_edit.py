@@ -12,7 +12,7 @@ from util import video_to_img
 
 load_environ()
 WIDTH = int(os.environ.get("WIDTH", "832"))
-HEIGHT = int(os.environ.get("WIDTH", "480"))
+HEIGHT = int(os.environ.get("HEIGHT", "480"))
 
 # ─────────────────────────────────────────────────────────────
 # EXPRESSION MAPPING

@@ -7,7 +7,7 @@ from config import load_environ
 
 load_environ()
 WIDTH = int(os.environ.get("WIDTH", "832"))
-HEIGHT = int(os.environ.get("WIDTH", "480"))
+HEIGHT = int(os.environ.get("HEIGHT", "480"))
 
 def main():
     registry_path = sys.argv[1]
