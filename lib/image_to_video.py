@@ -13,7 +13,7 @@ load_environ()
 from image_gen import GenerateImage
 
 WIDTH = int(os.environ.get("WIDTH", "832"))
-HEIGHT = int(os.environ.get("WIDTH", "480"))
+HEIGHT = int(os.environ.get("HEIGHT", "480"))
 
 WAN21 = os.environ.get("WAN21","14B")
 

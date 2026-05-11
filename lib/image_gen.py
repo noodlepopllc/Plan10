@@ -10,7 +10,7 @@ from PIL.PngImagePlugin import PngInfo
 
 load_environ()
 WIDTH = int(os.environ.get("WIDTH", "832"))
-HEIGHT = int(os.environ.get("WIDTH", "480"))
+HEIGHT = int(os.environ.get("HEIGHT", "480"))
 
 class ImageGenQwen(object):
     def __init__(self,vrlimit=14):
