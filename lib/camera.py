@@ -9,7 +9,13 @@ from image_gen import add_metadata_char
 from util import video_to_img, wait_for_file
 import torch
 from safetensors import safe_open
-from image_to_video GenerateVideo
+from image_to_video import GenerateVideo
+
+from config import load_environ
+
+load_environ()
+WIDTH = int(os.environ.get("WIDTH", "832"))
+HEIGHT = int(os.environ.get("WIDTH", "480"))
 
 class CameraMoveEngine:
     def __init__(self, step=0.10):
