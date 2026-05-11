@@ -40,7 +40,8 @@ def load_environ():
             os.environ[k] = v
         os.environ["LOADED"] = "True"
     cfg = load_config()
-    os.remove('.env')
+    if os.path.exists('.env'):
+        os.remove('.env')
     with Path('.env').open('a') as fp:
         for k, v in cfg.items():
             fp.write(f'export {k}="{v}"\n')
