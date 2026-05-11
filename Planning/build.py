@@ -151,6 +151,9 @@ def render_pipeline(registry_path: str, actions_path: str, dialog_path: str = No
         shot_type = beat.get("shot_type", "medium")
         motion_prompt = beat.get("motion_prompt", "")
         facial_action = beat.get("facial_action", "neutral")
+
+        if shot_type == "two_shot" and len(visible_ids) == 1:
+            shot_type = "medium"
         
         # Determine focus character & backdrop routing
         if shot_type == "two_shot" or len(visible_ids) > 1:

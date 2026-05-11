@@ -1,6 +1,6 @@
 import sys, os, time
 sys.path.append('./lib')
-sys.path.append('./Woosh')
+
 
 from qwen_llm import llm_analyze_media
 
@@ -9,11 +9,13 @@ from image_to_video import GenerateVideo
 from pathlib import Path
 import torch, torchaudio
 
-from woosh.inference.flowmatching_sampler import flowmatching_integrate
-from woosh.components.base import LoadConfig
-from woosh.model.video_kontext import VideoKontext
-from woosh.utils.video import SynchformerProcessor
-from woosh.utils.videoio import extract_video_frames, remux_video
+from config import load_environ
+from PIL import Image
+from PIL.PngImagePlugin import PngInfo
+
+load_environ()
+WIDTH = int(os.environ.get("WIDTH", "832"))
+HEIGHT = int(os.environ.get("HEIGHT", "480"))
 
 output = './outputs_qwen'
 count = 0
@@ -27,6 +29,16 @@ Rules:
 - Keep it under 15 words
 - Output format: "sound1, sound2, sound3"
 """
+
+### Checkout woosh repo, add dependencies and uncomment
+'''
+sys.path.append('./Woosh')
+from woosh.inference.flowmatching_sampler import flowmatching_integrate
+from woosh.components.base import LoadConfig
+from woosh.model.video_kontext import VideoKontext
+from woosh.utils.video import SynchformerProcessor
+from woosh.utils.videoio import extract_video_frames, remux_video
+
 
 def translate_to_audio_prompt(visual_prompt):
     if not visual_prompt: return ""
@@ -138,8 +150,9 @@ def add_audio(video_path, prompt):
             audio_start=0,
             duration_seconds=duration,
         )
+'''
 with open('MovieGenVideoBench.txt', 'r') as mov:
-    res = [(480,832)]#,(832,480)]
+    res = [(WIDTH,HEIGHT)]
     for prompt in [x for x in mov]:
         if not prompt.strip():
             continue
