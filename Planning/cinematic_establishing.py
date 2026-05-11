@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 import sys, json, re
 
+WIDTH = 832
+HEIGHT = 480
+
 def main():
     registry_path = sys.argv[1]
     shot_count = int(sys.argv[2]) if len(sys.argv) > 2 else 4
@@ -51,11 +54,11 @@ def main():
         action = f"{t['desc']}, NO mouth movement, NO speech animation"
 
         out.append(f"\n>> ALIAS: {alias}")
-        out.append(f"composite_scene combining={base_backdrop}, {char_refs}, shot_type=\"{t['shot_type']}\", action=\"{action}\" Height: 832, Width: 480, Seed: -1")
+        out.append(f"composite_scene combining={base_backdrop}, {char_refs}, shot_type=\"{t['shot_type']}\", action=\"{action}\" Height: {HEIGHT}, Width: {WIDTH}, Seed: -1")
 
         vid_alias = f"vid_{alias}"
         out.append(f"\n>> ALIAS: {vid_alias}")
-        out.append(f"image_to_video using={alias}, prompt=\"subtle camera drift, atmospheric light shift, NO mouth movement, NO speech animation\", duration_sec=5 Height: 832, Width: 480, Seed: -1")
+        out.append(f"image_to_video using={alias}, prompt=\"subtle camera drift, atmospheric light shift, NO mouth movement, NO speech animation\", duration_sec=5 Height: {HEIGHT}, Width: {WIDTH}, Seed: -1")
 
     print("\n".join(out))
 
