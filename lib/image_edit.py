@@ -220,7 +220,7 @@ def EditImage(prompt='', images=[''], output='tmp_edit.png', width=WIDTH, height
 # ─────────────────────────────────────────────────────────────
 if __name__ == '__main__':
     import argparse
-    parser = argparse.ArgumentParser(description='Cinematic Image Pipeline')
+    parser = argparse.ArgumentParser()
     parser.add_argument('-I', '--images', action='append', default=[], help='Input images')
     parser.add_argument('-P', '--prompt', type=str, default='remove text', help='Edit prompt')
     parser.add_argument('-W', '--width', type=int, default=WIDTH)
