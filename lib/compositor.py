@@ -342,7 +342,7 @@ if __name__ == '__main__':
                 char_image = args.chars.pop()
             else:
                 char_image = None
-            print(GenerateRoomBackdrop(args.background, args.zone, args.output, 1328, 1328, args.seed, char_image))
+            print(GenerateZoneBackdrop(args.background, args.zone, args.output, 1328, 1328, args.seed, char_image))
         else:
             print(GenerateReverseBackground(args.background, args.output, 1328, 1328, args.seed))
     else:
