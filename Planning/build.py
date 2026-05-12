@@ -116,7 +116,7 @@ def render_pipeline(registry_path: str, actions_path: str, dialog_path: str = No
         zone = f"{base_zone.rstrip('.')}{props_suffix}"
         
         zone_slug = slugify(zone)[:20]
-        zone_alias = f"bd_{env_alias}_zone_{zone_slug}"
+        zone_alias = f"bd_{env_slug}_zone_{zone_slug}"
         zone_backdrop_map[slug] = zone_alias
 
         char_ref_path = f"assets/char_{slug}.png"
