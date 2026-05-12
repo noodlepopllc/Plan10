@@ -71,7 +71,7 @@ if __name__ == "__main__":
 
 
     # Reset context unless -K is passed
-    if not args.context and os.path.exists(CONTEXT_FILE):
+    if  os.path.exists(CONTEXT_FILE) and (not args.fileprompt and not args.context):
         os.remove(CONTEXT_FILE)
 
     raw = Path(args.prompt).read_text() if args.fileprompt else args.prompt
