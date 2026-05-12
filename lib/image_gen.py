@@ -545,10 +545,7 @@ def CreateBackgroundSchema():
 
 if __name__ == '__main__':
     import argparse
-    parser = argparse.ArgumentParser(
-                    prog='GenerateImages',
-                    description='Generate images from prompt',
-                    epilog='')
+    parser = argparse.ArgumentParser()
     parser.add_argument('-W', '--width', type=int, default=WIDTH, help='width of output')
     parser.add_argument('-H', '--height', type=int, default=HEIGHT, help='height of output')
     parser.add_argument('-E', '--seed', type=int, default=42, help='seed')
