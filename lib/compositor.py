@@ -336,7 +336,7 @@ if __name__ == '__main__':
     parser.add_argument('-Z', '--zone', type=str, default=None, help='Request different zone other than reverse')
     args = parser.parse_args()
     if args.gen_reverse:
-        if not args.images: print("ERROR: -I required for reverse gen"); exit(1)
+        if not args.background: print("ERROR: -I required for reverse gen"); exit(1)
         if args.zone:
             if args.chars:
                 char_image = args.chars.pop()
