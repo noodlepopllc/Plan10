@@ -8,24 +8,26 @@ from image_gen import (
     CreateBackground, 
     GenerateImage, 
     GenerateImageSchema, 
-    GenerateReverseBackgroundSchema, 
-    GenerateReverseBackground,
-    GenerateBackdropSchema,
-    GenerateZoneBackdrop
 ) 
 from graphics_gen import GenerateGraphic, GenerateGraphicSchema
 from image_to_video import GenerateVideoSchema, GenerateVideo
 from speech_to_video import GenerateTalkingVideo, GenerateTalkingVideoSchema
 from image_analysis import EnhancePrompt
 from dialog import VoiceDesignSchema, VoiceCloneSchema, DesignVoice, CloneVoice
-from compositor import CompositeSceneSchema, CompositeScene
+from compositor import (
+    CompositeSceneSchema, 
+    CompositeScene,
+    GenerateReverseBackgroundSchema, 
+    GenerateReverseBackground,
+    GenerateBackdropSchema,
+    GenerateZoneBackdrop )
+
 import traceback
 
 # UPDATED IMPORTS to match consolidated image_edit.py
 from image_edit import (
     EditImageSchema, 
     EditImage,
-
 )
 
 # =============================================================================
