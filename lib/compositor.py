@@ -324,8 +324,8 @@ def GenerateZoneBackdrop(
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('-W', '--width', type=int, default=832)
-    parser.add_argument('-H', '--height', type=int, default=480)
+    parser.add_argument('-W', '--width', type=int, default=WIDTH)
+    parser.add_argument('-H', '--height', type=int, default=HEIGHT)
     parser.add_argument('-E', '--seed', type=int, default=42)
     parser.add_argument('-O', '--output', type=str, default='output.png')
     parser.add_argument('-B', '--background', type=str, help='Background path')
