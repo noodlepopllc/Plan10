@@ -30,7 +30,7 @@ def load_config():
             json.dump(cfg, c, indent=4)
     return cfg
 
-def load_environ():
+def load_environ(replace_env=False):
     from pathlib import Path
     if "LOADED" not in os.environ:
         # If need something from modelscope, try international first, much faster
@@ -40,11 +40,18 @@ def load_environ():
             os.environ[k] = v
         os.environ["LOADED"] = "True"
     cfg = load_config()
+    if replace_env:
+        if os.path.exists('.env'):
+            os.remove('.env')
     if not os.path.exists('.env'):
         with Path('.env').open('a') as fp:
             for k, v in cfg.items():
                 fp.write(f'export {k}="{v}"\n')
 
 if __name__ == '__main__':
-    load_environ()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-R', '--replace-env', action='store_true', help='Generate reverse-angle background (T2I)')
+    args = parser.parse_args()
+    load_environ(args.replace_env)
     print("config.json has been created.")
