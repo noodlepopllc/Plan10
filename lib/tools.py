@@ -232,7 +232,7 @@ class ToolHandler(object):
                 return self._handle_success(tool_name, filtered, chosen_alias, ctx, result, ext_override=".png")
 
             elif tool_name == "generate_backdrop":
-                filtered['output'] = f"{OUTPUT_DIR}/bg_{chosen_alias or ''}_{ts}.png"
+                filtered['output'] = f"{OUTPUT_DIR}/bd_{chosen_alias or ''}_{ts}.png"
                 result = GenerateZoneBackdrop(**filtered)
                 return self._handle_success(tool_name, filtered, chosen_alias, ctx, result, ext_override=".png")
 
