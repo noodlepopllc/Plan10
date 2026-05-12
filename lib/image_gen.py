@@ -551,7 +551,7 @@ if __name__ == '__main__':
     parser.add_argument('-E', '--seed', type=int, default=42, help='seed')
     parser.add_argument('-P', '--prompt', type=str, default='a beautiful woman tanning at the beach', help='prompt')
     parser.add_argument('-O', '--output', type=str, default='output.png')
-    parser.add_argument('-C', '--charactersheet', action='store_true')
+    parser.add_argument('-C', '--character-sheet', action='store_true')
     parser.add_argument('-L', '--location', action='store_true')
     parser.add_argument('-R', '--gen-reverse', action='store_true', help='Generate reverse-angle background (T2I)')
     parser.add_argument('-Z', '--zone', type=str, default=None, help='Request different zone other than reverse')
@@ -562,7 +562,7 @@ if __name__ == '__main__':
             print(GenerateRoomBackdrop(args.images[0], args.zone, args.output, args.width, args.height, args.seed))
         else:
             print(GenerateReverseBackground(args.images[0], args.output, args.width, args.height, args.seed))
-    elif args.charactersheet:
+    elif args.character_sheet:
         print(CreateCharacterSheet(args.prompt, args.output, args.seed))
     elif args.location:
         print(CreateBackground(args.prompt, args.output,args.seed))
