@@ -326,161 +326,8 @@ def CreateBackground(prompt='', output='location_tmp.png',seed=-1):
     status['prompt'] = final_prompt
     return status
 
-def GenerateBackdropSchema():
-    return {
-        "type": "function",
-        "function": {
-            "name": "generate_backdrop",  # Matches function name for direct routing
-            "description": "Take a master environment image and generate a repositioned viewpoint of a specific zone within the same room.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "media": {
-                        "type": "string", 
-                        "description": "Absolute or relative file path to the source master environment image."
-                    },
-                    "zone": {
-                        "type": "string",
-                        "description": "Text description of the specific area to frame within the same room. Example: 'the opposite side of the room near the arched window'"
-                    },
-                    "output": {"type": "string", "default": "zone_backdrop.png"},
-                    "width": {"type": "integer", "description": "Output image width in pixels"},
-                    "height": {"type": "integer", "description": "Output image height in pixels"},
-                    "seed": {"type": "integer", "description": "Random seed for reproducibility (-1 for random)"},
-                    "char_image": {"type": "string", "description": "character to inject into the new backdrop"}
-                },
-                "required": ["media", "zone"]
-            }
-        }
-    }
 
-def GenerateZoneBackdrop(
-    media: str,
-    zone: str,
-    output: str = "zone_backdrop.png",
-    width: int = 1328,
-    height: int = 1328,
-    seed: int = -1,
-    char_image: str = None,
-):
-    """Generate a zone backdrop via structured image analysis + targeted prompt construction."""
-    
-    if not os.path.exists(media):
-        raise FileNotFoundError(f"Source not found: {media}")
-    
-    # ========================================================================
-    # 🔍 STAGE 1: ANALYZE SOURCE IMAGE (structured extraction)
-    # ========================================================================
-    analysis_prompt = (
-        "Describe scene in 4 parts:\n"
-        "1. ENV: Indoor/Outdoor, lighting quality/direction, time/weather, architectural style, color palette.\n"
-        "2. SOURCES: Visible light sources (lamps, windows, neon)? Position relative to frame (LEFT/RIGHT/CENTER/BEHIND).\n"
-        "3. LANDMARKS: Prominent background features (altars, bars, windows, pillars)? Description + position.\n"
-        "4. SPATIAL: Nearby structural anchors (railings, counters, walls) with positions: LEFT/RIGHT/CENTER.\n"
-        "5. OPTICS: Lens traits (Panavision 70mm, depth of field, highlight roll-off, aspect ratio).\n"
-        "Keep under 150 words total. Use concise phrases, not full sentences."
-    )
-    
-    analysis = AnalyzeImage(media, analysis_prompt)
-    analysis_text = analysis['analysis'].strip()
-    
-    # ========================================================================
-    # 🎨 STAGE 2: CONSTRUCT ZONE PROMPT (preserve + swap + remove)
-    # ========================================================================
-    
-    # Character injection (optional, weak influence via prompt only)
-    char_desc = ""
-    if char_image and os.path.exists(char_image):
-        with Image.open(char_image) as img:
-            raw_desc = img.info.get('Description', 'character')
-            char_desc = (
-                f"A single {raw_desc}. "
-                "Preserve adult facial proportions, light cheekbone definition, and subtle jawline contour. "
-                "Position naturally within the space, matching environmental lighting and perspective. "
-            )
-    
-    # Build transformation prompt using analysis + zone target
-    prompt = (
-        f"{analysis_text}\n\n"
-        f"Generate a cinematic environment shot of: {zone}.\n"
-        "This is a DISTINCT AREA within the same overall location as the analyzed scene.\n\n"
-        "PRESERVE EXACTLY:\n"
-        "• Environment type, architectural style, material textures, color palette\n"
-        "• Lighting quality, direction, color temperature, volumetric atmosphere\n"
-        "• Time of day, weather conditions, atmospheric mood (haze, dust, smoke)\n"
-        "• Optical traits: Panavision 70mm, cinematic depth of field, smooth highlight roll-off, 16:9 framing\n\n"
-        "SWAP FOCAL ANCHOR:\n"
-        f"• Replace the CENTER spatial element with: {zone}\n"
-        "• The new focal element must feel physically connected to the original space (same building, same era, same design language)\n\n"
-        "REMOVE FROM VIEW:\n"
-        "• Any landmarks or structural anchors that would be behind the camera in this new viewpoint\n"
-        "• Foreground elements that block the composition zone for character placement\n\n"
-        "COMPOSITION:\n"
-        "• Wide 16:9 framing with clear mid-ground for character placement\n"
-        "• NO characters (unless specified below), NO text overlay, NO style drift\n"
-        f"{char_desc}"
-        "• Photorealistic cinematic environment shot, compositing-ready"
-    )
-    
-    # ========================================================================
-    # 🎯 STAGE 3: GENERATE (pure text-to-image, no reference image)
-    # ========================================================================
-    return GenerateImage(
-        prompt=prompt,
-        output=output,
-        width=width,
-        height=height,
-        seed=seed
-    )
 
-def GenerateReverseBackground(source_image: str, output: str = "reverse_bg.png", width: int = 1328, height: int = 1328, seed: int = -1):
-    if not os.path.exists(source_image): 
-        raise FileNotFoundError(f"Source not found: {source_image}")
-    
-    # Analysis: explicitly separate Anchors, Landmarks, and Lighting
-    analysis_prompt = (
-        "Describe scene in 4 parts:\n"
-        "1. ENV: Indoor/Outdoor, lighting quality/direction, time/weather, style.\n"
-        "2. SOURCES: Sun/lamp visible in frame? Position?\n"
-        "3. LANDMARKS: Distant/prominent background features visible? Description.\n"
-        "4. SPATIAL: Nearby structural anchors (railings, walls, pillars) with positions: LEFT/RIGHT/CENTER.\n"
-        "Keep under 120 words total."
-    )
-    analysis = AnalyzeImage(source_image, analysis_prompt)
-    env_desc = analysis['analysis'].strip()
-    
-    # Prompt: Landmarks vanish, Anchors flip, Lighting stays
-    prompt = (
-        f"{env_desc}\n\n"
-        "Generate the reverse shot for a conversation scene: camera rotated 180° around the conversation axis.\n"
-        "PRESERVE EXACTLY: environment type, lighting quality/direction, time of day, weather, materials, color palette.\n"
-        "ADJUST SOURCES: Visible sun/lamps are now behind the camera and must NOT appear; keep only their lighting effect.\n"
-        "HANDLE LANDMARKS: Major landmarks visible in the original frame are now behind the camera and must NOT appear. Replace with a background view consistent with the location but facing the opposite direction.\n"
-        "INVERT SPATIAL: Nearby structural anchors (railings, walls, pillars) swap horizontal position—what was on the LEFT is now on the RIGHT, and vice versa.\n"
-        "Cinematic, atmospheric, empty of characters or text."
-    )
-    
-    return GenerateImage(prompt=prompt, output=output, width=width, height=height, seed=seed)
-
-# ─────────────────────────────────────────────────────────────
-# REVERSE BACKGROUND (Uses T2I, not Edit)
-# ─────────────────────────────────────────────────────────────
-def GenerateReverseBackgroundSchema():
-    return {
-        "type": "function", "function": {
-            "name": "generate_reverse_background",
-            "description": "Analyze a background and generate a NEW background from a different angle using text-to-image.",
-            "parameters": {
-                "type": "object", "properties": {
-                    "source_image": {"type": "string", "description": "Path to source background to analyze."},
-                    "output": {"type": "string", "default": "reverse_bg.png"},
-                    "width": {"type": "integer", "default": 1280},
-                    "height": {"type": "integer", "default": 720},
-                    "seed": {"type": "integer", "default": -1}
-                }, "required": ["source_image"]
-            }
-        }
-    }
 
 
 
@@ -553,16 +400,8 @@ if __name__ == '__main__':
     parser.add_argument('-O', '--output', type=str, default='output.png')
     parser.add_argument('-C', '--character-sheet', action='store_true')
     parser.add_argument('-L', '--location', action='store_true')
-    parser.add_argument('-R', '--gen-reverse', action='store_true', help='Generate reverse-angle background (T2I)')
-    parser.add_argument('-Z', '--zone', type=str, default=None, help='Request different zone other than reverse')
     args = parser.parse_args()
-    if args.gen_reverse:
-        if not args.images: print("ERROR: -I required for reverse gen"); exit(1)
-        if args.zone:
-            print(GenerateRoomBackdrop(args.images[0], args.zone, args.output, args.width, args.height, args.seed))
-        else:
-            print(GenerateReverseBackground(args.images[0], args.output, args.width, args.height, args.seed))
-    elif args.character_sheet:
+    if args.character_sheet:
         print(CreateCharacterSheet(args.prompt, args.output, args.seed))
     elif args.location:
         print(CreateBackground(args.prompt, args.output,args.seed))
