@@ -78,12 +78,18 @@ STRICT RULES:
   • Apply strict complementary color theory across the scene. The master "environment" establishes the base palette. Each character's appearance/outfit MUST use dominant tones that sit opposite their specific "background_zone" backdrop on the color wheel (e.g., cool blue corridor zone / warm orange-gold character attire, purple-tinted alcove / yellow-lime armor accents).
   • Characters MUST visually POP and stand out distinctly from their assigned zone backdrop using these complementary contrasts. Ensure high chroma separation in clothing, armor, or skin/fur tones.
   • Backgrounds MUST remain harmonized through shared atmospheric lighting, matching color grading, and consistent architectural texture. NO style drift between zone backdrops and master environment.
-- Voice format (exact tokens only):
-  gender: "male" | "female"
-  age: "child" | "teenager" | "young adult" | "middle-aged" | "elderly"
-  pitch: "very low pitch" | "low pitch" | "moderate pitch" | "high pitch" | "very high pitch"
-  style (optional): "whisper"
-  accent (optional): "american accent" | "british accent" | "australian accent" | "canadian accent" | "chinese accent" | "indian accent" | "japanese accent" | "korean accent" | "portuguese accent" | "russian accent"
+- Voice format (exact tokens only, MANDATORY STRUCTURE):
+  • Format: "gender, age, pitch[, accent]" — style is ONLY included if input explicitly specifies whispering.
+  • gender: "male" | "female" (REQUIRED — derive from input or character context)
+  • age: "child" | "teenager" | "young adult" | "middle-aged" | "elderly" (REQUIRED — derive from input)
+  • pitch: "very low pitch" | "low pitch" | "moderate pitch" | "high pitch" | "very high pitch" (REQUIRED — select best match from input)
+  • accent (OPTIONAL — ONLY include if input explicitly mentions one): "american accent" | "british accent" | "australian accent" | "canadian accent" | "chinese accent" | "indian accent" | "japanese accent" | "korean accent" | "portuguese accent" | "russian accent"
+  • style "whisper" (STRICTLY CONDITIONAL — ONLY include if input explicitly contains "whisper", "whispering", or "soft-spoken whisper"): NEVER include by default. NEVER infer. If input does not explicitly mention whispering, OMIT this token entirely.
+  • Example outputs:
+    - Input: "female, young adult, high pitch, korean accent" → "female, young adult, high pitch, korean accent"
+    - Input: "male, middle-aged, low pitch, whisper, british accent" → "male, middle-aged, low pitch, whisper, british accent"
+    - Input: "female, teenager, high pitch" → "female, teenager, high pitch" (NO accent, NO whisper)
+  • NEVER invent optional tokens. If input doesn't specify accent or whisper, output only the required three: gender, age, pitch.
 - NEVER invent IDs. Start at 1, increment sequentially.
 - NEVER include dialog, actions, or temporal beats.
 - Characters MUST have distinct pitch/accent combinations for vocal separation.
