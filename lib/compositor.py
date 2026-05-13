@@ -259,13 +259,12 @@ def GenerateZoneBackdrop(
     # 🔍 STAGE 1: ANALYZE SOURCE IMAGE (structured extraction)
     # ========================================================================
     analysis_prompt = (
-        "Describe scene in 4 parts:\n"
-        "1. ENV: Indoor/Outdoor, lighting quality/direction, time/weather, architectural style, color palette.\n"
-        "2. SOURCES: Visible light sources (lamps, windows, neon)? Position relative to frame (LEFT/RIGHT/CENTER/BEHIND).\n"
-        "3. LANDMARKS: Prominent background features (altars, bars, windows, pillars)? Description + position.\n"
-        "4. SPATIAL: Nearby structural anchors (railings, counters, walls) with positions: LEFT/RIGHT/CENTER.\n"
-        "5. OPTICS: Lens traits (Panavision 70mm, depth of field, highlight roll-off, aspect ratio).\n"
-        "Keep under 150 words total. Use concise phrases, not full sentences."
+        "Describe only the permanent architectural shell and environmental foundation of this image. Focus on:\n"
+        "1. STRUCTURAL BOUNDARIES: Walls, ceiling, floor, windows, doorways, columns.\n"
+        "2. SURFACE MATERIALS: Stone, wood, metal, plaster, fabric textures and their base colors.\n"
+        "3. AMBIENT LIGHTING QUALITY: Overall color temperature, atmospheric density (haze/dust), soft fill grade.\n"
+        "4. OPTICAL CHARACTERISTICS: Depth of field, lens style, aspect ratio, highlight behavior.\n"
+        "Keep under 80 words. Describe only what is built into the room itself."
     )
     
     analysis = AnalyzeImage(media, analysis_prompt)
@@ -303,7 +302,6 @@ def GenerateZoneBackdrop(
         "• Any landmarks or structural anchors that would be behind the camera in this new viewpoint\n"
         "• Foreground elements that block the composition zone for character placement\n\n"
         "COMPOSITION:\n"
-        "• Wide 16:9 framing with clear mid-ground for character placement\n"
         "• NO characters (unless specified below), NO text overlay, NO style drift\n"
         f"{char_desc}"
         "• Photorealistic cinematic environment shot, compositing-ready"
