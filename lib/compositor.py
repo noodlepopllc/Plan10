@@ -272,9 +272,10 @@ def GenerateZoneBackdrop(
             "Describe only the permanent environmental foundation of this outdoor scene. Focus on:\n"
             "1. TERRAIN & GROUND: Sand, rock, grass, water, soil texture and base colors.\n"
             "2. VEGETATION & NATURAL FEATURES: Tree types, foliage density, rock formations, dunes, cliffs.\n"
-            "3. SKY & ATMOSPHERE: Cloud type, haze, humidity, time-of-day lighting, sun angle direction.\n"
-            "4. OPTICAL CHARACTERISTICS: Horizon line position, atmospheric perspective, lens style, depth cues.\n"
-            "Keep under 80 words. Describe only what is inherent to the location. EXCLUDE transient objects (people, animals, vehicles, temporary structures)."
+            "3. SKY & ATMOSPHERE: Cloud type, haze, humidity, time-of-day lighting quality. "
+            "DO NOT describe sun position, shadow direction, or specular highlight locations.\n"
+            "4. OPTICAL CHARACTERISTICS: Horizon line position, atmospheric perspective, lens style.\n"
+            "Keep under 80 words. Describe only what is inherent to the location. EXCLUDE transient objects and light-source geometry."
         )
     else:  # indoor fallback
         analysis_prompt = (
@@ -308,6 +309,12 @@ def GenerateZoneBackdrop(
         prompt = (
             f"{analysis_text}\n\n"
             f"Generate a cinematic environment shot of: {zone}.\n"
+            # In the outdoor branch of your prompt construction:
+            "LIGHTING CONTINUITY (CRITICAL):\n"
+            "• Preserve overall lighting QUALITY: color temperature, atmospheric density, time-of-day mood\n"
+            "• BUT vary the apparent sun angle slightly (±15°) so reflections, shadow fall, and water speculars feel naturally shifted\n"
+            "• If water is present: vary wave-angle reflections; avoid replicating exact highlight patterns from source\n"
+            "• Prefer overcast or diffuse lighting if the zone description doesn't specify direct sun\n\n"
             "This is a DISTINCT AREA within the same natural environment as the analyzed scene.\n\n"
             "PRESERVE EXACTLY:\n"
             "• Biome type, terrain composition, vegetation style, color palette\n"
