@@ -81,7 +81,7 @@ fi
 echo "# cat $2/static_dialog.txt >> $2/final.txt" >> $2/final.sh
 
 if [[ ! -f "$2/all_dialog.txt" ]]; then
-    python PlanningV2/builders/dialog.py $output/registry.json $output/sequence_dialog.json > "$2/action_dialog.txt"
+    python PlanningV2/builders/dialog.py $output/registry.json $output/sequence_dialog.json > "$2/all_dialog.txt"
 fi
 echo "# cat $2/all_dialog.txt >> $2/final.txt" >> $2/final.sh
 
