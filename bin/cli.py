@@ -45,7 +45,7 @@ def asset_exists(rel_path, out_dir):
 def main():
     parser = argparse.ArgumentParser(description="Interactive Asset Generator CLI")
     parser.add_argument('--context', '-c', type=str, default=None, help='Path to context file')
-    parser.add_argument('--max-steps', '-s', type=int, default=15, help='Max generation steps per task')
+    parser.add_argument('--max-steps', '-s', type=int, default=5, help='Max generation steps per task')
     args = parser.parse_args()
 
     # 1️⃣ RESOLVE CONTEXT PATH
