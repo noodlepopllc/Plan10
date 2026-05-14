@@ -56,24 +56,30 @@ if [[ ! -f "$2/identity.txt" ]]; then
 fi
 echo "cat $2/identity.txt > $2/final.txt" > $2/final.sh
 
+## ACTION SHOTS
 if [[ ! -f "$2/action_images.txt" ]]; then
     python PlanningV2/builders/actions.py $output/registry.json $output/sequence_action.json --images-only > "$2/action_images.txt"
 fi
-echo "cat $2/action_images.txt >> $2/final.txt" >> $2/final.sh
-
-if [[ ! -f "$2/headshots.txt" ]]; then
-    python PlanningV2/builders/dialog.py $output/registry.json $output/sequence_dialog.json --headshots-only > "$2/headshots.txt"
-fi
-echo "cat $2/headshots.txt >> $2/final.txt" >> $2/final.sh
+echo "# cat $2/action_images.txt >> $2/final.txt" >> $2/final.sh
 
 if [[ ! -f "$2/action_videos.txt" ]]; then
     python PlanningV2/builders/actions.py $output/registry.json $output/sequence_action.json > "$2/action_videos.txt"
 fi
-echo "cat $2/action_videos.txt >> $2/final.txt" >> $2/final.sh
+echo "# cat $2/action_videos.txt >> $2/final.txt" >> $2/final.sh
+
+if [[ ! -f "$2/headshots.txt" ]]; then
+    python PlanningV2/builders/dialog.py $output/registry.json $output/sequence_dialog.json --headshots-only > "$2/headshots.txt"
+fi
+echo "# cat $2/headshots.txt >> $2/final.txt" >> $2/final.sh
 
 if [[ ! -f "$2/static_dialog.txt" ]]; then
     python PlanningV2/builders/dialog.py $output/registry.json $output/sequence_dialog.json --images-only > "$2/static_dialog.txt"
 fi
-echo "cat $2/static_dialog.txt >> $2/final.txt" >> $2/final.sh
+echo "# cat $2/static_dialog.txt >> $2/final.txt" >> $2/final.sh
+
+if [[ ! -f "$2/all_dialog.txt" ]]; then
+    python PlanningV2/builders/dialog.py $output/registry.json $output/sequence_dialog.json > "$2/action_dialog.txt"
+fi
+echo "# cat $2/all_dialog.txt >> $2/final.txt" >> $2/final.sh
 
 echo "✅ Pipeline complete: $2"
