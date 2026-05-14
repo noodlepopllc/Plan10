@@ -343,4 +343,4 @@ if __name__ == '__main__':
         else:
             print(GenerateReverseBackground(args.background, args.output, 1328, 1328, args.seed))
     else:
-        CompositeScene(args.background, args.chars, args.shot_type, args.action, args.output, args.seed, args.width, args.height)
+        print(CompositeScene(args.background, args.chars, args.shot_type, args.action, args.output, args.seed, args.width, args.height))
