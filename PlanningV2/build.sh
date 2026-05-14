@@ -56,7 +56,7 @@ if [[ ! -f "$2/identity.txt" ]]; then
 fi
 echo "cat $2/identity.txt > $2/final.txt" > $2/final.sh
 
-## ACTION SHOTS
+echo "### ACTION SHOTS (Static Images, Videos) \n" >> $2/final.sh
 if [[ ! -f "$2/action_images.txt" ]]; then
     python PlanningV2/builders/actions.py $output/registry.json $output/sequence_action.json --images-only > "$2/action_images.txt"
 fi
@@ -67,6 +67,7 @@ if [[ ! -f "$2/action_videos.txt" ]]; then
 fi
 echo "# cat $2/action_videos.txt >> $2/final.txt" >> $2/final.sh
 
+echo "### DIALOG SHOTS (Headshots, Videos From Headshots, Action Headshots\n" >> $2/final.sh
 if [[ ! -f "$2/headshots.txt" ]]; then
     python PlanningV2/builders/dialog.py $output/registry.json $output/sequence_dialog.json --headshots-only > "$2/headshots.txt"
 fi
