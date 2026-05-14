@@ -85,7 +85,10 @@ def main():
         motion_prompt = beat.get("motion_prompt", "")
         facial_action = beat.get("facial_action", "neutral")
 
-        if shot_type == "two_shot" and len(visible_ids) == 1:
+        if shot_type in ["two_shot","ots"] and len(visible_ids) == 1:
+            shot_type = "medium"
+        
+        if shot_type == "closeup":
             shot_type = "medium"
         
         # Determine focus character & backdrop routing
