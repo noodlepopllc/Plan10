@@ -241,6 +241,13 @@ def GenerateBackdropSchema():
         }
     }
 
+def _classify_scene(media: str) -> str:
+    """Quick heuristic: check for sky/horizon dominance vs. enclosed geometry."""
+    # Option A: Simple color/edge heuristic
+    # Option B: Call a tiny VLM classifier: "Is this indoor or outdoor? Reply one word."
+    analysis = AnalyzeImage(media, "Is this scene indoor or outdoor? Reply with one word: 'indoor' or 'outdoor'.")
+    return analysis['analysis'].strip().lower()
+
 def GenerateZoneBackdrop(
     media: str,
     zone: str,
@@ -258,14 +265,26 @@ def GenerateZoneBackdrop(
     # ========================================================================
     # 🔍 STAGE 1: ANALYZE SOURCE IMAGE (structured extraction)
     # ========================================================================
-    analysis_prompt = (
-        "Describe only the permanent architectural shell and environmental foundation of this image. Focus on:\n"
-        "1. STRUCTURAL BOUNDARIES: Walls, ceiling, floor. DO NOT describe doors, windows, arches, or openings.\n"
-        "2. SURFACE MATERIALS: Stone, wood, metal, plaster, fabric textures and their base colors.\n"
-        "3. AMBIENT LIGHTING QUALITY: Overall color temperature, atmospheric density (haze/dust), soft fill grade.\n"
-        "4. OPTICAL CHARACTERISTICS: Depth of field, lens style, aspect ratio, highlight behavior.\n"
-        "Keep under 80 words. Describe only what is built into the room itself. EXCLUDE all doors, windows, arches, and focal landmarks."
-    )
+    scene_type = _classify_scene(media)
+
+    if scene_type == "outdoor":
+        analysis_prompt = (
+            "Describe only the permanent environmental foundation of this outdoor scene. Focus on:\n"
+            "1. TERRAIN & GROUND: Sand, rock, grass, water, soil texture and base colors.\n"
+            "2. VEGETATION & NATURAL FEATURES: Tree types, foliage density, rock formations, dunes, cliffs.\n"
+            "3. SKY & ATMOSPHERE: Cloud type, haze, humidity, time-of-day lighting, sun angle direction.\n"
+            "4. OPTICAL CHARACTERISTICS: Horizon line position, atmospheric perspective, lens style, depth cues.\n"
+            "Keep under 80 words. Describe only what is inherent to the location. EXCLUDE transient objects (people, animals, vehicles, temporary structures)."
+        )
+    else:  # indoor fallback
+        analysis_prompt = (
+            "Describe only the permanent architectural shell and environmental foundation of this image. Focus on:\n"
+            "1. STRUCTURAL BOUNDARIES: Walls, ceiling, floor. DO NOT describe doors, windows, arches, or openings.\n"
+            "2. SURFACE MATERIALS: Stone, wood, metal, plaster, fabric textures and their base colors.\n"
+            "3. AMBIENT LIGHTING QUALITY: Overall color temperature, atmospheric density (haze/dust), soft fill grade.\n"
+            "4. OPTICAL CHARACTERISTICS: Depth of field, lens style, aspect ratio, highlight behavior.\n"
+            "Keep under 80 words. Describe only what is built into the room itself. EXCLUDE all doors, windows, arches, and focal landmarks."
+        )
     
     analysis = AnalyzeImage(media, analysis_prompt)
     analysis_text = analysis['analysis'].strip()
@@ -285,26 +304,44 @@ def GenerateZoneBackdrop(
                 "Position naturally within the space, matching environmental lighting and perspective. "
             )
     
-    # Build transformation prompt using analysis + zone target
-    prompt = (
-        f"{analysis_text}\n\n"
-        f"Generate a cinematic environment shot of: {zone}.\n"
-        "This is a DISTINCT AREA within the same overall location as the analyzed scene.\n\n"
-        "PRESERVE EXACTLY:\n"
-        "• Environment type, architectural style, material textures, color palette\n"
-        "• Lighting quality, direction, color temperature, volumetric atmosphere\n"
-        "• Time of day, weather conditions, atmospheric mood (haze, dust, smoke)\n"
-        "• Optical traits: Panavision 70mm, cinematic depth of field, smooth highlight roll-off, 16:9 framing\n\n"
-        "LANDMARK RULES (CRITICAL):\n"
-        "• ONLY include doors, windows, arches, or openings if they are EXPLICITLY mentioned in the zone description above.\n"
-        "• If a door/window is NOT mentioned in the zone string, it must NOT appear in the output.\n"
-        "• The new focal element must feel physically connected to the original space (same building, same era, same design language)\n\n"
-        "COMPOSITION:\n"
-        "• Wide 16:9 framing with clear mid-ground for character placement\n"
-        "• NO characters (unless specified below), NO text overlay, NO style drift\n"
-        f"{char_desc}"
-        "• Photorealistic cinematic environment shot, compositing-ready"
-    )
+    if scene_type == "outdoor":
+        prompt = (
+            f"{analysis_text}\n\n"
+            f"Generate a cinematic environment shot of: {zone}.\n"
+            "This is a DISTINCT AREA within the same natural environment as the analyzed scene.\n\n"
+            "PRESERVE EXACTLY:\n"
+            "• Biome type, terrain composition, vegetation style, color palette\n"
+            "• Sky conditions, lighting direction, color temperature, atmospheric haze\n"
+            "• Time of day, weather, environmental mood\n"
+            "• Optical traits: Panavision 70mm, cinematic depth of field, horizon placement\n\n"
+            "NATURAL LANDMARK RULES:\n"
+            "• ONLY include specific natural features (rock formations, tree clusters, water edges) if EXPLICITLY mentioned in the zone description.\n"
+            "• If a feature is NOT mentioned, vary it naturally while staying within the same ecosystem.\n"
+            "• The new area must feel geographically continuous (same coastline, forest type, desert region)\n\n"
+            "COMPOSITION:\n"
+            "• NO characters (unless specified), NO text, NO style drift\n"
+            f"{char_desc}"
+            "• Photorealistic cinematic environment shot, compositing-ready"
+        )
+    else:
+        prompt = (
+            f"{analysis_text}\n\n"
+            f"Generate a cinematic environment shot of: {zone}.\n"
+            "This is a DISTINCT AREA within the same overall location as the analyzed scene.\n\n"
+            "PRESERVE EXACTLY:\n"
+            "• Environment type, architectural style, material textures, color palette\n"
+            "• Lighting quality, direction, color temperature, volumetric atmosphere\n"
+            "• Time of day, weather conditions, atmospheric mood (haze, dust, smoke)\n"
+            "• Optical traits: Panavision 70mm, cinematic depth of field\n\n"
+            "LANDMARK RULES (CRITICAL):\n"
+            "• ONLY include doors, windows, arches, or openings if they are EXPLICITLY mentioned in the zone description above.\n"
+            "• If a door/window is NOT mentioned in the zone string, it must NOT appear in the output.\n"
+            "• The new focal element must feel physically connected to the original space (same building, same era, same design language)\n\n"
+            "COMPOSITION:\n"
+            "• NO characters (unless specified below), NO text overlay, NO style drift\n"
+            f"{char_desc}"
+            "• Photorealistic cinematic environment shot, compositing-ready"
+        )
     
     # ========================================================================
     # 🎯 STAGE 3: GENERATE (pure text-to-image, no reference image)
