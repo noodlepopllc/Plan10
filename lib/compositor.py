@@ -330,6 +330,12 @@ def GenerateZoneBackdrop(
             f"{char_desc}"
             "• Photorealistic cinematic environment shot, compositing-ready"
         )
+        if "water" in analysis_text.lower() or "ocean" in analysis_text.lower():
+            prompt += (
+                "\n• Water surface: maintain same wave scale and foam texture, "
+                "but vary reflection angles and specular highlight distribution. "
+                "No identical sun-path glints."
+            )
     else:
         prompt = (
             f"{analysis_text}\n\n"
@@ -349,6 +355,7 @@ def GenerateZoneBackdrop(
             f"{char_desc}"
             "• Photorealistic cinematic environment shot, compositing-ready"
         )
+
     
     # ========================================================================
     # 🎯 STAGE 3: GENERATE (pure text-to-image, no reference image)
