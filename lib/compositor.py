@@ -260,11 +260,11 @@ def GenerateZoneBackdrop(
     # ========================================================================
     analysis_prompt = (
         "Describe only the permanent architectural shell and environmental foundation of this image. Focus on:\n"
-        "1. STRUCTURAL BOUNDARIES: Walls, ceiling, floor, windows, doorways, columns.\n"
+        "1. STRUCTURAL BOUNDARIES: Walls, ceiling, floor. DO NOT describe doors, windows, arches, or openings.\n"
         "2. SURFACE MATERIALS: Stone, wood, metal, plaster, fabric textures and their base colors.\n"
         "3. AMBIENT LIGHTING QUALITY: Overall color temperature, atmospheric density (haze/dust), soft fill grade.\n"
         "4. OPTICAL CHARACTERISTICS: Depth of field, lens style, aspect ratio, highlight behavior.\n"
-        "Keep under 80 words. Describe only what is built into the room itself."
+        "Keep under 80 words. Describe only what is built into the room itself. EXCLUDE all doors, windows, arches, and focal landmarks."
     )
     
     analysis = AnalyzeImage(media, analysis_prompt)
@@ -295,13 +295,12 @@ def GenerateZoneBackdrop(
         "• Lighting quality, direction, color temperature, volumetric atmosphere\n"
         "• Time of day, weather conditions, atmospheric mood (haze, dust, smoke)\n"
         "• Optical traits: Panavision 70mm, cinematic depth of field, smooth highlight roll-off, 16:9 framing\n\n"
-        "SWAP FOCAL ANCHOR:\n"
-        f"• Replace the CENTER spatial element with: {zone}\n"
+        "LANDMARK RULES (CRITICAL):\n"
+        "• ONLY include doors, windows, arches, or openings if they are EXPLICITLY mentioned in the zone description above.\n"
+        "• If a door/window is NOT mentioned in the zone string, it must NOT appear in the output.\n"
         "• The new focal element must feel physically connected to the original space (same building, same era, same design language)\n\n"
-        "REMOVE FROM VIEW:\n"
-        "• Any landmarks or structural anchors that would be behind the camera in this new viewpoint\n"
-        "• Foreground elements that block the composition zone for character placement\n\n"
         "COMPOSITION:\n"
+        "• Wide 16:9 framing with clear mid-ground for character placement\n"
         "• NO characters (unless specified below), NO text overlay, NO style drift\n"
         f"{char_desc}"
         "• Photorealistic cinematic environment shot, compositing-ready"
