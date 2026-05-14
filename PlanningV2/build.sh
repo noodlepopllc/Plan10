@@ -51,10 +51,12 @@ echo "#!/bin/bash" > $2/final.sh
 echo "set -euo pipefail" >> $2/final.sh
 chmod 0777 $2/final.sh
 
+echo "rm -f $2/final.txt" > $2/final.sh
+
 if [[ ! -f "$2/identity.txt" ]]; then
     python PlanningV2/builders/identity.py $output/registry.json > $2/identity.txt
 fi
-echo "cat $2/identity.txt > $2/final.txt" > $2/final.sh
+echo "cat $2/identity.txt > $2/final.txt" >> $2/final.sh
 
 echo "### ACTION SHOTS (Pick One)" >> $2/final.sh
 if [[ ! -f "$2/action_images.txt" ]]; then
