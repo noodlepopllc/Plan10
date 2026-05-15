@@ -95,8 +95,11 @@ def main():
         focus_cid = visible_ids[0]
         focus_slug = char_map[focus_cid]["slug"]
         
-        # Use the character's pre-generated action backdrop
-        backdrop = action_backdrop_map.get(focus_slug, master_env_alias)
+        if shot_type == "ots" and len(visible_ids) > 1:
+            backdrop = action_backdrop_map.get(char_map[visible_ids[1]]["slug"], master_env_alias)
+        else:
+            # Use the character's pre-generated action backdrop
+            backdrop = action_backdrop_map.get(focus_slug, master_env_alias)
         
         if len(visible_ids) > 1:
             char_refs = ", ".join([f"char_{char_map[cid]['slug']}" for cid in visible_ids])
