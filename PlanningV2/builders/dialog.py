@@ -147,12 +147,6 @@ def main():
             i2v_prompt = f"{mood}, {final_motion}, subtle camera drift, mouth completely closed and still, lips sealed shut, zero lip motion"
             out.append(f'\n>> ALIAS: {motion_alias}')
             out.append(f'image_to_video using={base_alias}, prompt="{i2v_prompt}", duration_sec=2 Height: {HEIGHT}, Width: {WIDTH}, Seed: {SEED}')
-            
-            dialog_motion_alias = f"dialog_motion_{dialog_idx:03d}"
-            out.append(f'\n>> ALIAS: {dialog_motion_alias}')
-            out.append(f'dialog_to_video using={motion_alias}, audio={ch["design"]}, text="{raw_text}", prompt="lips moving naturally, preserve existing head motion, NO extra gestures, NO facial drift, mouth articulation matches audio phonemes" Height: {HEIGHT}, Width: {WIDTH}, Seed: {SEED}')
-            
-            out.append(f'// DIALOG SELECT: use {dialog_motion_alias} (motion) OR {static_alias} (static) based on end-frame quality')
         
         dialog_idx += 1
     
