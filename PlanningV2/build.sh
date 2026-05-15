@@ -19,6 +19,9 @@ if [[ ! -f "$output/visual_prompt.txt" || ! -f "$output/action.txt" ]]; then
     echo "creating $output/visual_prompt.txt"
     python PlanningV2/expanders/beat_expansion.py "$(cat "$1")" 8 > $output/visual_prompt.txt
 
+fi
+
+if [[ ! -f "$output/action.txt" ]]; then
     echo "creating $output/action.txt"
     python lib/qwen_llm.py -P "$(cat $output/visual_prompt.txt)" | tail -n +2 > $output/action.txt
 fi
