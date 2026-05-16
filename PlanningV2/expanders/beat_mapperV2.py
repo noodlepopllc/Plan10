@@ -22,7 +22,7 @@ def main():
     action_input = beats_text if beats_text else "NONE"
     dialog_input = dialog_text if dialog_text else "NONE"
 
-   prompt = f"""Convert the provided inputs into a strict JSON sequence.
+    prompt = f"""Convert the provided inputs into a strict JSON sequence.
 
 TOTAL BEATS REQUIRED: {len(action_input.splitlines()) + len(dialog_input.splitlines())} (Preserve EVERY line from BOTH inputs)
 
