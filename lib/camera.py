@@ -294,7 +294,7 @@ def ApplyGimbalImage(media="", output="", angle="front", height="eye", distance=
     gimbal = CameraGimbal(AZ_MAP.get(angle, 0), EL_MAP.get(height, 0), DIST_MAP.get(distance, 1.0))
     
     # generate() already saves to disk and returns a dict/status
-    return gimbal.generate(img, 'tmp.png', img.width, img.height, seed)
+    return gimbal.generate(img, output, img.width, img.height, seed)
 
 
 def GimbalShotSchema():
