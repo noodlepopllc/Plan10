@@ -88,7 +88,7 @@ def CompositeScene(
         task = (
             f"REF 1: {bg_desc}. "
             # 🆕 Add crop permission + priority
-            "COMPOSITION RULE: Characters are the focal point. Background elements may be cropped, truncated, or extend beyond frame edges naturally. NEVER shrink background objects to fit—allow natural cropping instead. "
+            "COMPOSITION RULE: Characters are the focal point. Background elements may be cropped, truncated, or extend beyond frame edges naturally. NEVER shrink background or foreground objects to fit—allow natural cropping instead. "
             + spatial_rules + 
             f"REF 2: {chars_desc} "
             f"Action: {action}. "
