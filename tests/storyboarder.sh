@@ -30,4 +30,4 @@ OUTPUT FORMAT (STRICT):
 SYS_EOF
 
 # 4. Run pipeline
-python lib/graphics_gen.py -P "$(python lib/qwen_llm.py -S "$SYS_FILE" -P -P "$(cat $1)" | sed 's/`//g' | tr -d '\n')" -O $2
+python lib/graphics_gen.py -P "$(python lib/qwen_llm.py -S "$SYS_FILE" -P "$(cat $1)" | sed 's/`//g' | tr -d '\n')" -O $2
