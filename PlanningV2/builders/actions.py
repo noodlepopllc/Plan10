@@ -114,6 +114,7 @@ def main():
         if motion_prompt:
             clean_motion = re.sub(r'^\w+:\s*', '', motion_prompt).strip()
             action_parts.append(clean_motion)
+        '''
         action_parts.extend([
             "mouth completely closed and still",
             "lips sealed shut",
@@ -121,6 +122,7 @@ def main():
             "NO text overlay",
             "NO speech animation"
         ])
+        '''
         action = ", ".join([p for p in action_parts if p])
         
         alias = f"action_{action_idx:03d}"
