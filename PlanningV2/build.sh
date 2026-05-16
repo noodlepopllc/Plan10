@@ -58,11 +58,10 @@ if [[ ! -f "$output/map_prompt_combined.txt" || ! -f "$output/sequence_combined.
     python lib/qwen_llm.py -P "$(cat $output/map_prompt_action.txt)" -S PlanningV2/prompts/sequence.txt | tail -n +2 > $output/sequence_combined.json
 fi
 
-if [[ ! -f "$2/complete.txt" ]]; then
-    python PlanningV2/builders/identity.py $output/registry.json > "$2/complete.txt"
-    python PlanningV2/builders/actions.py $output/registry.json $output/sequence_combined.json >> "$2/complete.txt"
-    python PlanningV2/builders/dialog.py $output/registry.json $output/sequence_combined.json > "$2/complete.txt"
-fi
+python PlanningV2/builders/identity.py $output/registry.json > "$2/complete.txt"
+python PlanningV2/builders/actions.py $output/registry.json $output/sequence_combined.json >> "$2/complete.txt"
+python PlanningV2/builders/dialog.py $output/registry.json $output/sequence_combined.json > "$2/complete.txt"
+
 
 echo "#!/bin/bash" > $2/final.sh
 echo "set -euo pipefail" >> $2/final.sh
