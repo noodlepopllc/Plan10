@@ -52,7 +52,7 @@ fi
 
 if [[ ! -f "$output/map_prompt_combined.txt" || ! -f "$output/sequence_combined.json" ]]; then
     echo "creating $output/map_prompt_action.txt"
-    python PlanningV2/expanders/beat_mapper.py $output/registry.json $output/action.txt $output/dialog.txt "$1" > $output/map_prompt_combined.txt
+    python PlanningV2/expanders/beat_mapperV2.py $output/registry.json $output/action.txt $output/dialog.txt "$1" > $output/map_prompt_combined.txt
     
     echo "creating $output/sequence_action.json"
     python lib/qwen_llm.py -P "$(cat $output/map_prompt_action.txt)" -S PlanningV2/prompts/sequence.txt | tail -n +2 > $output/sequence_combined.json
