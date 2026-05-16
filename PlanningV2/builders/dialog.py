@@ -30,6 +30,28 @@ MOOD_REACTIONS = {
     "neutral": ["subtle breathing", "steady gaze", "still posture"]
 }
 
+# ADD THIS BELOW MOOD_REACTIONS
+CLOSEUP_MOOD_VISUALS = {
+    "nervous": "slightly widened eyes, tense jaw, subtle brow furrow, gaze slightly off-camera",
+    "reassuring": "soft eyes, relaxed forehead, warm direct gaze, gentle downward head tilt",
+    "relieved": "relaxed brow, soft eyelids, gentle exhale posture, calm downward-to-direct gaze",
+    "playful": "raised eyebrow, crinkled eye corners, slight head cock, amused direct gaze",
+    "frustrated": "furrowed brow, tightened jaw, narrowed eyes, downward gaze",
+    "confident": "steady direct gaze, relaxed jaw, slight chin lift, calm unblinking eyes",
+    "skeptical": "narrowed eyes, raised eyebrow, slight head tilt, sidelong glance",
+    "encouraging": "warm direct gaze, soft eye crinkle, relaxed forehead, slight forward lean posture",
+    "curious": "widened eyes slightly, head cocked, focused direct gaze, relaxed mouth",
+    "supportive": "soft eyes, gentle nod posture, relaxed brow, warm steady gaze",
+    "shy": "downcast eyes, slight head duck, relaxed mouth, avoiding direct camera",
+    "amused": "crinkled eye corners, slight closed-mouth smirk, raised eyebrow, light gaze",
+    "eager": "bright wide eyes, alert expression, direct gaze, relaxed forehead",
+    "patient": "calm steady gaze, relaxed facial muscles, neutral brow, soft focus",
+    "defensive": "tight jaw, narrowed eyes, slight backward lean posture, guarded direct gaze",
+    "overwhelmed": "dropped gaze, tense shoulders visible, furrowed brow, heavy eyelids",
+    "stern": "direct unblinking gaze, firm jaw line, neutral brow, focused intense eyes",
+    "neutral": "relaxed facial muscles, direct soft gaze, even breathing posture, calm expression"
+}
+
 def slugify(text: str) -> str:
     text = str(text).lower().strip()
     text = re.sub(r'[^\w\s-]', '', text)
@@ -94,7 +116,7 @@ def main():
     required = _get_required_moods(dialog_seq, [c["alias_slug"] for c in registry["characters"]])
     for slug, mood in sorted(required):
         alias = f"compd_{slug}_{mood}"
-        action = f"{mood}, mouth completely closed and still, lips sealed shut, zero lip motion, static facial expression, cropped at shoulders, NO hands, NO props"
+        action = f"{mood_cues}, mouth closed and relaxed, lips gently together, cropped at shoulders, NO hands, NO props, NO motion blur"
         backdrop = zone_backdrop_map.get(slug, master_env_alias)
         
         out.append(f'\n>> ALIAS: {alias}')
@@ -102,7 +124,7 @@ def main():
 
     for slug, mood in sorted(required):
         alias = f"compd_{slug}_{mood}_medium"
-        action = f"{mood}"
+        action = f"{mood_cues}"
         backdrop = zone_backdrop_map.get(slug, master_env_alias)
         
         out.append(f'\n>> ALIAS: {alias}')
