@@ -11,13 +11,13 @@ this version is tight fitting, the skirt portion is short, the top is low cut,
 cute black kitten heels, black ribbon tied in her hair, knee high white stockings with lace trim, 8K, photorealistic. Seed: 12345
 
 >> ALIAS: Alice_Background_Indoor
-create a background from a scene in the book with a large square table inside of a mysterious magical study, fairy tale, vibrant colors, realistic fantasy indoor scene from 'Alice in Wonderland'. Seed: 12345
+create a background from a scene in the book with a table inside of a mysterious magical study, fairy tale, vibrant colors, realistic fantasy indoor scene from 'Alice in Wonderland'. Seed: 12345
 
 >> ALIAS: Alice_Background_Outdoor
 create a background from a scene in the book with large mushrooms, fairy tale, vibrant colors, realistic fantasy outdoor scene from 'Alice in Wonderland'. Seed: 12345
 
 >> ALIAS: Alice_Composite
-create a composite by combining Alice_Sheet asset black ribbons in her hair with Alice_Background_Indoor asset she looks down at the table touching it. MUST SET HEIGHT AND WIDTH, Height: 832, Width: 480, Seed: 12345
+create a composite by combining Alice_Sheet asset black ribbons in her hair with Alice_Background_Indoor asset she examines the table as she stands beside it. MUST SET HEIGHT AND WIDTH, Height: 832, Width: 480, Seed: 12345
 
 >> ALIAS: Alice_Composite_Outside
 create a composite by combining Alice_Sheet asset black ribbons in her hair with Alice_Background_Outdoor asset her she is looking at a mushroom. MUST SET HEIGHT AND WIDTH, Height: 832, Width: 480, Seed: -1
