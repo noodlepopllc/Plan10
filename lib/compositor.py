@@ -271,7 +271,7 @@ def GenerateZoneBackdrop(
             "• Biome type, terrain composition, vegetation style, color palette\n"
             "• Sky conditions, lighting direction, color temperature, atmospheric haze\n"
             "• Time of day, weather, environmental mood\n"
-            "• Optical traits: Panavision 70mm, cinematic depth of field, horizon placement\n\n"
+            #"• Optical traits: Panavision 70mm, cinematic depth of field, horizon placement\n\n"
             "NATURAL LANDMARK RULES:\n"
             "• ONLY include specific natural features (rock formations, tree clusters, water edges) if EXPLICITLY mentioned in the zone description.\n"
             "• If a feature is NOT mentioned, vary it naturally while staying within the same ecosystem.\n"
@@ -279,7 +279,7 @@ def GenerateZoneBackdrop(
             "COMPOSITION:\n"
             "• NO characters (unless specified), NO text, NO style drift\n"
             f"{char_desc}"
-            "• Photorealistic cinematic environment shot, compositing-ready"
+            #"• Photorealistic cinematic environment shot, compositing-ready"
         )
         if "water" in analysis_text.lower() or "ocean" in analysis_text.lower():
             prompt += (
@@ -296,7 +296,7 @@ def GenerateZoneBackdrop(
             "• Environment type, architectural style, material textures, color palette\n"
             "• Lighting quality, direction, color temperature, volumetric atmosphere\n"
             "• Time of day, weather conditions, atmospheric mood (haze, dust, smoke)\n"
-            "• Optical traits: Panavision 70mm, cinematic depth of field\n\n"
+            #"• Optical traits: Panavision 70mm, cinematic depth of field\n\n"
             "LANDMARK RULES (CRITICAL):\n"
             "• ONLY include doors, windows, arches, or openings if they are EXPLICITLY mentioned in the zone description above.\n"
             "• If a door/window is NOT mentioned in the zone string, it must NOT appear in the output.\n"
@@ -304,7 +304,7 @@ def GenerateZoneBackdrop(
             "COMPOSITION:\n"
             "• NO characters (unless specified below), NO text overlay, NO style drift\n"
             f"{char_desc}"
-            "• Photorealistic cinematic environment shot, compositing-ready"
+            #"• Photorealistic cinematic environment shot, compositing-ready"
         )
 
     
