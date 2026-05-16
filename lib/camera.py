@@ -274,10 +274,10 @@ def ApplyGimbalShot(media="", output="", angle="front", height="eye", distance="
     
     # generate() already saves to disk and returns a dict/status
     result =  gimbal.generate(img, output, img.width, img.height, seed)
-    #end_frame = video_to_img(result['output_path'])
+    end_frame = video_to_img(result['output_path'])
 
-    #GenerateVideo(prompt='Camera moves to a new field of view', media=[img, end_Frame], output=output.replace('png','mp4'), 
-    #              duration_sec=5, width=img.width, height=img.height, seed=seed)
+    GenerateVideo(prompt='Camera moves to a new field of view', media=[img, end_Frame], output=output.replace('png','mp4'), 
+                  duration_sec=5, width=img.width, height=img.height, seed=seed)
     return result
 
 def ApplyGimbalImage(media="", output="", angle="front", height="eye", distance="medium", seed=-1):
