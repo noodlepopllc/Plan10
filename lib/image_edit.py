@@ -43,6 +43,11 @@ class ImageEditQwen(object):
             vrlimit = int(os.environ["VRAM"])
         self.vrlimit = vrlimit
         self.pipe = None
+
+    def get_pipe(self):
+        if not self.pipe:
+            self.__enter__()
+        return self.pipe
     
     def __enter__(self):
         if not self.pipe:

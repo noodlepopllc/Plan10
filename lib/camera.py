@@ -250,7 +250,7 @@ class CameraGimbal:
         from image_edit import ImageEditQwen
         editor = ImageEditQwen()
         attach_qwen_lora_runtime(
-            editor.pipe,
+            editor.get_pipe(),
             "./loras/qwen-image-edit-2511-multiple-angles-lora.safetensors",
             alpha=1.0,
         )
