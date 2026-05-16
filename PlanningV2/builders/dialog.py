@@ -116,6 +116,7 @@ def main():
     required = _get_required_moods(dialog_seq, [c["alias_slug"] for c in registry["characters"]])
     for slug, mood in sorted(required):
         alias = f"compd_{slug}_{mood}"
+        mood_cues = CLOSEUP_MOOD_VISUALS.get(mood, CLOSEUP_MOOD_VISUALS["neutral"])
         action = f"{mood_cues}, mouth closed and relaxed, lips gently together, cropped at shoulders, NO hands, NO props, NO motion blur"
         backdrop = zone_backdrop_map.get(slug, master_env_alias)
         
@@ -124,6 +125,7 @@ def main():
 
     for slug, mood in sorted(required):
         alias = f"compd_{slug}_{mood}_medium"
+        mood_cues = CLOSEUP_MOOD_VISUALS.get(mood, CLOSEUP_MOOD_VISUALS["neutral"])
         action = f"{mood_cues}"
         backdrop = zone_backdrop_map.get(slug, master_env_alias)
         
