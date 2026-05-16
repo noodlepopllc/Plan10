@@ -59,11 +59,22 @@ def CompositeScene(
     # 4. Route to specific prompt logic
     # In the prompt construction section, replace the "REF 1" handling:
 
+    # 🆕 SPATIAL INTEGRITY RULES (prevents clipping through objects)
+    spatial_rules = (
+        "SPATIAL RULES: "
+        "1. Characters MUST maintain clean spatial boundaries—NO clipping through furniture, walls, tables, or objects. "
+        "2. Characters must be properly grounded on floor surfaces with visible foot/leg contact. "
+        "3. If furniture (tables, desks, counters) is present, characters are either CLEARLY IN FRONT OF it (occluding it) or CLEARLY BEHIND it (partially occluded by it)—NEVER merged through. "
+        "4. Maintain consistent depth layering: foreground elements > characters > midground objects > background. "
+        "5. NO floating, NO intersecting geometry, NO transparency through solid objects."
+    )
+
     if shot_type == 'ots':
         task = (
             f"REF 1: {bg_desc}. Background source. "
             # 🆕 Add crop permission
             "ALLOW CROPPING: Background elements may be partially cropped or extend off-frame to maintain composition. DO NOT force-fit entire objects. "
+            + spatial_rules +
             "Cinematic close-up, camera is eye level, over-the-shoulder shot of "
             f"REF 2: Character 1 (foreground character) {descriptions[0]} blurred, face is away from the camera and "
             "focusing on "
@@ -78,6 +89,7 @@ def CompositeScene(
             f"REF 1: {bg_desc}. "
             # 🆕 Add crop permission + priority
             "COMPOSITION RULE: Characters are the focal point. Background elements may be cropped, truncated, or extend beyond frame edges naturally. NEVER shrink background objects to fit—allow natural cropping instead. "
+            + spatial_rules + 
             f"REF 2: {chars_desc} "
             f"Action: {action}. "
             f"Framing: {framing}. "
