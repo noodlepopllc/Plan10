@@ -99,6 +99,14 @@ def main():
         
         out.append(f'\n>> ALIAS: {alias}')
         out.append(f'composite_scene combining={backdrop}, char_{slug}, shot_type="closeup", action="{action}" Height: {HEIGHT}, Width: {WIDTH}, Seed: {SEED}')
+
+    for slug, mood in sorted(required):
+        alias = f"compd_{slug}_{mood}_medium"
+        action = f"{mood}"
+        backdrop = zone_backdrop_map.get(slug, master_env_alias)
+        
+        out.append(f'\n>> ALIAS: {alias}')
+        out.append(f'composite_scene combining={backdrop}, char_{slug}, shot_type="medium", action="{action}" Height: {HEIGHT}, Width: {WIDTH}, Seed: {SEED}')
     
     # Exit early if just previewing headshots
     if headshots_only:
@@ -146,7 +154,7 @@ def main():
             motion_alias = f"vid_motion_{dialog_idx:03d}"
             i2v_prompt = f"{mood}, {final_motion}, subtle camera drift, mouth completely closed and still, lips sealed shut, zero lip motion"
             out.append(f'\n>> ALIAS: {motion_alias}')
-            out.append(f'image_to_video using={base_alias}, prompt="{i2v_prompt}", duration_sec=2 Height: {HEIGHT}, Width: {WIDTH}, Seed: {SEED}')
+            out.append(f'image_to_video using={base_alias}_medium, prompt="{i2v_prompt}", duration_sec=2 Height: {HEIGHT}, Width: {WIDTH}, Seed: {SEED}')
         
         dialog_idx += 1
     
