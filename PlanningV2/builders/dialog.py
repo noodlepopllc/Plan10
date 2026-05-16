@@ -33,11 +33,11 @@ MOOD_REACTIONS = {
 # ADD THIS BELOW MOOD_REACTIONS
 CLOSEUP_MOOD_VISUALS = {
     "nervous": "slightly widened eyes, tense jaw, subtle brow furrow, gaze slightly off-camera",
-    "reassuring": "soft eyes, relaxed forehead, warm direct gaze, gentle downward head tilt",
-    "relieved": "relaxed brow, soft eyelids, gentle exhale posture, calm downward-to-direct gaze",
+    #"reassuring": "soft eyes, relaxed forehead, warm direct gaze, gentle downward head tilt",
+    #"relieved": "relaxed brow, soft eyelids, gentle exhale posture, calm downward-to-direct gaze",
     "playful": "raised eyebrow, crinkled eye corners, slight head cock, amused direct gaze",
     "frustrated": "furrowed brow, tightened jaw, narrowed eyes, downward gaze",
-    "confident": "steady direct gaze, relaxed jaw, slight chin lift, calm unblinking eyes",
+    #"confident": "steady direct gaze, relaxed jaw, slight chin lift, calm unblinking eyes",
     "skeptical": "narrowed eyes, raised eyebrow, slight head tilt, sidelong glance",
     "encouraging": "warm direct gaze, soft eye crinkle, relaxed forehead, slight forward lean posture",
     "curious": "widened eyes slightly, head cocked, focused direct gaze, relaxed mouth",
@@ -45,11 +45,15 @@ CLOSEUP_MOOD_VISUALS = {
     "shy": "downcast eyes, slight head duck, relaxed mouth, avoiding direct camera",
     "amused": "crinkled eye corners, slight closed-mouth smirk, raised eyebrow, light gaze",
     "eager": "bright wide eyes, alert expression, direct gaze, relaxed forehead",
-    "patient": "calm steady gaze, relaxed facial muscles, neutral brow, soft focus",
+    #"patient": "calm steady gaze, relaxed facial muscles, neutral brow, soft focus",
     "defensive": "tight jaw, narrowed eyes, slight backward lean posture, guarded direct gaze",
     "overwhelmed": "dropped gaze, tense shoulders visible, furrowed brow, heavy eyelids",
     "stern": "direct unblinking gaze, firm jaw line, neutral brow, focused intense eyes",
-    "neutral": "relaxed facial muscles, direct soft gaze, even breathing posture, calm expression"
+    #"neutral": "relaxed facial muscles, direct soft gaze, even breathing posture, calm expression"
+    "reassuring": "HEAD TILTED SLIGHTLY FORWARD (5°), WARM DIRECT EYE CONTACT, SOFT BROW RELAXATION, GENTLE CORNER-OF-MOUTH RELAXATION, OPEN/RECEIVING POSTURE. Active emotional warmth.",
+    "patient": "HEAD PERFECTLY LEVEL, EYES SOFT BUT NEUTRAL GAZE, JAW COMPLETELY LOOSE, SHOULDERS SLIGHTLY DROPPED, ZERO FORWARD LEAN. Passive waiting state, calm stillness.",
+    "confident": "CHIN LIFTED 5°, SHOULDERS SQUARE AND BACK, DIRECT UNBLINKING GAZE, FIRM JAW LINE, LIPS LIGHTLY PRESSED TOGETHER. Alert grounded presence.",
+    "neutral": "HEAD PERFECTLY STRAIGHT, EYES LEVEL, BROWS COMPLETELY FLAT, ZERO FACIAL TENSION, MOUTH NEUTRAL REST. Baseline state, no emotional signal.",
 }
 
 def slugify(text: str) -> str:
