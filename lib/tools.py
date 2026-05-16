@@ -17,8 +17,6 @@ from dialog import VoiceDesignSchema, VoiceCloneSchema, DesignVoice, CloneVoice
 from compositor import (
     CompositeSceneSchema, 
     CompositeScene,
-    GenerateReverseBackgroundSchema, 
-    GenerateReverseBackground,
     GenerateBackdropSchema,
     GenerateZoneBackdrop )
 
@@ -61,7 +59,6 @@ class ToolHandler(object):
         CreateBackgroundSchema(),
         GenerateImageSchema(),
         CompositeSceneSchema(),
-        GenerateReverseBackgroundSchema(),
         EditImageSchema(), 
         GenerateBackdropSchema(),
         GenerateVideoSchema(),
@@ -153,7 +150,6 @@ class ToolHandler(object):
             "create_background": ["prompt", "output", "alias"],
             "generate_image": ["prompt", "width", "height", "seed", "output", "alias"],
             "composite_scene": ["background_path", "characters", "shot_type", "action", "width", "height", "output", "alias","seed"],
-            "generate_reverse_background": ["source_image", "width", "height", "seed", "output", "alias"],
             "edit_image": ["images", "prompt", "width", "height", "seed", "output", "alias"],
             "image_to_video": ["prompt", "media", "width", "height", "seed", "duration_sec", "output", "alias"],
             "dialog_to_video": ["prompt", "text", "media", "audio", "width", "height", "seed", "output", "alias"],
@@ -200,11 +196,6 @@ class ToolHandler(object):
             elif tool_name == "composite_scene":
                 filtered['output'] = f"{OUTPUT_DIR}/comp_{chosen_alias or ''}_{ts}.png"
                 result = CompositeScene(**filtered)
-                return self._handle_success(tool_name, filtered, chosen_alias, ctx, result)
-                
-            elif tool_name == "generate_reverse_background":
-                filtered['output'] = f"{OUTPUT_DIR}/reverse_{chosen_alias or ''}_{ts}.png"
-                result = GenerateReverseBackground(**filtered)
                 return self._handle_success(tool_name, filtered, chosen_alias, ctx, result)
 
             elif tool_name == "edit_image":
