@@ -279,17 +279,34 @@ def ApplyGimbalShot(input="", output="", angle="front", height="eye", distance="
     return GenerateVideo(prompt='Camera moves to a new field of view', media=[img, end_Frame], output=output, 
                   duration_sec=5, width=img.width, height=img.height, seed=seed)
 
+def ApplyGimbalImage(media="", output="", angle="front", height="eye", distance="medium", seed=-1):
+    AZ_MAP = {"front": 0, "front_right": 45, "right": 90, "back_right": 135, 
+              "back": 180, "back_left": 225, "left": 270, "front_left": 315}
+    EL_MAP = {"low": -30, "eye": 0, "high": 30, "very_high": 60}
+    DIST_MAP = {"closeup": 0.6, "medium": 1.0, "wide": 1.8}
+
+    if not os.path.exists(media):
+        raise FileNotFoundError(f"Source image not found: {media}")
+
+    img = video_to_img(media)
+    
+    # Your existing class handles LoRA attachment + Qwen pipeline
+    gimbal = CameraGimbal(AZ_MAP.get(angle, 0), EL_MAP.get(height, 0), DIST_MAP.get(distance, 1.0))
+    
+    # generate() already saves to disk and returns a dict/status
+    return gimbal.generate(img, 'tmp.png', img.width, img.height, seed)
+
 
 def GimbalShotSchema():
     return {
         "type": "function",
         "function": {
-            "name": "apply_gimbal_shot",
+            "name": "apply_gimbal_image",
             "description": "Reframe a character using a validated multi-angle LoRA. Generates a clean keyframe for video interpolation.",
             "parameters": {
                 "type": "object",
                 "properties": {
-                    "input": {"type": "string", "description": "Source image alias or path"},
+                    "media": {"type": "string", "description": "Source image alias or path"},
                     "output": {"type": "string", "description": "Output path for result"},
                     "angle": {
                         "type": "string",
@@ -308,7 +325,7 @@ def GimbalShotSchema():
                     },
                     "seed": {"type": "integer", "default": -1}
                 },
-                "required": ["input", "output", "angle", "height", "distance"]
+                "required": ["media", "output", "angle", "height", "distance"]
             }
         }
     }

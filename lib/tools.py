@@ -30,6 +30,8 @@ from image_edit import (
     EditImage,
 )
 
+from camera import GimbalShotSchema, ApplyGimbalImage
+
 # =============================================================================
 # PARAMETER VALIDATION & FIXES
 # =============================================================================
@@ -65,7 +67,8 @@ class ToolHandler(object):
         GenerateVideoSchema(),
         GenerateTalkingVideoSchema(),
         VoiceDesignSchema(),
-        GenerateGraphicSchema()
+        GenerateGraphicSchema(),
+        GimbalShotSchema()
     ]
 
     def detect_asset_type(self, path, tool_name):
@@ -157,6 +160,7 @@ class ToolHandler(object):
             "design_voice": ["voice", "output", "seed"],
             "generate_graphic": ["prompt", "output", "width", "height", "seed", "target_video_size", "padding_style", "alias"],
             "generate_backdrop": ["media","zone","width","height","seed","char_image", "output", "alias"],
+            "apply_gimbal_image": ["media", "output", "angle", "height", "distance", "alias"]
         }
         
         filtered = {k: v for k, v in args.items() if k in VALID.get(tool_name, [])}
@@ -236,6 +240,11 @@ class ToolHandler(object):
             elif tool_name == "generate_backdrop":
                 filtered['output'] = f"{OUTPUT_DIR}/bd_{chosen_alias or ''}_{ts}.png"
                 result = GenerateZoneBackdrop(**filtered)
+                return self._handle_success(tool_name, filtered, chosen_alias, ctx, result, ext_override=".png")
+
+            elif tool_name == "apply_gimbal_image":
+                filtered['output'] = f"{OUTPUT_DIR}/camera_{chosen_alias or ''}_{ts}.png"
+                result = ApplyGimbalImage(**filtered)
                 return self._handle_success(tool_name, filtered, chosen_alias, ctx, result, ext_override=".png")
 
             return {"status": "error", "message": f"Unknown tool: {tool_name}"}
