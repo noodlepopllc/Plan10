@@ -258,26 +258,27 @@ class CameraGimbal:
         prompt = self.get_prompt()
         return editor.generate(prompt, [image], output, width, height, seed)
 
-def ApplyGimbalShot(input="", output="", angle="front", height="eye", distance="medium", seed=-1):
+def ApplyGimbalShot(media="", output="", angle="front", height="eye", distance="medium", seed=-1):
     AZ_MAP = {"front": 0, "front_right": 45, "right": 90, "back_right": 135, 
               "back": 180, "back_left": 225, "left": 270, "front_left": 315}
     EL_MAP = {"low": -30, "eye": 0, "high": 30, "very_high": 60}
     DIST_MAP = {"closeup": 0.6, "medium": 1.0, "wide": 1.8}
 
-    if not os.path.exists(input):
-        raise FileNotFoundError(f"Source image not found: {input}")
+    if not os.path.exists(media):
+        raise FileNotFoundError(f"Source image not found: {media}")
 
-    img = video_to_img(input)
+    img = video_to_img(media)
     
     # Your existing class handles LoRA attachment + Qwen pipeline
     gimbal = CameraGimbal(AZ_MAP.get(angle, 0), EL_MAP.get(height, 0), DIST_MAP.get(distance, 1.0))
     
     # generate() already saves to disk and returns a dict/status
-    result =  gimbal.generate(img, 'tmp.png', img.width, img.height, seed)
+    result =  gimbal.generate(img, output.replace('mp4','png'), img.width, img.height, seed)
     end_frame = video_to_img(result['output_path'])
 
-    return GenerateVideo(prompt='Camera moves to a new field of view', media=[img, end_Frame], output=output, 
+    GenerateVideo(prompt='Camera moves to a new field of view', media=[img, end_Frame], output=output.replace('png','mp4'), 
                   duration_sec=5, width=img.width, height=img.height, seed=seed)
+    return result
 
 def ApplyGimbalImage(media="", output="", angle="front", height="eye", distance="medium", seed=-1):
     AZ_MAP = {"front": 0, "front_right": 45, "right": 90, "back_right": 135, 
@@ -301,7 +302,7 @@ def GimbalShotSchema():
     return {
         "type": "function",
         "function": {
-            "name": "apply_gimbal_image",
+            "name": "apply_gimbal_shot",
             "description": "Reframe a character using a validated multi-angle LoRA. Generates a clean keyframe for video interpolation.",
             "parameters": {
                 "type": "object",
