@@ -185,7 +185,7 @@ def main():
             out.append(f'\n>> ALIAS: {motion_alias}')
             out.append(f'image_to_video using={base_alias}, prompt="{i2v_prompt}", duration_sec=2 Height: {HEIGHT}, Width: {WIDTH}, Seed: {SEED}')
 
-            motion_alias = f"vid_motion_medium{dialog_idx:03d}"
+            motion_alias = f"vid_motion_medium_{dialog_idx:03d}"
             i2v_prompt = f"{mood}, {final_motion}"
             out.append(f'\n>> ALIAS: {motion_alias}')
             out.append(f'image_to_video using={base_alias}_medium, prompt="{i2v_prompt}", duration_sec=2 Height: {HEIGHT}, Width: {WIDTH}, Seed: {SEED}')
