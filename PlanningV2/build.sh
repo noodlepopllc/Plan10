@@ -17,7 +17,7 @@ fi
 if [[ ! -f "$output/visual_prompt.txt" || ! -f "$output/action.txt" ]]; then
     # 2. Plain English Visual Expansion
     echo "creating $output/visual_prompt.txt"
-    python PlanningV2/expanders/beat_expansionV2.py "$(cat "$1")" 8 > $output/visual_prompt.txt
+    python PlanningV2/expanders/beat_expansionV2.py "$(cat "$1")" $output/registry.json 8 > $output/visual_prompt.txt
 
 fi
 

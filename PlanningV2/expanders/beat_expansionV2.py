@@ -7,7 +7,10 @@ def main():
         sys.exit(1)
         
     story = sys.argv[1]
-    location = sys.argv[2] if len(sys.argv) > 2 else "neutral interior space"
+    location = sys.argv[2] if len(sys.argv) > 2 else ""
+    if location:
+        with open(location, 'r') as r:
+        location = json.load(r).get('environment','an interior space')
     beats = int(sys.argv[3]) if len(sys.argv) > 3 else 14
     chars = sys.argv[4].split(",") if len(sys.argv) > 4 else ["Character A", "Character B"]
     char_names = ", ".join(chars)
