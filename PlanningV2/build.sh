@@ -17,7 +17,7 @@ fi
 if [[ ! -f "$output/visual_prompt.txt" || ! -f "$output/action.txt" ]]; then
     # 2. Plain English Visual Expansion
     echo "creating $output/visual_prompt.txt"
-    python PlanningV2/expanders/beat_expansionV2.py "$(cat "$1")" > $output/visual_prompt.txt
+    python PlanningV2/expanders/beat_expansionV2.py "$(cat "$1")" 8 > $output/visual_prompt.txt
 
 fi
 
@@ -29,7 +29,7 @@ fi
 if [[ ! -f "$output/dialog.txt"  ]]; then
     # 3. Generate Dialog (EXACTLY as you had it)
     echo "creating $output/dialog.txt"
-    DIALOG_PROMPT=$(python PlanningV2/expanders/dialog_headshotV2.py "$1" $output/registry.json )
+    DIALOG_PROMPT=$(python PlanningV2/expanders/dialog_headshotV2.py "$1" $output/registry.json 8)
     python lib/qwen_llm.py -P "$DIALOG_PROMPT" | tail -n +2 > $output/dialog.txt
 fi
 
