@@ -9,6 +9,14 @@ ALLOWED_MOODS = [
 ]
 MOOD_LIST_STR = ", ".join(ALLOWED_MOODS)
 
+# ✅ PRE-COMPUTE PACING RULES (avoids f-string parsing errors)
+DYNAMIC_PACING = {
+    'competitive': 'interruptions, sharp turns, shorter lines, defensive postures',
+    'cooperative': 'overlapping support, longer explanations, shared pauses, reassuring gestures',
+    'defensive': 'evasive answers, delayed reactions, frequent bracketed beats, hesitant pacing',
+    'persuasive': 'rhetorical questions, steady eye contact, gradual escalation, confident framing'
+}
+
 def main():
     if len(sys.argv) < 3:
         print("Usage: python dialog_gen.py scene.txt registry.txt beats [goal_a] [goal_b] [dynamic]", file=sys.stderr)
@@ -36,6 +44,9 @@ def main():
     with open(scene_path) as f:
         scene = f.read().strip()
 
+    # ✅ Resolve pacing outside the f-string
+    pacing_rule = DYNAMIC_PACING.get(dynamic, "balanced tension")
+
     prompt = f"""Generate exactly {beats} dialog/reaction beats for this scene.
 OUTPUT FORMAT (STRICT):
 {name1}: <mood> <spoken line OR [nonverbal action]>
@@ -58,12 +69,7 @@ RULES:
 - Structure the arc naturally: Establish → Push/Counter → Peak/Turn → Resolve/Linger.
 - At least 30% of beats must be bracketed nonverbal reactions: [nods slowly], [looks away, exhales], [tightens jaw], etc.
 - Spoken lines: natural conversational length. Let TTS handle pacing.
-- Dynamic pacing: {dynamic} → {
-    'competitive': 'interruptions, sharp turns, shorter lines, defensive postures',
-    'cooperative': 'overlapping support, longer explanations, shared pauses, reassuring gestures',
-    'defensive': 'evasive answers, delayed reactions, frequent bracketed beats, hesitant pacing',
-    'persuasive': 'rhetorical questions, steady eye contact, gradual escalation, confident framing'
-  }.get(dynamic, 'balanced tension')
+- Dynamic pacing: {dynamic} → {pacing_rule}
 - Match goals: Every line either advances a goal, defends against pressure, or reacts to a shift.
 - Setting influences tone and word choice naturally.
 
