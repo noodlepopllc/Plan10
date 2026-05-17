@@ -3,6 +3,7 @@ import json
 import sys
 import re
 import os
+import math
 
 sys.path.append('./lib')
 from config import load_environ
@@ -114,27 +115,20 @@ def main():
         if motion_prompt:
             clean_motion = re.sub(r'^\w+:\s*', '', motion_prompt).strip()
             action_parts.append(clean_motion)
-        '''
-        action_parts.extend([
-            "mouth completely closed and still",
-            "lips sealed shut",
-            "zero lip motion",
-            "NO text overlay",
-            "NO speech animation"
-        ])
-        '''
+
         action = ", ".join([p for p in action_parts if p])
         
         alias = f"action_{action_idx:03d}"
         out.append(f'\n>> ALIAS: {alias}')
         out.append(f'composite_scene combining={backdrop}, {char_refs}, shot_type="{shot_type}", action="{action}" Height: {HEIGHT}, Width: {WIDTH}, Seed: {SEED}')
         
+        duration = math.ceil(beat.get('duration',5.0))
         # Optional I2V motion pass
         if motion_prompt and beat.get("motion_type") != "static" and not images_only:
             motion_alias = f"vid_action_{action_idx:03d}"
             motion_prompt_clean = re.sub(r'^\w+:\s*', '', motion_prompt).strip()
             out.append(f'\n>> ALIAS: {motion_alias}')
-            out.append(f'image_to_video using={alias}, prompt="{motion_prompt_clean}, subtle camera drift, preserve facial expression", duration_sec=5 Height: {HEIGHT}, Width: {WIDTH}, Seed: {SEED}')
+            out.append(f'image_to_video using={alias}, prompt="{motion_prompt_clean}, subtle camera drift, preserve facial expression", duration_sec={duration} Height: {HEIGHT}, Width: {WIDTH}, Seed: {SEED}')
         
         action_idx += 1
 
