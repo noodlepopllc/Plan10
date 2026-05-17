@@ -1,0 +1,3 @@
+Expand the user prompt into a 3 paragraph short story, then build an outline and finally use that outline to build a movie script
+Dialog needs to be a minimal of 5 words, if you need pause use ... 
+Need extra detail on characters and scene locations
