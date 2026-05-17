@@ -8,21 +8,22 @@ Code
 {
   "characters": [
     {
+      "appearance_prompt": "<identity-locked, 35+ words>",
       "id": 1,
       "name": "<character name>",
       "alias_slug": "<lowercase, underscore-separated slug>",
       "voice": "<gender, age, pitch[, accent][, whisper]>",
       "background_zone": "<unique architectural anchor>",
-      "zone_prompt": "<environment with anchor injected>",
-      "appearance_prompt": "<identity-locked, 35+ words>"
+      "zone_prompt": "<environment with anchor injected>"
+
     }
   ],
   "scenes": [
     {
+      "environment": "<45+ word cinematic environment prompt>",
       "scene_id": 1,
       "scene_alias": "<lowercase, underscore-separated slug>",
       "environment_alias": "<lowercase, underscore-separated slug>",
-      "environment": "<45+ word cinematic environment prompt>",
       "zones": [
         {
           "zone_id": 1,
@@ -114,48 +115,32 @@ Extract every explicit descriptor:
     clothing
     accessories
 
-Never invent traits.
-Never omit explicit descriptors.
-Framing
-
-    1:1 square
-    Neutral relaxed stance
-    3/4 or waist‑up
-    Flat even studio lighting
-    No props
-    No motion blur
-
 Type‑Specific Rules
 
 Apply exactly one:
 Female humans
-
     stunning, captivating, elegant, alluring
     tight‑fitting, low‑cut, sheer, cropped, high‑slit, backless
     accentuated curves, slim waist, long legs
     polished hair/makeup
 
 Male humans
-
     unassuming, bookish, soft‑featured, slight build
     ill‑fitting blazer, buttoned shirt, thick‑rimmed glasses, slouchy cardigan
     reserved posture, avoiding eye contact, fidgety hands
 
 Androids
-
     precision‑engineered, seamless chassis, glowing accents
     tight synthetic armor
     no pores, no organic asymmetry
 
 Animorphic
-
     striking anthropomorphic form
     expressive animal features
     minimal/form‑fitting outfits
     clean fur/feather/scale rendering
 
 Color Harmony
-
     Environment defines base palette
     Character outfit uses complementary colors
     High chroma separation
