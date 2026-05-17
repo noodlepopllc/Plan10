@@ -25,7 +25,7 @@ Each beat MUST follow this structure:
   "type": "action" | "dialog",
   "visible_chars": [<character_id>, ...],
   "text": <string or null>,              // dialog only
-  "facial_action": <string or null>,     // dialog only
+  "facial_mood": <string>,   // MUST be one of the allowed tokens
   "starting_pose": <string or null>,     // action only
   "motion_prompt": <string or null>,     // action only
   "shot_type": "closeup" | "medium" | "wide" | "two_shot",
@@ -58,6 +58,42 @@ Dialog beats MUST:
 - set shot_type = "closeup".
 - set motion_type = "static".
 - set duration = null (Python will fill this later).
+
+========================
+FACIAL MOOD RULES (MANDATORY)
+========================
+
+For every dialog beat, you MUST include a field:
+
+  "facial_mood": <string>
+
+This field MUST be EXACTLY ONE of the following values:
+
+  "nervous",
+  "reassuring",
+  "relieved",
+  "playful",
+  "frustrated",
+  "confident",
+  "skeptical",
+  "encouraging",
+  "curious",
+  "supportive",
+  "shy",
+  "amused",
+  "eager",
+  "patient",
+  "defensive",
+  "overwhelmed",
+  "stern",
+  "neutral"
+
+RULES:
+- You MUST choose the mood that best matches the emotional tone of the dialog line.
+- You MUST NOT invent new moods.
+- You MUST NOT output descriptions, commas, or modifiers.
+- You MUST output ONLY the exact token from the list above.
+- If the dialog tone is ambiguous, use "neutral".
 
 ========================
 OUTPUT RULES

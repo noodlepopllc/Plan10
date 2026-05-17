@@ -115,6 +115,8 @@ Extract every explicit descriptor:
     clothing
     accessories
 
+    allow invention if not specified
+
 Type‑Specific Rules
 
 Apply exactly one:

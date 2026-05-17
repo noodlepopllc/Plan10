@@ -95,7 +95,7 @@ def get_required_moods(beats, char_slugs):
     return required
 
 def get_facial_mood(beat):
-    raw = beat.get("facial_action")
+    raw = beat.get("facial_mood")
     if not raw or raw is None:
         return "neutral"
     return raw.split(",")[0].strip().lower()
@@ -208,7 +208,7 @@ def main():
         if btype == "dialog":
             char_name = beat["visible_chars"][0]
             slug = slugify(char_name)
-            mood = beat.get("facial_action", "neutral").split(",")[0].strip().lower()
+            mood = beat.get("facial_mood", "neutral").split(",")[0].strip().lower()
             base_alias = f"compd_{scene_slug}_{slug}_{mood}"
 
             text = beat.get("text", "")

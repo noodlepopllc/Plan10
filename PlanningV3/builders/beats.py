@@ -51,7 +51,7 @@ if __name__ == '__main__':
         print("SCENE ",i+1)
         system_prompt = Path('./PlanningV3/prompts/beats.txt').read_text().strip()
         for x in range(5):
-            data = "".join([x.strip() for x in llm_analyze_media('',scene['scene_text'],system_prompt,8192)['analysis']])
+            data = llm_analyze_media('',scene['scene_text'],system_prompt,8192)['analysis']
             try:
                 a = loads(data)
                 scenes["scenes"].append({(i+1): a})
