@@ -6,7 +6,7 @@ output="$2/output"
 
 source .env
 
-if [-z $SEED ];then
+if [ -z $SEED ];then
     export SEED=$RANDOM
 fii
 
