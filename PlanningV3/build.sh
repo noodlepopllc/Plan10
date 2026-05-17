@@ -27,10 +27,16 @@ if [[ ! -f "$output/beats.json" ]]; then
     python PlanningV3/builders/beats.py $output/screenplay.txt $output/beats.json
 fi
 
-if [[ ! -f "$output/scene$2.txt" ]]; then
-    echo "creating $output/identity$2.txt"
-    python PlanningV3/expanders/identity.py $output/registry.json $2 > "$3/scene$2.txt"
-    python PlanningV3/expanders/scene.py $output/registry.json $output/beats.json $2 >> "$3/scene$2.txt"
+if [[ ! -f "$3/identities.txt" ]]; then
+    python PlanningV3/expanders/identity.py $output/registry.json > "$3/identities.txt"
+fi
+
+if [[ ! -f "$3/scene$2.txt" ]]; then
+    echo "creating $3/scene$2.txt"
+
+    python PlanningV3/expanders/identity.py $output/registry.json $2 > "$3/locations$2.txt"
+    python PlanningV3/expanders/scene.py $output/registry.json $output/beats.json $2 > "$3/shots$2.txt"
+    cat "$3/identities.txt" "$3/locations$2.txt"  "$3/shots$2.txt" > "$3/scene$2.txt"
 fi
 
 echo "✅ Pipeline complete: $3"
