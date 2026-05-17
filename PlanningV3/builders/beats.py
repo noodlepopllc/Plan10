@@ -1,9 +1,10 @@
 import re
 
 SCENE_MARKER_RE = re.compile(
-    r'^\*\*SCENE\s+\d+.*\*\*$',  # matches **SCENE 1**, **SCENE 2 - TITLE**, etc.
+    r'^\*\*SCENE\s+(?:\d+|START)(?:[^\*]*)\*\*$',
     re.MULTILINE
 )
+
 
 def iter_scenes_by_marker(script_text: str):
     """
