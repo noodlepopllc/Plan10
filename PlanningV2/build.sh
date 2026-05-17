@@ -29,7 +29,7 @@ fi
 if [[ ! -f "$output/dialog.txt"  ]]; then
     # 3. Generate Dialog (EXACTLY as you had it)
     echo "creating $output/dialog.txt"
-    DIALOG_PROMPT=$(python PlanningV2/expanders/dialog_headshot.py "$1" $output/registry.json 8)
+    DIALOG_PROMPT=$(python PlanningV2/expanders/dialog_headshotV2.py "$1" $output/registry.json 8)
     python lib/qwen_llm.py -P "$DIALOG_PROMPT" | tail -n +2 > $output/dialog.txt
 fi
 
