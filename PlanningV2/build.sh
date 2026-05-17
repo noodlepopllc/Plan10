@@ -4,7 +4,11 @@ set -euo pipefail
 mkdir -p $2/output
 output="$2/output"
 
-export SEED=$RANDOM
+source .env
+
+if [-z $SEED ];then
+    export SEED=$RANDOM
+fii
 
 touch $output/empty.txt
 
