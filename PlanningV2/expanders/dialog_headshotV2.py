@@ -73,10 +73,6 @@ RULES:
 - Match goals: Every line either advances a goal, defends against pressure, or reacts to a shift.
 - Setting influences tone and word choice naturally.
 - Output EXACTLY {beats} lines for DIALOG. One utterance = one line.
-- For ACTIONS: Generate complete narrative steps. If a movement naturally spans multiple micro-actions, keep them together on one line.
-- Action line format: [BEAT N] [CHAR] <name> | [ACTION] <complete motion phrase> | [DURATION] <total seconds> | [HOLD] <stable end pose>
-- If the sequence naturally requires more than {beats} action steps, continue numbering past {beats}. We will segment downstream.
-- NEVER cut a motion mid-phrase. "Steps forward, pauses, turns" = ONE action line.
 
 EXAMPLE:
 {name1}: confident You knew about this from the start.

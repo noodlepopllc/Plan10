@@ -42,7 +42,6 @@ RULES:
 - Escalate physically: proximity → posture shift → weight transfer → eye contact/gaze break.
 - NO camera jargon. Describe ONLY visible screen content.
 - Output ONLY the formatted lines. NO markdown, NO extra text, NO explanations.
-- Output EXACTLY {beats} lines for DIALOG. One utterance = one line.
 - For ACTIONS: Generate complete narrative steps. If a movement naturally spans multiple micro-actions, keep them together on one line.
 - Action line format: [BEAT N] [CHAR] <name> | [ACTION] <complete motion phrase> | [DURATION] <total seconds> | [HOLD] <stable end pose>
 - If the sequence naturally requires more than {beats} action steps, continue numbering past {beats}. We will segment downstream.
