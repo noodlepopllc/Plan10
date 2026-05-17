@@ -3,9 +3,23 @@ import sys
 
 SCHEMA = '''
 {
-  "metadata": { "story_context": "string", "execution_note": "Pipeline reorders beats by generation dependencies (assets → composites → voices → dialog → video). Original narrative sequence is preserved in the 'beats' array via the 'order' field.", "flow_rationale": "string" },
+  "metadata": { "story_context": "string", "execution_note": "Pipeline reorders beats by generation dependencies. Original sequence preserved via 'order'.", "flow_rationale": "string" },
   "beats": [
-    { "order": "number", "type": "dialog or action", "visible_chars": "array of 1 or 2 integers", "text": "string or null", "facial_action": "string or null", "starting_pose": "string or null", "motion_prompt": "string or null", "shot_type": "string", "motion_type": "string", "motion_target": "string or null", "base_composite": "string or null", "props": "string or null", "duration": "number (seconds, 1.0-5.0)" }
+    { 
+      "order": "number", 
+      "type": "dialog or action", 
+      "visible_chars": "array of 1 or 2 integers", 
+      "text": "string or null", 
+      "facial_action": "string or null", 
+      "starting_pose": "string or null", 
+      "motion_prompt": "string or null", 
+      "shot_type": "string", 
+      "motion_type": "string", 
+      "motion_target": "string or null", 
+      "base_composite": "string or null", 
+      "props": "string or null", 
+      "duration": "number or null (seconds; ONLY for type='action'; null for dialog)" 
+    }
   ]
 }
 '''
@@ -48,11 +62,11 @@ STRICT GENERATION RULES:
    • "teacher", "woman in blazer", "instructor", "glasses" → visible_chars: [1]
    • "assistant", "kitten dress", "red dress", "cat ears" → visible_chars: [2]
    • If both described → visible_chars: [1, 2]
-4. DURATION EXTRACTION (APPLY TO ALL BEATS):
-   • If action input contains `[DURATION] X.X`, extract as float: "duration": X.X
-   • If missing in action input, default: "duration": 3.0
-   • For dialog beats: calculate "duration" = max(1.5, len(text.split()) * 0.35)
-   • MUST output "duration" as a NUMBER in every beat. NEVER as string.
+4. DURATION EXTRACTION (ACTION BEATS ONLY):
+   • If type="action" AND input contains `[DURATION] X.X`, extract as float: "duration": X.X
+   • If type="action" AND duration missing, default: "duration": 3.0
+   • If type="dialog", SET "duration": null (audio length determines timing; NEVER infer or calculate)
+   • MUST output "duration" as NUMBER or null. NEVER as string.
 5. ACTION MOTION EXTRACTION (APPLY ONLY IF ACTION INPUT IS PROVIDED):
    • Convert physical actions into EXPLICIT, TAGGED kinematic instructions.
    • Assign to motion_prompt: "Teacher: [verb], [verb] | Assistant: [verb], [verb]"
