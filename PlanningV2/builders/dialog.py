@@ -5,6 +5,9 @@ sys.path.append('./lib')
 from config import load_environ
 load_environ()
 
+load_environ()
+WIDTH = int(os.environ.get("WIDTH", "832"))
+HEIGHT = int(os.environ.get("HEIGHT", "480"))
 SEED = int(os.environ.get("SEED","-1"))
 
 MOOD_REACTIONS = {
@@ -123,7 +126,7 @@ def main():
         backdrop = zone_backdrop_map.get(slug, master_env_alias)
         
         out.append(f'\n>> ALIAS: {alias}')
-        out.append(f'composite_scene combining={backdrop}, char_{slug}, shot_type="closeup", action="{action}" Seed: {SEED}')
+        out.append(f'composite_scene combining={backdrop}, char_{slug}, shot_type="closeup", action="{action}" Height: {HEIGHT}, Width: {WIDTH}, Seed: {SEED}')
 
     for slug, mood in sorted(required):
         alias = f"compd_{slug}_{mood}_medium"
@@ -132,7 +135,7 @@ def main():
         backdrop = zone_backdrop_map.get(slug, master_env_alias)
         
         out.append(f'\n>> ALIAS: {alias}')
-        out.append(f'composite_scene combining={backdrop}, char_{slug}, shot_type="medium", action="{action}" Seed: {SEED}')
+        out.append(f'composite_scene combining={backdrop}, char_{slug}, shot_type="medium", action="{action}" Height: {HEIGHT}, Width: {WIDTH}, Seed: {SEED}')
     
     # Exit early if just previewing headshots
     if headshots_only:
