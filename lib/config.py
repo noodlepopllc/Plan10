@@ -19,7 +19,8 @@ def load_config():
         "IMAGE_GEN": "KLEIN",
         "IMAGE_EDIT": "KLEIN",
         "WIDTH": "832",
-        "HEIGHT": "480"
+        "HEIGHT": "480",
+        "SEED": "122333"
     }
     if os.path.exists(CONFIG_FILE):
         try:
