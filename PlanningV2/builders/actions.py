@@ -122,7 +122,7 @@ def main():
         out.append(f'\n>> ALIAS: {alias}')
         out.append(f'composite_scene combining={backdrop}, {char_refs}, shot_type="{shot_type}", action="{action}" Height: {HEIGHT}, Width: {WIDTH}, Seed: {SEED}')
         
-        duration = math.ceil(beat.get('duration',5.0))
+        duration = math.ceil(float(beat.get('duration',5.0)))
         # Optional I2V motion pass
         if motion_prompt and beat.get("motion_type") != "static" and not images_only:
             motion_alias = f"vid_action_{action_idx:03d}"
