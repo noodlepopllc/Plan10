@@ -70,7 +70,7 @@ def main():
             out.append(f'\n>> ALIAS: char_{slug}')
             out.append(
                 f'create_character_sheet prompt="{c.get("appearance_prompt", "")}" '
-                f'Height: {HEIGHT}, Width: {WIDTH}, Seed: {SEED}'
+                f'Height: 1328, Width: 1328, Seed: {SEED}'
             )
 
             # Voice design
@@ -93,7 +93,7 @@ def main():
     out.append(f'\n>> ALIAS: {env_alias}')
     out.append(
         f'create_background prompt="{env_prompt}" '
-        f'Height: {HEIGHT}, Width: {WIDTH}, Seed: {SEED}'
+        f'Height: 1328, Width: 1328, Seed: {SEED}'
     )
 
     # ------------------------------------------------------------
