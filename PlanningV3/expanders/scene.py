@@ -204,7 +204,7 @@ def main():
                 out.append(f'\n>> ALIAS: {motion_alias}')
                 out.append(
                     f'image_to_video using={alias}_medium, prompt="{motion}", '
-                    f'duration_sec=2 Height: {HEIGHT}, Width: {WIDTH}, Seed: {SEED}'
+                    f'duration_sec=3 Height: {HEIGHT}, Width: {WIDTH}, Seed: {SEED}'
                 )
 
     if headshots_only or images_only:
