@@ -191,7 +191,23 @@ def main():
             f'action="{cues}, mouth closed, no props" Height: {HEIGHT}, Width: {WIDTH}, Seed: {SEED}'
         )
 
-    if headshots_only:
+        if not headshots_only:
+            out.append(f'\n>> ALIAS: {alias}_medium')
+            out.append(
+                f'composite_scene combining={backdrop}, char_{slug}, shot_type="medium", '
+                f'action="{cues}" Height: {HEIGHT}, Width: {WIDTH}, Seed: {SEED}'
+            )
+        
+            if not images_only:
+                motion_alias = f"vid_{scene_slug}_{slug}_{mood}_medium"
+                motion = ",".join(MOOD_REACTIONS.get(mood, MOOD_REACTIONS["neutral"]))
+                out.append(f'\n>> ALIAS: {motion_alias}')
+                out.append(
+                    f'image_to_video using={alias}_medium, prompt="{motion}", '
+                    f'duration_sec=2 Height: {HEIGHT}, Width: {WIDTH}, Seed: {SEED}'
+                )
+
+    if headshots_only or images_only:
         print("\n".join(out))
         return
 
@@ -220,13 +236,7 @@ def main():
                 f'prompt="natural lip sync, no head motion" Height: {HEIGHT}, Width: {WIDTH}, Seed: {SEED}'
             )
 
-            if not images_only:
-                motion_alias = f"vid_{scene_slug}_{idx:03d}"
-                out.append(f'\n>> ALIAS: {motion_alias}')
-                out.append(
-                    f'image_to_video using={base_alias}, prompt="{mood}, subtle motion", '
-                    f'duration_sec=2 Height: {HEIGHT}, Width: {WIDTH}, Seed: {SEED}'
-                )
+
 
         # -------------------------
         # ACTION
