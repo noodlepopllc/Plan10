@@ -52,16 +52,18 @@ if __name__ == "__main__":
     p = argparse.ArgumentParser()
     p.add_argument('prompt', nargs='?', default="Generate a cyberpunk city at night.")
     p.add_argument('--max-steps', '-s', type=int, default=5)
-    p.add_argument('--context', '-K', action='store_true', help='Keep existing context/assets')
+    p.add_argument('--context', '-K', type=str, default=None, help='Keep existing context/assets')
     p.add_argument('-F', '--fileprompt', action='store_true')
     args = p.parse_args()
 
+    CONTEXT_FILE = args.context
+
     if args.fileprompt:
         OUTPUT_DIR = args.prompt.replace('.txt','')
-        CONTEXT_FILE = f"{OUTPUT_DIR}/context.json"
     else:
         OUTPUT_DIR = "outputs"
-        CONTEXT_FILE = f"{OUTPUT_DIR}/context.json"
+
+    CONTEXT_FILE = args.context if args.context else f"{OUTPUT_DIR}/context.json"
 
     outdir = Path(OUTPUT_DIR)
     outdir.mkdir(exist_ok=True)
