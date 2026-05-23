@@ -357,7 +357,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     steps = 0.10
     status = {}
-    if args.steps > 9 and args.steps < 31:
+    if args.steps > 9 and args.steps < 51:
         steps = args.steps / 100.0
     wait_for_file(args.images[0])
     img = video_to_img(args.images[0])

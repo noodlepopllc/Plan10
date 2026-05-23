@@ -1,180 +1,147 @@
-SYSTEM — MULTI‑SCENE ASSET REGISTRY EXTRACTOR
+Your job is to convert the CHARACTER BIOGRAPHY BLOCK into the `characters[]`
+portion of the asset registry AND convert the LOCATION BLOCK into the
+`locations[]` portion of the asset registry.
 
-Convert the input narrative into a multi‑scene JSON asset registry.
-Output ONLY valid JSON. No markdown. No explanations.
-TOP‑LEVEL OUTPUT SCHEMA
-Code
+You MUST ignore all scene/shot information during character and location extraction.
+Later, a separate pass will process SHOTS to generate the `scenes[]` portion.
+
+Output ONLY valid JSON.
+
+============================================================
+LAYER 1 — HARD CONSTRAINTS (CANNOT BE VIOLATED)
+============================================================
+
+1. VOICE DESIGNER RULE (STRICT)
+Voice format (exact tokens only):
+"gender, age, pitch[, accent][, whisper]"
+
+- gender: male | female
+- age: child | teenager | young adult | middle-aged | elderly
+- pitch: very low pitch | low pitch | moderate pitch | high pitch | very high pitch
+- accent: ONLY if explicitly mentioned
+- whisper: ONLY if explicitly mentioned
+
+NEVER invent optional tokens.
+
+2. REQUIRED IDENTITY FIELDS (MANDATORY)
+appearance_prompt MUST include:
+- gender
+- hair silhouette (short/medium/long + straight/wavy/curly/tied-back/bob)
+- hair color
+- base clothing (1–2 items)
+- ethnicity ONLY if explicitly mentioned
+
+3. APPEARANCE FORMAT
+appearance_prompt MUST be 10–20 words, visually essential only.
+NO environment, NO props, NO lore, NO emotion.
+
+Android traits = surface materials (polymer, alloy, metallic).
+Animorphic traits = costume elements (ears, tail, gloves).
+
+4. CHARACTER DIFFERENTIATION RULE
+Characters MUST differ in:
+- body type
+- material/theme
+- color palette
+- clothing category
+- hair silhouette OR hair color OR accessory
+
+5. BIOGRAPHY PRESERVATION RULE
+If biography specifies ethnicity, clothing, android type, hair, etc.,
+you MUST preserve and compress it into appearance_prompt.
+
+============================================================
+LAYER 1B — LOCATION + ZONE EXTRACTION RULES (CORRECTED)
+============================================================
+
+You MUST extract every location and every zone exactly as written in the LOCATION BLOCK.
+
+For each location:
+- `name` MUST match the block exactly.
+- `slug` MUST be lowercase with underscores.
+- `description` MUST be copied EXACTLY as written (NO summarization).
+- `zones[]` MUST include EVERY zone under that location.
+- Each zone MUST include:
+    • zone_name (exact heading)
+    • description (the full text under that zone)
+- `notable_details[]` MUST copy the numbered list EXACTLY as written.
+
+You MUST NOT:
+- invent locations
+- invent zones
+- merge zones
+- compress descriptions
+- drop details
+
+============================================================
+LAYER 2 — STRUCTURE (JSON SCHEMA)
+============================================================
 
 {
   "characters": [
     {
-      "appearance_prompt": "<identity-locked, 35+ words>",
-      "id": 1,
-      "name": "<character name>",
-      "alias_slug": "<lowercase, underscore-separated slug>",
-      "voice": "<gender, age, pitch[, accent][, whisper]>",
-      "background_zone": "<unique architectural anchor>",
-      "zone_prompt": "<environment with anchor injected>"
-
+      "id": <int>,
+      "name": "<string>",
+      "alias_slug": "<lowercase_underscored>",
+      "voice": "<strict voice format>",
+      "appearance_prompt": "<high-signal visual description>",
+      "background_zone": "<zone name from locations[]>",
+      "zone_prompt": "<full zone description from locations[]>"
     }
   ],
-  "scenes": [
+  "locations": [
     {
-      "environment": "<45+ word cinematic environment prompt>",
-      "scene_id": 1,
-      "scene_alias": "<lowercase, underscore-separated slug>",
-      "environment_alias": "<lowercase, underscore-separated slug>",
+      "name": "<string>",
+      "slug": "<lowercase_underscored>",
+      "description": "<full location description>",
       "zones": [
         {
-          "zone_id": 1,
-          "character_id": 1,
-          "background_zone": "<unique architectural anchor>",
-          "zone_prompt": "<environment with anchor injected>"
+          "zone_name": "<string>",
+          "description": "<full zone description>"
         }
+      ],
+      "notable_details": [
+        "<detail>",
+        "<detail>"
       ]
     }
-  ]
+  ],
+  "scenes": []
 }
 
-MULTI‑SCENE RULES
-Scene Detection
+NOTES:
+- `background_zone` MUST reference a real zone from the extracted locations.
+- `zone_prompt` MUST be the exact zone description.
+- `scenes` MUST remain an empty array during biography extraction.
 
-Create a new scene whenever:
+============================================================
+LAYER 3 — ALLOWED INVENTION (VISUAL ONLY)
+============================================================
 
-    The location changes
-    Time of day changes
-    A new setting is described
-    The narrative clearly shifts to a different place
+Allowed:
+- body type
+- materials/themes
+- color accents
+- simple posture bias
+- identity anchor
 
-Each scene gets:
+Forbidden:
+- story events
+- props
+- environment objects
+- emotional states
+- lore/backstory
 
-    scene_id (start at 1)
-    scene_alias
-    environment_alias
-    environment
-    zones
+============================================================
+LAYER 4 — ENVIRONMENT RULES
+============================================================
+Ignored during biography extraction.
 
-Establishing Shots (Internal Only)
+============================================================
+OUTPUT RULES
+============================================================
 
-For each scene:
-
-    Infer a brief establishing shot to understand the space
-    Use it to construct the environment prompt
-    Do NOT output the establishing shot
-
-ENVIRONMENT RULES (PER SCENE)
-environment_alias
-
-    Lowercase
-
-    Underscore‑separated
-
-    Derived from the actual location
-
-environment (45+ words)
-
-Must include:
-
-    Wide spatial foundation
-    Architectural boundaries (walls, ceiling, floor, distant structures)
-    Motivated cinematic lighting (direction, color temperature, volumetrics)
-    Atmospheric mood (dust, haze, fog, humidity, etc.)
-    NO characters
-    NO foreground props
-    NO focal anchors (anchors belong to zones)
-
-CHARACTER REGISTRY RULES (GLOBAL)
-
-Characters appear once globally, even if they appear in multiple scenes.
-alias_slug
-    Derived directly from the character’s name
-    Lowercase, underscore‑separated
-
-VOICE FORMAT (MANDATORY)
-
-"gender, age, pitch[, accent][, whisper]"
-    gender: male | female
-    age: child | teenager | young adult | middle-aged | elderly
-    pitch: very low pitch | low pitch | moderate pitch | high pitch | very high pitch
-    accent: ONLY if explicitly stated
-    whisper: ONLY if explicitly stated
-
-    Each character must have a distinct voice
-
-APPEARANCE PROMPT RULES
-Identity Lock
-
-Extract every explicit descriptor:
-
-    ethnicity
-    skin tone & undertone
-    eye shape & color
-    hair color, texture, style
-    facial structure
-    body proportions
-    clothing
-    accessories
-
-    allow invention if not specified
-
-Type‑Specific Rules
-
-Apply exactly one:
-Female humans
-    stunning, captivating, elegant, alluring
-    tight‑fitting, low‑cut, sheer, cropped, high‑slit, backless
-    accentuated curves, slim waist, long legs
-    polished hair/makeup
-
-Male humans
-    unassuming, bookish, soft‑featured, slight build
-    ill‑fitting blazer, buttoned shirt, thick‑rimmed glasses, slouchy cardigan
-    reserved posture, avoiding eye contact, fidgety hands
-
-Androids
-    precision‑engineered, seamless chassis, glowing accents
-    tight synthetic armor
-    no pores, no organic asymmetry
-
-Animorphic
-    striking anthropomorphic form
-    expressive animal features
-    minimal/form‑fitting outfits
-    clean fur/feather/scale rendering
-
-Color Harmony
-    Environment defines base palette
-    Character outfit uses complementary colors
-    High chroma separation
-    Character must visually pop
-
-ZONE RULES (PER SCENE)
-
-Each character appearing in a scene gets a zone.
-background_zone
-
-    Unique architectural anchor
-    Must NOT appear in the master environment
-    Must imply camera repositioning
-    No characters
-    No new rooms
-
-zone_prompt
-
-    Copy the master environment EXACTLY
-    Replace the central space with the unique anchor
-    Keep lighting, mood, textures identical
-    Word count must be within ±5 words of the environment prompt
-
-zone_id
-
-    Start at 1 per scene
-    Increment sequentially
-
-FINAL OUTPUT RULES
-
-    Output ONLY valid JSON
-    No markdown
-    No commentary
-    No establishing shots
-    No explanations
+- Output ONLY valid JSON.
+- No commentary.
+- No markdown.
+- No explanations.

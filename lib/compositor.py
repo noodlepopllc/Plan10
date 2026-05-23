@@ -22,13 +22,42 @@ def CompositeScene(
 ):
     # 1. Validate
     if not os.path.exists(background_path): raise FileNotFoundError(f"Background not found: {background_path}")
+
+    # 2. Extract metadata (source of truth)
+    bg_desc = Image.open(background_path).info.get('Description', 'cinematic environment')
+
+    # Establishing shot mode (no characters)
+    if len(characters) == 0:
+        task = (
+            f"REF 1: {bg_desc}. "
+            f"{shot_type.upper()} SHOT of the environment. "
+            f"Camera focus instruction: {action}. "
+            "No characters, no silhouettes, no human forms. "
+            "Preserve exact rendering style of REF 1. "
+            "ALLOW CROPPING of background elements naturally."
+        )
+
+        print(f'\n📝 PROMPT (establishing shot):\n{task}\n')
+
+        status = EditImage(task, [background_path], output, width, height, seed)
+
+        img = Image.open(output)
+        meta = PngImagePlugin.PngInfo()
+        meta.add_text("Prompt", task)
+        meta.add_text("ShotType", "establishing")
+        img.save(output, pnginfo=meta)
+
+        status.update({"action": action, "prompt": task})
+        if os.environ['BATCH'] == 'False':
+            analysis = AnalyzeImage(output, "Briefly describe this image, no more than 100 words")
+            status['description'] = analysis['analysis']
+        status['prompt'] = task
+        return status
+
     for c in characters:
         if not os.path.exists(c): 
             print(f"Character not found: {c}")
             raise FileNotFoundError(f"Character not found: {c}")
-
-    # 2. Extract metadata (source of truth)
-    bg_desc = Image.open(background_path).info.get('Description', 'cinematic environment')
     
     # Build character descriptions
     descriptions = []
@@ -125,30 +154,60 @@ def CompositeSceneSchema():
         "type": "function",
         "function": {
             "name": "composite_scene",
-            "description": "Composes 1 or 2 characters into a background reference for storyboarding. Automatically handles lighting matching, framing, and action-aware posing (Frame 0 anticipation) for downstream video generation.",
+            "description": (
+                "Composes 0, 1, or 2 characters into a background reference for storyboarding. "
+                "When characters are provided, shot_type controls character framing and action "
+                "describes anticipation posing. When no characters are provided, shot_type "
+                "controls environmental camera distance (e.g., wide, closeup) and action "
+                "describes the camera's focus target within the environment (e.g., 'focus on a can on the ground')."
+            ),
             "parameters": {
                 "type": "object",
                 "properties": {
                     "background_path": {
                         "type": "string",
-                        "description": "Path to the reference background image (must contain 'Description' metadata)."
+                        "description": (
+                            "Path to the reference background image (must contain 'Description' metadata). "
+                            "Always required."
+                        )
                     },
                     "characters": {
                         "type": "array",
                         "items": {"type": "string"},
-                        "minItems": 1,
+                        "minItems": 0,
                         "maxItems": 2,
-                        "description": "List of 1 or 2 paths to character reference images (must contain 'Description' metadata)."
+                        "description": (
+                            "List of 0 to 2 paths to character reference images. "
+                            "If 1–2 characters are provided, the shot is character‑focused. "
+                            "If 0 characters are provided, the shot becomes an environmental establishing shot "
+                            "and shot_type/action are reinterpreted accordingly."
+                        )
                     },
                     "shot_type": {
                         "type": "string",
-                        "enum": ["medium", "closeup", "profile_left", "profile_right", "ots", "two_shot", "wide"],
+                        "enum": [
+                            "medium",
+                            "closeup",
+                            "profile_left",
+                            "profile_right",
+                            "ots",
+                            "two_shot",
+                            "wide"
+                        ],
                         "default": "medium",
-                        "description": "Camera framing and composition type."
+                        "description": (
+                            "Camera framing. "
+                            "With characters: defines how characters are framed (e.g., medium, closeup, two_shot). "
+                            "Without characters: defines environmental camera distance (e.g., closeup of an object, wide establishing shot)."
+                        )
                     },
                     "action": {
                         "type": "string",
-                        "description": "Description of the 'anticipation pose' (Frame 0) for the characters. This defines the initial state for video motion (e.g., 'hair swaying back', 'weight shifted to step')."
+                        "description": (
+                            "With characters: describes the anticipation pose or micro‑action (Frame 0). "
+                            "Without characters: describes the camera's focus target or emphasis within the environment "
+                            "(e.g., 'focus on a can on the ground', 'focus on the neon sign')."
+                        )
                     },
                     "output": {
                         "type": "string",
@@ -171,10 +230,11 @@ def CompositeSceneSchema():
                         "description": "Output image height."
                     }
                 },
-                "required": ["background_path", "characters", "action"]
+                "required": ["background_path", "action"]
             }
         }
     }
+
 
 def GenerateBackdropSchema():
     return {

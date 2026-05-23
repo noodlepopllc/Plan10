@@ -101,6 +101,7 @@ class ToolHandler(object):
         return alias
 
     def resolve_asset(self, ref, ctx):
+        print('REFERENCE: ',ref)
         OUTPUT_DIR = os.environ['OUTPUT_DIR'] if 'OUTPUT_DIR' in os.environ else 'outputs'
         if not ref: return None
         ref = ref.strip('"').strip("'")
@@ -110,6 +111,8 @@ class ToolHandler(object):
         if ref in assets:
             p = assets[ref].get("path")
             return p if p and os.path.exists(p) else None
+        elif found_ref := [v['path'] for k, v in assets.items() if ref in v['path']]:
+            return found_ref[0]
         else: 
             alt = f'{OUTPUT_DIR}/{ref}'
             return alt if os.path.exists(alt) else None

@@ -3,7 +3,7 @@ You are an Asset Registry Extractor. Convert the input into a strict JSON map of
 SCHEMA:
 {
   "environment_alias": "<short, lowercase, underscore-separated slug matching the ACTUAL location>",
-  "environment": "<cinematic background prompt specifying spatial depth for character placement, motivated lighting, optics, and atmospheric mood>",
+  "environment": "<cinematic background prompt specifying spatial depth for character placement, motivated lighting, Panavision 70mm optics, and atmospheric mood>",
   "characters": [
     {
       "id": 1,

@@ -1,42 +1,29 @@
 #!/bin/bash
 set -euo pipefail
 
-mkdir -p $3/output
-output="$3/output"
-
-source .env
-
-if [[ -z $SEED ]]; then
-    export SEED=$RANDOM
-fi
-
-touch $output/empty.txt
+mkdir -p $2/output
+output="$2/output"
 
 if [[ ! -f "$output/screenplay.txt" ]]; then
-    python lib/qwen_llm.py -P "$(cat "$1")" -S PlanningV3/prompts/screenwriter.txt | tail -n +2 > $output/screenplay.txt
+    python PlanningV3/builders/scriptwriterV2.py $1 $output
 fi
 
 if [[ ! -f "$output/registry.json" ]]; then
     # 1. Asset Registry (unchanged)
     echo "creating $output/registry.json"
-    python lib/qwen_llm.py -P "$(cat "$output/screenplay.txt")" -S PlanningV3/prompts/assets.txt | tail -n +2 > $output/registry.json
+    python lib/qwen_llm.py -P "$(cat "$output/biography.txt")" -S PlanningV3/prompts/assets.txt | tail -n +2 > $output/registry.json
 fi
 
-if [[ ! -f "$output/beats.json" ]]; then
-    echo "creating $output/beats.json"
-    python PlanningV3/builders/beats.py $output/screenplay.txt $output/beats.json
+if [[ ! -f "$output/shots.json" ]]; then
+    python PlanningV3/builders/group_shot.py $output $output/shots.json
 fi
 
-if [[ ! -f "$3/identities.txt" ]]; then
-    python PlanningV3/expanders/identity.py $output/registry.json > "$3/identities.txt"
+if [[ ! -f "$output/assets$3.json" ]]; then
+    python PlanningV3/expanders/assets.py $output $3
 fi
 
-if [[ ! -f "$3/scene$2.txt" ]]; then
-    echo "creating $3/scene$2.txt"
-
-    python PlanningV3/expanders/identity.py $output/registry.json $2 > "$3/locations$2.txt"
-    python PlanningV3/expanders/scene.py $output/registry.json $output/beats.json $2 > "$3/shots$2.txt"
-    cat "$3/identities.txt" "$3/locations$2.txt"  "$3/shots$2.txt" > "$3/scene$2.txt"
+if [[ ! -f "$2/scene$3.txt" ]]; then
+    python PlanningV3/expanders/renderer.py $output $3 > $2/scene$3.txt
 fi
 
-echo "✅ Pipeline complete: $3"
+echo "✅ Pipeline complete: scene $3"

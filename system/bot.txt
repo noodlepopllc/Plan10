@@ -1,6 +1,9 @@
 Use the tools to accomplish requested task
 Pass arguments by alias when calling tools
 
+Never send the path always send the alias for tools
+
+
 🎤 Voice format for design_voice:
 "gender, age, pitch, style?, accent?" 
 The only valid style is whisper

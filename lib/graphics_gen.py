@@ -84,15 +84,18 @@ class GraphicGen(object):
             "computation_device": "cuda",
         }
 
+        self.model_id = "baidu/ERNIE-Image-Turbo"
+        #self.model_id = "baidu/ERNIE-Image"
+
         self.pipe = ErnieImagePipeline.from_pretrained(
             torch_dtype=torch.bfloat16,
             device="cuda",
             model_configs=[
-                ModelConfig(model_id="baidu/ERNIE-Image-Turbo", origin_file_pattern="transformer/diffusion_pytorch_model*.safetensors", **vram_config),
-                ModelConfig(model_id="baidu/ERNIE-Image-Turbo", origin_file_pattern="text_encoder/model.safetensors", **vram_config),
-                ModelConfig(model_id="baidu/ERNIE-Image-Turbo", origin_file_pattern="vae/diffusion_pytorch_model.safetensors", **vram_config),
+                ModelConfig(model_id=self.model_id, origin_file_pattern="transformer/diffusion_pytorch_model*.safetensors", **vram_config),
+                ModelConfig(model_id=self.model_id, origin_file_pattern="text_encoder/model.safetensors", **vram_config),
+                ModelConfig(model_id=self.model_id, origin_file_pattern="vae/diffusion_pytorch_model.safetensors", **vram_config),
             ],
-            tokenizer_config=ModelConfig(model_id="baidu/ERNIE-Image-Turbo", origin_file_pattern="tokenizer/"),
+            tokenizer_config=ModelConfig(model_id=self.model_id, origin_file_pattern="tokenizer/"),
             vram_limit=vrlimit,
         )
 
@@ -100,15 +103,25 @@ class GraphicGen(object):
         if seed == -1: 
             seed = random.randint(0, 1000000)
 
-        image = self.pipe(
-            prompt=prompt,
-            seed=seed,
-            num_inference_steps=8,
-            cfg_scale=1.0,
-            height=height,
-            width=width,
-            sigma_shift=4.9
-        )
+        if 'Turbo' in self.model_id:
+            image = self.pipe(
+                prompt=prompt,
+                seed=seed,
+                num_inference_steps=8,
+                cfg_scale=1.0,
+                height=height,
+                width=width,
+                sigma_shift=4.0
+            )
+        else:
+            image = self.pipe(
+                prompt=prompt,
+                seed=seed,
+                num_inference_steps=50,
+                cfg_scale=4.0,
+                height=height,
+                width=width
+            )
         image.save(output)
         os.utime(output, None)
         
