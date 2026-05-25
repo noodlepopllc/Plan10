@@ -316,6 +316,9 @@ def generate_assets(registry, shots, graph):
             f"facing={cv.get('facing', 'toward-character')}"
         )
 
+        # FIX: use the shot-specific backdrop instead of the base BG
+        sb_alias = f"{scene_id}_ZB_SHOT_{cu['shot_id']}"
+
         instruction = (
             f"closeup of {name}, showing {emotion.lower()} expression, "
             f"consistent with appearance: {appearance}. "
@@ -325,9 +328,10 @@ def generate_assets(registry, shots, graph):
 
         assets.append({
             "alias": cu["alias"],
-            "alias_used": cu["dependencies"],
+            "alias_used": [f"{name}_Sheet", sb_alias],
             "instruction": instruction
         })
+
 
     # ---------------------------------------------------------
     # SHOT COMPOSITES
