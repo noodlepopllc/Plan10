@@ -19,8 +19,22 @@ def build(assets):
         ]
 
         if not ready:
-            print(remaining.items())
+            print("\n=== REMAINING ASSETS ===")
+            for alias, a in remaining.items():
+                print(alias, "depends on", a["alias_used"])
+
+            missing = []
+            for alias, a in remaining.items():
+                for dep in a["alias_used"]:
+                    if dep not in built and dep not in remaining:
+                        missing.append((alias, dep))
+
+            print("\n=== MISSING DEPENDENCIES ===")
+            for alias, dep in missing:
+                print(f"{alias} depends on missing alias {dep}")
+
             raise RuntimeError("Cyclic or missing dependencies")
+
 
         for alias in ready:
             a = remaining.pop(alias)

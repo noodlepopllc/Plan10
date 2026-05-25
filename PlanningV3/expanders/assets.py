@@ -145,32 +145,50 @@ def build_dependency_graph(registry, scene_id, shots):
     }
 
     # ---------------------------------------------------------
-    # SHOT BACKDROPS
+    # SHOT BACKDROPS (DEDUPED)
     # ---------------------------------------------------------
+    backdrop_cache = {}   # (zone, angle, height, distance, framing, facing) → alias
+    shot_backdrop_map = {}  # shot_id → alias
+
     for shot in shots:
         cv = shot.get("camera_view", {})
-        zone_anchor = cv.get("zone_anchor", shot.get("environment_zone", shot.get("location", "Unknown zone")))
-        sb_alias = f"{scene_id}_ZB_SHOT_{shot['shot_id']}"
 
-        prompt = (
-            f"Environment zone: {shot['environment_zone']}. "
-            f"Zone anchor: {zone_anchor}. "
-            f"Camera view: angle={cv.get('angle', 'front')}, "
-            f"height={cv.get('height', 'eye-level')}, "
-            f"distance={cv.get('distance', 'medium')}, "
-            f"framing={cv.get('framing', shot.get('type', 'medium'))}, "
-            f"facing={cv.get('facing', 'toward-character')}."
+        key = (
+            shot["environment_zone"],
+            cv.get("angle", "front"),
+            cv.get("height", "eye-level"),
+            cv.get("distance", "medium"),
+            cv.get("framing", shot.get("type", "medium")),
+            cv.get("facing", "toward-character")
         )
 
-        graph["shot_backdrops"].append({
-            "alias": sb_alias,
-            "dependencies": [bg_alias],
-            "shot_id": shot["shot_id"],
-            "prompt": prompt
-        })
+        # If we've already made a backdrop for this geometry, reuse it
+        if key in backdrop_cache:
+            sb_alias = backdrop_cache[key]
+        else:
+            sb_alias = f"{scene_id}_ZB_{len(backdrop_cache) + 1}"
+            backdrop_cache[key] = sb_alias
+
+            prompt = (
+                f"Environment zone: {shot['environment_zone']}. "
+                f"Zone anchor: {cv.get('zone_anchor', shot.get('environment_zone'))}. "
+                f"Camera view: angle={key[1]}, height={key[2]}, "
+                f"distance={key[3]}, framing={key[4]}, facing={key[5]}."
+            )
+
+            graph["shot_backdrops"].append({
+                "alias": sb_alias,
+                "dependencies": [bg_alias],
+                "shot_id": shot["shot_id"],
+                "prompt": prompt
+            })
+
+        # Map this shot to the deduped backdrop
+        shot_backdrop_map[shot["shot_id"]] = sb_alias
+
 
     # ---------------------------------------------------------
-    # CLOSEUPS
+    # CLOSEUPS (use deduped backdrops)
     # ---------------------------------------------------------
     for shot in shots:
         for char in shot["characters"]:
@@ -184,13 +202,17 @@ def build_dependency_graph(registry, scene_id, shots):
 
             graph["closeups"].append({
                 "alias": cu_alias,
-                "dependencies": [f"{name}_Sheet", bg_alias],
+                "dependencies": [
+                    f"{name}_Sheet",
+                    shot_backdrop_map[shot['shot_id']]   # <-- FIXED
+                ],
                 "character": name,
                 "emotion": emotion,
                 "zone": zone,
                 "camera_view": cv,
                 "shot_id": shot["shot_id"]
             })
+
 
     # ---------------------------------------------------------
     # SHOT COMPOSITES
@@ -204,12 +226,10 @@ def build_dependency_graph(registry, scene_id, shots):
         if shot["type"] in IMAGE_SHOT_TYPES:
             sc_alias = f"{scene_id}_SHOT_{shot['shot_id']}"
 
-            # FIX: use the shot-specific backdrop instead of the base BG
-            sb_alias = f"{scene_id}_ZB_SHOT_{shot['shot_id']}"
-
-            deps = [sb_alias] + [
+            deps = [shot_backdrop_map[shot['shot_id']]] + [
                 f"{c['name'].upper()}_Sheet" for c in shot["characters"]
             ]
+
 
             graph["shot_composites"].append({
                 "alias": sc_alias,
@@ -289,7 +309,7 @@ def generate_assets(registry, shots, graph):
         })
 
     # ---------------------------------------------------------
-    # CLOSEUPS
+    # CLOSEUPS (use deduped backdrops)
     # ---------------------------------------------------------
     for cu in graph["closeups"]:
         name = cu["character"]
@@ -298,6 +318,7 @@ def generate_assets(registry, shots, graph):
 
         shot = find_shot(shots, cu["shot_id"])
 
+        # find the correct camera view
         char_cv = None
         for c in shot["characters"]:
             if c["name"].upper() == cu["character"]:
@@ -316,8 +337,8 @@ def generate_assets(registry, shots, graph):
             f"facing={cv.get('facing', 'toward-character')}"
         )
 
-        # FIX: use the shot-specific backdrop instead of the base BG
-        sb_alias = f"{scene_id}_ZB_SHOT_{cu['shot_id']}"
+        # USE THE DEDUPED BACKDROP FROM THE GRAPH
+        sb_alias = cu["dependencies"][1]
 
         instruction = (
             f"closeup of {name}, showing {emotion.lower()} expression, "
@@ -328,9 +349,10 @@ def generate_assets(registry, shots, graph):
 
         assets.append({
             "alias": cu["alias"],
-            "alias_used": [f"{name}_Sheet", sb_alias],
+            "alias_used": cu["dependencies"],
             "instruction": instruction
         })
+
 
 
     # ---------------------------------------------------------
