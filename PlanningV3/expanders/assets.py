@@ -110,8 +110,8 @@ def build_dependency_graph(registry, scene_id, shots):
         "scene_id": scene_id,
         "identity": [],
         "background": None,
-        "shot_backdrops": [],
-        "closeups": [],
+        "zone_backdrops": [],     # NEW: zone × layout × camera_side
+        "base_composites": [],    # NEW: character-in-zone
         "shot_composites": [],
         "dialog": []
     }
@@ -133,7 +133,7 @@ def build_dependency_graph(registry, scene_id, shots):
         })
 
     # ---------------------------------------------------------
-    # BACKGROUND
+    # BACKGROUND (scene-level)
     # ---------------------------------------------------------
     env_prompt = shots[0]["environment_zone"]
     bg_alias = f"{scene_id}_BG"
@@ -145,77 +145,73 @@ def build_dependency_graph(registry, scene_id, shots):
     }
 
     # ---------------------------------------------------------
-    # SHOT BACKDROPS (DEDUPED)
+    # ZONE BACKDROPS (zone × layout × camera_side)
     # ---------------------------------------------------------
-    backdrop_cache = {}   # (zone, angle, height, distance, framing, facing) → alias
-    shot_backdrop_map = {}  # shot_id → alias
+    backdrop_cache = {}   # (zone, layout, camera_side) -> alias
 
     for shot in shots:
-        cv = shot.get("camera_view", {})
+        zone = shot["environment_zone"]
+        layout = shot.get("layout", "solo")
+        camera_side = shot.get("camera_side", "center")
 
-        key = (
-            shot["environment_zone"],
-            cv.get("angle", "front"),
-            cv.get("height", "eye-level"),
-            cv.get("distance", "medium"),
-            cv.get("framing", shot.get("type", "medium")),
-            cv.get("facing", "toward-character")
-        )
+        key = (zone, layout, camera_side)
 
-        # If we've already made a backdrop for this geometry, reuse it
         if key in backdrop_cache:
-            sb_alias = backdrop_cache[key]
+            zb_alias = backdrop_cache[key]
         else:
-            sb_alias = f"{scene_id}_ZB_{len(backdrop_cache) + 1}"
-            backdrop_cache[key] = sb_alias
+            zb_alias = f"{scene_id}_ZB_{len(backdrop_cache) + 1}"
+            backdrop_cache[key] = zb_alias
 
+            cv = shot.get("camera_view", {})
             prompt = (
-                f"Environment zone: {shot['environment_zone']}. "
-                f"Zone anchor: {cv.get('zone_anchor', shot.get('environment_zone'))}. "
-                f"Camera view: angle={key[1]}, height={key[2]}, "
-                f"distance={key[3]}, framing={key[4]}, facing={key[5]}."
+                f"Environment zone: {zone}. "
+                f"Layout: {layout}. "
+                f"Camera side: {camera_side}. "
+                f"Shot-level camera view: "
+                f"angle={cv.get('angle')}, "
+                f"height={cv.get('height')}, "
+                f"distance={cv.get('distance')}, "
+                f"framing={cv.get('framing')}, "
+                f"facing={cv.get('facing')}."
             )
 
-            graph["shot_backdrops"].append({
-                "alias": sb_alias,
+            graph["zone_backdrops"].append({
+                "alias": zb_alias,
                 "dependencies": [bg_alias],
-                "shot_id": shot["shot_id"],
+                "zone": zone,
+                "layout": layout,
+                "camera_side": camera_side,
                 "prompt": prompt
             })
 
-        # Map this shot to the deduped backdrop
-        shot_backdrop_map[shot["shot_id"]] = sb_alias
-
+        shot["_zone_backdrop_alias"] = zb_alias  # stash for later stages
 
     # ---------------------------------------------------------
-    # CLOSEUPS (use deduped backdrops)
+    # BASE COMPOSITES (character-in-zone)
     # ---------------------------------------------------------
     for shot in shots:
+        zb_alias = shot["_zone_backdrop_alias"]
+
         for char in shot["characters"]:
             name = char["name"].upper()
-            emotion = extract_emotion(char.get("appearance_in_shot", ""))
-            zone = shot["environment_zone"]
+            base_alias = f"{scene_id}_BASE_{shot['shot_id']}_{name}"
 
-            cv = char.get("camera_view") or shot.get("camera_view", {})
-
-            cu_alias = f"{scene_id}_CU_{shot['shot_id']}_{name}"
-
-            graph["closeups"].append({
-                "alias": cu_alias,
+            graph["base_composites"].append({
+                "alias": base_alias,
                 "dependencies": [
                     f"{name}_Sheet",
-                    shot_backdrop_map[shot['shot_id']]   # <-- FIXED
+                    zb_alias
                 ],
                 "character": name,
-                "emotion": emotion,
-                "zone": zone,
-                "camera_view": cv,
-                "shot_id": shot["shot_id"]
+                "shot_id": shot["shot_id"],
+                "zone": shot["environment_zone"],
+                "layout": shot.get("layout", "solo"),
+                "camera_side": shot.get("camera_side", "center"),
+                "character_camera_view": char.get("camera_view", {}),
             })
 
-
     # ---------------------------------------------------------
-    # SHOT COMPOSITES
+    # SHOT COMPOSITES (camera transforms over base composites)
     # ---------------------------------------------------------
     IMAGE_SHOT_TYPES = [
         "closeup", "medium", "wide", "two_shot", "ots", "profile",
@@ -226,10 +222,10 @@ def build_dependency_graph(registry, scene_id, shots):
         if shot["type"] in IMAGE_SHOT_TYPES:
             sc_alias = f"{scene_id}_SHOT_{shot['shot_id']}"
 
-            deps = [shot_backdrop_map[shot['shot_id']]] + [
-                f"{c['name'].upper()}_Sheet" for c in shot["characters"]
+            deps = [
+                f"{scene_id}_BASE_{shot['shot_id']}_{c['name'].upper()}"
+                for c in shot["characters"]
             ]
-
 
             graph["shot_composites"].append({
                 "alias": sc_alias,
@@ -238,12 +234,14 @@ def build_dependency_graph(registry, scene_id, shots):
                 "characters": [c["name"] for c in shot["characters"]],
                 "camera_view": shot.get("camera_view", {}),
                 "environment_zone": shot["environment_zone"],
+                "layout": shot.get("layout", "solo"),
+                "camera_side": shot.get("camera_side", "center"),
+                "camera_focus": shot.get("camera_focus", ""),
                 "shot_id": shot["shot_id"]
             })
 
-
     # ---------------------------------------------------------
-    # DIALOG
+    # DIALOG (depends on shot composite)
     # ---------------------------------------------------------
     for shot in shots:
         dialog_lines = shot.get("dialog", [])
@@ -253,17 +251,18 @@ def build_dependency_graph(registry, scene_id, shots):
         for i, line in enumerate(dialog_lines):
             speaker = line["speaker"].upper()
             d_alias = f"{scene_id}_D_{shot['shot_id']}_{i}"
-            cu_alias = f"{scene_id}_CU_{shot['shot_id']}_{speaker}"
+            sc_alias = f"{scene_id}_SHOT_{shot['shot_id']}"
 
             graph["dialog"].append({
                 "alias": d_alias,
-                "dependencies": [f"{speaker}_Voice", cu_alias],
+                "dependencies": [f"{speaker}_Voice", sc_alias],
                 "speaker": speaker,
                 "shot_id": shot["shot_id"],
                 "line_index": i
             })
 
     return graph
+
 
 
 def generate_assets(registry, shots, graph):
@@ -299,70 +298,60 @@ def generate_assets(registry, shots, graph):
     })
 
     # ---------------------------------------------------------
-    # SHOT BACKDROPS
+    # ZONE BACKDROPS
     # ---------------------------------------------------------
-    for sb in graph["shot_backdrops"]:
-        assets.append({
-            "alias": sb["alias"],
-            "alias_used": sb["dependencies"],
-            "instruction": f"generate shot-specific backdrop: {sb['prompt']}"
-        })
-
-    # ---------------------------------------------------------
-    # CLOSEUPS (use deduped backdrops)
-    # ---------------------------------------------------------
-    for cu in graph["closeups"]:
-        name = cu["character"]
-        emotion = cu["emotion"]
-        zone = cu["zone"]
-
-        shot = find_shot(shots, cu["shot_id"])
-
-        # find the correct camera view
-        char_cv = None
-        for c in shot["characters"]:
-            if c["name"].upper() == cu["character"]:
-                char_cv = c.get("camera_view")
-                break
-
-        cv = char_cv or shot.get("camera_view", {})
-
-        appearance = registry_map[name]["appearance_prompt"]
-
-        cv_desc = (
-            f"angle={cv.get('angle', 'front')}, "
-            f"height={cv.get('height', 'eye-level')}, "
-            f"distance={cv.get('distance', 'close')}, "
-            f"framing={cv.get('framing', 'closeup')}, "
-            f"facing={cv.get('facing', 'toward-character')}"
-        )
-
-        # USE THE DEDUPED BACKDROP FROM THE GRAPH
-        sb_alias = cu["dependencies"][1]
-
+    for zb in graph["zone_backdrops"]:
         instruction = (
-            f"closeup of {name}, showing {emotion.lower()} expression, "
-            f"consistent with appearance: {appearance}. "
-            f"Environment zone: {zone}. "
-            f"Camera view: {cv_desc}. Tight framing."
+            f"generate zone backdrop for environment zone: {zb['zone']}. "
+            f"Layout: {zb['layout']}. "
+            f"Camera side: {zb['camera_side']}. "
+            f"{zb['prompt']}"
         )
 
         assets.append({
-            "alias": cu["alias"],
-            "alias_used": cu["dependencies"],
+            "alias": zb["alias"],
+            "alias_used": zb["dependencies"],
             "instruction": instruction
         })
 
+    # ---------------------------------------------------------
+    # BASE COMPOSITES (character-in-zone)
+    # ---------------------------------------------------------
+    for base in graph["base_composites"]:
+        name = base["character"]
+        appearance = registry_map[name]["appearance_prompt"]
 
+        cv = base.get("character_camera_view", {})
+        cv_desc = (
+            f"angle={cv.get('angle', 'front')}, "
+            f"height={cv.get('height', 'eye-level')}, "
+            f"distance={cv.get('distance', 'medium')}, "
+            f"framing={cv.get('framing', 'medium')}, "
+            f"facing={cv.get('facing', 'toward-environment')}"
+        )
+
+        instruction = (
+            f"composite {name} into the zone backdrop, consistent with appearance: {appearance}. "
+            f"Environment zone: {base['zone']}. "
+            f"Layout: {base['layout']}. "
+            f"Camera side: {base['camera_side']}. "
+            f"Character camera view: {cv_desc}."
+        )
+
+        assets.append({
+            "alias": base["alias"],
+            "alias_used": base["dependencies"],
+            "instruction": instruction
+        })
 
     # ---------------------------------------------------------
-    # SHOT COMPOSITES
+    # SHOT COMPOSITES (camera transforms)
     # ---------------------------------------------------------
     for sc in graph["shot_composites"]:
         chars = ", ".join(sc["characters"])
 
         shot = find_shot(shots, sc["shot_id"])
-        shot_cv = shot.get("camera_view", {})
+        shot_cv = sc.get("camera_view", {})
 
         char_views = []
         for c in shot["characters"]:
@@ -379,10 +368,16 @@ def generate_assets(registry, shots, graph):
         instruction = (
             f"{sc['description']} "
             f"Environment zone: {sc['environment_zone']}. "
-            f"Shot framing: angle={shot_cv.get('angle')}, height={shot_cv.get('height')}, "
-            f"distance={shot_cv.get('distance')}, framing={shot_cv.get('framing')}, "
+            f"Layout: {sc.get('layout', 'solo')}. "
+            f"Camera side: {sc.get('camera_side', 'center')}. "
+            f"Shot-level camera framing: "
+            f"angle={shot_cv.get('angle')}, "
+            f"height={shot_cv.get('height')}, "
+            f"distance={shot_cv.get('distance')}, "
+            f"framing={shot_cv.get('framing')}, "
             f"facing={shot_cv.get('facing')}. "
             f"Per-character camera geometry: {char_view_summary}. "
+            f"Camera focus: {sc.get('camera_focus', '')}. "
             f"Characters visible: {chars}."
         )
 
