@@ -204,7 +204,10 @@ def build_dependency_graph(registry, scene_id, shots):
         if shot["type"] in IMAGE_SHOT_TYPES:
             sc_alias = f"{scene_id}_SHOT_{shot['shot_id']}"
 
-            deps = [bg_alias] + [
+            # FIX: use the shot-specific backdrop instead of the base BG
+            sb_alias = f"{scene_id}_ZB_SHOT_{shot['shot_id']}"
+
+            deps = [sb_alias] + [
                 f"{c['name'].upper()}_Sheet" for c in shot["characters"]
             ]
 
@@ -217,6 +220,7 @@ def build_dependency_graph(registry, scene_id, shots):
                 "environment_zone": shot["environment_zone"],
                 "shot_id": shot["shot_id"]
             })
+
 
     # ---------------------------------------------------------
     # DIALOG
