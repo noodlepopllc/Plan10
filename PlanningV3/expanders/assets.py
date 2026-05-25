@@ -290,12 +290,21 @@ def generate_assets(registry, shots, graph):
     # ---------------------------------------------------------
     # BACKGROUND
     # ---------------------------------------------------------
+    
     bg = graph["background"]
+    bg['prompt'] = registry["locations"][0]["description"]
     assets.append({
         "alias": bg["alias"],
         "alias_used": [],
-        "instruction": f"create background for scene location: {bg['prompt']}"
+        "instruction": (
+            f"create representative environment reference for the scene: "
+            f"{bg['prompt']}. "
+            f"Wide, neutral, non-shot-specific. "
+            f"Establish architecture, lighting, palette, and materials. "
+            f"No characters."
+        )
     })
+
 
     # ---------------------------------------------------------
     # ZONE BACKDROPS
