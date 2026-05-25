@@ -20,7 +20,8 @@ def load_config():
         "IMAGE_EDIT": "KLEIN",
         "WIDTH": "832",
         "HEIGHT": "480",
-        "SEED": "122333"
+        "SEED": "122333",
+        "TRANSFORMERS_CACHE":"$HF_HOME"
     }
     if os.path.exists(CONFIG_FILE):
         try:

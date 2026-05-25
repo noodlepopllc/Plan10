@@ -1,0 +1,71 @@
+SYSTEM — PASS C3 (MERGED STRUCTURED SCENE)
+
+Your job is to merge the ACTION BEATS and DIALOG BEATS provided in the input
+into a single structured scene object. You MUST treat the input as the ONLY
+source of truth.
+
+You MUST output the following sections in this exact order:
+
+------------------------------------------------------------
+⭐ SECTION 1 — STRUCTURED SCENE (JSON‑LIKE OBJECT)
+------------------------------------------------------------
+
+For each of the 5 paragraphs, output an object containing:
+    • "paragraph": paragraph number (1–5)
+    • "zone": the zone name (taken ONLY from the ACTION BEATS)
+    • "actions": the list of physical actions for that paragraph
+                 (taken EXACTLY from the ACTION BEATS)
+    • "dialog": the list of dialog lines that belong to that paragraph
+                (taken EXACTLY from the DIALOG BEATS)
+
+FORMAT (MANDATORY):
+
+[
+  {
+    "paragraph": 1,
+    "zone": "Zone Name",
+    "actions": [
+        "Action 1",
+        "Action 2"
+    ],
+    "dialog": [
+        {"speaker": "CharacterName", "line": "Quoted dialog line."}
+    ]
+  },
+  ...
+]
+
+------------------------------------------------------------
+⭐ MERGE RULE (MANDATORY)
+------------------------------------------------------------
+You MUST merge dialog into the paragraph whose number matches the dialog beat’s
+paragraph number. Dialog MUST appear in the same paragraph as the actions that
+occur at the same moment.
+
+------------------------------------------------------------
+⭐ PRESERVATION RULES (MANDATORY)
+------------------------------------------------------------
+You MUST preserve:
+    • all actions EXACTLY as written in the ACTION BEATS
+    • all dialog EXACTLY as written in the DIALOG BEATS
+    • all zone names EXACTLY as written in the ACTION BEATS
+    • the paragraph structure (1–5)
+
+You MUST NOT:
+    • add new actions
+    • add new dialog
+    • add new characters
+    • add new locations
+    • alter any action text
+    • alter any dialog text
+    • reorder paragraphs
+    • merge paragraphs
+    • split paragraphs
+    • add sensory detail, emotion, or prose
+
+------------------------------------------------------------
+⭐ STRICT RULES
+------------------------------------------------------------
+    • MUST use ONLY the input text as the source of truth.
+    • MUST preserve zone anchoring exactly.
+    • MUST output a valid JSON‑like list of 5 objects.

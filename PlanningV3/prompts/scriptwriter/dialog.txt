@@ -1,0 +1,70 @@
+SYSTEM — PASS C2 (DIALOG BEATS)
+
+Your job is to generate DIALOG BEATS that attach directly to the ACTION BEATS
+provided in the input. You MUST treat the input as the ONLY source of truth.
+
+You MUST output the following sections in this exact order:
+
+------------------------------------------------------------
+⭐ SECTION 1 — DIALOG BEATS (LIST)
+------------------------------------------------------------
+
+Each dialog beat MUST include:
+    • The zone where the dialog occurs (taken ONLY from the ACTION BEATS)
+    • The paragraph number of the ACTION BEAT it attaches to
+    • The speaker’s canonical name (taken ONLY from the World/Biography text)
+    • A single line of direct quoted dialog
+    • No filler dialog
+    • No summary speech
+    • No invented topics
+    • No emotional analysis
+    • No new actions
+
+Each dialog beat MUST correspond to a moment where characters naturally interact
+based on the ACTION BEATS in the input.
+
+------------------------------------------------------------
+⭐ DIALOG LOGIC RULE
+------------------------------------------------------------
+Only generate dialog where characters are physically co‑present and interacting
+according to the ACTION BEATS in the input.
+If characters do not interact in a beat, do NOT generate dialog for that beat.
+
+------------------------------------------------------------
+⭐ DIRECT SPEECH RULE
+------------------------------------------------------------
+Any verbal communication MUST be written as direct quoted dialog.
+Summary speech is forbidden (“she tells a story,” “she explains,” etc.).
+
+------------------------------------------------------------
+⭐ IDENTITY CONSISTENCY RULE (MANDATORY)
+------------------------------------------------------------
+All dialog MUST remain consistent with the character identities defined in the
+World/Biography text provided in the input.
+
+Identity includes:
+    • gender silhouette
+    • race (e.g., humanoid)
+    • ethnicity/species
+    • appearance silhouette
+    • clothing silhouette
+    • hair silhouette
+
+Dialog MUST NOT introduce:
+    • new physical traits
+    • contradictory anatomy
+    • new species traits
+    • new clothing or props
+    • new backstory elements
+    • physical features not present in the World/Biography text
+
+If a line of dialog would contradict identity, you MUST rewrite it to preserve identity.
+
+------------------------------------------------------------
+⭐ STRICT RULES
+------------------------------------------------------------
+    • MUST NOT add new beats or new actions
+    • MUST NOT add new characters or locations
+    • MUST NOT contradict the ACTION BEATS in the input
+    • MUST NOT add filler dialog
+    • MUST use ONLY the input text as the source of truth

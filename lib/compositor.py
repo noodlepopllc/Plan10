@@ -1,6 +1,6 @@
 from PIL import Image, PngImagePlugin
 from image_edit import EditImage
-from image_gen import GenerateImage
+from image_gen import GenerateImage, add_metadata_char, add_metadata_loc
 from image_analysis import AnalyzeImage
 import os
 
@@ -24,7 +24,14 @@ def CompositeScene(
     if not os.path.exists(background_path): raise FileNotFoundError(f"Background not found: {background_path}")
 
     # 2. Extract metadata (source of truth)
-    bg_desc = Image.open(background_path).info.get('Description', 'cinematic environment')
+    img = Image.open(background_path)
+    desc = img.info.get("Description")
+
+    if desc is None:
+        desc = add_metadata_loc(background_path, '', seed)
+
+    bg_desc = desc
+
 
     # Establishing shot mode (no characters)
     if len(characters) == 0:
@@ -62,7 +69,9 @@ def CompositeScene(
     # Build character descriptions
     descriptions = []
     for c in characters:
-        desc = Image.open(c).info.get('Description', 'character')
+        desc = Image.open(c).info.get('Description')
+        if not desc:
+            desc = add_metadata_char(c, '', seed)
         descriptions.append(f"{desc}. Preserve adult facial proportions, light cheekbone definition, and subtle jawline contour.")
 
     if shot_type not in ("two_shot", "ots"):
@@ -98,6 +107,9 @@ def CompositeScene(
         "5. NO floating, NO intersecting geometry, NO transparency through solid objects."
     )
 
+    Lighting = '''Soft cinematic key light from camera-left, gentle fill from camera-right, consistent color temperature across all shots. Maintain identical lighting direction and intensity between OTS and medium shots.'''
+
+
     if shot_type == 'ots':
         task = (
             f"REF 1: {bg_desc}. Background source. "
@@ -109,7 +121,7 @@ def CompositeScene(
             "focusing on "
             f"REF 3: Character 2 (background character) {descriptions[1]}, clear shot, face towards camera, shoulders squared, visible from shoulders up. "
             f"Action: {action}. "
-            f"Lighting: Bright cinematic key + rim light on REF 3. REF 2 stays darker/blurred. "
+            f"Lighting: {Lighting} Foreground character is blurred and slightly darker. "
             f"Match REF 1 color temperature. Preserve EXACT rendering style from REF 2 and REF 3. "
             f"NO flat lighting, NO foreground sharpness, NO cartoon shading. --no dark faces, no merged depth"
         )
@@ -122,7 +134,7 @@ def CompositeScene(
             f"REF 2: {chars_desc} "
             f"Action: {action}. "
             f"Framing: {framing}. "
-            f"Lighting: CHARACTERS ARE BRIGHTLY LIT AND SEPARATED FROM BACKGROUND. "
+            f"Lighting: {Lighting} Characters are fully lit and sharp. "
             f"Match lighting, color temperature, and atmosphere of REF 1 exactly. "
             f"Preserve EXACT rendering style, proportions, and details from REF 2. "
             f"NO extras, NO text, NO blur. --no cartoon, no flat colors, no photorealistic skin"

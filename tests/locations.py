@@ -34,8 +34,21 @@ class LocationPairGenerator:
             f"even global illumination filling all shadows, "
             f"high-key subject exposure, no harsh spot-only contrast"
         )
+        
+    def _remove_occluded_objects(self, text: str) -> str:
+    
+        OTS_OCCLUDED = {
+            "ladder", "bar", "counter", "piano", "telescope",
+            "bench", "table", "sofa", "station", "machine",
+            "desk", "rack", "shelf", "cabinet"
+        }
+        lowered = text.lower()
+        for obj in OTS_OCCLUDED:
+            if obj in lowered:
+                return "empty negative space"
+        return text
 
-    def get_pair(self, key: str, bg_color: str, lighting: str, camera: str, time_of_day: str = "midday") -> tuple[str, str]:
+    def get_pair(self, key: str, bg_color: str, lighting: str, camera: str, time_of_day: str = "midday", ots_mode=True) -> tuple[str, str]:
         loc = self.locations.get(key)
         if not loc:
             raise KeyError(f"Location '{key}' not found. Available: {list(self.locations.keys())}")
@@ -62,6 +75,12 @@ class LocationPairGenerator:
 
         va = loc["view_a"]
         vb = loc["view_b"]
+        
+        if ots_mode:
+            va["right"] = self._remove_occluded_objects(va["right"])
+            vb["right"] = self._remove_occluded_objects(vb["right"])
+            va["left"]  = self._remove_occluded_objects(va["left"])
+            vb["left"]  = self._remove_occluded_objects(vb["left"])
 
         prompt_a = (
             f"{base_prompt}"
