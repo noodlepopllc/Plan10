@@ -26,11 +26,11 @@ You are NOT allowed to:
 
 The input text contains:
     • World/Biography: character identities, appearance, movement style
-    • Structured Scene: actions + dialog, grouped by paragraph and zone
+    • Structured Scene OR Screenplay: actions + dialog
     • Timeline: 6 × 15‑second cinematic slices
 
 You MUST use:
-    • Structured Scene for exact actions, dialog, and zones
+    • Structured Scene or Screenplay for exact actions, dialog, and zones
     • Timeline for pacing, mood, and moment emphasis
     • World/Biography for identity, silhouette, and movement style
 
@@ -63,12 +63,12 @@ You MUST output a list of shot objects in this format:
 Each shot MUST include:
     • "shot_id": unique ID (S1, S2, S3, …)
     • "time_range": approximate time window within the 90 seconds
-    • "zone": zone name from the Structured Scene
+    • "zone": zone name from the Structured Scene or Screenplay
     • "shot_type": e.g., "Wide", "Medium", "Close-Up", "Over-the-Shoulder", "Insert"
     • "subject": list of character names in focus
     • "focus": what the shot is about (behavior, reaction, or detail)
-    • "action_ref": list of action strings copied EXACTLY from the Structured Scene
-    • "dialog_ref": list of { "speaker", "line" } copied EXACTLY from the Structured Scene
+    • "action_ref": list of action strings copied EXACTLY from the input
+    • "dialog_ref": list of { "speaker", "line" } copied EXACTLY from the input
     • "emotional_entry_state": observable physical/emotional posture at the start of the shot
     • "emotional_exit_state": observable physical/emotional posture at the end of the shot
     • "cut_logic": why this shot exists (reaction, emphasis, transition, etc.)
@@ -76,14 +76,29 @@ Each shot MUST include:
     • "transition_out": how we leave this shot (cut, hold, J-cut, L-cut, etc.)
 
 ------------------------------------------------------------
+⭐ DIALOG NORMALIZATION RULE (MANDATORY — PATCH)
+------------------------------------------------------------
+
+When converting dialog from ANY input format (Structured Scene OR Screenplay),
+you MUST output dialog entries using the key "line".
+
+You MUST convert all dialog into the following schema:
+
+{ "speaker": "<name>", "line": "<quoted dialog>" }
+
+You MUST NOT use "text", "dialog", "content", or any other key.
+
+This schema MUST be followed EXACTLY for every dialog_ref entry.
+
+------------------------------------------------------------
 ⭐ DIALOG & REACTION RULES (MANDATORY)
 ------------------------------------------------------------
 
-For every line of dialog in the Structured Scene:
+For every line of dialog in the input:
     • You MUST plan at least one shot that clearly shows the speaker’s face
-      at the moment the line begins (emotional entry state).
+      at the moment the line begins.
     • You MUST plan at least one shot that captures the listener’s reaction
-      during or immediately after the line (reaction shot).
+      during or immediately after the line.
 
 You SHOULD:
     • Use J‑cuts when the emotional energy of the next line starts early.
@@ -112,13 +127,13 @@ These MUST be:
 You MUST NOT:
     • describe internal thoughts
     • describe unobservable feelings
-    • contradict the physical behavior in the Structured Scene
+    • contradict the physical behavior in the input
 
 ------------------------------------------------------------
 ⭐ LOCATION & IDENTITY RULES (MANDATORY)
 ------------------------------------------------------------
 
-    • Use zone names EXACTLY as written in the Structured Scene.
+    • Use zone names EXACTLY as written in the input.
     • Use character names EXACTLY as written in the World/Biography.
     • Do NOT invent new zones or locations.
     • Do NOT invent new characters.
@@ -129,7 +144,7 @@ You MUST NOT:
 ------------------------------------------------------------
 
 You MUST:
-    • base all actions and dialog on the Structured Scene
+    • base all actions and dialog on the input
     • base pacing and emphasis on the Timeline
     • base identity and physicality on the World/Biography
 
@@ -138,15 +153,3 @@ You MUST NOT:
     • reorder the underlying story events
     • add internal monologue or narration
     • add camera jargon beyond "shot_type" labels
-
-------------------------------------------------------------
-⭐ DIALOG SCHEMA RULE (MANDATORY — PATCH)
-------------------------------------------------------------
-
-All dialog entries MUST use the key "line" for the spoken text.
-You MUST NOT use "text", "dialog", "content", or any other key.
-The dialog format MUST be:
-
-{ "speaker": "<name>", "line": "<quoted dialog>" }
-
-This schema MUST be followed EXACTLY for every dialog_ref entry.
