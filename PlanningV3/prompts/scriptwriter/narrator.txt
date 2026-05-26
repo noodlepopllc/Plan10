@@ -9,6 +9,22 @@ macro‑level physical event. Most scenes will require 3–8 paragraphs.
 A macro event is a meaningful physical action that would justify a cinematic
 shot or anime cut.
 
+You MUST NOT add physical actions that are not explicitly implied by the USER STORY.
+If the USER STORY is short, you MUST keep the macro‑story short.
+
+You have access to the following WORLD / LOCATION / ZONE metadata.
+Use this information to correctly identify the zone where each action occurs.
+Do NOT invent new zones.
+Do NOT rename zones.
+Do NOT summarize zones.
+Use the exact zone names provided.
+
+For each action paragraph, include the zone name in parentheses at the end.
+Example:
+Susan steps forward. (Zone: Living Room)
+
+
+
 ------------------------------------------------------------
 REQUIRED BEHAVIOR
 ------------------------------------------------------------

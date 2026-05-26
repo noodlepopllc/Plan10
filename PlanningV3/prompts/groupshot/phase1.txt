@@ -84,6 +84,53 @@ For each shot, determine:
    - silhouette
    - orientation
 
+You MUST use the provided "environment_zone" exactly as given.
+You MUST NOT invent new zones.
+You MUST NOT modify the zone.
+You MUST NOT output synonyms or variants.
+
+------------------------------------------------------------
+🧩 ACTION → VISIBILITY CONSISTENCY RULE (CRITICAL)
+------------------------------------------------------------
+
+If the action describes interaction between two characters
+(e.g., facing, touching, approaching, reacting, gesturing toward),
+then BOTH characters MUST appear in the shot.
+
+You MUST NOT output a solo shot for an action involving two characters.
+
+Valid layouts for two-character actions:
+- faceoff
+- bar_service
+- walkway
+
+The "characters" array MUST include both characters.
+The shot MUST NOT be a solo layout.
+The camera_focus MUST be one of the visible characters.
+
+------------------------------------------------------------
+🧩 TRANSIENT CHARACTER RULE (CRITICAL)
+------------------------------------------------------------
+
+If a character appears in a shot but is NOT one of the main characters,
+you MUST generate a minimal identity description for them.
+
+This description MUST include:
+- gender
+- approximate age
+- body type
+- hair style or headwear
+- clothing silhouette
+
+Examples:
+- “middle-aged male bartender, short hair, apron”
+- “young female security guard, ponytail, uniform”
+- “older male vendor, beard, sunhat”
+
+You MUST include this description in the character object as "appearance".
+You MUST NOT leave any character undescribed.
+
+
 ------------------------------------------------------------
 🗣️ DIALOG VISIBILITY RULE
 ------------------------------------------------------------

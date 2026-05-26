@@ -1,118 +1,131 @@
-SYSTEM — PASS B (WORLD EXPANSION)
-
 Your job is to expand the world scaffolding provided in the input text into a complete static world model.
 You MUST treat the input as the ONLY source of truth.
 You MUST output the following sections in this exact order:
-
-------------------------------------------------------------
 ⭐ SECTION 1 — SETTING (2–3 paragraphs)
-------------------------------------------------------------
+
 Expand the World Summary found in the input into:
-    • atmosphere
-    • time period (MANDATORY)
-    • technology level (MANDATORY)
-    • sensory detail
-    • tone
-    • cultural context
-    • environmental mood
+
+    atmosphere
+
+    time period (MANDATORY — inferred from SETTING BLOCK)
+
+    technology level (MANDATORY — inferred from SETTING BLOCK)
+
+    sensory detail
+
+    tone
+
+    cultural context
+
+    environmental mood
 
 Everything MUST be cinematic and filmable, but NOT narrative.
-You MUST anchor all descriptions to the time period and technology level.
+You MUST anchor all descriptions to the time period and technology level defined by the SETTING BLOCK.
 You MUST NOT add story events, character actions, or plot.
-
-------------------------------------------------------------
 ⭐ SECTION 2 — BIOGRAPHY (full detail)
-------------------------------------------------------------
+
 For each character described in the input Character Summary, expand into:
 
-    • Name
-    • Age
-    • Gender
-    • Race (e.g., humanoid)
-    • Ethnicity/Species (only if explicitly given in the input)
-    • Appearance (visual, physical, filmable)
-    • Clothing (MANDATORY — must match time period)
-    • Hair (MANDATORY — must match time period)
-    • Personality (1–2 sentences)
-    • Movement style
-    • Distinctive physical traits
+    Name
+
+    Age
+
+    Gender
+
+    Race (e.g., human, android, elf, etc.)
+
+    Ethnicity/Species (only if explicitly given)
+
+    Appearance (visual, physical, filmable)
+
+    Clothing (MANDATORY — must match the time period + technology level of the SETTING BLOCK)
+
+    Hair (MANDATORY — must match the time period + technology level)
+
+    Personality (1–2 sentences)
+
+    Movement style
+
+    Distinctive physical traits
 
 STRICT RULES:
-    • MUST be visual, physical, and filmable
-    • MUST reflect the time period and technology level
-    • MUST NOT include backstory or lore
-    • MUST NOT include internal monologue
-    • MUST NOT include emotional analysis
-    • MUST NOT include story events
 
-------------------------------------------------------------
+    MUST be visual, physical, and filmable
+
+    MUST reflect the time period and technology level of the SETTING BLOCK
+
+    MUST NOT include backstory or lore
+
+    MUST NOT include internal monologue
+
+    MUST NOT include emotional analysis
+
+    MUST NOT include story events
+
 ⭐ SECTION 3 — LOCATIONS (full detail)
-------------------------------------------------------------
-For each location described in the input Location Summary, expand it into:
 
+For each location described in the input Location Summary, expand it into:
 A. Exterior Description (MANDATORY)
-    • 2–3 sentences describing:
-        – architecture (time‑period accurate)
-        – materials (time‑period accurate)
-        – lighting (time‑period accurate)
-        – signage (if applicable)
-        – atmosphere
-        – ambient sound
+
+2–3 sentences describing:
+
+    architecture (consistent with time period + technology level)
+
+    materials (consistent with time period + technology level)
+
+    lighting (consistent with time period + technology level)
+
+    signage (if applicable)
+
+    atmosphere
+
+    ambient sound
 
 B. Interior STAGING ZONES (MANDATORY)
-You MUST define interior zones as functional staging areas, not architectural rooms.
-Zones are specific areas inside the location where actions and interactions can be staged.
 
-Examples for a medieval tavern (illustrative only; do NOT hard‑code):
-    • Entrance Threshold
-    • Bar Counter
-    • Common Tables
-    • Hearth Corner
-    • Path Between Bar and Tables
-    • Kitchen Door Area
-    • Stairway to Rooms
+Zones are functional staging areas inside the location.
 
-RULES FOR ZONES:
-    • You MUST derive zones ONLY from the Location Summary and the described purpose of the space in the input.
-    • You MUST define 3–8 meaningful zones per location.
-    • Every zone MUST be a distinct, filmable patch of space where characters can stand, sit, walk, or interact.
-    • Zone names MUST be functional and descriptive (e.g., “Bar Counter”, “Common Tables”), not generic (“Area 1”, “Zone A”).
-    • All zones MUST be time‑period and location appropriate.
+Rules:
+
+    MUST derive zones ONLY from the Location Summary
+
+    MUST define 3–8 meaningful zones
+
+    MUST be filmable patches of space
+
+    MUST match the time period + technology level
+
+    MUST NOT invent new zones
 
 For each zone:
-    • 2–3 sentences of description
-    • 3–5 notable visual details
-    • All architecture, materials, lighting, and furniture MUST match the time period
-    • NO story events
+
+    2–3 sentences of description
+
+    3–5 visual details (architecture, materials, lighting, fixed furniture)
+
+    NO story events
+
+    NO props
+
+    NO character details
 
 C. Notable Details
-A short list of purely environmental details.
 
-RULES:
-    • You MUST NOT extract more than 15 notable details per location.
-    • If the input contains more than 15 notable details, extract only the first 15 exactly as written.
-    • You MUST NOT invent new details beyond what is implied by the input.
-
-Notable Details MUST describe ONLY the environment.
-You MUST NOT include:
-• clothing
-• hair
-• character appearance
-• character props
-• character silhouettes
-• anything worn by characters
-• anything attached to characters
-
-If fewer than 15 environmental details exist, output only those that exist.
-Do NOT pad the list.
-
-------------------------------------------------------------
+REMOVE THIS SECTION ENTIRELY.  
+Notable Details is deprecated and MUST NOT be generated.
 ⭐ GLOBAL RULES (PASS B)
-------------------------------------------------------------
-    • MUST use ONLY the provided input text as the source of truth.
-    • MUST preserve the time period and technology level in ALL visual descriptions.
-    • MUST NOT invent new locations.
-    • MUST NOT invent impossible architecture for the time period.
-    • MUST NOT write any story or narrative.
-    • MUST NOT include camera terminology.
-    • MUST NOT skip any required section.
+
+    MUST use ONLY the provided input text as the source of truth
+
+    MUST preserve the time period and technology level defined by the SETTING BLOCK
+
+    MUST NOT invent new locations
+
+    MUST NOT invent impossible architecture for the time period
+
+    MUST NOT write any story or narrative
+
+    MUST NOT include camera terminology
+
+    MUST NOT skip any required section
+

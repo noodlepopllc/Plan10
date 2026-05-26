@@ -4,7 +4,7 @@ set -euo pipefail
 mkdir -p $2/output
 output="$2/output"
 
-if [[ ! -f "$output/screenplay.txt" ]]; then
+if [[ ! -f "$output/complete.json" ]]; then
     python PlanningV3/builders/scriptwriterV3.py $1 $output
 fi
 
@@ -15,7 +15,7 @@ if [[ ! -f "$output/registry.json" ]]; then
 fi
 
 if [[ ! -f "$output/shots.json" ]]; then
-    python PlanningV3/builders/group_shot.py $output $output/shots.json
+    python PlanningV3/builders/group_shotV2.py $output $output/shots.json
 fi
 
 if [[ ! -f "$output/assets$3.json" ]]; then

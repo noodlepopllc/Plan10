@@ -34,7 +34,7 @@ def build_script(story, outpath):
       biography_f.write(biography)
     print('Wrote Biography')
 
-    narrative = run_prompt(world, NARRATOR)
+    narrative = run_prompt(f'Biography: {biography}, Story: {story}', NARRATOR)
     with open(f'{outpath}/narrative.txt', 'w') as narrative_f:
       narrative_f.write(narrative)
     print('Wrote Narrative')
@@ -56,7 +56,7 @@ def build_script(story, outpath):
     complete = run_prompt(
         f'World: {biography}, Action Beats: {action_beats}, Dialog Beats: {dialog_beats}, Narrative: {narrative}',
         STORY)
-    with open(f'{outpath}/complete.txt', 'w') as complete_f:
+    with open(f'{outpath}/complete.json', 'w') as complete_f:
       complete_f.write(complete)
     print('Wrote Story COMPLETE')
 
@@ -65,12 +65,12 @@ def build_script(story, outpath):
         draft_f.write(draft)
     print('Wrote Draft')
 
+    '''
     final = run_prompt(draft, FORMAT)
     with open(f'{outpath}/screenplay.txt', 'w') as final_f:
         final_f.write(final)
     print('Wrote Formatted Screenplay')
 
-    '''
     timeline = run_prompt(complete, TIMELINE)
     with open(f'{outpath}/timeline.txt', 'w') as timeline_f:
         timeline_f.write(timeline)

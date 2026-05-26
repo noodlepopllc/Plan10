@@ -6,28 +6,65 @@ from json import loads, dump
 import json
 from pathlib import Path
 
+import json
+import difflib
+from pathlib import Path
+
 def normalize_zone_name(name: str):
     # Remove leading numbering like "1. " or "2. "
     return re.sub(r"^\d+\.\s*", "", name).strip()
 
 
+def patch_registry_zones(registry_path: str, canonical_zones: dict):
+    registry = json.loads(Path(registry_path).read_text())
+
+    canonical_names = list(canonical_zones.values())
+
+    for loc in registry.get("locations", []):
+        for zone in loc.get("zones", []):
+            name = zone.get("zone_name") or zone.get("name") or ""
+            if not name:
+                continue
+
+            # fuzzy match against canonical human-readable names
+            match = difflib.get_close_matches(name, canonical_names, n=1, cutoff=0.7)
+            if not match:
+                print(f"[registry patch] no match for zone '{name}'")
+                continue
+
+            canonical_name = match[0]
+
+            # find slug for that canonical name
+            slug = None
+            for s, human in canonical_zones.items():
+                if human == canonical_name:
+                    slug = s
+                    break
+
+            if not slug:
+                print(f"[registry patch] no slug for matched zone '{canonical_name}'")
+                continue
+
+            zone["zone_name"] = canonical_name
+            zone["slug"] = slug
+
+    Path(registry_path).write_text(json.dumps(registry, indent=4))
+
 def generate_canonical_zone_dictionary(pass_a_locations_text):
     zones = {}
 
-    zone_pattern = re.compile(r"\*\*\s*(.*?)\s*\*\*|^([A-Za-z].+?)\n", re.MULTILINE)
+    # Match numbered markdown headings like "**2. Common Tables**"
+    zone_pattern = re.compile(r"\*\*\s*\d+\.\s*(.*?)\s*\*\*")
     matches = zone_pattern.findall(pass_a_locations_text)
 
-    for m in matches:
-        zone_name = m[0] if m[0] else m[1]
+    for zone_name in matches:
         zone_name = normalize_zone_name(zone_name)
-
-        if "Area" not in zone_name and "Zone" not in zone_name and "Threshold" not in zone_name and "Path" not in zone_name:
-            continue
 
         slug = re.sub(r"[^a-z0-9]+", "_", zone_name.lower()).strip("_")
         zones[slug] = zone_name
 
     return zones
+
 
 
 
@@ -87,43 +124,43 @@ BEAT_RE = re.compile(
     re.DOTALL
 )
 
-# ---------------------------------------------------------
-# ITERATE SCENES — NOW RETURNS BEATS AS A LIST
-# ---------------------------------------------------------
+def split_scenes_by_zone(beats):
+    scenes = []
+    current_scene = []
+    current_zone = beats[0]["zone"]
 
-def iter_scenes_from_xml(script_text: str):
-    for m in SCENE_RE.finditer(script_text):
-        scene_id = int(m.group(1))
-        scene_body = m.group(2)
+    for beat in beats:
+        if beat["zone"] != current_zone:
+            scenes.append({
+                "zone": current_zone,
+                "beats": current_scene
+            })
+            current_scene = []
+            current_zone = beat["zone"]
 
-        slug = SLUGLINE_RE.search(scene_body)
-        slugline = slug.group(1).strip() if slug else ""
+        current_scene.append(beat)
 
-        beats = []
+    scenes.append({
+        "zone": current_zone,
+        "beats": current_scene
+    })
 
-        for beat_type, speaker, content in BEAT_RE.findall(scene_body):
-            content = content.strip()
-            if not content:
-                continue
-
-            if beat_type == "action":
-                beats.append({
-                    "type": "action",
-                    "action": content
-                })
-            else:
-                beats.append({
-                    "type": "dialog",
-                    "speaker": speaker,
-                    "line": content
-                })
+    return scenes
 
 
+def iter_scenes_from_complete_json(path: str):
+    beats = json.loads(Path(path).read_text())
+    scenes = split_scenes_by_zone(beats)
+
+    for i, scene in enumerate(scenes, start=1):
         yield {
-            "scene_id": scene_id,
-            "scene_heading": slugline,
-            "beats": beats
+            "scene_id": i,
+            "zone": scene["zone"],
+            "beats": scene["beats"]
         }
+
+
+
 
 # ---------------------------------------------------------
 # MAIN EXECUTION — PATCHED FOR 3-BEAT TEMPORAL CONTINUITY
@@ -133,15 +170,16 @@ if __name__ == '__main__':
     base = sys.argv[1]
     out_path = sys.argv[2]
 
-    text = Path(f'{base}/screenplay.txt').read_text()
     biography = Path(f'{base}/biography.txt').read_text()
 
     # NEW: extract canonical zones from PASS A
     canonical_zones = extract_zones_from_pass_a(biography)
+    print(canonical_zones)
 
     scenes = {"scenes": []}
 
-    for scene in iter_scenes_from_xml(text):
+    for scene in iter_scenes_from_complete_json(f"{base}/complete.json"):
+
         print("SCENE", scene["scene_id"])
 
         beats = scene["beats"]
@@ -152,7 +190,17 @@ if __name__ == '__main__':
             nextb = beats[i+1] if i < len(beats)-1 else ""
 
             # NEW: pre-match zone for this beat
-            beat_text = curr.get("action") or curr.get("line") or ""
+            actions = curr.get("actions", [])
+            dialog = curr.get("dialog", [])
+
+            # Flatten actions into a single string
+            action_text = " ".join(actions)
+
+            # Flatten dialog lines into a single string
+            dialog_text = " ".join(d["line"] for d in dialog)
+
+            beat_text = (action_text + " " + dialog_text).strip()
+
             zone_slug = pre_match_zone_for_beat(beat_text, canonical_zones)
 
             if not zone_slug:
@@ -195,3 +243,5 @@ if __name__ == '__main__':
 
     with open(out_path, 'w') as wr:
         dump(scenes, wr, indent=4)
+
+    patch_registry_zones(f'{base}/registry.json', canonical_zones)
