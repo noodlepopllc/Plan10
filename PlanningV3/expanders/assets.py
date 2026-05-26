@@ -44,32 +44,69 @@ def extract_emotion(appearance_text):
 
     return "Neutral"
 
+def assign_roles(shot):
+    """
+    Deterministic charA/charB assignment.
+    First character = charA
+    Second character = charB
+    """
+    roles = {}
+    chars = shot["characters"]
+
+    if len(chars) >= 1:
+        roles[chars[0]["name"]] = "charA"
+    if len(chars) >= 2:
+        roles[chars[1]["name"]] = "charB"
+
+    return roles
+
+
 def select_zone_variant(shot, zones, character_name):
     zone_name = shot["environment_zone"]
-    char_count = len(shot["characters"])
-    camera_side = shot.get("camera_side", None)
+    camera_side = shot.get("camera_side", "center")
+    shot_type = shot.get("type", "").lower()
+    chars = shot["characters"]
 
-    # 1. Two-person → Forward
-    if char_count > 1:
-        variant = "forward"
+    # Assign charA / charB roles
+    roles = assign_roles(shot)
+    role = roles.get(character_name, None)
 
-    # 2. Solo → Reverse for that character
-    elif char_count == 1:
-        variant = "reverseA" if character_name == "charA" else "reverseB"
+    # ---------------------------------------------------------
+    # MULTI-CHARACTER SHOTS → ALWAYS FORWARD
+    # ---------------------------------------------------------
+    if len(chars) > 1:
+        variant = "Forward"
 
-    # 3. OTS → Reverse based on camera_side
-    if shot["type"] == "ots":
-        if camera_side == "charA":
-            variant = "reverseA"
+    # ---------------------------------------------------------
+    # SOLO SHOTS → ReverseA or ReverseB
+    # ---------------------------------------------------------
+    elif len(chars) == 1:
+        if role == "charA":
+            variant = "ReverseA"
         else:
-            variant = "reverseB"
+            variant = "ReverseB"
 
-    # Find matching zone
+    # ---------------------------------------------------------
+    # OTS OVERRIDES EVERYTHING
+    # ---------------------------------------------------------
+    if shot_type == "ots":
+        if camera_side == "charA":
+            variant = "ReverseA"
+        elif camera_side == "charB":
+            variant = "ReverseB"
+        else:
+            variant = "ReverseA"  # fallback
+
+    # ---------------------------------------------------------
+    # FIND MATCHING ZONE VARIANT
+    # ---------------------------------------------------------
     for z in zones:
         if z["zone_name"] == zone_name and z["variant"].lower() == variant.lower():
             return z["alias"]
 
-    raise ValueError("No matching zone variant found")
+    raise ValueError(f"No matching zone variant found for {zone_name} / {variant}")
+
+
 
 def build_base_composite(shot, character, zones):
     sheet_alias = f"{character}_Sheet"
@@ -195,20 +232,32 @@ def build_dependency_graph(registry, scene_id, shots):
                 alias = f"{scene_id}_ZV_{zone}_{variant}"
                 zone_variants[zone][variant] = alias
 
+                # ---------------------------------------------------------
+                # CORRECTED PROMPTS — GUARANTEED CAMERA ROTATION
+                # ---------------------------------------------------------
+
                 if variant == "Forward":
                     prompt = (
                         f"Environment zone: {zone}. "
-                        f"Forward-facing view. "
-                        f"Preserve all visible light sources, windows, lamps, and their positions."
+                        f"FORWARD VIEW. "
+                        f"Camera faces the primary subject direction. "
+                        f"Show the environment exactly as it appears from the main camera orientation. "
+                        f"Include all visible environmental elements (terrain, furniture, horizon, walls, windows, sun, sky, props) "
+                        f"as they appear from this direction. "
+                        f"Preserve all visible light sources and their positions."
                     )
                 else:
                     prompt = (
                         f"Environment zone: {zone}. "
-                        f"Reverse-facing view. "
-                        f"REMOVE all visible directional light sources (windows, lamps, fixtures) "
-                        f"that would now be behind the camera. "
-                        f"Preserve ONLY their lighting effect on the environment. "
-                        f"No direct light sources may appear in frame."
+                        f"REVERSE VIEW. "
+                        f"Rotate the camera 180 degrees horizontally to show the OPPOSITE SIDE of the environment. "
+                        f"This MUST reveal environmental elements that are NOT visible in the Forward view. "
+                        f"Show the geometry, terrain, horizon, furniture, props, and background that exist BEHIND the Forward camera. "
+                        f"REMOVE any direct light sources (sun, windows, lamps) that would now be behind the camera, "
+                        f"but preserve their lighting effect on the environment. "
+                        f"No direct light sources may appear in frame. "
+                        f"ReverseA and ReverseB MUST be visually distinct from Forward and from each other "
+                        f"based on camera_side and character orientation."
                     )
 
                 graph["zone_backdrops"].append({
@@ -221,6 +270,7 @@ def build_dependency_graph(registry, scene_id, shots):
 
         # Store for later
         shot["_zone_variants"] = zone_variants[zone]
+
 
 
     # ---------------------------------------------------------
