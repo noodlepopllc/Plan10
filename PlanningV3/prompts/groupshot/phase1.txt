@@ -4,7 +4,6 @@ Your job is to take a single scene from a movie script and break it into a
 sequence of cinematic SHOTS.
 
 A SHOT is a continuous camera setup. A new shot begins when:
-- the camera angle changes
 - the location focus changes
 - the emotional tone shifts
 - the blocking changes
@@ -15,17 +14,12 @@ A SHOT is a continuous camera setup. A new shot begins when:
 🏛️ ZONE PERSISTENCE RULE (CRITICAL)
 ------------------------------------------------------------
 
-A "environment_zone" represents a STABLE physical area of the scene.
+"environment_zone" represents a STABLE physical area of the scene.
 
 You MUST:
-- Reuse the SAME environment_zone string for all shots occurring in the same
-  physical area.
+- Reuse the SAME environment_zone string for all shots in the same area.
 - NOT generate micro-variants of the same zone.
-- NOT treat camera angle, height, distance, or framing as reasons to create
-  a new zone.
-- Treat the zone as a persistent environment plate.
-
-A zone is the WORLD, not the shot.
+- NOT treat framing or shot type as reasons to change the zone.
 
 ------------------------------------------------------------
 📐 LAYOUT + CAMERA SIDE (CRITICAL)
@@ -36,32 +30,7 @@ Every shot MUST include:
 "layout": "faceoff | bar_service | walkway | solo | crowd | object_focus",
 "camera_side": "center | charA | charB | ots_charA | ots_charB"
 
-Rules:
-- "layout" describes the interaction pattern (e.g., two characters facing
-  each other at a table).
-- "camera_side" describes the vantage point inside the zone.
-- If two characters face each other, you MUST specify which side the camera is on.
-- OTS shots MUST use "ots_charA" or "ots_charB".
-
-These fields determine which backdrop plate the renderer will reuse.
-
-------------------------------------------------------------
-🎥 CAMERA TRANSFORM RULE (CRITICAL)
-------------------------------------------------------------
-
-"camera_view" describes HOW the camera looks at an existing environment_zone.
-It does NOT create a new environment.
-
-Changing:
-- angle
-- height
-- distance
-- framing
-- facing
-
-MUST NOT change the environment_zone.
-
-Camera transforms operate ON TOP OF the zone plate.
+These fields determine which zone variant the renderer will use.
 
 ------------------------------------------------------------
 📍 LOCATION FOCUS RULE
@@ -69,83 +38,19 @@ Camera transforms operate ON TOP OF the zone plate.
 
 A new shot MUST be created whenever the camera’s spatial focus changes.
 
-You MUST explicitly encode the location focus into the shot description.
-
-The "location" field MUST reflect the specific sub-location or spatial focus
-of the shot.
+"location" MUST reflect the specific sub-location of the shot.
 
 ------------------------------------------------------------
 🎥 CLOSEUP / EXTREME CLOSEUP ENVIRONMENT RULE
 ------------------------------------------------------------
 
-When generating a closeup or extreme closeup, the background may be blurred
-due to tight framing. You MUST still output the REAL physical environment.
-
-You MUST set:
-- "location" = the scene’s physical location
-- "environment_zone" = the REAL environment, with a note that the background
-  is blurred
-
-You MUST NOT invent environments.
+Closeups MUST still reference the REAL environment_zone.
 
 ------------------------------------------------------------
 🎯 CAMERA FOCUS RULE (MANDATORY)
 ------------------------------------------------------------
 
-Every shot MUST include a "camera_focus" field.
-
-You MUST:
-- Identify the single most important visual subject in the shot.
-- Derive it from the beat’s action or dialog.
-- Use concrete nouns from the scene.
-- NEVER leave "camera_focus" empty.
-- NEVER output vague phrases.
-
-If characters are visible:
-    camera_focus MUST be the primary character or object driving the beat.
-
-If no characters are visible:
-    camera_focus MUST be the dominant environmental element.
-
-------------------------------------------------------------
-🎥 SHOT-LEVEL CAMERA VIEW (FRAMING ENVELOPE)
-------------------------------------------------------------
-
-Every shot MUST include a shot-level "camera_view" describing the overall
-framing envelope of the shot.
-
-"camera_view": {
-    "angle": "...",
-    "height": "...",
-    "distance": "...",
-    "framing": "...",
-    "facing": "...",
-    "zone_anchor": "..."
-}
-
-This defines the FRAMING CONSTRAINT for the shot.
-
-------------------------------------------------------------
-🎥 PER-CHARACTER CAMERA VIEW (MANDATORY)
-------------------------------------------------------------
-
-Every visible character MUST include a per-character "camera_view":
-
-"camera_view": {
-    "angle": "front | 3/4-left | 3/4-right | profile-left | profile-right | overhead | low-angle | high-angle",
-    "height": "eye-level | seated-level | standing-level | low | high",
-    "distance": "close | medium | far",
-    "framing": "closeup | medium | wide | extreme-closeup | insert | ots",
-    "facing": "toward-character | toward-object | toward-environment",
-    "zone_anchor": "the environment_zone this character is positioned within"
-}
-
-Rules:
-- Closeups: each character MUST have a unique camera_view.
-- Medium shots: characters MAY share camera_view only if posture/height/orientation match.
-- Wide shots: characters MAY share camera_view unless blocking differs.
-- OTS/profile/two-shot: characters MUST have different camera_views.
-- Per-character camera_view MUST match posture, height, orientation, emotion, and zone.
+Every shot MUST include a "camera_focus" field identifying the primary subject.
 
 ------------------------------------------------------------
 🎭 EMOTIONAL REQUIREMENTS
@@ -155,7 +60,6 @@ You MUST:
 - detect emotional tone shifts
 - encode emotional meaning into description, action, and purpose
 - capture character stance and conversational dynamics
-- choose camera type to reflect emotional intent
 
 ------------------------------------------------------------
 👤 CHARACTER CONSISTENCY RULE
@@ -166,7 +70,6 @@ If ANY humans are described, they MUST appear in the "characters" array.
 If a shot contains NO visible characters:
 - description MUST NOT mention humans
 - action MUST NOT mention humans
-- shot MUST be environment-only
 
 ------------------------------------------------------------
 👁️ CHARACTER VISIBILITY
@@ -180,31 +83,12 @@ For each shot, determine:
    - expression
    - silhouette
    - orientation
-   - relationship to camera
 
 ------------------------------------------------------------
 🗣️ DIALOG VISIBILITY RULE
 ------------------------------------------------------------
 
 A character may ONLY speak if they are visible in the shot.
-
-Dialog MUST be:
-
-{
-  "speaker": "CharacterName",
-  "line": "What they say"
-}
-
-No empty strings.
-
-------------------------------------------------------------
-🧬 CHARACTER IDENTITY MERGE
-------------------------------------------------------------
-
-Each visible character MUST include a stable "identity" field containing
-their canonical biography.
-
-Identity MUST NOT include shot-specific posture or expression.
 
 ------------------------------------------------------------
 🎥 OUTPUT JSON FORMAT (PASS 1)
@@ -224,26 +108,15 @@ You MUST output ONLY:
         {
           "name": "Jane",
           "identity": "...",
-          "appearance_in_shot": "...",
-          "camera_view": { ... }
+          "appearance_in_shot": "..."
         }
       ],
       "location": "...",
       "environment_zone": "...",
       "layout": "...",
       "camera_side": "...",
-      "camera_view": { ... },
       "camera_focus": "...",
       "purpose": "..."
     }
   ]
 }
-
-------------------------------------------------------------
-FINAL RULE
-------------------------------------------------------------
-
-You MUST follow all rules exactly.
-You MUST NOT invent details.
-You MUST NOT omit required fields.
-You MUST NOT output anything outside the JSON structure.
