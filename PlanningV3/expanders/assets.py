@@ -195,12 +195,27 @@ def build_dependency_graph(registry, scene_id, shots):
                 alias = f"{scene_id}_ZV_{zone}_{variant}"
                 zone_variants[zone][variant] = alias
 
+                if variant == "Forward":
+                    prompt = (
+                        f"Environment zone: {zone}. "
+                        f"Forward-facing view. "
+                        f"Preserve all visible light sources, windows, lamps, and their positions."
+                    )
+                else:
+                    prompt = (
+                        f"Environment zone: {zone}. "
+                        f"Reverse-facing view. "
+                        f"REMOVE all visible directional light sources (windows, lamps, fixtures) "
+                        f"that would now be behind the camera. "
+                        f"Preserve ONLY their lighting effect on the environment. "
+                        f"No direct light sources may appear in frame."
+
                 graph["zone_backdrops"].append({
                     "alias": alias,
                     "dependencies": [bg_alias],
                     "zone": zone,
                     "variant": variant,
-                    "prompt": f"Zone {zone}, variant {variant}"
+                    "prompt": prompt
                 })
 
         # Store for later
