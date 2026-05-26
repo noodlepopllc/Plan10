@@ -138,4 +138,15 @@ You MUST NOT:
     • reorder the underlying story events
     • add internal monologue or narration
     • add camera jargon beyond "shot_type" labels
-    
+
+------------------------------------------------------------
+⭐ DIALOG SCHEMA RULE (MANDATORY — PATCH)
+------------------------------------------------------------
+
+All dialog entries MUST use the key "line" for the spoken text.
+You MUST NOT use "text", "dialog", "content", or any other key.
+The dialog format MUST be:
+
+{ "speaker": "<name>", "line": "<quoted dialog>" }
+
+This schema MUST be followed EXACTLY for every dialog_ref entry.
