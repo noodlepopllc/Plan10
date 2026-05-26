@@ -84,17 +84,18 @@ def build_i2v_videos(scene_id, assets, shots):
         shot_cv = shot.get("camera_view", {})
 
         instruction = (
-            f"Animate this composite image using I2V. "
-            f"Scene description: {shot['description']}, "
-            f"Action: {shot['action']}, "
-            f"Shot framing: angle={shot_cv.get('angle')}, height={shot_cv.get('height')}, "
+            f"Animate the shot composite with subtle micro-motion. "
+            f"Scene: {shot['description']}. "
+            f"Action: {shot['action']}. "
+            f"Use shot-level framing: angle={shot_cv.get('angle')}, height={shot_cv.get('height')}, "
             f"distance={shot_cv.get('distance')}, framing={shot_cv.get('framing')}, "
             f"facing={shot_cv.get('facing')}. "
-            f"Per-character camera geometry: {char_view_summary}. "
+            f"Per-character geometry: {char_view_summary}. "
             f"Camera focus: {shot['camera_focus']}. "
             f"Micro-motion: {micro_motion}. "
-            "Facial expressions only for showing emotion."
+            f"Facial expressions only for emotion."
         )
+
 
         video_nodes.append({
             "alias": f"{scene_id}_VID_{shot_id}",
@@ -305,11 +306,11 @@ def generate_assets(registry, shots, graph):
         "alias": bg["alias"],
         "alias_used": [],
         "instruction": (
-            f"create representative interior environment reference for the scene: "
-            f"{bg['prompt']}. "
+            f"Create interior environment reference for the scene. "
+            f"Use this description: {bg['prompt']}. "
             f"Wide, neutral, non-shot-specific. "
-            f"Establish interior architecture, lighting, palette, and materials. "
-            f"No characters."
+            f"No characters. "
+            f"Establish interior architecture, lighting, palette, and materials."
         )
     })
 
@@ -318,11 +319,12 @@ def generate_assets(registry, shots, graph):
     # ---------------------------------------------------------
     for zb in graph["zone_backdrops"]:
         instruction = (
-            f"generate zone backdrop for environment zone: {zb['zone']}. "
-            f"Layout: {zb['layout']}. "
-            f"Camera side: {zb['camera_side']}. "
-            f"{zb['prompt']}"
+            f"Generate environment plate for zone '{zb['zone']}'. "
+            f"Use layout '{zb['layout']}' and camera side '{zb['camera_side']}'. "
+            f"Derive architecture, lighting, and materials from BG. "
+            f"Do not include characters."
         )
+
 
         assets.append({
             "alias": zb["alias"],
@@ -335,23 +337,15 @@ def generate_assets(registry, shots, graph):
     # ---------------------------------------------------------
     for base in graph["base_composites"]:
         name = base["character"]
-        appearance = registry_map[name]["appearance_prompt"]
 
-        cv = base.get("character_camera_view", {})
-        cv_desc = (
-            f"angle={cv.get('angle', 'front')}, "
-            f"height={cv.get('height', 'eye-level')}, "
-            f"distance={cv.get('distance', 'medium')}, "
-            f"framing={cv.get('framing', 'medium')}, "
-            f"facing={cv.get('facing', 'toward-environment')}"
-        )
+        # second dependency is always the zone backdrop alias
+        zb_alias = base["dependencies"][1]
 
         instruction = (
-            f"composite {name} into the zone backdrop, consistent with appearance: {appearance}. "
-            f"Environment zone: {base['zone']}. "
-            f"Layout: {base['layout']}. "
-            f"Camera side: {base['camera_side']}. "
-            f"Character camera view: {cv_desc}."
+            f"Composite character sheet asset {name}_Sheet into zone backdrop asset {zb_alias}. "
+            f"Neutral placement pass only. "
+            f"Do not apply camera transforms. "
+            f"Ensure correct spatial placement for zone '{base['zone']}'."
         )
 
         assets.append({
@@ -359,6 +353,7 @@ def generate_assets(registry, shots, graph):
             "alias_used": base["dependencies"],
             "instruction": instruction
         })
+
 
     # ---------------------------------------------------------
     # SHOT COMPOSITES (camera transforms)
@@ -382,20 +377,15 @@ def generate_assets(registry, shots, graph):
         char_view_summary = "; ".join(char_views)
 
         instruction = (
-            f"{sc['description']} "
-            f"Environment zone: {sc['environment_zone']}. "
-            f"Layout: {sc.get('layout', 'solo')}. "
-            f"Camera side: {sc.get('camera_side', 'center')}. "
-            f"Shot-level camera framing: "
-            f"angle={shot_cv.get('angle')}, "
-            f"height={shot_cv.get('height')}, "
-            f"distance={shot_cv.get('distance')}, "
-            f"framing={shot_cv.get('framing')}, "
+            f"Apply shot-level camera transform to base composites. "
+            f"Use framing: angle={shot_cv.get('angle')}, height={shot_cv.get('height')}, "
+            f"distance={shot_cv.get('distance')}, framing={shot_cv.get('framing')}, "
             f"facing={shot_cv.get('facing')}. "
-            f"Per-character camera geometry: {char_view_summary}. "
-            f"Camera focus: {sc.get('camera_focus', '')}. "
-            f"Characters visible: {chars}."
+            f"Apply per-character camera geometry: {char_view_summary}. "
+            f"Use zone '{sc['environment_zone']}', layout '{sc['layout']}', camera side '{sc['camera_side']}'. "
+            f"Camera focus: {sc.get('camera_focus', '')}."
         )
+
 
         assets.append({
             "alias": sc["alias"],
@@ -412,10 +402,11 @@ def generate_assets(registry, shots, graph):
         appearance = registry_map[d["speaker"]]["appearance_prompt"]
 
         instruction = (
-            f"{d['speaker']} speaks the line: \"{line}\". "
-            f"Lip-sync and expression should match emotional context and "
-            f"character appearance: {appearance}."
+            f"Generate lip-sync and facial expression for {d['speaker']} saying: \"{line}\". "
+            f"Use emotional context from the shot. "
+            f"Do not alter camera or environment."
         )
+
 
         assets.append({
             "alias": d["alias"],
