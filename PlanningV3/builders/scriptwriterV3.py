@@ -54,7 +54,7 @@ def build_script(story, outpath):
     print('Wrote Dialog Beats')
 
     complete = run_prompt(
-        f'World: {biography}, Dialog Beats: {dialog_beats}, Narrative: {narrative}',
+        f'World: {biography}, Action Beats: {action_beats}, Dialog Beats: {dialog_beats}, Narrative: {narrative}',
         STORY)
     with open(f'{outpath}/complete.txt', 'w') as complete_f:
       complete_f.write(complete)
