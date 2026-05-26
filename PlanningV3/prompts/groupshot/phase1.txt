@@ -120,3 +120,32 @@ You MUST output ONLY:
     }
   ]
 }
+
+------------------------------------------------------------
+🗣️ DIALOG SCHEMA RULE (MANDATORY)
+------------------------------------------------------------
+
+The "dialog" field for each shot MUST be a list of dialog objects.
+
+Each dialog object MUST have this exact structure:
+
+{
+  "speaker": "<character name>",
+  "line": "<exact dialog line from the script>"
+}
+
+You MUST:
+- Use the key "line" for the spoken text.
+- NOT use "text", "dialog", "content", or any other key for the spoken text.
+- Preserve the dialog wording exactly as in the script.
+- Only include dialog for characters visible in this shot.
+
+Example:
+
+"dialog": [
+  {
+    "speaker": "Samuel",
+    "line": "It was just... overwhelming today."
+  }
+]
+
