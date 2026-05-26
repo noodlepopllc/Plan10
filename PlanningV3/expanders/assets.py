@@ -290,19 +290,13 @@ def generate_assets(registry, shots, graph):
             # create_character_sheet
             prompt = char["appearance_prompt"]
             instruction = (
-                f"create_character_sheet("
-                f"prompt={json.dumps(prompt)}"
-                f")"
+                f"create_character_sheet using prompt: {prompt}"
             )
         else:
             # design_voice
             voice_desc = char["voice"]
-            output_path = f"{name}_Voice.wav"
             instruction = (
-                f"design_voice("
-                f"voice={json.dumps(voice_desc)}, "
-                f"output={json.dumps(output_path)}"
-                f")"
+                f"design_voice using voice: {voice_desc}"
             )
 
         assets.append({
@@ -318,9 +312,7 @@ def generate_assets(registry, shots, graph):
     bg_prompt = bg["prompt"]
 
     bg_instruction = (
-        f"create_background("
-        f"prompt={json.dumps(bg_prompt)}"
-        f")"
+        f"create_background using prompt: {bg_prompt}"
     )
 
     assets.append({
@@ -334,11 +326,8 @@ def generate_assets(registry, shots, graph):
     # ---------------------------------------------------------
     for zb in graph["zone_backdrops"]:
         instruction = (
-            f"generate_backdrop("
-            f"media={json.dumps(zb['dependencies'][0])}, "
-            f"zone={json.dumps(zb['zone'])}, "
-            f"char_image=\"\""
-            f")"
+            f"generate_backdrop using media: {zb['dependencies'][0]}, "
+            f"zone: {zb['zone']}"
         )
 
         assets.append({
@@ -353,17 +342,11 @@ def generate_assets(registry, shots, graph):
     for base in graph["base_composites"]:
         name = base["character"]
         sheet_alias = f"{name}_Sheet"
-        zb_alias = base["dependencies"][1]  # [Sheet, ZB]
-
-        action = f"neutral placement of {name} in zone {base['zone']}"
+        zb_alias = base["dependencies"][1]
 
         instruction = (
-            f"composite_scene("
-            f"background_path={json.dumps(zb_alias)}, "
-            f"characters={[sheet_alias]!r}, "
-            f"shot_type=\"medium\", "
-            f"action={json.dumps(action)}"
-            f")"
+            f"create a composite by combining {sheet_alias} with {zb_alias}, "
+            f"neutral placement in zone {base['zone']}"
         )
 
         assets.append({
@@ -379,9 +362,9 @@ def generate_assets(registry, shots, graph):
         shot = find_shot(shots, sc["shot_id"])
         shot_cv = sc.get("camera_view", {}) or {}
 
-        # first base composite is the media source
         if not sc["dependencies"]:
             continue
+
         source_media = sc["dependencies"][0]
 
         angle = shot_cv.get("angle", "front")
@@ -389,13 +372,8 @@ def generate_assets(registry, shots, graph):
         distance = shot_cv.get("distance", "medium")
 
         instruction = (
-            f"apply_gimbal_shot("
-            f"media={json.dumps(source_media)}, "
-            f"output={json.dumps(sc['alias'] + '.png')}, "
-            f"angle={json.dumps(angle)}, "
-            f"height={json.dumps(height)}, "
-            f"distance={json.dumps(distance)}"
-            f")"
+            f"apply gimbal shot to {source_media}, "
+            f"angle: {angle}, height: {height}, distance: {distance}"
         )
 
         assets.append({
@@ -416,15 +394,9 @@ def generate_assets(registry, shots, graph):
         media_alias = sc_alias
         audio_alias = f"{speaker}_Voice.wav"
 
-        prompt = "speaking naturally, lip-synced to the line"
-
         instruction = (
-            f"dialog_to_video("
-            f"prompt={json.dumps(prompt)}, "
-            f"media={json.dumps(media_alias)}, "
-            f"text={json.dumps(line)}, "
-            f"audio={json.dumps(audio_alias)}"
-            f")"
+            f"create a dialog_to_video using {audio_alias} with {media_alias}, "
+            f"text: \"{line}\""
         )
 
         assets.append({
@@ -434,6 +406,7 @@ def generate_assets(registry, shots, graph):
         })
 
     return assets
+
 
 
 if __name__ == '__main__':
