@@ -203,7 +203,8 @@ def build_dependency_graph(registry, scene_id, shots):
         for z in loc["zones"]:
             if zone_name in z["zone_name"]:
                 return z["description"]
-        return registry["world"]["description"]  # fallback interior description
+        return registry["locations"][0]["description"]  # safe fallback
+
 
     primary_zone = shots[0]["environment_zone"]
     env_prompt = resolve_zone_description(registry, primary_zone)
