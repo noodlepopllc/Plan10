@@ -266,10 +266,20 @@ def generate_assets(registry, shots, graph):
         char = registry_map[name]
 
         if item["alias"].endswith("_Sheet"):
-            prompt = char["appearance_prompt"]
+            base_prompt = char["appearance_prompt"]
+
+            realism_block = (
+                "shot on a full-frame DSLR, 50mm lens, natural skin texture, "
+                "realistic pores, photographic realism, studio lighting, "
+                "no painting, no illustration, no digital art, no concept art."
+            )
+
+            prompt = f"{base_prompt}. {realism_block}"
+
             instruction = (
                 f"create_character_sheet using prompt: {prompt}"
             )
+
         else:
             voice_desc = char["voice"]
             instruction = (
