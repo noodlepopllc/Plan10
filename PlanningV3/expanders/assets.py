@@ -50,6 +50,7 @@ def build_i2v_videos(scene_id, assets, shots):
     shot_map = {str(s["shot_id"]): s for s in shots}
 
     for asset in assets:
+        # Only generate I2V for shot composites
         if not asset["alias"].startswith(f"{scene_id}_SHOT_"):
             continue
 
@@ -62,40 +63,18 @@ def build_i2v_videos(scene_id, assets, shots):
         if not shot:
             continue
 
+        # Micro‑motion summary
         micro_motion = ", ".join([
             c.get("appearance_in_shot", "").strip().rstrip(".")
             for c in shot["characters"]
             if c.get("appearance_in_shot")
-        ]) or "subtle environmental motion (heat shimmer, light drift, fabric flutter)"
+        ]) or "subtle environmental motion"
 
-        # Per-character camera geometry
-        char_views = []
-        for c in shot["characters"]:
-            cv = c.get("camera_view", {})
-            char_views.append(
-                f"{c['name']}: angle={cv.get('angle')}, "
-                f"height={cv.get('height')}, "
-                f"distance={cv.get('distance')}, "
-                f"framing={cv.get('framing')}, "
-                f"facing={cv.get('facing')}"
-            )
-        char_view_summary = "; ".join(char_views)
-
-        shot_cv = shot.get("camera_view", {})
-
+        # Build instruction
         instruction = (
-            f"Animate the shot composite with subtle micro-motion. "
-            f"Scene: {shot['description']}. "
-            f"Action: {shot['action']}. "
-            f"Use shot-level framing: angle={shot_cv.get('angle')}, height={shot_cv.get('height')}, "
-            f"distance={shot_cv.get('distance')}, framing={shot_cv.get('framing')}, "
-            f"facing={shot_cv.get('facing')}. "
-            f"Per-character geometry: {char_view_summary}. "
-            f"Camera focus: {shot['camera_focus']}. "
-            f"Micro-motion: {micro_motion}. "
-            f"Facial expressions only for emotion."
+            f"create an image_to_video using {asset['alias']} asset, "
+            f"action: {micro_motion}"
         )
-
 
         video_nodes.append({
             "alias": f"{scene_id}_VID_{shot_id}",
