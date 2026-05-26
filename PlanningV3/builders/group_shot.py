@@ -45,12 +45,17 @@ def iter_scenes_from_xml(script_text: str):
                 continue
 
             if beat_type == "action":
-                beats.append(content)
+                beats.append({
+                    "type": "action",
+                    "action": content
+                })
             else:
-                if speaker:
-                    beats.append(f"{speaker}:\n{content}")
-                else:
-                    beats.append(content)
+                beats.append({
+                    "type": "dialog",
+                    "speaker": speaker,
+                    "line": content
+                })
+
 
         yield {
             "scene_id": scene_id,
