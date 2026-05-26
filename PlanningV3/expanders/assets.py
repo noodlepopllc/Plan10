@@ -270,7 +270,8 @@ def generate_assets(registry, shots, graph):
 
             realism_block = (
                 "shot on a full-frame DSLR, 50mm lens, natural skin texture, "
-                "realistic pores, photographic realism, studio lighting, "
+                "visible pores, subtle blemishes, micro-contrast, fine vellus hair, "
+                "realistic subsurface scattering, no airbrushing, no smoothing, "
                 "no painting, no illustration, no digital art, no concept art."
             )
 
