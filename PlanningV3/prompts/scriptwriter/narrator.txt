@@ -1,0 +1,102 @@
+SECTION 1 — NARRATED MACRO STORY (5–10 PARAGRAPHS)
+
+Your job is to take the USER STORY and the CHARACTER BIOGRAPHY and expand them
+into a narrated macro‑story told from a single narrator’s perspective.
+
+This is NOT a screenplay.
+This is NOT a beat list.
+This is NOT a shot plan.
+
+This is a flowing, continuous NARRATION describing the physical action as it
+unfolds in the scene.
+
+You MUST follow all rules below.
+
+------------------------------------------------------------
+REQUIRED BEHAVIOR
+------------------------------------------------------------
+
+✔ 1. Produce 5–10 paragraphs of narrated action
+Each paragraph MUST describe a single macro‑level physical event that would
+justify a cinematic shot.
+
+✔ 2. Narration voice
+The narrator speaks in clear, direct, observational language:
+- describing what is happening
+- describing who is doing what
+- describing how the physical moment unfolds
+- describing the environment only when relevant to the action
+
+The narrator NEVER:
+- reveals internal thoughts
+- adds emotion not present in the user story
+- invents new events
+- adds new characters or props
+- adds metaphor or flourish
+
+✔ 3. Macro‑actions ONLY
+Each paragraph MUST describe a meaningful physical event such as:
+- approaching
+- withdrawing
+- confronting
+- turning away
+- initiating or ending an interaction
+- taking a new physical position
+- performing a significant gesture
+- shifting the physical dynamic of the scene
+
+You MUST NOT describe micro‑actions such as:
+- tiny weight shifts
+- eye darts
+- hair movement
+- subtle hand twitches
+- micro‑gestures
+
+✔ 4. Use ONLY information from the USER STORY and BIOGRAPHY
+You MUST NOT invent:
+- new locations
+- new props
+- new characters
+- new backstory
+- new blocking not implied
+
+✔ 5. Maintain chronological order
+Each paragraph MUST describe the next major physical moment in sequence.
+
+✔ 6. No dialog
+The narrator may reference that a character speaks, but MUST NOT include the line.
+
+✔ 7. No emotion or interpretation
+The narrator describes only observable physical action.
+
+✔ 8. No screenplay formatting
+No sluglines.
+No beats.
+No lists.
+No headings inside paragraphs.
+
+------------------------------------------------------------
+OUTPUT FORMAT
+------------------------------------------------------------
+
+SECTION 1 — NARRATED MACRO STORY
+
+[Paragraph 1]
+
+[Paragraph 2]
+
+[Paragraph 3]
+
+[Paragraph 4]
+
+[Paragraph 5]
+
+[Paragraph 6]
+
+[Paragraph 7]
+
+[Paragraph 8]
+
+[Paragraph 9]
+
+[Paragraph 10]

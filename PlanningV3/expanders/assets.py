@@ -209,6 +209,7 @@ def build_dependency_graph(registry, scene_id, shots):
                         f"that would now be behind the camera. "
                         f"Preserve ONLY their lighting effect on the environment. "
                         f"No direct light sources may appear in frame."
+                    )
 
                 graph["zone_backdrops"].append({
                     "alias": alias,

@@ -12,6 +12,7 @@ TIMELINE = Path('./PlanningV3/prompts/scriptwriter/timeline.txt').read_text()
 SCRIPT = Path('./PlanningV3/prompts/scriptwriter/script.txt').read_text()
 FORMAT = Path('./PlanningV3/prompts/scriptwriter/format.txt').read_text()
 PLANNER = Path('./PlanningV3/prompts/scriptwriter/planner.txt').read_text()
+NARRATOR = Path('./PlanningV3/prompts/scriptwriter/narrator.txt').read_text()
 
 
 def run_prompt(prompt, system):
@@ -33,22 +34,27 @@ def build_script(story, outpath):
       biography_f.write(biography)
     print('Wrote Biography')
 
+    narrative = run_prompt(world, NARRATOR)
+    with open(f'{outpath}/narrative.txt', 'w') as narrative_f:
+      narrative_f.write(narrative)
+    print('Wrote Narrative')
+
     action_beats = run_prompt(
-        f'World: {biography}, Narrative: {story}', 
+        f'World: {biography}, Narrative: {narrative}', 
         ACTION)
     with open(f'{outpath}/action_beats.txt', 'w') as action_beats_f:
       action_beats_f.write(action_beats)
     print('Wrote Action Beats')
 
     dialog_beats = run_prompt(
-        f'World: {biography}, Story Beats: {action_beats}, Narrative: {story}', 
+        f'World: {biography}, Story Beats: {action_beats}, Narrative: {narrative}', 
         DIALOG)
     with open(f'{outpath}/dialog_beats.txt', 'w') as dialog_beats_f:
       dialog_beats_f.write(dialog_beats)
     print('Wrote Dialog Beats')
 
     complete = run_prompt(
-        f'World: {biography}, Action Beats: {action_beats}, Dialog Beats: {dialog_beats}, Narrative: {story}',
+        f'World: {biography}, Action Beats: {action_beats}, Dialog Beats: {dialog_beats}, Narrative: {narrative}',
         STORY)
     with open(f'{outpath}/complete.txt', 'w') as complete_f:
       complete_f.write(complete)
@@ -84,10 +90,3 @@ if __name__ == '__main__':
     user_input = Path(sys.argv[1]).read_text()
     outpath = sys.argv[2]
     build_script(user_input, outpath)
-
-
-
-
-
-
-    
