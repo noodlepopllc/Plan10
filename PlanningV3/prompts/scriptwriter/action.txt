@@ -1,82 +1,89 @@
-⭐ SYSTEM — SINGLE‑PASS ACTION BEAT EXTRACTOR
+SECTION 1 — ACTION BEATS (VARIABLE LENGTH)
 
-SECTION 1 — ACTION BEATS (5 PARAGRAPHS)  
-(One pass. No expansion. No slicing. No dialog. No emotion. No invention.)
-
-Your job is to convert the Narrative text into five paragraphs of ACTION BEATS, each describing who is doing what in which zone, using only the information explicitly present in the Narrative and World text.
+Your job is to convert the NARRATED MACRO STORY into a sequence of MACRO ACTION
+BEATS. Each beat represents one meaningful physical event that would justify a
+cinematic shot or anime cut.
 
 This is a direct extractor, not a generator.
-⭐ REQUIRED BEHAVIOR
-✔ 1. Five paragraphs, chronological order
 
-You MUST produce exactly 5 paragraphs, each describing the next physical moment in sequence.
-✔ 2. Each paragraph MUST include:
+------------------------------------------------------------
+REQUIRED BEHAVIOR
+------------------------------------------------------------
 
-    the zone where the moment occurs
-    the characters present at the start of that moment
-    the physical actions that occur
-    any character entering or leaving the zone (only if explicitly stated)
-    any threshold crossing (only if explicitly stated)
+✔ 1. Variable number of beats
+You MUST produce one ACTION BEAT per macro event in the narration.
+Do NOT force a fixed number.
 
-✔ 3. Physical actions ONLY
+Most scenes will produce 3–8 beats.
 
-Allowed content includes:
+✔ 2. Each ACTION BEAT MUST include:
+- the zone where the event occurs (if stated)
+- the characters present at the start of the event
+- the macro‑level physical action that occurs
+- any character entering or leaving the zone (only if explicitly stated)
+- any threshold crossing (only if explicitly stated)
+- any dialog hint (if the narration includes one), expressed as an ACTION
 
-    sitting
-    standing
-    walking
-    turning
-    placing objects
-    picking up objects
-    gesturing
-    leaning
-    shifting weight
-    approaching
-    withdrawing
+✔ 3. Dialog as ACTIONS
+If the narration includes a dialog hint:
+- you MUST include it as part of the ACTION BEAT
+- you MUST phrase it as a physical action, e.g.:
 
-✔ 4. No invention
+  “Character speaks, asking whether she loves him.”
+  “Character responds, stating her programmed answer.”
 
+- you MUST NOT quote the dialog line
+- you MUST NOT invent new meaning
+
+✔ 4. Macro physical actions ONLY
+Each beat MUST describe one meaningful physical event such as:
+- approaching or withdrawing
+- turning toward or away
+- initiating or ending an interaction
+- taking a new physical position
+- performing a significant gesture
+- shifting the physical dynamic of the scene
+- speaking (as an action)
+
+You MUST NOT include micro‑actions such as:
+- tiny weight shifts
+- eye darts
+- hair movement
+- subtle twitches
+- micro‑gestures or micro‑posture changes
+
+✔ 5. No invention
 You MUST NOT add:
+- new props
+- new zones
+- new characters
+- new blocking not implied
+- new story events
 
-    new props
-    new zones
-    new characters
-    new actions not implied
-    new blocking
-    new story events
-
-✔ 5. No narrative prose
-
+✔ 6. No narrative prose
 You MUST NOT include:
+- metaphor
+- emotion
+- sensory detail
+- internal thoughts
+- flourish
 
-    dialog
-    emotion
-    metaphor
-    sensory detail
-    internal thoughts
-    flourish
+✔ 7. No multi‑step chains
+Each beat describes ONE macro event, not a sequence of future actions.
 
-✔ 6. No multi‑step chains
+✔ 8. No repetition
+Each beat must add new physical information.
 
-Each paragraph describes one continuous moment, not a sequence of future actions.
-✔ 7. No repetition
+------------------------------------------------------------
+OUTPUT FORMAT
+------------------------------------------------------------
 
-Each paragraph must add new physical information.
-⭐ OUTPUT FORMAT
-Code
+SECTION 1 — ACTION BEATS
 
-SECTION 1 — ACTION BEATS (5 PARAGRAPHS)
+[Beat 1]
 
-[Paragraph 1]
+[Beat 2]
 
-[Paragraph 2]
+[Beat 3]
 
-[Paragraph 3]
-
-[Paragraph 4]
-
-[Paragraph 5]
-
-No headings inside paragraphs.
-No lists.
-No commentary.
+...

@@ -9,32 +9,36 @@ You MUST output the following sections in this exact order:
 ⭐ SECTION 1 — DIALOG BEATS (LIST)
 ------------------------------------------------------------
 
+For EACH ACTION BEAT that contains a dialog action or dialog hint, you MUST
+produce exactly ONE dialog beat.
+
 Each dialog beat MUST include:
     • The zone where the dialog occurs (taken ONLY from the ACTION BEATS)
-    • The paragraph number of the ACTION BEAT it attaches to
+    • The ACTION BEAT number it attaches to
     • The speaker’s canonical name (taken ONLY from the World/Biography text)
-    • A single line of direct quoted dialog
+    • A single line of direct quoted dialog rewritten from the dialog hint
     • No filler dialog
     • No summary speech
     • No invented topics
     • No emotional analysis
     • No new actions
 
-Each dialog beat MUST correspond to a moment where characters naturally interact
-based on the ACTION BEATS in the input.
+If an ACTION BEAT contains NO dialog hint, you MUST NOT generate a dialog beat.
 
 ------------------------------------------------------------
-⭐ DIALOG LOGIC RULE
+⭐ DIALOG EXTRACTION RULE
 ------------------------------------------------------------
-Only generate dialog where characters are physically co‑present and interacting
-according to the ACTION BEATS in the input.
-If characters do not interact in a beat, do NOT generate dialog for that beat.
+You MUST extract dialog ONLY from ACTION BEATS that explicitly contain a dialog
+action or dialog hint. You MUST NOT infer dialog from narration or context.
 
 ------------------------------------------------------------
 ⭐ DIRECT SPEECH RULE
 ------------------------------------------------------------
 Any verbal communication MUST be written as direct quoted dialog.
-Summary speech is forbidden (“she tells a story,” “she explains,” etc.).
+Summary speech is forbidden (“she tells him something,” “he explains,” etc.).
+
+You MUST rewrite the dialog hint into a natural, direct line of dialog that
+matches the meaning of the hint WITHOUT adding new meaning.
 
 ------------------------------------------------------------
 ⭐ IDENTITY CONSISTENCY RULE (MANDATORY)
@@ -68,3 +72,17 @@ If a line of dialog would contradict identity, you MUST rewrite it to preserve i
     • MUST NOT contradict the ACTION BEATS in the input
     • MUST NOT add filler dialog
     • MUST use ONLY the input text as the source of truth
+
+------------------------------------------------------------
+OUTPUT FORMAT
+------------------------------------------------------------
+
+SECTION 1 — DIALOG BEATS
+
+[Dialog Beat 1]
+
+[Dialog Beat 2]
+
+[Dialog Beat 3]
+
+...
