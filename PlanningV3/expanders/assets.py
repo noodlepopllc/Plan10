@@ -44,6 +44,52 @@ def extract_emotion(appearance_text):
 
     return "Neutral"
 
+def select_zone_variant(shot, zones, character_name):
+    zone_name = shot["environment_zone"]
+    char_count = len(shot["characters"])
+    camera_side = shot.get("camera_side", None)
+
+    # 1. Two-person → Forward
+    if char_count > 1:
+        variant = "forward"
+
+    # 2. Solo → Reverse for that character
+    elif char_count == 1:
+        variant = "reverseA" if character_name == "charA" else "reverseB"
+
+    # 3. OTS → Reverse based on camera_side
+    if shot["type"] == "ots":
+        if camera_side == "charA":
+            variant = "reverseA"
+        else:
+            variant = "reverseB"
+
+    # Find matching zone
+    for z in zones:
+        if z["zone_name"] == zone_name and z["variant"].lower() == variant.lower():
+            return z["alias"]
+
+    raise ValueError("No matching zone variant found")
+
+def build_base_composite(shot, character, zones):
+    sheet_alias = f"{character}_Sheet"
+    zone_alias = select_zone_variant(shot, zones, character)
+    action = shot["action"]
+    shot_type = shot["type"]
+
+    instruction = (
+        f"create a composite by combining {sheet_alias} asset with {zone_alias} asset, "
+        f"shot type: {shot_type}, apply starting action: {action}, "
+        f"no camera transforms"
+    )
+
+    return {
+        "alias": f"{character}_{shot['shot_id']}_BASE",
+        "alias_used": [sheet_alias, zone_alias],
+        "instruction": instruction
+    }
+
+
 
 def build_i2v_videos(scene_id, assets, shots):
     video_nodes = []
@@ -134,100 +180,88 @@ def build_dependency_graph(registry, scene_id, shots):
 
 
     # ---------------------------------------------------------
-    # ZONE BACKDROPS (zone × layout × camera_side)
+    # ZONE VARIANTS (Forward / ReverseA / ReverseB)
     # ---------------------------------------------------------
-    backdrop_cache = {}   # (zone, layout, camera_side) -> alias
+    zone_variants = {}  # zone_name -> {variant_name: alias}
 
     for shot in shots:
         zone = shot["environment_zone"]
-        layout = shot.get("layout", "solo")
-        camera_side = shot.get("camera_side", "center")
 
-        key = (zone, layout, camera_side)
+        if zone not in zone_variants:
+            zone_variants[zone] = {}
 
-        if key in backdrop_cache:
-            zb_alias = backdrop_cache[key]
-        else:
-            zb_alias = f"{scene_id}_ZB_{len(backdrop_cache) + 1}"
-            backdrop_cache[key] = zb_alias
+            # Create 3 deterministic variants
+            for variant in ["Forward", "ReverseA", "ReverseB"]:
+                alias = f"{scene_id}_ZV_{zone}_{variant}"
+                zone_variants[zone][variant] = alias
 
-            cv = shot.get("camera_view", {})
-            prompt = (
-                f"Environment zone: {zone}. "
-                f"Layout: {layout}. "
-                f"Camera side: {camera_side}. "
-                f"Shot-level camera view: "
-                f"angle={cv.get('angle')}, "
-                f"height={cv.get('height')}, "
-                f"distance={cv.get('distance')}, "
-                f"framing={cv.get('framing')}, "
-                f"facing={cv.get('facing')}."
-            )
+                graph["zone_backdrops"].append({
+                    "alias": alias,
+                    "dependencies": [bg_alias],
+                    "zone": zone,
+                    "variant": variant,
+                    "prompt": f"Zone {zone}, variant {variant}"
+                })
 
-            graph["zone_backdrops"].append({
-                "alias": zb_alias,
-                "dependencies": [bg_alias],
-                "zone": zone,
-                "layout": layout,
-                "camera_side": camera_side,
-                "prompt": prompt
-            })
+        # Store for later
+        shot["_zone_variants"] = zone_variants[zone]
 
-        shot["_zone_backdrop_alias"] = zb_alias  # stash for later stages
 
     # ---------------------------------------------------------
-    # BASE COMPOSITES (character-in-zone)
+    # BASE COMPOSITES (character + zone_variant)
     # ---------------------------------------------------------
     for shot in shots:
-        zb_alias = shot["_zone_backdrop_alias"]
+        zone = shot["environment_zone"]
+        variants = shot["_zone_variants"]
 
         for char in shot["characters"]:
             name = char["name"].upper()
+
+            # Select Forward / ReverseA / ReverseB
+            if len(shot["characters"]) > 1:
+                variant = "Forward"
+            elif len(shot["characters"]) == 1:
+                variant = "ReverseA" if name == "CHARA" else "ReverseB"
+            if shot["type"] == "ots":
+                variant = "ReverseA" if shot.get("camera_side") == "charA" else "ReverseB"
+
+            zone_alias = variants[variant]
+
             base_alias = f"{scene_id}_BASE_{shot['shot_id']}_{name}"
 
             graph["base_composites"].append({
                 "alias": base_alias,
                 "dependencies": [
                     f"{name}_Sheet",
-                    zb_alias
+                    zone_alias
                 ],
                 "character": name,
                 "shot_id": shot["shot_id"],
-                "zone": shot["environment_zone"],
-                "layout": shot.get("layout", "solo"),
-                "camera_side": shot.get("camera_side", "center"),
-                "character_camera_view": char.get("camera_view", {}),
+                "zone": zone,
+                "variant": variant
             })
 
-    # ---------------------------------------------------------
-    # SHOT COMPOSITES (camera transforms over base composites)
-    # ---------------------------------------------------------
-    IMAGE_SHOT_TYPES = [
-        "closeup", "medium", "wide", "two_shot", "ots", "profile",
-        "establishing", "tracking", "insert", "cutaway", "transition"
-    ]
 
+    # ---------------------------------------------------------
+    # SHOT COMPOSITES
+    # ---------------------------------------------------------
     for shot in shots:
-        if shot["type"] in IMAGE_SHOT_TYPES:
-            sc_alias = f"{scene_id}_SHOT_{shot['shot_id']}"
+        sc_alias = f"{scene_id}_SHOT_{shot['shot_id']}"
 
-            deps = [
-                f"{scene_id}_BASE_{shot['shot_id']}_{c['name'].upper()}"
-                for c in shot["characters"]
-            ]
+        deps = [
+            f"{scene_id}_BASE_{shot['shot_id']}_{c['name'].upper()}"
+            for c in shot["characters"]
+        ]
 
-            graph["shot_composites"].append({
-                "alias": sc_alias,
-                "dependencies": deps,
-                "description": shot["description"],
-                "characters": [c["name"] for c in shot["characters"]],
-                "camera_view": shot.get("camera_view", {}),
-                "environment_zone": shot["environment_zone"],
-                "layout": shot.get("layout", "solo"),
-                "camera_side": shot.get("camera_side", "center"),
-                "camera_focus": shot.get("camera_focus", ""),
-                "shot_id": shot["shot_id"]
-            })
+        graph["shot_composites"].append({
+            "alias": sc_alias,
+            "dependencies": deps,
+            "description": shot["description"],
+            "characters": [c["name"] for c in shot["characters"]],
+            "shot_id": shot["shot_id"],
+            "type": shot["type"]
+        })
+
 
     # ---------------------------------------------------------
     # DIALOG (depends on shot composite)
@@ -257,6 +291,8 @@ def build_dependency_graph(registry, scene_id, shots):
 def generate_assets(registry, shots, graph):
     assets = []
     registry_map = {c["name"].upper(): c for c in registry["characters"]}
+    shot_map = {str(s["shot_id"]): s for s in shots}
+
 
     # ---------------------------------------------------------
     # IDENTITY → create_character_sheet / design_voice
@@ -330,21 +366,54 @@ def generate_assets(registry, shots, graph):
     # BASE COMPOSITES → composite_scene
     # ---------------------------------------------------------
     for base in graph["base_composites"]:
-        name = base["character"]
-        sheet_alias = f"{name}_Sheet"
-        zb_alias = base["dependencies"][1]
+        sheet_alias = base["dependencies"][0]
+        zone_alias = base["dependencies"][1]
+
+        shot = find_shot(shots, base["shot_id"])
+        shot_type = shot["type"]
+        starting_action = shot["action"]
 
         instruction = (
-            f"create a composite by combining {sheet_alias} asset with {zb_alias} asset, "
-            f"neutral placement in {base['zone']}"
+            f"create a composite by combining {sheet_alias} asset with {zone_alias} asset, "
+            f"shot type: {shot_type}, apply starting action: {starting_action}, "
+            f"no camera transforms"
         )
 
         assets.append({
             "alias": base["alias"],
-            "alias_used": base["dependencies"],
+            "alias_used": [sheet_alias, zone_alias],
             "instruction": instruction
         })
 
+
+
+    # ---------------------------------------------------------
+    # SHOT COMPOSITES → composite_scene
+    # ---------------------------------------------------------
+    for shot_node in graph["shot_composites"]:
+        shot = find_shot(shots, shot_node["shot_id"])
+        shot_type = shot["type"]
+        action = shot["action"]
+
+        deps = shot_node["dependencies"]
+
+        instruction = (
+            f"create a composite by combining {' and '.join(deps)} assets, "
+            f"shot type: {shot_type}, apply action: {action}, "
+            f"no camera transforms"
+        )
+
+        assets.append({
+            "alias": shot_node["alias"],
+            "alias_used": deps,
+            "instruction": instruction
+        })
+
+
+
+
+
+    '''
     # ---------------------------------------------------------
     # SHOT COMPOSITES → apply_gimbal_shot
     # ---------------------------------------------------------
@@ -371,6 +440,7 @@ def generate_assets(registry, shots, graph):
             "alias_used": sc["dependencies"],
             "instruction": instruction
         })
+    '''
 
     # ---------------------------------------------------------
     # DIALOG → dialog_to_video
