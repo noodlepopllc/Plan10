@@ -135,14 +135,23 @@ def build_dependency_graph(registry, scene_id, shots):
     # ---------------------------------------------------------
     # BACKGROUND (scene-level)
     # ---------------------------------------------------------
-    env_prompt = shots[0]["environment_zone"]
-    bg_alias = f"{scene_id}_BG"
+    def resolve_zone_description(registry, zone_name):
+        loc = registry["locations"][0]
+        for z in loc["zones"]:
+            if zone_name in z["zone_name"]:
+                return z["description"]
+        return registry["world"]["description"]  # fallback interior description
 
+    primary_zone = shots[0]["environment_zone"]
+    env_prompt = resolve_zone_description(registry, primary_zone)
+
+    bg_alias = f"{scene_id}_BG"
     graph["background"] = {
         "alias": bg_alias,
         "dependencies": [],
         "prompt": env_prompt
     }
+
 
     # ---------------------------------------------------------
     # ZONE BACKDROPS (zone × layout × camera_side)
@@ -292,19 +301,17 @@ def generate_assets(registry, shots, graph):
     # ---------------------------------------------------------
     
     bg = graph["background"]
-    bg['prompt'] = registry["locations"][0]["description"]
     assets.append({
         "alias": bg["alias"],
         "alias_used": [],
         "instruction": (
-            f"create representative environment reference for the scene: "
+            f"create representative interior environment reference for the scene: "
             f"{bg['prompt']}. "
             f"Wide, neutral, non-shot-specific. "
-            f"Establish architecture, lighting, palette, and materials. "
+            f"Establish interior architecture, lighting, palette, and materials. "
             f"No characters."
         )
     })
-
 
     # ---------------------------------------------------------
     # ZONE BACKDROPS
