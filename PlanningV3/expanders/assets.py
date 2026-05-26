@@ -336,7 +336,7 @@ def generate_assets(registry, shots, graph):
 
         instruction = (
             f"create a composite by combining {sheet_alias} asset with {zb_alias} asset, "
-            f"neutral placement in zone {base['zone']}"
+            f"neutral placement in {base['zone']}"
         )
 
         assets.append({
