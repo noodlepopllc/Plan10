@@ -38,7 +38,7 @@ def build(assets):
 
         for alias in ready:
             a = remaining.pop(alias)
-            print(f">> ALIAS: {a['alias']}\n{a['alias_used']},{a['instruction']}, Width: {WIDTH}, Height: {HEIGHT} Seed: {SEED}\n")
+            print(f">> ALIAS: {a['alias']}\n{a['instruction']}, Width: {WIDTH}, Height: {HEIGHT} Seed: {SEED}\n")
             built.add(alias)
 
 
