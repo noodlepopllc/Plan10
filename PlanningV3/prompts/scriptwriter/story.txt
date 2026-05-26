@@ -10,19 +10,21 @@ You MUST output the following sections in this exact order:
 ⭐ SECTION 1 — STRUCTURED SCENE (JSON‑LIKE OBJECT)
 ------------------------------------------------------------
 
-For each of the 5 paragraphs, output an object containing:
-    • "paragraph": paragraph number (1–5)
+You MUST output a JSON‑like list with ONE object per ACTION BEAT.
+
+Each object MUST contain:
+    • "beat": the ACTION BEAT number (1–N)
     • "zone": the zone name (taken ONLY from the ACTION BEATS)
-    • "actions": the list of physical actions for that paragraph
+    • "actions": the list of physical actions for that beat
                  (taken EXACTLY from the ACTION BEATS)
-    • "dialog": the list of dialog lines that belong to that paragraph
+    • "dialog": the list of dialog lines that belong to that beat
                 (taken EXACTLY from the DIALOG BEATS)
 
 FORMAT (MANDATORY):
 
 [
   {
-    "paragraph": 1,
+    "beat": 1,
     "zone": "Zone Name",
     "actions": [
         "Action 1",
@@ -38,9 +40,9 @@ FORMAT (MANDATORY):
 ------------------------------------------------------------
 ⭐ MERGE RULE (MANDATORY)
 ------------------------------------------------------------
-You MUST merge dialog into the paragraph whose number matches the dialog beat’s
-paragraph number. Dialog MUST appear in the same paragraph as the actions that
-occur at the same moment.
+You MUST merge dialog into the object whose beat number matches the dialog beat’s
+beat number. Dialog MUST appear in the same object as the actions that occur at
+the same moment.
 
 ------------------------------------------------------------
 ⭐ PRESERVATION RULES (MANDATORY)
@@ -49,7 +51,7 @@ You MUST preserve:
     • all actions EXACTLY as written in the ACTION BEATS
     • all dialog EXACTLY as written in the DIALOG BEATS
     • all zone names EXACTLY as written in the ACTION BEATS
-    • the paragraph structure (1–5)
+    • the beat structure (1–N)
 
 You MUST NOT:
     • add new actions
@@ -58,9 +60,9 @@ You MUST NOT:
     • add new locations
     • alter any action text
     • alter any dialog text
-    • reorder paragraphs
-    • merge paragraphs
-    • split paragraphs
+    • reorder beats
+    • merge beats
+    • split beats
     • add sensory detail, emotion, or prose
 
 ------------------------------------------------------------
@@ -68,4 +70,4 @@ You MUST NOT:
 ------------------------------------------------------------
     • MUST use ONLY the input text as the source of truth.
     • MUST preserve zone anchoring exactly.
-    • MUST output a valid JSON‑like list of 5 objects.
+    • MUST output a valid JSON‑like list of objects.
