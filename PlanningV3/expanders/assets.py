@@ -280,16 +280,30 @@ def generate_assets(registry, shots, graph):
     registry_map = {c["name"].upper(): c for c in registry["characters"]}
 
     # ---------------------------------------------------------
-    # IDENTITY
+    # IDENTITY → create_character_sheet / design_voice
     # ---------------------------------------------------------
     for item in graph["identity"]:
         name = item["character"]
-        appearance = registry_map[name]["appearance_prompt"]
+        char = registry_map[name]
 
         if item["alias"].endswith("_Sheet"):
-            instruction = f"create character sheet for {name}: {appearance}"
+            # create_character_sheet
+            prompt = char["appearance_prompt"]
+            instruction = (
+                f"create_character_sheet("
+                f"prompt={json.dumps(prompt)}"
+                f")"
+            )
         else:
-            instruction = f"design voice for {name}: {registry_map[name]['voice']}"
+            # design_voice
+            voice_desc = char["voice"]
+            output_path = f"{name}_Voice.wav"
+            instruction = (
+                f"design_voice("
+                f"voice={json.dumps(voice_desc)}, "
+                f"output={json.dumps(output_path)}"
+                f")"
+            )
 
         assets.append({
             "alias": item["alias"],
@@ -298,33 +312,34 @@ def generate_assets(registry, shots, graph):
         })
 
     # ---------------------------------------------------------
-    # BACKGROUND
+    # BACKGROUND → create_background
     # ---------------------------------------------------------
-    
     bg = graph["background"]
+    bg_prompt = bg["prompt"]
+
+    bg_instruction = (
+        f"create_background("
+        f"prompt={json.dumps(bg_prompt)}"
+        f")"
+    )
+
     assets.append({
         "alias": bg["alias"],
         "alias_used": [],
-        "instruction": (
-            f"Create interior environment reference for the scene. "
-            f"Use this description: {bg['prompt']}. "
-            f"Wide, neutral, non-shot-specific. "
-            f"No characters. "
-            f"Establish interior architecture, lighting, palette, and materials."
-        )
+        "instruction": bg_instruction
     })
 
     # ---------------------------------------------------------
-    # ZONE BACKDROPS
+    # ZONE BACKDROPS → generate_backdrop
     # ---------------------------------------------------------
     for zb in graph["zone_backdrops"]:
         instruction = (
-            f"Generate environment plate for zone '{zb['zone']}'. "
-            f"Use layout '{zb['layout']}' and camera side '{zb['camera_side']}'. "
-            f"Derive architecture, lighting, and materials from BG. "
-            f"Do not include characters."
+            f"generate_backdrop("
+            f"media={json.dumps(zb['dependencies'][0])}, "
+            f"zone={json.dumps(zb['zone'])}, "
+            f"char_image=\"\""
+            f")"
         )
-
 
         assets.append({
             "alias": zb["alias"],
@@ -333,19 +348,22 @@ def generate_assets(registry, shots, graph):
         })
 
     # ---------------------------------------------------------
-    # BASE COMPOSITES (character-in-zone)
+    # BASE COMPOSITES → composite_scene
     # ---------------------------------------------------------
     for base in graph["base_composites"]:
         name = base["character"]
+        sheet_alias = f"{name}_Sheet"
+        zb_alias = base["dependencies"][1]  # [Sheet, ZB]
 
-        # second dependency is always the zone backdrop alias
-        zb_alias = base["dependencies"][1]
+        action = f"neutral placement of {name} in zone {base['zone']}"
 
         instruction = (
-            f"Composite character sheet asset {name}_Sheet into zone backdrop asset {zb_alias}. "
-            f"Neutral placement pass only. "
-            f"Do not apply camera transforms. "
-            f"Ensure correct spatial placement for zone '{base['zone']}'."
+            f"composite_scene("
+            f"background_path={json.dumps(zb_alias)}, "
+            f"characters={[sheet_alias]!r}, "
+            f"shot_type=\"medium\", "
+            f"action={json.dumps(action)}"
+            f")"
         )
 
         assets.append({
@@ -354,38 +372,31 @@ def generate_assets(registry, shots, graph):
             "instruction": instruction
         })
 
-
     # ---------------------------------------------------------
-    # SHOT COMPOSITES (camera transforms)
+    # SHOT COMPOSITES → apply_gimbal_shot
     # ---------------------------------------------------------
     for sc in graph["shot_composites"]:
-        chars = ", ".join(sc["characters"])
-
         shot = find_shot(shots, sc["shot_id"])
-        shot_cv = sc.get("camera_view", {})
+        shot_cv = sc.get("camera_view", {}) or {}
 
-        char_views = []
-        for c in shot["characters"]:
-            cv = c.get("camera_view", {})
-            char_views.append(
-                f"{c['name']}: angle={cv.get('angle')}, "
-                f"height={cv.get('height')}, "
-                f"distance={cv.get('distance')}, "
-                f"framing={cv.get('framing')}, "
-                f"facing={cv.get('facing')}"
-            )
-        char_view_summary = "; ".join(char_views)
+        # first base composite is the media source
+        if not sc["dependencies"]:
+            continue
+        source_media = sc["dependencies"][0]
+
+        angle = shot_cv.get("angle", "front")
+        height = shot_cv.get("height", "eye")
+        distance = shot_cv.get("distance", "medium")
 
         instruction = (
-            f"Apply shot-level camera transform to base composites. "
-            f"Use framing: angle={shot_cv.get('angle')}, height={shot_cv.get('height')}, "
-            f"distance={shot_cv.get('distance')}, framing={shot_cv.get('framing')}, "
-            f"facing={shot_cv.get('facing')}. "
-            f"Apply per-character camera geometry: {char_view_summary}. "
-            f"Use zone '{sc['environment_zone']}', layout '{sc['layout']}', camera side '{sc['camera_side']}'. "
-            f"Camera focus: {sc.get('camera_focus', '')}."
+            f"apply_gimbal_shot("
+            f"media={json.dumps(source_media)}, "
+            f"output={json.dumps(sc['alias'] + '.png')}, "
+            f"angle={json.dumps(angle)}, "
+            f"height={json.dumps(height)}, "
+            f"distance={json.dumps(distance)}"
+            f")"
         )
-
 
         assets.append({
             "alias": sc["alias"],
@@ -394,19 +405,27 @@ def generate_assets(registry, shots, graph):
         })
 
     # ---------------------------------------------------------
-    # DIALOG
+    # DIALOG → dialog_to_video
     # ---------------------------------------------------------
     for d in graph["dialog"]:
         shot = find_shot(shots, d["shot_id"])
         line = shot["dialog"][d["line_index"]]["line"]
-        appearance = registry_map[d["speaker"]]["appearance_prompt"]
+        speaker = d["speaker"]
+
+        sc_alias = f"{graph['scene_id']}_SHOT_{d['shot_id']}"
+        media_alias = sc_alias
+        audio_alias = f"{speaker}_Voice.wav"
+
+        prompt = "speaking naturally, lip-synced to the line"
 
         instruction = (
-            f"Generate lip-sync and facial expression for {d['speaker']} saying: \"{line}\". "
-            f"Use emotional context from the shot. "
-            f"Do not alter camera or environment."
+            f"dialog_to_video("
+            f"prompt={json.dumps(prompt)}, "
+            f"media={json.dumps(media_alias)}, "
+            f"text={json.dumps(line)}, "
+            f"audio={json.dumps(audio_alias)}"
+            f")"
         )
-
 
         assets.append({
             "alias": d["alias"],

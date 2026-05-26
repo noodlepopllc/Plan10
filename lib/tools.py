@@ -249,3 +249,7 @@ class ToolHandler(object):
         finally:
             gc.collect()
             torch.cuda.empty_cache()
+
+
+if __name__ == '__main__':
+    print(ToolHandler.TOOLS)
