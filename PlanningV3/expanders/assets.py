@@ -287,13 +287,11 @@ def generate_assets(registry, shots, graph):
         char = registry_map[name]
 
         if item["alias"].endswith("_Sheet"):
-            # create_character_sheet
             prompt = char["appearance_prompt"]
             instruction = (
                 f"create_character_sheet using prompt: {prompt}"
             )
         else:
-            # design_voice
             voice_desc = char["voice"]
             instruction = (
                 f"design_voice using voice: {voice_desc}"
@@ -325,8 +323,10 @@ def generate_assets(registry, shots, graph):
     # ZONE BACKDROPS → generate_backdrop
     # ---------------------------------------------------------
     for zb in graph["zone_backdrops"]:
+        bg_alias = zb["dependencies"][0]
+
         instruction = (
-            f"generate_backdrop using media: {zb['dependencies'][0]}, "
+            f"generate_backdrop using media: {bg_alias} asset, "
             f"zone: {zb['zone']}"
         )
 
@@ -345,7 +345,7 @@ def generate_assets(registry, shots, graph):
         zb_alias = base["dependencies"][1]
 
         instruction = (
-            f"create a composite by combining {sheet_alias} with {zb_alias}, "
+            f"create a composite by combining {sheet_alias} asset with {zb_alias} asset, "
             f"neutral placement in zone {base['zone']}"
         )
 
@@ -372,7 +372,7 @@ def generate_assets(registry, shots, graph):
         distance = shot_cv.get("distance", "medium")
 
         instruction = (
-            f"apply gimbal shot to {source_media}, "
+            f"apply gimbal shot to {source_media} asset, "
             f"angle: {angle}, height: {height}, distance: {distance}"
         )
 
@@ -395,7 +395,7 @@ def generate_assets(registry, shots, graph):
         audio_alias = f"{speaker}_Voice.wav"
 
         instruction = (
-            f"create a dialog_to_video using {audio_alias} with {media_alias}, "
+            f"create a dialog_to_video using {audio_alias} asset with {media_alias} asset, "
             f"text: \"{line}\""
         )
 
