@@ -7,6 +7,10 @@ WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
 SEED = int(os.environ.get("SEED", "123456"))
 
+def flatten(text):
+    return " ".join(text.split())
+
+
 def build(assets):
     built = set()
     remaining = {a["alias"]: a for a in assets}
@@ -38,7 +42,7 @@ def build(assets):
 
         for alias in ready:
             a = remaining.pop(alias)
-            print(f">> ALIAS: {a['alias']}\n{a['instruction']}, Width: {WIDTH}, Height: {HEIGHT} Seed: {SEED}\n")
+            print(f">> ALIAS: {a['alias']}\n{flatten(a['instruction'])}, Width: {WIDTH}, Height: {HEIGHT} Seed: {SEED}\n")
             built.add(alias)
 
 
