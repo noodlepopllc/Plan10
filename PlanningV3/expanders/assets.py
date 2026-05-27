@@ -2,6 +2,57 @@ import json
 import re
 from collections import defaultdict
 
+def extract_primary_pose(text, self_name, other_names):
+    """
+    Extracts a clean, atomic, single-action pose from appearance_in_shot.
+    - Takes only the first sentence
+    - Removes repeated self-name
+    - Removes references to other characters
+    - Removes relational language
+    - Removes multi-action chains
+    """
+    if not text:
+        return ""
+
+    # 1. First sentence only
+    first = re.split(r'[.!?]', text)[0]
+
+    # 2. Remove self-name duplicates
+    first = re.sub(rf"\b{self_name}\b", "", first, flags=re.I)
+
+    # 3. Remove references to other characters
+    for name in other_names:
+        first = re.sub(rf"\b{name}\b.*?(,|$)", "", first, flags=re.I)
+
+    # 4. Remove relational cues
+    relational = [
+        "beside", "next to", "facing", "toward", "towards",
+        "opposite", "in front of", "behind", "near", "close to",
+        "approaching", "closing the distance", "moving toward"
+    ]
+    for word in relational:
+        first = re.sub(rf"\b{word}\b.*?(,|$)", "", first, flags=re.I)
+
+    # 5. Clean whitespace
+    return re.sub(r"\s+", " ", first).strip().rstrip(",")
+
+
+def detect_missing_character_reference(pose, shot_characters, registry_characters):
+    """
+    Detects if a pose references a character who is NOT in the shot.
+    Returns a list of missing character names.
+    """
+    pose_lower = pose.lower()
+    shot_names = {c["name"].lower() for c in shot_characters}
+
+    referenced = []
+    for name in registry_characters:
+        if name.lower() in pose_lower and name.lower() not in shot_names:
+            referenced.append(name)
+
+    return referenced
+
+
 
 def slugify(text):
     return re.sub(r'[^a-zA-Z0-9]+', '-', text).strip('-')
@@ -108,23 +159,51 @@ def select_zone_variant(shot, zones, character_name):
 
 
 
-def build_base_composite(shot, character, zones):
+def build_base_composite(shot, character, variants, variant, registry_characters):
+    """
+    variants = shot["_zone_variants"]
+    variant  = base["variant"] from graph
+    """
+
     sheet_alias = f"{character}_Sheet"
-    zone_alias = select_zone_variant(shot, zones, character)
-    action = shot["action"]
+    zone_alias = variants[variant]
+
+    # Find character entry
+    char_data = next(c for c in shot["characters"] if c["name"].upper() == character)
+    raw_pose = char_data.get("appearance_in_shot", "")
+
+    # Clean pose
+    other_names = [c["name"] for c in shot["characters"] if c["name"].upper() != character]
+    action = extract_primary_pose(raw_pose, character, other_names)
+
+    # Detect missing character references
+    missing_refs = detect_missing_character_reference(
+        raw_pose,
+        shot["characters"],
+        registry_characters
+    )
+
+    # Build alias list
+    alias_used = [sheet_alias, zone_alias]
+    for missing in missing_refs:
+        alias_used.append(f"{missing.upper()}_Sheet")
+
     shot_type = shot["type"]
 
     instruction = (
-        f"create a composite by combining {sheet_alias} asset with {zone_alias} asset, "
+        f"create a composite by combining {' and '.join(alias_used)} assets, "
         f"shot type: {shot_type}, apply starting action: {action}, "
         f"no camera transforms"
     )
 
     return {
         "alias": f"{character}_{shot['shot_id']}_BASE",
-        "alias_used": [sheet_alias, zone_alias],
+        "alias_used": alias_used,
         "instruction": instruction
     }
+
+
+
 
 
 
@@ -146,12 +225,15 @@ def build_i2v_videos(scene_id, assets, shots):
         if not shot:
             continue
 
-        # Micro‑motion summary
         micro_motion = ", ".join([
-            c.get("appearance_in_shot", "").strip().rstrip(".")
+            extract_primary_pose(
+                c.get("appearance_in_shot", ""),
+                c["name"],
+                [o["name"] for o in shot["characters"] if o["name"] != c["name"]]
+            )
             for c in shot["characters"]
-            if c.get("appearance_in_shot")
         ]) or "subtle environmental motion"
+
 
         # Build instruction
         instruction = (
@@ -432,25 +514,49 @@ def generate_assets(registry, shots, graph):
     # ---------------------------------------------------------
     # BASE COMPOSITES → composite_scene
     # ---------------------------------------------------------
-    for base in graph["base_composites"]:
-        sheet_alias = base["dependencies"][0]
-        zone_alias = base["dependencies"][1]
+    registry_characters = [c["name"] for c in registry["characters"]]
 
+    for base in graph["base_composites"]:
         shot = find_shot(shots, base["shot_id"])
+        character = base["character"]
+        sheet_alias, zone_alias = base["dependencies"]
+
+        # Find character entry in shot
+        char_data = next(c for c in shot["characters"] if c["name"].upper() == character)
+        raw_pose = char_data.get("appearance_in_shot", "")
+
+        # Clean pose
+        other_names = [c["name"] for c in shot["characters"] if c["name"].upper() != character]
+        action = extract_primary_pose(raw_pose, character, other_names)
+
+        # Detect missing character references
+        missing_refs = detect_missing_character_reference(
+            raw_pose,
+            shot["characters"],
+            registry_characters
+        )
+
+        alias_used = [sheet_alias, zone_alias]
+        for missing in missing_refs:
+            alias_used.append(f"{missing.upper()}_Sheet")
+
         shot_type = shot["type"]
-        starting_action = shot["action"]
 
         instruction = (
-            f"create a composite by combining {sheet_alias} asset with {zone_alias} asset, "
-            f"shot type: {shot_type}, apply starting action: {starting_action}, "
+            f"create a composite by combining {' and '.join(alias_used)} assets, "
+            f"shot type: {shot_type}, apply starting action: {action}, "
             f"no camera transforms"
         )
 
         assets.append({
-            "alias": base["alias"],
-            "alias_used": [sheet_alias, zone_alias],
+            "alias": base["alias"],      # <-- use graph alias (e.g. 1_BASE_1_SAMUEL)
+            "alias_used": alias_used,
             "instruction": instruction
         })
+
+
+
+
 
 
 
@@ -460,7 +566,15 @@ def generate_assets(registry, shots, graph):
     for shot_node in graph["shot_composites"]:
         shot = find_shot(shots, shot_node["shot_id"])
         shot_type = shot["type"]
-        action = shot["action"]
+
+        action = ", ".join(
+            extract_primary_pose(
+                c.get("appearance_in_shot", ""),
+                c["name"],
+                [o["name"] for o in shot["characters"] if o["name"] != c["name"]]
+            )
+            for c in shot["characters"]
+        )
 
         deps = shot_node["dependencies"]
 
@@ -469,6 +583,7 @@ def generate_assets(registry, shots, graph):
             f"shot type: {shot_type}, apply action: {action}, "
             f"no camera transforms"
         )
+
 
         assets.append({
             "alias": shot_node["alias"],
