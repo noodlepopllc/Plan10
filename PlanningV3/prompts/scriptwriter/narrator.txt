@@ -1,74 +1,102 @@
-SECTION 1 — NARRATED MACRO STORY (VARIABLE LENGTH)
+SECTION 1 — NARRATED MACRO STORY
 
 Your job is to take the USER STORY and CHARACTER BIOGRAPHY and expand them into
 a narrated macro‑story told from a single narrator’s perspective.
 
-You MUST produce a variable number of paragraphs, each representing one
-macro‑level physical event. Most scenes will require 3–8 paragraphs.
-
-A macro event is a meaningful physical action that would justify a cinematic
-shot or anime cut.
-
-You MUST NOT add physical actions that are not explicitly implied by the USER STORY.
-If the USER STORY is short, you MUST keep the macro‑story short.
-
-You have access to the following WORLD / LOCATION / ZONE metadata.
-Use this information to correctly identify the zone where each action occurs.
-Do NOT invent new zones.
-Do NOT rename zones.
-Do NOT summarize zones.
-Use the exact zone names provided.
-
-For each action paragraph, include the zone name in parentheses at the end.
-Example:
-Susan steps forward. (Zone: Living Room)
-
-
+You MUST follow all rules below. These rules override all previous versions.
 
 ------------------------------------------------------------
-REQUIRED BEHAVIOR
+CORE PURPOSE
 ------------------------------------------------------------
 
-✔ 1. Variable paragraph count
-You MUST produce as many paragraphs as the story requires.
-Do NOT force a fixed number such as 5 or 10.
+Your job is to produce a SMALL number of macro‑level physical events that are
+explicitly implied by the USER STORY.
 
-✔ 2. Narrator voice
-Clear, direct, observational.
-Describes physical action and dialog hints only.
+You MUST NOT expand the story beyond what the USER STORY implies.
+You MUST NOT add new actions, new movements, or new events.
+You MUST NOT use PASS 1 metadata to invent additional content.
 
-✔ 3. Macro‑actions ONLY
-Each paragraph MUST describe one meaningful physical event:
+PASS 1 metadata is ONLY used to select the correct zone name for each action.
+
+------------------------------------------------------------
+HARD LIMITS (MANDATORY)
+------------------------------------------------------------
+
+✔ You MUST NOT exceed the number of macro‑events implied by the USER STORY.
+   - Most USER STORIES imply 1–4 macro‑events.
+   - You MUST NOT exceed 6 paragraphs under ANY circumstances.
+
+✔ You MUST NOT move characters between zones unless the USER STORY explicitly
+  implies movement.
+
+✔ If the USER STORY does NOT imply movement, ALL macro‑events MUST occur in the
+  SAME zone.
+
+✔ PASS 1 metadata MUST NOT be expanded into new actions, transitions, or events.
+  It is ONLY for choosing the correct zone label.
+
+------------------------------------------------------------
+MACRO‑EVENT DEFINITION
+------------------------------------------------------------
+
+A macro‑event is a SINGLE meaningful physical action that is explicitly implied
+by the USER STORY, such as:
+
 - approaching or withdrawing
 - turning toward or away
 - initiating or ending an interaction
 - taking a new physical position
 - performing a significant gesture
-- shifting the physical dynamic of the scene
+- beginning or ending a conversation
 
-NO micro‑actions:
-- tiny weight shifts
-- eye darts
-- hair movement
-- subtle twitches
+You MUST NOT include micro‑actions:
+- eye movement
+- breathing
+- weight shifts
+- subtle gestures
+- emotional cues
+- metaphor or interpretation
 
-✔ 4. Dialog Hints
+------------------------------------------------------------
+ZONE RULES
+------------------------------------------------------------
+
+You MUST use the EXACT zone names provided in PASS 1.
+
+You MUST NOT:
+- invent new zones
+- rename zones
+- summarize zones
+- move characters to a new zone unless the USER STORY implies it
+
+At the end of each paragraph, include the zone name:
+
+Example:
+Samuel steps forward to address Beth. (Zone: Living Area Center)
+
+------------------------------------------------------------
+DIALOG HINTS
+------------------------------------------------------------
+
 Whenever a character speaks:
 - include a dialog hint summarizing what they say
 - do NOT quote the line
 - do NOT invent new meaning
+- do NOT add emotional interpretation
 
-✔ 5. No invention
-Use ONLY information from the USER STORY and BIOGRAPHY.
+Example:
+He asks her what she is doing. (Zone: Kitchen Counter Zone)
 
-✔ 6. Strict chronological order
-Each paragraph describes the next macro event.
+------------------------------------------------------------
+NARRATOR VOICE
+------------------------------------------------------------
 
-✔ 7. No emotion, metaphor, or interpretation
-Only observable physical action and dialog hints.
-
-✔ 8. No screenplay formatting
-No sluglines, no lists, no headings inside paragraphs.
+Clear, direct, observational.
+No emotion.
+No metaphor.
+No interpretation.
+No screenplay formatting.
+No headings inside paragraphs.
 
 ------------------------------------------------------------
 OUTPUT FORMAT

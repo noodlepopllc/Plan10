@@ -1,15 +1,12 @@
-Your job is to expand the world scaffolding provided in the input text into a complete static world model.
-You MUST treat the input as the ONLY source of truth.
-You MUST output the following sections in this exact order:
 ⭐ SECTION 1 — SETTING (2–3 paragraphs)
 
-Expand the World Summary found in the input into:
+Expand the SETTING BLOCK into a filmable environment, focusing on:
 
     atmosphere
 
-    time period (MANDATORY — inferred from SETTING BLOCK)
+    time period (MANDATORY — must match SETTING BLOCK)
 
-    technology level (MANDATORY — inferred from SETTING BLOCK)
+    technology level (MANDATORY — must match SETTING BLOCK)
 
     sensory detail
 
@@ -19,12 +16,24 @@ Expand the World Summary found in the input into:
 
     environmental mood
 
-Everything MUST be cinematic and filmable, but NOT narrative.
-You MUST anchor all descriptions to the time period and technology level defined by the SETTING BLOCK.
-You MUST NOT add story events, character actions, or plot.
+STRICT RULES:
+
+    MUST be cinematic and filmable
+
+    MUST anchor all descriptions to the time period + technology level
+
+    MUST NOT add story events
+
+    MUST NOT add character actions
+
+    MUST NOT add plot
+
+    MUST NOT invent new technology beyond what the SETTING BLOCK implies
+
+This section defines the world’s physical reality, not its narrative.
 ⭐ SECTION 2 — BIOGRAPHY (full detail)
 
-For each character described in the input Character Summary, expand into:
+For each character, expand into:
 
     Name
 
@@ -32,17 +41,17 @@ For each character described in the input Character Summary, expand into:
 
     Gender
 
-    Race (e.g., human, android, elf, etc.)
+    Race
 
     Ethnicity/Species (only if explicitly given)
 
     Appearance (visual, physical, filmable)
 
-    Clothing (MANDATORY — must match the time period + technology level of the SETTING BLOCK)
+    Clothing (MANDATORY — must match time period + tech level)
 
-    Hair (MANDATORY — must match the time period + technology level)
+    Hair (MANDATORY — must match time period + tech level)
 
-    Personality (1–2 sentences)
+    Personality (1–2 sentences, filmable traits only)
 
     Movement style
 
@@ -52,9 +61,9 @@ STRICT RULES:
 
     MUST be visual, physical, and filmable
 
-    MUST reflect the time period and technology level of the SETTING BLOCK
+    MUST reflect the time period + technology level
 
-    MUST NOT include backstory or lore
+    MUST NOT include backstory
 
     MUST NOT include internal monologue
 
@@ -62,70 +71,129 @@ STRICT RULES:
 
     MUST NOT include story events
 
-⭐ SECTION 3 — LOCATIONS (full detail)
+This section defines what the camera sees, not who the character “is inside.”
+⭐ SECTION 3 — LOCATIONS (THIS IS THE NEW CORE OF PASS B)
 
-For each location described in the input Location Summary, expand it into:
-A. Exterior Description (MANDATORY)
+This is where the Set Definition Layer becomes real.
 
-2–3 sentences describing:
+For each location:
+⭐ A. Architectural Shell (MANDATORY — NEW)
 
-    architecture (consistent with time period + technology level)
+Define the physical room in 3–5 sentences:
 
-    materials (consistent with time period + technology level)
+    room shape
 
-    lighting (consistent with time period + technology level)
+    wall placement
 
-    signage (if applicable)
+    window placement
 
-    atmosphere
+    door placement
 
-    ambient sound
+    floor material
 
-B. Interior STAGING ZONES (MANDATORY)
+    ceiling material
 
-Zones are functional staging areas inside the location.
+    lighting sources
 
-Rules:
+    architectural style (consistent with time period + tech level)
 
-    MUST derive zones ONLY from the Location Summary
+This is the geometry anchor.  
+Without this, the model will hallucinate.
+⭐ B. Environment Objects (MANDATORY — NEW)
 
-    MUST define 3–8 meaningful zones
+List anchored, non‑movable objects that define the room:
 
-    MUST be filmable patches of space
+    couch on north wall
 
-    MUST match the time period + technology level
+    table under south window
 
-    MUST NOT invent new zones
+    floor lamp east of couch
+
+    kitchen counter on east wall
+
+    bed against west wall
+
+Each object must include:
+
+    material
+
+    color
+
+    placement
+
+    orientation
+
+These are the anchors that prevent drift.
+⭐ C. Interior STAGING ZONES (MANDATORY — REWRITTEN)
+
+Zones are bounded, filmable patches of space inside the room.
 
 For each zone:
 
-    2–3 sentences of description
+    2–3 sentences describing its function + boundaries
 
-    3–5 visual details (architecture, materials, lighting, fixed furniture)
+    3–5 visual details
 
-    NO story events
+    MUST reference anchored objects
 
-    NO props
+    MUST reference architectural shell
 
-    NO character details
+    MUST NOT invent new furniture
 
-C. Notable Details
+    MUST NOT invent new architecture
 
-REMOVE THIS SECTION ENTIRELY.  
-Notable Details is deprecated and MUST NOT be generated.
-⭐ GLOBAL RULES (PASS B)
+    MUST NOT include props
 
-    MUST use ONLY the provided input text as the source of truth
+    MUST NOT include characters
 
-    MUST preserve the time period and technology level defined by the SETTING BLOCK
+This is where the room becomes usable for blocking.
+⭐ D. Stable Views (MANDATORY — NEW)
+
+For each location, define:
+✔ Shared View
+
+Neutral, geometry‑true slice of the room.
+✔ Character‑A View
+
+Anchored to A’s position.
+Shows B’s side of the room.
+✔ Character‑B View
+
+Anchored to B’s position.
+Shows A’s side of the room.
+
+Each view must include:
+
+    what walls are visible
+
+    what anchored objects are visible
+
+    what lighting sources are visible
+
+    what staging zones are visible
+
+These are the views used for dialog and establishing shots.
+⭐ GLOBAL RULES (SET DEFINITION LAYER)
+
+    MUST use ONLY the input text as truth
 
     MUST NOT invent new locations
 
-    MUST NOT invent impossible architecture for the time period
+    MUST NOT invent new furniture
 
-    MUST NOT write any story or narrative
+    MUST NOT invent new architecture
 
-    MUST NOT include camera terminology
+    MUST NOT add narrative
+
+    MUST NOT add props
+
+    MUST NOT add character actions
+
+    MUST NOT add camera terminology
 
     MUST NOT skip any required section
+
+This layer’s ONLY job:
+
+    Turn conceptual scaffolding into a real, anchored, filmable environment.
 

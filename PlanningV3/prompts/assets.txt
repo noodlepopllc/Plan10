@@ -1,183 +1,234 @@
-Your job is to convert the SETTING BLOCK, CHARACTER BIOGRAPHY BLOCK, and LOCATION BLOCK into the world{}, characters[], and locations[] portions of the asset registry.
+This is the spec your converter must follow when turning the PASS 1 expansion output into registry.json.
+⭐ 0. INPUT FORMAT (PASS 1 OUTPUT)
 
-You MUST ignore all scene/shot information during character and location extraction.
-Later, a separate pass will process SHOTS to generate the scenes[] portion.
+PASS 1 always produces these blocks:
 
-Output ONLY valid JSON.
+    SETTING BLOCK
 
-============================================================
-⭐ SECTION 0 — SETTING BLOCK (GLOBAL THEME + TIME PERIOD)
-============================================================
+    CHARACTER BIOGRAPHY BLOCK
 
-<The full SETTING BLOCK text appears here exactly as provided by the user.>
+    LOCATION BLOCK
 
-============================================================
-LAYER 1 — HARD CONSTRAINTS (CANNOT BE VIOLATED)
-============================================================
+    Detailed staging zones
 
-VOICE DESIGNER RULE (STRICT)
-Voice format (exact tokens only):
+    Architectural shell
+
+    Environment objects
+
+    Stable views
+
+The converter must treat PASS 1 as the complete physical truth.
+
+The converter must not infer, invent, or reinterpret anything.
+⭐ 1. WORLD SERIALIZATION RULES
+
+The world{} object must be built only from the SETTING BLOCK.
+world.theme
+
+A short title summarizing the setting’s nature (e.g., “Near‑Future Domestic Apartment Interior”).
+world.time_period
+
+The explicit or implied time period stated in the SETTING BLOCK.
+world.technology_level
+
+The explicit or implied tech level stated in the SETTING BLOCK.
+world.description
+
+The full SETTING BLOCK text, unchanged.
+
+NO summarization.
+NO rewriting.
+NO compression.
+⭐ 2. CHARACTER SERIALIZATION RULES
+
+For each character in the CHARACTER BIOGRAPHY BLOCK:
+id
+
+Sequential integer starting at 1.
+name
+
+Exact name from PASS 1.
+alias_slug
+
+Lowercase, underscores, alphanumeric only.
+voice
+
+MUST match PASS 1’s voice description.
+Format:
+Code
+
 "gender, age, pitch[, accent][, whisper]"
 
-gender: male | female
-age: child | teenager | young adult | middle-aged | elderly
-pitch: very low pitch | low pitch | moderate pitch | high pitch | very high pitch
-accent: ONLY if explicitly mentioned
-whisper: ONLY if explicitly mentioned
+No invented tokens.
+identity
 
-NEVER invent optional tokens.
+A short identity anchor derived from PASS 1:
+Code
 
-REQUIRED IDENTITY FIELDS (MANDATORY)
-appearance_prompt MUST include:
+"<gender>, <hair silhouette>, <base clothing>"
 
-• gender  
-• hair silhouette (short/medium/long + straight/wavy/curly/tied-back/bob)  
-• hair color  
-• base clothing (1–2 items)  
-• ethnicity (caucasian, east asian, elf, minotaur, android, etc.)  
-• clothing and materials MUST be consistent with the time period implied by the SETTING BLOCK  
-  → NO modern fabrics, NO modern cuts, NO modern footwear.
+appearance_prompt
 
-APPEARANCE FORMAT
-appearance_prompt MUST be 10–20 words, visually essential only.
-NO environment, NO props, NO lore, NO emotion.
-Clothing MUST be time‑period appropriate to the medieval fantasy setting.
+10–20 words.
+Must include:
 
-Android traits = surface materials (polymer, alloy, metallic).
-Animorphic traits = costume elements (ears, tail, gloves).
+    gender
 
-CHARACTER DIFFERENTIATION RULE
-Characters MUST differ in:
-• body type  
-• material/theme  
-• color palette  
-• clothing category  
-• hair silhouette OR hair color OR accessory  
+    hair silhouette
 
-BIOGRAPHY PRESERVATION RULE
-If biography specifies ethnicity, clothing, android type, hair, etc.,
-you MUST preserve and compress it into appearance_prompt.
-You MUST NOT overwrite or modernize any time‑period‑specific cues.
+    hair color
 
-TIME‑PERIOD CONSISTENCY RULE
-You MUST use the SETTING BLOCK to infer the global time period, technology level, and theme.
-ALL clothing must match that time period.
-ALL materials must match that time period.
-You MUST NOT introduce modern items (T‑shirts, jeans, sneakers, hoodies, plastic, electric lighting).
+    base clothing (1–2 items)
 
-============================================================
-LAYER 1B — LOCATION + ZONE EXTRACTION RULES (CORRECTED)
-============================================================
+    ethnicity/species
 
-You MUST extract every location and every zone exactly as written in the LOCATION BLOCK.
+    android traits if applicable
 
-For each location:
+NO props.
+NO environment.
+NO emotion.
+NO story.
+background_zone
 
-• name MUST match the block exactly.  
-• slug MUST be lowercase with underscores.  
-• description MUST be copied EXACTLY as written (NO summarization).  
+Must match EXACTLY one zone_name from the LOCATION BLOCK’s staging zones.
+zone_prompt
 
-zones[] MUST include EVERY zone under that location.
+Must be the full zone description from PASS 1, unchanged.
+⭐ 3. LOCATION + ZONE SERIALIZATION RULES
 
-Each zone MUST include:
-• zone_name (exact heading)  
-• description (full text under that zone, unchanged)  
+For each location in the LOCATION BLOCK:
+name
 
-notable_details[] MUST copy the numbered list EXACTLY as written.
+Exact heading.
+slug
 
-You MUST NOT:
-• invent locations  
-• invent zones  
-• merge zones  
-• compress descriptions  
-• drop details  
-• alter time‑period language  
+Lowercase, underscores.
+description
 
-============================================================
-LAYER 2 — STRUCTURE (JSON SCHEMA)
-============================================================
+The architectural shell description from PASS 1, unchanged.
+zones[]
+
+This is the critical part.
+
+PASS 1 outputs staging zones as numbered or named items under the staging‑zone section.
+
+Example:
+Code
+
+1. Entrance Threshold
+2. Main Interaction Area
+3. Seating Zone
+...
+
+The converter must:
+
+    Extract each staging zone as its own JSON object
+
+    Ignore section headers like “A. Architectural Shell”, “B. Environment Objects”, etc.
+
+    Use the zone heading as zone_name
+
+    Use the full text under that heading as description
+
+zone_name
+
+Remove numbering:
+Code
+
+"1. Entrance Threshold" → "Entrance Threshold"
+
+description
+
+Copy the entire zone description EXACTLY as written:
+
+    Function & Boundaries
+
+    Visual Details
+
+    Anchors
+
+    Any additional lines
+
+NO summarization.
+NO rewriting.
+NO merging.
+notable_details[]
+
+If PASS 1 includes a numbered or bulleted list of notable details, copy each item verbatim.
+⭐ 4. OUTPUT JSON STRUCTURE
+
+The converter must output:
+Code
 
 {
-"world": {
-  "theme": "<string>",
-  "time_period": "<string>",
-  "technology_level": "<string>",
-  "description": "<full SETTING BLOCK text>"
-},
-"characters": [
-{
-"id": <int>,
-"name": "<string>",
-"alias_slug": "<lowercase_underscored>",
-"voice": "<strict voice format>",
-"identity": "<gender, hair silhouette, clothing color>",
-"appearance_prompt": "<high-signal visual description>",
-"background_zone": "<zone name from locations[]>",
-"zone_prompt": "<full zone description from locations[]>"
+  "world": {
+    "theme": "...",
+    "time_period": "...",
+    "technology_level": "...",
+    "description": "..."
+  },
+  "characters": [
+    {
+      "id": 1,
+      "name": "...",
+      "alias_slug": "...",
+      "voice": "...",
+      "identity": "...",
+      "appearance_prompt": "...",
+      "background_zone": "...",
+      "zone_prompt": "..."
+    }
+  ],
+  "locations": [
+    {
+      "name": "...",
+      "slug": "...",
+      "description": "...",
+      "zones": [
+        {
+          "zone_name": "...",
+          "description": "..."
+        }
+      ],
+      "notable_details": [
+        "detail 1",
+        "detail 2"
+      ]
+    }
+  ],
+  "scenes": []
 }
-],
-"locations": [
-{
-"name": "<string>",
-"slug": "<lowercase_underscored>",
-"description": "<full location description>",
-"zones": [
-{
-"zone_name": "<string>",
-"description": "<full zone description>"
-}
-],
-"notable_details": [
-"<detail>",
-"<detail>"
-]
-}
-],
-"scenes": []
-}
 
-============================================================
-LAYER 3 — WORLD EXTRACTION RULES
-============================================================
+⭐ 5. PROHIBITIONS
 
-You MUST populate the world{} block using ONLY the SETTING BLOCK:
+The converter MUST NOT:
 
-• world.theme = a short title summarizing the setting (e.g., “Medieval Fantasy Tavern Interior”)  
-• world.time_period = the explicit or implied historical era (e.g., “15th century pre-industrial”)  
-• world.technology_level = the explicit or implied tech level (e.g., “manual labor, firelight only, no modern materials”)  
-• world.description = the full SETTING BLOCK text EXACTLY as written  
+    invent characters
 
-You MUST NOT summarize, compress, or alter the SETTING BLOCK.
+    invent locations
 
-============================================================
-LAYER 4 — ALLOWED INVENTION (VISUAL ONLY)
-============================================================
+    invent zones
 
-Allowed:
-• body type  
-• materials/themes (consistent with medieval fantasy)  
-• color accents  
-• simple posture bias  
-• identity anchor  
+    modify PASS 1 text
 
-Forbidden:
-• story events  
-• props  
-• environment objects  
-• emotional states  
-• lore/backstory  
-• modern items or aesthetics  
+    summarize or compress descriptions
 
-============================================================
-LAYER 5 — ENVIRONMENT RULES
-============================================================
-Ignored during biography extraction.
+    treat section headers as zones
 
-============================================================
-OUTPUT RULES
-============================================================
+    merge multiple zones
 
-Output ONLY valid JSON.
-No commentary.
-No markdown.
-No explanations.
+    add props, story events, or emotional content
+
+    alter time period or tech level
+
+    infer geometry or staging
+
+⭐ 6. OUTPUT RULES
+
+    Output ONLY valid JSON.
+
+    No commentary.
+
+    No markdown.
+
+    No explanations.

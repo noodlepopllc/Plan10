@@ -86,24 +86,21 @@ def load_registry_zones(registry_path: str):
     if not locations:
         raise ValueError("registry.json has no locations")
 
-    # Assuming single location for now; adjust if multi-location later
     zones = locations[0].get("zones", [])
     if not zones:
         raise ValueError("registry.json has no zones in first location")
 
-    # Build canonical_zones: slug -> zone_name
-    canonical_zones = {}
-    for z in zones:
-        name = z["zone_name"]
-        slug = z.get("slug") or slugify(name)
-        canonical_zones[slug] = name
+    # canonical list of zone names
+    zone_name_list = [z["zone_name"] for z in zones]
 
-    # Derived mappings
-    zone_name_to_slug = {name: slug for slug, name in canonical_zones.items()}
-    slug_to_zone_name = canonical_zones
-    all_zone_names = list(canonical_zones.values())
+    # map zone_name → description
+    zone_description_map = {
+        z["zone_name"]: z["description"]
+        for z in zones
+    }
 
-    return zone_name_to_slug, slug_to_zone_name, all_zone_names
+    return zone_name_list, zone_description_map
+
 
 
 
@@ -182,29 +179,24 @@ if __name__ == '__main__':
     base = sys.argv[1]
     out_path = sys.argv[2]
 
-    # 1) Load canonical zones from registry.json
-    zone_name_to_slug, slug_to_zone_name, all_zone_names = load_registry_zones(
-        f"{base}/registry.json"
-    )
-    slug_to_description = load_registry_zone_descriptions(f"{base}/registry.json")
-
-    # Load registry once at the top of main()
+    # Load registry
     registry = json.loads(Path(f"{base}/registry.json").read_text())
 
-    # Build canonical character list for Phase 1 input
+    # Load canonical zones
+    all_zone_names, zone_description_map = load_registry_zones(
+        f"{base}/registry.json"
+    )
+
+    # Build canonical character list
     canonical_characters = [
         {"name": c["name"], "identity": c["identity"]}
         for c in registry["characters"]
     ]
 
-
-
-    # 2) Load Phase 1 system prompt
     PHASE_1 = Path('./PlanningV3/prompts/groupshot/phase1.txt').read_text()
 
     scenes = {"scenes": []}
 
-    # 3) Iterate scenes from complete.json
     for scene in iter_scenes_from_complete_json(f"{base}/complete.json"):
 
         print("SCENE", scene["scene_id"])
@@ -216,29 +208,20 @@ if __name__ == '__main__':
             prev = beats[i-1] if i > 0 else ""
             nextb = beats[i+1] if i < len(beats)-1 else ""
 
-            # Beat zone (human-readable from complete.json)
             human_zone = curr.get("zone", "")
-
-            # Fuzzy match → canonical zone_name
             canonical_zone_name = fuzzy_match_zone(human_zone, all_zone_names)
 
             if not canonical_zone_name:
                 print(f"WARNING: Could not match zone '{human_zone}'")
-                # You can choose to continue or hard-fail here
                 continue
 
-            # Convert canonical zone_name → slug
-            zone_slug = zone_name_to_slug[canonical_zone_name]
-
-            # NEW — attach canonical zone name + slug to the LLM input
             phase1_input = {
                 "previous_beat": prev,
                 "current_beat": curr,
                 "next_beat": nextb,
-                "environment_zone_description": slug_to_description[zone_slug],
+                "environment_zone_description": zone_description_map[canonical_zone_name],
                 "characters": canonical_characters
             }
-
 
             data = llm_analyze_media(
                 media="",
@@ -257,10 +240,7 @@ if __name__ == '__main__':
 
             for s in shots:
                 s["shot_id"] = len(all_shots) + 1
-                s["environment_zone"] = zone_slug
-                s["environment_zone_name"] = canonical_zone_name
-
-
+                s["environment_zone"] = canonical_zone_name
                 all_shots.append(s)
 
         scenes["scenes"].append({

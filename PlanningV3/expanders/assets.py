@@ -20,22 +20,14 @@ def find_shot(shots, shot_id):
     raise KeyError(f"Shot {shot_id} not found")
 
 
-def resolve_zone_description(registry, zone_slug):
-    import re
-
-    def slugify(text):
-        return re.sub(r'[^a-zA-Z0-9]+', '-', text).strip('-').lower()
-
+def resolve_zone_description(registry, zone_name):
     for loc in registry["locations"]:
         for z in loc["zones"]:
-            name = z["zone_name"]
-            derived_slug = slugify(name)
-
-            if derived_slug == zone_slug:
+            if z["zone_name"] == zone_name:
                 return z["description"]
 
-    # fallback: return location description if zone not found
     return registry["locations"][0]["description"]
+
 
 
 def assign_roles(shot):
@@ -141,7 +133,9 @@ def build_dependency_graph(registry, scene_id, shots):
                 alias = f"{scene_id}_ZV_{zone_slug}_{variant}"
                 zone_variants[zone_slug][variant] = alias
 
-                zone_description = resolve_zone_description(registry, zone_slug)
+                zone_name = shot["environment_zone"]
+                zone_description = resolve_zone_description(registry, zone_name)
+
 
                 if variant == "Forward":
                     prompt = (
@@ -293,8 +287,8 @@ def generate_assets(registry, shots, graph):
         bg_alias = zb["dependencies"][0]
         instruction = (
             f"generate_backdrop using media: {bg_alias} asset, "
-            f"zone_slug: {zb['zone_slug']}, variant: {zb['variant']}, "
-            f"prompt: \"{zb['prompt']}\""
+            "Camera distance: medium shot framing, "
+            f"{zb['prompt']}"
         )
 
 
