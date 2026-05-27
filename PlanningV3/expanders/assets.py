@@ -1,67 +1,16 @@
 import json
 import re
+import sys
+from pathlib import Path
 from collections import defaultdict
 
-def extract_primary_pose(text, self_name, other_names):
-    """
-    Extracts a clean, atomic, single-action pose from appearance_in_shot.
-    - Takes only the first sentence
-    - Removes repeated self-name
-    - Removes references to other characters
-    - Removes relational language
-    - Removes multi-action chains
-    """
-    if not text:
-        return ""
 
-    # 1. First sentence only
-    first = re.split(r'[.!?]', text)[0]
-
-    # 2. Remove self-name duplicates
-    first = re.sub(rf"\b{self_name}\b", "", first, flags=re.I)
-
-    # 3. Remove references to other characters
-    for name in other_names:
-        first = re.sub(rf"\b{name}\b.*?(,|$)", "", first, flags=re.I)
-
-    # 4. Remove relational cues
-    relational = [
-        "beside", "next to", "facing", "toward", "towards",
-        "opposite", "in front of", "behind", "near", "close to",
-        "approaching", "closing the distance", "moving toward"
-    ]
-    for word in relational:
-        first = re.sub(rf"\b{word}\b.*?(,|$)", "", first, flags=re.I)
-
-    # 5. Clean whitespace
-    return re.sub(r"\s+", " ", first).strip().rstrip(",")
-
-
-def detect_missing_character_reference(pose, shot_characters, registry_characters):
-    """
-    Detects if a pose references a character who is NOT in the shot.
-    Returns a list of missing character names.
-    """
-    pose_lower = pose.lower()
-    shot_names = {c["name"].lower() for c in shot_characters}
-
-    referenced = []
-    for name in registry_characters:
-        if name.lower() in pose_lower and name.lower() not in shot_names:
-            referenced.append(name)
-
-    return referenced
-
-
+# ---------------------------------------------------------
+# CORE HELPERS
+# ---------------------------------------------------------
 
 def slugify(text):
     return re.sub(r'[^a-zA-Z0-9]+', '-', text).strip('-')
-
-
-def zone_slug_from_shot(shot, scene_id):
-    zone_text = shot.get("environment_zone") or shot.get("location") or "Zone"
-    first_word = zone_text.split()[0]
-    return f"{scene_id}_{first_word.capitalize()}" if scene_id else f"{first_word.capitalize()}"
 
 
 def find_shot(shots, shot_id):
@@ -71,29 +20,24 @@ def find_shot(shots, shot_id):
     raise KeyError(f"Shot {shot_id} not found")
 
 
-def extract_emotion(appearance_text):
-    if not appearance_text:
-        return "Neutral"
+def resolve_zone_description(registry, zone_slug):
+    import re
 
-    text = appearance_text.lower()
+    def slugify(text):
+        return re.sub(r'[^a-zA-Z0-9]+', '-', text).strip('-').lower()
 
-    emotion_keywords = {
-        "analytical": "Analytical",
-        "rigid": "Rigid",
-        "stoic": "Stoic",
-        "commanding": "Commanding",
-        "expressive": "Expressive",
-        "overwhelmed": "Overwhelmed",
-        "questioning": "Questioning",
-        "vulnerable": "Vulnerable",
-        "resigned": "Resigned"
-    }
+    for loc in registry["locations"]:
+        for z in loc["zones"]:
+            name = z["zone_name"]
+            derived_slug = slugify(name)
 
-    for key, val in emotion_keywords.items():
-        if key in text:
-            return val
+            if derived_slug == zone_slug:
+                return z["description"]
 
-    return "Neutral"
+    # fallback: return location description if zone not found
+    return registry["locations"][0]["description"]
+
+
 
 def assign_roles(shot):
     """
@@ -112,158 +56,55 @@ def assign_roles(shot):
     return roles
 
 
-def select_zone_variant(shot, zones, character_name):
-    zone_name = shot["environment_zone"]
+def select_variant_for_shot(shot, character_name_upper):
+    """
+    Decide which zone variant to use (Forward / ReverseA / ReverseB)
+    based on layout + camera_side + solo/multi.
+    """
+    layout = shot.get("layout", "solo")
     camera_side = shot.get("camera_side", "center")
-    shot_type = shot.get("type", "").lower()
     chars = shot["characters"]
 
-    # Assign charA / charB roles
-    roles = assign_roles(shot)
-    role = roles.get(character_name, None)
-
-    # ---------------------------------------------------------
-    # MULTI-CHARACTER SHOTS → ALWAYS FORWARD
-    # ---------------------------------------------------------
+    # Multi-character → always Forward
     if len(chars) > 1:
-        variant = "Forward"
+        return "Forward"
 
-    # ---------------------------------------------------------
-    # SOLO SHOTS → ReverseA or ReverseB
-    # ---------------------------------------------------------
-    elif len(chars) == 1:
-        if role == "charA":
-            variant = "ReverseA"
-        else:
-            variant = "ReverseB"
+    # Solo shots
+    roles = assign_roles(shot)
+    role = roles.get(character_name_upper.title(), None)  # names in roles are original case
 
-    # ---------------------------------------------------------
-    # OTS OVERRIDES EVERYTHING
-    # ---------------------------------------------------------
-    if shot_type == "ots":
-        if camera_side == "charA":
-            variant = "ReverseA"
-        elif camera_side == "charB":
-            variant = "ReverseB"
-        else:
-            variant = "ReverseA"  # fallback
+    # If camera_side is explicit, use that
+    if camera_side == "charA":
+        return "ReverseA"
+    if camera_side == "charB":
+        return "ReverseB"
 
-    # ---------------------------------------------------------
-    # FIND MATCHING ZONE VARIANT
-    # ---------------------------------------------------------
-    for z in zones:
-        if z["zone_name"] == zone_name and z["variant"].lower() == variant.lower():
-            return z["alias"]
+    # Fallback: role-based
+    if role == "charA":
+        return "ReverseA"
+    if role == "charB":
+        return "ReverseB"
 
-    raise ValueError(f"No matching zone variant found for {zone_name} / {variant}")
+    # Final fallback
+    return "ReverseA"
 
 
-
-def build_base_composite(shot, character, variants, variant, registry_characters):
-    """
-    variants = shot["_zone_variants"]
-    variant  = base["variant"] from graph
-    """
-
-    sheet_alias = f"{character}_Sheet"
-    zone_alias = variants[variant]
-
-    # Find character entry
-    char_data = next(c for c in shot["characters"] if c["name"].upper() == character)
-    raw_pose = char_data.get("appearance_in_shot", "")
-
-    # Clean pose
-    other_names = [c["name"] for c in shot["characters"] if c["name"].upper() != character]
-    action = extract_primary_pose(raw_pose, character, other_names)
-
-    # Detect missing character references
-    missing_refs = detect_missing_character_reference(
-        raw_pose,
-        shot["characters"],
-        registry_characters
-    )
-
-    # Build alias list
-    alias_used = [sheet_alias, zone_alias]
-    for missing in missing_refs:
-        alias_used.append(f"{missing.upper()}_Sheet")
-
-    shot_type = shot["type"]
-
-    instruction = (
-        f"create a composite by combining {' and '.join(alias_used)} assets, "
-        f"shot type: {shot_type}, apply starting action: {action}, "
-        f"no camera transforms"
-    )
-
-    return {
-        "alias": f"{character}_{shot['shot_id']}_BASE",
-        "alias_used": alias_used,
-        "instruction": instruction
-    }
-
-
-
-
-
-
-def build_i2v_videos(scene_id, assets, shots):
-    video_nodes = []
-    shot_map = {str(s["shot_id"]): s for s in shots}
-
-    for asset in assets:
-        # Only generate I2V for shot composites
-        if not asset["alias"].startswith(f"{scene_id}_SHOT_"):
-            continue
-
-        match = re.search(r'SHOT_(\d+)$', asset["alias"])
-        if not match:
-            continue
-
-        shot_id = match.group(1)
-        shot = shot_map.get(shot_id)
-        if not shot:
-            continue
-
-        micro_motion = ", ".join([
-            extract_primary_pose(
-                c.get("appearance_in_shot", ""),
-                c["name"],
-                [o["name"] for o in shot["characters"] if o["name"] != c["name"]]
-            )
-            for c in shot["characters"]
-        ]) or "subtle environmental motion"
-
-
-        # Build instruction
-        instruction = (
-            f"create an image_to_video using {asset['alias']} asset, "
-            f"action: {micro_motion}"
-        )
-
-        video_nodes.append({
-            "alias": f"{scene_id}_VID_{shot_id}",
-            "alias_used": [asset["alias"]],
-            "instruction": instruction
-        })
-
-    return video_nodes
-
+# ---------------------------------------------------------
+# DEPENDENCY GRAPH
+# ---------------------------------------------------------
 
 def build_dependency_graph(registry, scene_id, shots):
     graph = {
         "scene_id": scene_id,
         "identity": [],
         "background": None,
-        "zone_backdrops": [],     # NEW: zone × layout × camera_side
-        "base_composites": [],    # NEW: character-in-zone
+        "zone_backdrops": [],
+        "base_composites": [],
         "shot_composites": [],
         "dialog": []
     }
 
-    # ---------------------------------------------------------
-    # IDENTITY
-    # ---------------------------------------------------------
+    # ---------------- IDENTITY ----------------
     for c in registry["characters"]:
         name = c["name"].upper()
         graph["identity"].append({
@@ -277,19 +118,9 @@ def build_dependency_graph(registry, scene_id, shots):
             "character": name
         })
 
-    # ---------------------------------------------------------
-    # BACKGROUND (scene-level)
-    # ---------------------------------------------------------
-    def resolve_zone_description(registry, zone_name):
-        loc = registry["locations"][0]
-        for z in loc["zones"]:
-            if zone_name in z["zone_name"]:
-                return z["description"]
-        return registry["locations"][0]["description"]  # safe fallback
-
-
-    primary_zone = shots[0]["environment_zone"]
-    env_prompt = resolve_zone_description(registry, primary_zone)
+    # ---------------- BACKGROUND ----------------
+    primary_zone_slug = shots[0]["environment_zone"]
+    env_prompt = resolve_zone_description(registry, primary_zone_slug)
 
     bg_alias = f"{scene_id}_BG"
     graph["background"] = {
@@ -298,102 +129,75 @@ def build_dependency_graph(registry, scene_id, shots):
         "prompt": env_prompt
     }
 
-
-    # ---------------------------------------------------------
-    # ZONE VARIANTS (Forward / ReverseA / ReverseB)
-    # ---------------------------------------------------------
-    zone_variants = {}  # zone_name -> {variant_name: alias}
+    # ---------------- ZONE VARIANTS ----------------
+    zone_variants = {}  # zone_slug -> {variant_name: alias}
 
     for shot in shots:
-        zone = shot["environment_zone"]
+        zone_slug = shot["environment_zone"]
 
-        if zone not in zone_variants:
-            zone_variants[zone] = {}
+        if zone_slug not in zone_variants:
+            zone_variants[zone_slug] = {}
 
-            # Create 3 deterministic variants
             for variant in ["Forward", "ReverseA", "ReverseB"]:
-                alias = f"{scene_id}_ZV_{zone}_{variant}"
-                zone_variants[zone][variant] = alias
-
-                # ---------------------------------------------------------
-                # CORRECTED PROMPTS — GUARANTEED CAMERA ROTATION
-                # ---------------------------------------------------------
+                alias = f"{scene_id}_ZV_{zone_slug}_{variant}"
+                zone_variants[zone_slug][variant] = alias
 
                 if variant == "Forward":
                     prompt = (
-                        f"Environment zone: {zone}. "
+                        f"Environment zone slug: {zone_slug}. "
                         f"FORWARD VIEW. "
                         f"Camera faces the primary subject direction. "
                         f"Show the environment exactly as it appears from the main camera orientation. "
-                        f"Include all visible environmental elements (terrain, furniture, horizon, walls, windows, sun, sky, props) "
-                        f"as they appear from this direction. "
+                        f"Include all visible environmental elements as they appear from this direction. "
                         f"Preserve all visible light sources and their positions."
                     )
                 else:
                     prompt = (
-                        f"Environment zone: {zone}. "
+                        f"Environment zone slug: {zone_slug}. "
                         f"REVERSE VIEW. "
-                        f"Rotate the camera 180 degrees horizontally to show the OPPOSITE SIDE of the environment. "
-                        f"This MUST reveal environmental elements that are NOT visible in the Forward view. "
-                        f"Show the geometry, terrain, horizon, furniture, props, and background that exist BEHIND the Forward camera. "
-                        f"REMOVE any direct light sources (sun, windows, lamps) that would now be behind the camera, "
+                        f"Rotate the camera 180 degrees horizontally to show the opposite side of the environment. "
+                        f"Reveal environmental elements that are not visible in the Forward view. "
+                        f"Show geometry, furniture, props, and background that exist behind the Forward camera. "
+                        f"Remove direct light sources that would now be behind the camera, "
                         f"but preserve their lighting effect on the environment. "
-                        f"No direct light sources may appear in frame. "
-                        f"ReverseA and ReverseB MUST be visually distinct from Forward and from each other "
-                        f"based on camera_side and character orientation."
+                        f"ReverseA and ReverseB must be visually distinct from Forward and from each other."
                     )
 
                 graph["zone_backdrops"].append({
                     "alias": alias,
                     "dependencies": [bg_alias],
-                    "zone": zone,
+                    "zone_slug": zone_slug,
                     "variant": variant,
                     "prompt": prompt
                 })
 
-        # Store for later
-        shot["_zone_variants"] = zone_variants[zone]
+        shot["_zone_variants"] = zone_variants[zone_slug]
 
-
-
-    # ---------------------------------------------------------
-    # BASE COMPOSITES (character + zone_variant)
-    # ---------------------------------------------------------
+    # ---------------- BASE COMPOSITES ----------------
     for shot in shots:
-        zone = shot["environment_zone"]
+        zone_slug = shot["environment_zone"]
         variants = shot["_zone_variants"]
 
         for char in shot["characters"]:
-            name = char["name"].upper()
-
-            # Select Forward / ReverseA / ReverseB
-            if len(shot["characters"]) > 1:
-                variant = "Forward"
-            elif len(shot["characters"]) == 1:
-                variant = "ReverseA" if name == "CHARA" else "ReverseB"
-            if shot["type"] == "ots":
-                variant = "ReverseA" if shot.get("camera_side") == "charA" else "ReverseB"
-
+            name_upper = char["name"].upper()
+            variant = select_variant_for_shot(shot, char["name"])
             zone_alias = variants[variant]
 
-            base_alias = f"{scene_id}_BASE_{shot['shot_id']}_{name}"
+            base_alias = f"{scene_id}_BASE_{shot['shot_id']}_{name_upper}"
 
             graph["base_composites"].append({
                 "alias": base_alias,
                 "dependencies": [
-                    f"{name}_Sheet",
+                    f"{name_upper}_Sheet",
                     zone_alias
                 ],
-                "character": name,
+                "character": name_upper,
                 "shot_id": shot["shot_id"],
-                "zone": zone,
+                "zone_slug": zone_slug,
                 "variant": variant
             })
 
-
-    # ---------------------------------------------------------
-    # SHOT COMPOSITES
-    # ---------------------------------------------------------
+    # ---------------- SHOT COMPOSITES ----------------
     for shot in shots:
         sc_alias = f"{scene_id}_SHOT_{shot['shot_id']}"
 
@@ -411,10 +215,7 @@ def build_dependency_graph(registry, scene_id, shots):
             "type": shot["type"]
         })
 
-
-    # ---------------------------------------------------------
-    # DIALOG (depends on shot composite)
-    # ---------------------------------------------------------
+    # ---------------- DIALOG ----------------
     for shot in shots:
         dialog_lines = shot.get("dialog", [])
         if not dialog_lines:
@@ -423,11 +224,10 @@ def build_dependency_graph(registry, scene_id, shots):
         for i, line in enumerate(dialog_lines):
             speaker = line["speaker"].upper()
             d_alias = f"{scene_id}_D_{shot['shot_id']}_{i}"
-            sc_alias = f"{scene_id}_SHOT_{shot['shot_id']}"
 
             graph["dialog"].append({
                 "alias": d_alias,
-                "dependencies": [f"{speaker}_Voice", sc_alias],
+                "dependencies": [f"{speaker}_Voice", f"{scene_id}_SHOT_{shot['shot_id']}"],
                 "speaker": speaker,
                 "shot_id": shot["shot_id"],
                 "line_index": i
@@ -436,41 +236,39 @@ def build_dependency_graph(registry, scene_id, shots):
     return graph
 
 
+# ---------------------------------------------------------
+# ASSET GENERATION
+# ---------------------------------------------------------
 
 def generate_assets(registry, shots, graph):
     assets = []
     registry_map = {c["name"].upper(): c for c in registry["characters"]}
-    shot_map = {str(s["shot_id"]): s for s in shots}
+    # Precompute zone alias per shot_id from base_composites
+    zone_alias_by_shot = {}
+    for base in graph["base_composites"]:
+        shot_id = base["shot_id"]
+        _, zone_alias = base["dependencies"]
+        zone_alias_by_shot.setdefault(shot_id, zone_alias)
 
 
-    # ---------------------------------------------------------
-    # IDENTITY → create_character_sheet / design_voice
-    # ---------------------------------------------------------
+    # ---------------- IDENTITY ----------------
     for item in graph["identity"]:
         name = item["character"]
         char = registry_map[name]
 
         if item["alias"].endswith("_Sheet"):
             base_prompt = char["appearance_prompt"]
-
             realism_block = (
                 "shot on a full-frame DSLR, 50mm lens, natural skin texture, "
                 "visible pores, subtle blemishes, micro-contrast, fine vellus hair, "
                 "realistic subsurface scattering, no airbrushing, no smoothing, "
                 "no painting, no illustration, no digital art, no concept art."
             )
-
             prompt = f"{base_prompt}. {realism_block}"
-
-            instruction = (
-                f"create_character_sheet using prompt: {prompt}"
-            )
-
+            instruction = f"create_character_sheet using prompt: {prompt}"
         else:
             voice_desc = char["voice"]
-            instruction = (
-                f"design_voice using voice: {voice_desc}"
-            )
+            instruction = f"design_voice using voice: {voice_desc}"
 
         assets.append({
             "alias": item["alias"],
@@ -478,15 +276,9 @@ def generate_assets(registry, shots, graph):
             "instruction": instruction
         })
 
-    # ---------------------------------------------------------
-    # BACKGROUND → create_background
-    # ---------------------------------------------------------
+    # ---------------- BACKGROUND ----------------
     bg = graph["background"]
-    bg_prompt = bg["prompt"]
-
-    bg_instruction = (
-        f"create_background using prompt: {bg_prompt}"
-    )
+    bg_instruction = f"create_background using prompt: {bg['prompt']}"
 
     assets.append({
         "alias": bg["alias"],
@@ -494,15 +286,12 @@ def generate_assets(registry, shots, graph):
         "instruction": bg_instruction
     })
 
-    # ---------------------------------------------------------
-    # ZONE BACKDROPS → generate_backdrop
-    # ---------------------------------------------------------
+    # ---------------- ZONE BACKDROPS ----------------
     for zb in graph["zone_backdrops"]:
         bg_alias = zb["dependencies"][0]
-
         instruction = (
             f"generate_backdrop using media: {bg_alias} asset, "
-            f"zone: {zb['zone']}"
+            f"zone_slug: {zb['zone_slug']}, variant: {zb['variant']}"
         )
 
         assets.append({
@@ -511,79 +300,52 @@ def generate_assets(registry, shots, graph):
             "instruction": instruction
         })
 
-    # ---------------------------------------------------------
-    # BASE COMPOSITES → composite_scene
-    # ---------------------------------------------------------
-    registry_characters = [c["name"] for c in registry["characters"]]
-
+    # ---------------- BASE COMPOSITES ----------------
     for base in graph["base_composites"]:
         shot = find_shot(shots, base["shot_id"])
         character = base["character"]
+
         sheet_alias, zone_alias = base["dependencies"]
 
-        # Find character entry in shot
         char_data = next(c for c in shot["characters"] if c["name"].upper() == character)
-        raw_pose = char_data.get("appearance_in_shot", "")
-
-        # Clean pose
-        other_names = [c["name"] for c in shot["characters"] if c["name"].upper() != character]
-        action = extract_primary_pose(raw_pose, character, other_names)
-
-        # Detect missing character references
-        missing_refs = detect_missing_character_reference(
-            raw_pose,
-            shot["characters"],
-            registry_characters
-        )
-
-        alias_used = [sheet_alias, zone_alias]
-        for missing in missing_refs:
-            alias_used.append(f"{missing.upper()}_Sheet")
+        pose = char_data.get("pose") or "standing still"
 
         shot_type = shot["type"]
 
         instruction = (
-            f"create a composite by combining {' and '.join(alias_used)} assets, "
-            f"shot type: {shot_type}, apply starting action: {action}, "
+            f"create a composite by combining {sheet_alias} and {zone_alias} assets, "
+            f"shot type: {shot_type}, apply starting action: {pose}, "
+            "integrate the pose naturally into the background using the asset descriptions "
             f"no camera transforms"
         )
 
         assets.append({
-            "alias": base["alias"],      # <-- use graph alias (e.g. 1_BASE_1_SAMUEL)
-            "alias_used": alias_used,
+            "alias": base["alias"],
+            "alias_used": [sheet_alias, zone_alias],
             "instruction": instruction
         })
 
-
-
-
-
-
-
-    # ---------------------------------------------------------
-    # SHOT COMPOSITES → composite_scene
-    # ---------------------------------------------------------
+    # ---------------- SHOT COMPOSITES ----------------
     for shot_node in graph["shot_composites"]:
         shot = find_shot(shots, shot_node["shot_id"])
         shot_type = shot["type"]
 
         action = ", ".join(
-            extract_primary_pose(
-                c.get("appearance_in_shot", ""),
-                c["name"],
-                [o["name"] for o in shot["characters"] if o["name"] != c["name"]]
-            )
+            (c.get("action") or c.get("pose") or "standing still")
             for c in shot["characters"]
         )
 
-        deps = shot_node["dependencies"]
+        shot_id = shot_node["shot_id"]
+        zone_alias = zone_alias_by_shot[shot_id]
+        char_sheets = [f"{c['name'].upper()}_Sheet" for c in shot["characters"]]
+
+        deps = [zone_alias] + char_sheets
 
         instruction = (
             f"create a composite by combining {' and '.join(deps)} assets, "
             f"shot type: {shot_type}, apply action: {action}, "
-            f"no camera transforms"
+            "integrate the character’s pose and action naturally into the background using the asset descriptions "
         )
-
 
         assets.append({
             "alias": shot_node["alias"],
@@ -592,52 +354,17 @@ def generate_assets(registry, shots, graph):
         })
 
 
-
-
-
-    '''
-    # ---------------------------------------------------------
-    # SHOT COMPOSITES → apply_gimbal_shot
-    # ---------------------------------------------------------
-    for sc in graph["shot_composites"]:
-        shot = find_shot(shots, sc["shot_id"])
-        shot_cv = sc.get("camera_view", {}) or {}
-
-        if not sc["dependencies"]:
-            continue
-
-        source_media = sc["dependencies"][0]
-
-        angle = shot_cv.get("angle", "front")
-        height = shot_cv.get("height", "eye")
-        distance = shot_cv.get("distance", "medium")
-
-        instruction = (
-            f"apply gimbal shot to {source_media} asset, "
-            f"angle: {angle}, height: {height}, distance: {distance}"
-        )
-
-        assets.append({
-            "alias": sc["alias"],
-            "alias_used": sc["dependencies"],
-            "instruction": instruction
-        })
-    '''
-
-    # ---------------------------------------------------------
-    # DIALOG → dialog_to_video
-    # ---------------------------------------------------------
+    # ---------------- DIALOG ----------------
     for d in graph["dialog"]:
         shot = find_shot(shots, d["shot_id"])
         line = shot["dialog"][d["line_index"]]["line"]
         speaker = d["speaker"]
 
         sc_alias = f"{graph['scene_id']}_SHOT_{d['shot_id']}"
-        media_alias = sc_alias
         audio_alias = f"{speaker}_Voice.wav"
 
         instruction = (
-            f"create a dialog_to_video using {audio_alias} asset with {media_alias} asset, "
+            f"create a dialog_to_video using {audio_alias} asset with {sc_alias} asset, "
             f"text: \"{line}\""
         )
 
@@ -650,15 +377,56 @@ def generate_assets(registry, shots, graph):
     return assets
 
 
+# ---------------------------------------------------------
+# I2V GENERATION
+# ---------------------------------------------------------
+
+def build_i2v_videos(scene_id, assets, shots):
+    video_nodes = []
+    shot_map = {str(s["shot_id"]): s for s in shots}
+
+    for asset in assets:
+        if not asset["alias"].startswith(f"{scene_id}_SHOT_"):
+            continue
+
+        match = re.search(r'SHOT_(\d+)$', asset["alias"])
+        if not match:
+            continue
+
+        shot_id = match.group(1)
+        shot = shot_map.get(shot_id)
+        if not shot:
+            continue
+
+        micro_motion = ", ".join(
+            (c.get("action") or c.get("pose") or "standing still")
+            for c in shot["characters"]
+        ) or "subtle environmental motion"
+
+        instruction = (
+            f"create an image_to_video using {asset['alias']} asset, "
+            "integrate the character’s pose and action naturally into the background using the asset descriptions "
+            f"action: {micro_motion}"
+        )
+
+        video_nodes.append({
+            "alias": f"{scene_id}_VID_{shot_id}",
+            "alias_used": [asset["alias"]],
+            "instruction": instruction
+        })
+
+    return video_nodes
+
+
+# ---------------------------------------------------------
+# MAIN
+# ---------------------------------------------------------
 
 if __name__ == '__main__':
-    import sys
-    from pathlib import Path
-
     basepath = sys.argv[1]
-    registry = json.loads(Path(f'{basepath}/registry.json').read_text())
     scene_id = sys.argv[2]
 
+    registry = json.loads(Path(f'{basepath}/registry.json').read_text())
     scenes_data = json.loads(Path(f'{basepath}/shots.json').read_text())["scenes"]
 
     shots = None

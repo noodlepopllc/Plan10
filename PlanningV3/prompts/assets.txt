@@ -110,6 +110,7 @@ LAYER 2 — STRUCTURE (JSON SCHEMA)
 "name": "<string>",
 "alias_slug": "<lowercase_underscored>",
 "voice": "<strict voice format>",
+"identity": "<gender, hair silhouette, clothing color>",
 "appearance_prompt": "<high-signal visual description>",
 "background_zone": "<zone name from locations[]>",
 "zone_prompt": "<full zone description from locations[]>"
