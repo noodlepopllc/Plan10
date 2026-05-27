@@ -148,7 +148,8 @@ def build_dependency_graph(registry, scene_id, shots):
                         f"FORWARD VIEW.\n"
                         f"Camera faces the primary subject direction.\n"
                         f"Show the environment exactly as described above, from the main camera orientation.\n"
-                        f"Include all visible environmental elements, geometry, furniture, and lighting.\n"
+                        "Show only the portion of the zone that is visible from this camera orientation."
+                        "Do not duplicate or invent furniture."
                         f"Preserve all visible light sources and their positions."
                     )
                 else:
