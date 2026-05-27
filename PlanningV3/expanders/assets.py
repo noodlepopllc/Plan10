@@ -38,7 +38,6 @@ def resolve_zone_description(registry, zone_slug):
     return registry["locations"][0]["description"]
 
 
-
 def assign_roles(shot):
     """
     Deterministic charA/charB assignment.

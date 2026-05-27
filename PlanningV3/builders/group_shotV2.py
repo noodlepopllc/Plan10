@@ -61,6 +61,20 @@ def attach_identity_tags(scenes, registry):
 # LOAD REGISTRY ZONES (SINGLE SOURCE OF TRUTH)
 # ---------------------------------------------------------
 
+def load_registry_zone_descriptions(registry_path: str):
+    registry = json.loads(Path(registry_path).read_text())
+    zones = registry["locations"][0]["zones"]
+
+    slug_to_description = {}
+    for z in zones:
+        name = z["zone_name"]
+        slug = slugify(name)
+        desc = z["description"]
+        slug_to_description[slug] = desc
+
+    return slug_to_description
+
+
 import re
 
 def slugify(text: str) -> str:
@@ -172,6 +186,18 @@ if __name__ == '__main__':
     zone_name_to_slug, slug_to_zone_name, all_zone_names = load_registry_zones(
         f"{base}/registry.json"
     )
+    slug_to_description = load_registry_zone_descriptions(f"{base}/registry.json")
+
+    # Load registry once at the top of main()
+    registry = json.loads(Path(f"{base}/registry.json").read_text())
+
+    # Build canonical character list for Phase 1 input
+    canonical_characters = [
+        {"name": c["name"], "identity": c["identity"]}
+        for c in registry["characters"]
+    ]
+
+
 
     # 2) Load Phase 1 system prompt
     PHASE_1 = Path('./PlanningV3/prompts/groupshot/phase1.txt').read_text()
@@ -204,13 +230,15 @@ if __name__ == '__main__':
             # Convert canonical zone_name → slug
             zone_slug = zone_name_to_slug[canonical_zone_name]
 
-            # Prepare LLM input for Phase 1
+            # NEW — attach canonical zone name + slug to the LLM input
             phase1_input = {
                 "previous_beat": prev,
                 "current_beat": curr,
                 "next_beat": nextb,
-                "environment_zone": zone_slug
+                "environment_zone_description": slug_to_description[zone_slug],
+                "characters": canonical_characters
             }
+
 
             data = llm_analyze_media(
                 media="",
@@ -229,6 +257,10 @@ if __name__ == '__main__':
 
             for s in shots:
                 s["shot_id"] = len(all_shots) + 1
+                s["environment_zone"] = zone_slug
+                s["environment_zone_name"] = canonical_zone_name
+
+
                 all_shots.append(s)
 
         scenes["scenes"].append({
@@ -237,7 +269,6 @@ if __name__ == '__main__':
             }
         })
 
-    registry = json.loads(Path(f"{base}/registry.json").read_text())
     scenes = attach_identity_tags(scenes, registry)
 
     with open(out_path, 'w') as wr:
