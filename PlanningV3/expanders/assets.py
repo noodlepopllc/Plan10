@@ -141,26 +141,29 @@ def build_dependency_graph(registry, scene_id, shots):
                 alias = f"{scene_id}_ZV_{zone_slug}_{variant}"
                 zone_variants[zone_slug][variant] = alias
 
+                zone_description = resolve_zone_description(registry, zone_slug)
+
                 if variant == "Forward":
                     prompt = (
-                        f"Environment zone slug: {zone_slug}. "
-                        f"FORWARD VIEW. "
-                        f"Camera faces the primary subject direction. "
-                        f"Show the environment exactly as it appears from the main camera orientation. "
-                        f"Include all visible environmental elements as they appear from this direction. "
+                        f"{zone_description}\n\n"
+                        f"FORWARD VIEW.\n"
+                        f"Camera faces the primary subject direction.\n"
+                        f"Show the environment exactly as described above, from the main camera orientation.\n"
+                        f"Include all visible environmental elements, geometry, furniture, and lighting.\n"
                         f"Preserve all visible light sources and their positions."
                     )
                 else:
                     prompt = (
-                        f"Environment zone slug: {zone_slug}. "
-                        f"REVERSE VIEW. "
-                        f"Rotate the camera 180 degrees horizontally to show the opposite side of the environment. "
-                        f"Reveal environmental elements that are not visible in the Forward view. "
-                        f"Show geometry, furniture, props, and background that exist behind the Forward camera. "
+                        f"{zone_description}\n\n"
+                        f"REVERSE VIEW.\n"
+                        f"Rotate the camera 180 degrees horizontally.\n"
+                        f"Reveal environmental elements that are not visible in the Forward view.\n"
+                        f"Show geometry, furniture, props, and background that exist behind the Forward camera.\n"
                         f"Remove direct light sources that would now be behind the camera, "
-                        f"but preserve their lighting effect on the environment. "
+                        f"but preserve their lighting effect on the environment.\n"
                         f"ReverseA and ReverseB must be visually distinct from Forward and from each other."
                     )
+
 
                 graph["zone_backdrops"].append({
                     "alias": alias,
