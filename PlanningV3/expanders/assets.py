@@ -4,8 +4,12 @@ import sys
 from pathlib import Path
 from collections import defaultdict
 
-def flatten(text):
-    return " ".join(text.split())
+def resolve_location_description(registry):
+    # assuming single location for now
+    return registry["locations"][0]["description"]
+
+
+
 
 # ---------------------------------------------------------
 # CORE HELPERS
@@ -112,14 +116,13 @@ def build_dependency_graph(registry, scene_id, shots):
         })
 
     # ---------------- BACKGROUND ----------------
-    primary_zone_slug = shots[0]["environment_zone"]
-    env_prompt = resolve_zone_description(registry, primary_zone_slug)
+    location_prompt = resolve_location_description(registry)
 
     bg_alias = f"{scene_id}_BG"
     graph["background"] = {
         "alias": bg_alias,
         "dependencies": [],
-        "prompt": env_prompt
+        "prompt": location_prompt
     }
 
     # ---------------- ZONE VARIANTS ----------------
