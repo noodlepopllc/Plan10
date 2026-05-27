@@ -293,8 +293,10 @@ def generate_assets(registry, shots, graph):
         bg_alias = zb["dependencies"][0]
         instruction = (
             f"generate_backdrop using media: {bg_alias} asset, "
-            f"zone_slug: {zb['zone_slug']}, variant: {zb['variant']}"
+            f"zone_slug: {zb['zone_slug']}, variant: {zb['variant']}, "
+            f"prompt: \"{zb['prompt']}\""
         )
+
 
         assets.append({
             "alias": zb["alias"],
