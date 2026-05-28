@@ -156,7 +156,7 @@ def build_dependency_graph(registry, scene_id, shots):
                     prompt = (
                         "use the description of the asset to create a new zone 180 degree view of room  "
                         "keep lighting the same "
-                        "no windows, 1 new piece of furniture if room is furnished that is appropriate to location, "
+                        "windowless with at least 1 new piece of furniture that is appropriate to location, "
                         f"preserve ambient lighting in the environment.\n"
                     )
 
