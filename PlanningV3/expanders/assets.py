@@ -129,7 +129,7 @@ def build_dependency_graph(registry, scene_id, shots):
     zone_variants = {}  # zone_slug -> {variant_name: alias}
 
     for shot in shots:
-        zone_slug = shot["environment_zone"]
+        zone_slug = slugify(shot["environment_zone"])
 
         if zone_slug not in zone_variants:
             zone_variants[zone_slug] = {}
@@ -145,26 +145,25 @@ def build_dependency_graph(registry, scene_id, shots):
                 if variant == "Forward":
                     prompt = (
                         f"{zone_description}\n\n"
-                        f"FORWARD VIEW.\n"
+                        "keep lighting the same as reference image "
                         f"Camera faces the primary subject direction.\n"
                         f"Show the environment exactly as described above, from the main camera orientation.\n"
                         "Show only the portion of the zone that is visible from this camera orientation."
-                        "Do not duplicate or invent furniture."
+                        "Do not duplicate or invent furniture. "
                         f"Preserve all visible light sources and their positions."
                     )
                 else:
                     prompt = (
-                        f"REVERSE VIEW.\n"
                         "use the description of the asset to create a new zone 180 degree view of room  "
                         "keep lighting the same "
-                        "no windows, 1 new piece of furniture if room is furnished that is appropriate to location"
-                        f"preserve lighting on the environment.\n"
+                        "no windows, 1 new piece of furniture if room is furnished that is appropriate to location, "
+                        f"preserve ambient lighting in the environment.\n"
                     )
 
 
                 graph["zone_backdrops"].append({
                     "alias": alias,
-                    "dependencies": [bg_alias],
+                    "dependencies": [bg_alias] if variant == "Forward" else [f"{scene_id}_ZV_{zone_slug}_Forward"],
                     "zone_slug": zone_slug,
                     "variant": variant,
                     "prompt": prompt
