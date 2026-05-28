@@ -154,14 +154,11 @@ def build_dependency_graph(registry, scene_id, shots):
                     )
                 else:
                     prompt = (
-                        f"{zone_description}\n\n"
                         f"REVERSE VIEW.\n"
-                        f"Rotate the camera 180 degrees horizontally.\n"
-                        f"Reveal environmental elements that are not visible in the Forward view.\n"
-                        f"Show geometry, furniture, props, and background that exist behind the Forward camera.\n"
-                        f"Remove direct light sources that would now be behind the camera, "
-                        f"but preserve their lighting effect on the environment.\n"
-                        f"ReverseA and ReverseB must be visually distinct from Forward and from each other."
+                        "use the description of the asset to create a new zone 180 degree view of room  "
+                        "keep lighting the same "
+                        "windows and walls swap sides, 1 new piece of furniture if room is furnished that is appropriate to location"
+                        f"preserve lighting on the environment.\n"
                     )
 
 
