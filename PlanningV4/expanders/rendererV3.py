@@ -13,7 +13,7 @@ def normalize(name: str) -> str:
     return ''.join([x for x in name.upper() if x in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789'])
 
 # ---------------------------------------------------------
-# CHARACTER SHEETS + VOICES
+# CHARACTER SHEETS + VOICES (CHAR_ ALIASES)
 # ---------------------------------------------------------
 
 def get_identity(assets):
@@ -26,15 +26,16 @@ def get_identity(assets):
             f"{bio['appearance']},{bio['hair']}, {bio['clothing']}"
         )
         name = description[0]
+        char_alias = f"CHAR_{normalize(name)}"
         yield (
-            f">> ALIAS: {normalize(name)}\n"
+            f">> ALIAS: {char_alias}\n"
             f"create a character sheet of {description[1]}, Seed: {SEED}\n\n"
-            f">> ALIAS: {normalize(name)}_VOICE\n"
+            f">> ALIAS: {char_alias}_VOICE\n"
             f"design a voice for {','.join(description[1].split(',')[:3])}\n"
         )
 
 # ---------------------------------------------------------
-# IDENTITY BINDING
+# IDENTITY BINDING (TEXT SIDE)
 # ---------------------------------------------------------
 
 def build_identity_map(assets):
@@ -50,8 +51,7 @@ def build_identity_map(assets):
 
 def bind_identity(action: str, names: dict) -> str:
     """
-    Replace character name with full identity descriptor.
-    Ensures the model never invents a second subject.
+    Replace character name with full identity descriptor in the text.
     """
     for char, ident in names.items():
         if char in action:
@@ -117,6 +117,9 @@ def render_beats_actions(assets, actions):
     """
     names = build_identity_map(assets)
 
+    # map plain names -> CHAR_ aliases
+    char_aliases = {c['name']: f"CHAR_{normalize(c['name'])}" for c in assets['characters']}
+
     for beat in actions:
         beat_actions = beat.get('actions') or []
         if not beat_actions:
@@ -138,7 +141,7 @@ def render_beats_actions(assets, actions):
         # -----------------------------
         # WIDE SHOT (zone background)
         # -----------------------------
-        char_assets = " and ".join(f"{normalize(c)} asset" for c in chars_in_beat)
+        char_assets = " and ".join(f"{char_aliases[c]} asset" for c in chars_in_beat)
         wide_prompt = "; ".join(bind_identity(a, names) for a in beat_actions)
 
         print(f"""
@@ -159,21 +162,21 @@ image_to_video BEAT_{beat["beat"]}_WIDE_ACTION asset, {wide_prompt}, Width: {WID
             if not char_action:
                 continue
 
-            char_alias = normalize(char)
+            char_alias = char_aliases[char]
             medium_prompt = bind_identity(char_action, names)
 
             print(f"""
->> ALIAS: BEAT_{beat["beat"]}_{char_alias}_ACTION
+>> ALIAS: BEAT_{beat["beat"]}_{normalize(char)}_ACTION
 composite_scene {zone_alias} asset and {char_alias} asset, {medium_prompt}, Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
 """)
 
             print(f"""
->> ALIAS: BEAT_{beat["beat"]}_{char_alias}_ACTION_VIDEO
-image_to_video BEAT_{beat["beat"]}_{char_alias}_ACTION asset, {medium_prompt}, Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
+>> ALIAS: BEAT_{beat["beat"]}_{normalize(char)}_ACTION_VIDEO
+image_to_video BEAT_{beat["beat"]}_{normalize(char)}_ACTION asset, {medium_prompt}, Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
 """)
 
 # ---------------------------------------------------------
-# DIALOG CLOSEUPS (SAME ZONE BACKGROUND)
+# DIALOG CLOSEUPS (SAME ZONE BACKGROUND, CHAR_ ALIASES)
 # ---------------------------------------------------------
 
 def _get_per_speaker_value(beat, key, speaker, default):
@@ -202,7 +205,7 @@ def build_dialog_closeup_prompt(beat, speaker, names):
 
 def render_beats_dialog(assets, actions):
     names = build_identity_map(assets)
-    char_aliases = {c['name']: normalize(c['name']) for c in assets['characters']}
+    char_aliases = {c['name']: f"CHAR_{normalize(c['name'])}" for c in assets['characters']}
 
     for beat in actions:
         dialog_list = beat.get('dialog') or []
@@ -222,14 +225,14 @@ def render_beats_dialog(assets, actions):
             closeup_prompt = build_dialog_closeup_prompt(beat, speaker, names)
 
             print(f"""
->> ALIAS: BEAT_{beat["beat"]}_{speaker_alias}_DIALOG_FRAME
+>> ALIAS: BEAT_{beat["beat"]}_{normalize(speaker)}_DIALOG_FRAME
 composite_scene {zone_alias} asset and {speaker_alias} asset,
 {closeup_prompt}, Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
 """)
 
             print(f"""
->> ALIAS: BEAT_{beat["beat"]}_{speaker_alias}_DIALOG_VIDEO
-speech_to_video using=BEAT_{beat["beat"]}_{speaker_alias}_DIALOG_FRAME
+>> ALIAS: BEAT_{beat["beat"]}_{normalize(speaker)}_DIALOG_VIDEO
+speech_to_video using=BEAT_{beat["beat"]}_{normalize(speaker)}_DIALOG_FRAME
 audio={speaker_alias}_VOICE
 text="{line}"
 Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
@@ -246,7 +249,7 @@ def main():
     with open(f"{basepath}/output/complete.json") as act:
         actions = json.load(act)
 
-    # Character sheets + voices
+    # Character sheets + voices (CHAR_ aliases)
     for x in get_identity(assets):
         print(x)
 

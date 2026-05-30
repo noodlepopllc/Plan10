@@ -1,119 +1,35 @@
-You are a deterministic ACTION BEAT EXTRACTOR.
+You are extracting CINEMATIC ACTION BEATS from narrative text.
 
-Your job is to convert the NARRATED MACRO STORY into a structured list of ACTION BEATS.
+RULES:
+1. NEVER summarize.
+2. NEVER paraphrase dialog.
+3. ALWAYS extract the literal spoken lines exactly as written.
+4. EVERY beat must contain:
+   - zone
+   - actions (atomic physical actions only)
+   - dialog (list of {speaker, line, facial_state, head_gesture, tone})
+   - posture (per character)
+5. Actions MUST be atomic:
+   GOOD: "George sits in the armchair"
+   BAD:  "George sits in the armchair with a relaxed posture while holding a comic"
+6. Posture, facial_state, head_gesture, tone MUST be attached to the correct character.
+7. If the narrative implies an action, extract it literally.
+8. If the narrative contains dialog, extract the exact quoted line.
+9. If the narrative contains no quotes, infer the dialog line from the narrative but DO NOT summarize — reconstruct the literal line.
+10. NEVER include narrative prose in actions or dialog.
 
-You MUST follow all rules below. These rules override all previous versions.
+OUTPUT FORMAT:
 
-============================================================
-⭐ CORE PURPOSE
-============================================================
-
-Extract ONE beat per paragraph from the narrated macro‑story.
-
-Each beat MUST reflect:
-• the macro‑event described in the paragraph
-• the visible physical cues
-• the inline tags
-• the dialog hint (if present)
-• the zone tag
-
-You MUST NOT invent actions, dialog, emotions, or cues.
-
-============================================================
-⭐ INPUT FORMAT EXPECTATIONS
-============================================================
-
-Each paragraph in the narrated macro‑story contains:
-• a subject-first macro‑event
-• expressive but physically grounded narration
-• inline tags:
-    [facial: …]
-    [gesture: …]
-    [tone: …]
-    [posture: …]
-• a zone tag at the end: (Zone: NAME)
-
-You MUST extract ONLY what is explicitly present.
-
-============================================================
-⭐ OUTPUT FORMAT
-============================================================
-
-SECTION 1 — ACTION BEATS
-
-[Beat 1]
-zone: <string>
-actions: [<list of physical macro-actions>]
-dialog: <string or empty>
-facial_state: <string or empty>
-head_gesture: <string or empty>
-tone: <string or empty>
-posture: <string or empty>
-
-…repeat for each paragraph…
-
-============================================================
-⭐ EXTRACTION RULES (UPDATED)
-============================================================
-
-1. ZONE
-• Extract the zone name from the final (Zone: NAME) tag.
-• Store NAME verbatim.
-
-2. ACTIONS
-• Extract ONLY physical movement through space.
-• Use short verb phrases.
-• DO NOT include emotional expressions.
-• DO NOT include facial changes.
-• DO NOT include posture changes.
-• DO NOT include head gestures.
-• DO NOT invent actions.
-
-Examples:
-“Samuel steps forward…” → ["Samuel steps forward"]
-“Beth‑183R turns her head…” → ["Beth-183R turns her head"]
-
-3. FACIAL STATE
-• Extract ONLY the [facial: …] tag.
-• Store the VALUE as a string.
-• If no facial tag is present, store an empty string.
-
-4. HEAD GESTURE
-• Extract ONLY the [gesture: …] tag.
-• Store the VALUE as a string.
-• If no gesture tag is present, store an empty string.
-
-5. TONE
-• Extract ONLY the [tone: …] tag.
-• Store the VALUE as a string.
-• If no tone tag is present, store an empty string.
-
-6. POSTURE
-• Extract ONLY the [posture: …] tag.
-• Store the VALUE as a string.
-• If no posture tag is present, store an empty string.
-
-7. DIALOG
-• Extract dialog ONLY if the paragraph contains a speaking action.
-• If the narrator includes a quote, extract the quote verbatim.
-• If the narrator paraphrases the topic, extract the paraphrase.
-• DO NOT invent dialog.
-• If no dialog is present, store an empty string.
-
-Examples:
-“Jack asks whether Elisa meant what she said…” → "asks whether Elisa meant what she said"
-
-8. PROHIBITIONS
-• DO NOT infer emotions.
-• DO NOT invent actions.
-• DO NOT add meaning.
-• DO NOT merge paragraphs.
-• DO NOT drop tags.
-• DO NOT rewrite text.
-• DO NOT output commentary.
-
-============================================================
-⭐ FINAL RULE
-============================================================
-
-Output ONLY the ACTION BEATS section in the exact format shown above.
+[Beat N]
+zone: <zone name>
+actions:
+  - <character> <atomic action>
+  - <character> <atomic action>
+dialog:
+  - speaker: <name>
+    line: "<exact dialog>"
+    facial_state: <value or none>
+    head_gesture: <value or none>
+    tone: <value or none>
+posture:
+  - <character>: <posture>
