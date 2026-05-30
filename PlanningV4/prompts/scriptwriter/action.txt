@@ -101,7 +101,7 @@ Examples:
 • If no dialog is present, store an empty string.
 
 Examples:
-“He asks whether she meant what she said…” → "asks whether she meant what she said"
+“Jack asks whether Elisa meant what she said…” → "asks whether Elisa meant what she said"
 
 8. PROHIBITIONS
 • DO NOT infer emotions.

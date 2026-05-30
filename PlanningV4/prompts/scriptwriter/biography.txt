@@ -113,6 +113,12 @@ STRICT RULES:
     • MUST NOT add furniture not in PASS 0A
     • MUST NOT add story
 
+Every zone must also have a reversed version
+The reversed version is the other half of the room
+- If two people were talking face the face,
+   the reversed is what the person in the zone would see 
+   behind the person they are talking to
+
 ------------------------------------------------------------
 ⭐ GLOBAL RULES (SET DEFINITION LAYER)
 
