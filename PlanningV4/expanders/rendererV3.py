@@ -59,10 +59,14 @@ def bind_identity(action: str, names: dict) -> str:
     return action
 
 # ---------------------------------------------------------
-# ZONE MAPPING + BACKGROUNDS
+# ZONE MAPPING + BACKGROUNDS (ZONES = CAMERA ANGLES)
 # ---------------------------------------------------------
 
 def create_zone_mapping(registry, story):
+    """
+    Map registry zone_name -> story beat['zone'] label.
+    Zones are camera angles inside a location.
+    """
     mappings = {}
     for location in registry['locations']:
         for zone in location['zones']:
@@ -73,14 +77,11 @@ def create_zone_mapping(registry, story):
                     break
     return mappings
 
-def get_backgrounds(registry, mappings, assets):
+def get_backgrounds(registry, mappings):
     """
-    Generate:
-      - one neutral background per zone
-      - one character-specific background per character per zone
+    ONE background per zone (zone = camera angle).
+    All characters that use that zone share this plate.
     """
-    char_names = [c['name'] for c in assets['characters']]
-
     for location in registry['locations']:
         architecture = location['architectural_shell']
 
@@ -90,43 +91,29 @@ def get_backgrounds(registry, mappings, assets):
 
             zone_key = mappings[zone['zone_name']]
             zone_alias = normalize(zone_key)
-            base_prompt = (
+
+            prompt = (
                 f"Architecture: {architecture}, "
                 f"Description: {zone['definition']}, "
                 f"Anchored objects: {zone['anchored_elements']}"
             )
 
-            # Neutral zone background (for wide shots)
             yield f"""
 >> ALIAS: {zone_alias}_BACKGROUND
 create_background cinematic widescreen composition with generous negative space at left and right frame edges,
 primary focal objects positioned safely within center 60% of frame, smooth flooring extends toward edges to provide
-clean tracking margins for camera movement, {base_prompt}, Seed: {SEED}"""
-
-            # Character-specific backgrounds (for mediums / closeups)
-            for char in char_names:
-                char_alias = normalize(char)
-                camera_offset = (
-                    f"camera subtly biased toward {char}'s side of the room, "
-                    f"slight parallax shift in anchored objects while preserving overall layout, "
-                    f"identical lighting, materials, and time of day for strict continuity"
-                )
-
-                yield f"""
->> ALIAS: {zone_alias}_BACKGROUND_{char_alias}
-create_background cinematic widescreen composition with generous negative space at left and right frame edges,
-primary focal objects positioned safely within center 60% of frame, smooth flooring extends toward edges to provide
-clean tracking margins for camera movement, {base_prompt}, {camera_offset}, Seed: {SEED}"""
+clean tracking margins for camera movement, {prompt}, Seed: {SEED}"""
 
 # ---------------------------------------------------------
-# ACTION RENDERING (WIDE + MEDIUM)
+# ACTION RENDERING (WIDE + MEDIUM, SAME ZONE BACKGROUND)
 # ---------------------------------------------------------
 
 def render_beats_actions(assets, actions):
     """
     For each beat:
-      - ONE wide shot with all characters in that beat (neutral background)
-      - ONE medium shot per character (character-specific background)
+      - ONE wide shot with all characters in that beat (zone background)
+      - ONE medium shot per character (same zone background)
+    Zones are already camera angles; we do NOT change backgrounds per character.
     """
     names = build_identity_map(assets)
 
@@ -136,6 +123,7 @@ def render_beats_actions(assets, actions):
             continue
 
         zone_base = normalize(beat['zone'])
+        zone_alias = f"{zone_base}_BACKGROUND"
 
         # Identify characters in this beat
         chars_in_beat = []
@@ -148,9 +136,8 @@ def render_beats_actions(assets, actions):
             continue
 
         # -----------------------------
-        # WIDE SHOT (neutral background)
+        # WIDE SHOT (zone background)
         # -----------------------------
-        zone_alias = f"{zone_base}_BACKGROUND"
         char_assets = " and ".join(f"{normalize(c)} asset" for c in chars_in_beat)
         wide_prompt = "; ".join(bind_identity(a, names) for a in beat_actions)
 
@@ -165,7 +152,7 @@ image_to_video BEAT_{beat["beat"]}_WIDE_ACTION asset, {wide_prompt}, Width: {WID
 """)
 
         # -----------------------------
-        # MEDIUM SHOTS (per character, char-specific background)
+        # MEDIUM SHOTS (per character, same zone background)
         # -----------------------------
         for char in chars_in_beat:
             char_action = next((a for a in beat_actions if char in a), None)
@@ -173,12 +160,11 @@ image_to_video BEAT_{beat["beat"]}_WIDE_ACTION asset, {wide_prompt}, Width: {WID
                 continue
 
             char_alias = normalize(char)
-            zone_char_bg = f"{zone_base}_BACKGROUND_{char_alias}"
             medium_prompt = bind_identity(char_action, names)
 
             print(f"""
 >> ALIAS: BEAT_{beat["beat"]}_{char_alias}_ACTION
-composite_scene {zone_char_bg} asset and {char_alias} asset, {medium_prompt}, Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
+composite_scene {zone_alias} asset and {char_alias} asset, {medium_prompt}, Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
 """)
 
             print(f"""
@@ -187,7 +173,7 @@ image_to_video BEAT_{beat["beat"]}_{char_alias}_ACTION asset, {medium_prompt}, W
 """)
 
 # ---------------------------------------------------------
-# DIALOG CLOSEUPS (NO ACTIONS, CHAR-SPECIFIC BACKGROUND)
+# DIALOG CLOSEUPS (SAME ZONE BACKGROUND)
 # ---------------------------------------------------------
 
 def _get_per_speaker_value(beat, key, speaker, default):
@@ -224,6 +210,7 @@ def render_beats_dialog(assets, actions):
             continue
 
         zone_base = normalize(beat['zone'])
+        zone_alias = f"{zone_base}_BACKGROUND"
 
         for dlg in dialog_list:
             speaker = dlg['speaker']
@@ -232,12 +219,11 @@ def render_beats_dialog(assets, actions):
                 continue
 
             speaker_alias = char_aliases[speaker]
-            zone_char_bg = f"{zone_base}_BACKGROUND_{speaker_alias}"
             closeup_prompt = build_dialog_closeup_prompt(beat, speaker, names)
 
             print(f"""
 >> ALIAS: BEAT_{beat["beat"]}_{speaker_alias}_DIALOG_FRAME
-composite_scene {zone_char_bg} asset and {speaker_alias} asset,
+composite_scene {zone_alias} asset and {speaker_alias} asset,
 {closeup_prompt}, Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
 """)
 
@@ -264,9 +250,9 @@ def main():
     for x in get_identity(assets):
         print(x)
 
-    # Backgrounds (neutral + per-character)
+    # Backgrounds (one per zone; zones are camera angles)
     mappings = create_zone_mapping(assets, actions)
-    for x in get_backgrounds(assets, mappings, assets):
+    for x in get_backgrounds(assets, mappings):
         print(x)
 
     # Action shots
