@@ -17,15 +17,15 @@ from dialog import VoiceDesignSchema, VoiceCloneSchema, DesignVoice, CloneVoice
 from compositor import (
     CompositeSceneSchema, 
     CompositeScene,
-    GenerateBackdropSchema,
-    GenerateZoneBackdrop )
+    GenerateBackdropSchema, 
+    GenerateZoneBackdrop)
 
 import traceback
 
 # UPDATED IMPORTS to match consolidated image_edit.py
 from image_edit import (
     EditImageSchema, 
-    EditImage,
+    EditImage
 )
 
 from camera import GimbalShotSchema, ApplyGimbalShot
@@ -158,7 +158,7 @@ class ToolHandler(object):
             "dialog_to_video": ["prompt", "text", "media", "audio", "width", "height", "seed", "output", "alias"],
             "design_voice": ["voice", "output", "seed"],
             "generate_graphic": ["prompt", "output", "width", "height", "seed", "target_video_size", "padding_style", "alias"],
-            "generate_backdrop": ["media","zone","width","height","seed","char_image", "output", "alias"],
+            "generate_backdrop": ["media", "zone", "width", "height", "seed","char_image", "output", "alias"],
             "apply_gimbal_shot": ["media", "output", "angle", "height", "distance", "alias"]
         }
         

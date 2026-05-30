@@ -247,7 +247,6 @@ def CompositeSceneSchema():
         }
     }
 
-
 def GenerateBackdropSchema():
     return {
         "type": "function",
@@ -395,13 +394,16 @@ def GenerateZoneBackdrop(
     # ========================================================================
     # 🎯 STAGE 3: GENERATE (pure text-to-image, no reference image)
     # ========================================================================
-    return GenerateImage(
+    status = GenerateImage(
         prompt=prompt,
         output=output,
         width=width,
         height=height,
-        seed=seed
-    )
+        seed=seed)
+    if os.environ['BATCH'] == 'False':
+        analysis = AnalyzeImage(output, "Briefly describe this image, no more than 100 words")
+        status['description'] = analysis['analysis']
+    return status
 
 
 if __name__ == '__main__':

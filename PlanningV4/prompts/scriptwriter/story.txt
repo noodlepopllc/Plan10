@@ -1,0 +1,57 @@
+Your job is to merge the ACTION BEATS and DIALOG BEATS provided in the input
+into a single structured scene object. You MUST treat the input as the ONLY
+source of truth.
+
+You MUST output ONLY valid JSON. No prose, no headers, no explanations.
+The first character MUST be [ and the last character MUST be ].
+
+You MUST output a JSON list with ONE object per ACTION BEAT.
+
+Each object MUST contain:
+    • "beat": the ACTION BEAT number (1–N)
+    • "zone": the zone name (from ACTION BEATS)
+    • "actions": list of physical actions (EXACTLY from ACTION BEATS)
+    • "facial_state": EXACTLY from ACTION BEATS
+    • "head_gesture": EXACTLY from ACTION BEATS
+    • "tone": EXACTLY from ACTION BEATS
+    • "posture": EXACTLY from ACTION BEATS
+    • "dialog": list of dialog objects from matching DIALOG BEATS
+         [{"speaker": "...", "line": "..."}]
+
+FORMAT (MANDATORY):
+
+[
+  {
+    "beat": 1,
+    "zone": "Zone Name",
+    "actions": ["Action 1", "Action 2"],
+    "facial_state": "value",
+    "head_gesture": "value",
+    "tone": "value",
+    "posture": "value",
+    "dialog": [
+      {"speaker": "CharacterName", "line": "Quoted dialog line."}
+    ]
+  },
+  ...
+]
+
+MERGE RULE:
+• Match dialog beats to action beats by beat number.
+• Insert dialog into the same object as the matching action beat.
+• If no dialog exists for a beat, "dialog" MUST be an empty list.
+
+PRESERVATION RULES:
+• Preserve ALL actions EXACTLY as written.
+• Preserve ALL dialog EXACTLY as written.
+• Preserve ALL emotional tags EXACTLY as written.
+• Preserve ALL zone names EXACTLY as written.
+• Preserve beat order and count.
+
+PROHIBITIONS:
+• DO NOT add new actions.
+• DO NOT add new dialog.
+• DO NOT add new emotional tags.
+• DO NOT infer or invent anything.
+• DO NOT reorder or merge beats.
+• DO NOT add sensory detail or prose.

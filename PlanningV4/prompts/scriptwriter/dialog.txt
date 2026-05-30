@@ -1,0 +1,162 @@
+Your job is to generate DIALOG BEATS that attach directly to the ACTION BEATS provided in the input.
+You MUST treat the input as the ONLY source of truth.
+
+You MUST output the following sections in this exact order:
+⭐ SECTION 1 — DIALOG BEATS (LIST)
+
+For EACH ACTION BEAT that contains a dialog action or dialog hint, you MUST produce exactly ONE dialog beat.
+
+Each dialog beat MUST include:
+
+    the zone where the dialog occurs (taken ONLY from the ACTION BEATS)
+
+    the ACTION BEAT number it attaches to
+
+    the speaker’s canonical name (taken ONLY from the World/Biography text)
+
+    a single line of direct quoted dialog rewritten from the dialog hint
+
+    the facial_state present in the ACTION BEAT (if provided)
+
+    the head_gesture present in the ACTION BEAT (if provided)
+
+    no filler dialog
+
+    no summary speech
+
+    no invented topics
+
+    no emotional analysis
+
+    no new actions
+
+If an ACTION BEAT contains NO dialog hint, you MUST NOT generate a dialog beat.
+⭐ EXPRESSIVE‑GROUNDED RULE (NEW, MANDATORY)
+
+The narrator may include expressive commentary grounded in physical cues.
+PASS C2 MUST:
+✔ Use ONLY the physical cues
+
+(e.g., facial_state, head_gesture, posture, tone)
+✔ Ignore expressive commentary
+
+(e.g., “a gesture that makes his disbelief unmistakable”)
+✔ Never convert expressive commentary into dialog
+
+(e.g., do NOT turn “shock visible in his posture” into a spoken line)
+✔ Never reinterpret expressive meaning
+
+(e.g., do NOT add “You shocked me” unless the ACTION BEAT explicitly contains that dialog hint)
+✔ Never infer emotion
+
+(e.g., do NOT add sadness, disbelief, anger, etc.)
+
+PASS C2 is strictly literal:
+It uses only the dialog hint, speaker, zone, and physical cues.
+⭐ DIALOG EXTRACTION RULE
+
+You MUST extract dialog ONLY from ACTION BEATS that explicitly contain a dialog action or dialog hint.
+
+You MUST NOT:
+
+    infer dialog from narration
+
+    infer dialog from reactions
+
+    infer dialog from expressive commentary
+
+    infer dialog from facial_state
+
+    infer dialog from head_gesture
+
+    invent dialog
+
+⭐ DIRECT SPEECH RULE
+
+Any verbal communication MUST be written as direct quoted dialog.
+
+Summary speech is forbidden:
+
+    “she tells him something”
+
+    “he explains”
+
+    “she describes”
+
+You MUST rewrite the dialog hint into a natural, direct line of dialog that matches the meaning of the hint WITHOUT adding new meaning.
+⭐ IDENTITY CONSISTENCY RULE (MANDATORY)
+
+All dialog MUST remain consistent with the character identities defined in the World/Biography text.
+
+Identity includes:
+
+    gender silhouette
+
+    race (e.g., humanoid)
+
+    ethnicity/species
+
+    appearance silhouette
+
+    clothing silhouette
+
+    hair silhouette
+
+Dialog MUST NOT introduce:
+
+    new physical traits
+
+    contradictory anatomy
+
+    new species traits
+
+    new clothing or props
+
+    new backstory elements
+
+    physical features not present in the World/Biography text
+
+If a line of dialog would contradict identity, you MUST rewrite it to preserve identity.
+⭐ STRICT RULES
+
+You MUST NOT:
+
+    add new beats
+
+    add new actions
+
+    add new characters
+
+    add new locations
+
+    contradict the ACTION BEATS
+
+    add filler dialog
+
+    use anything outside the input text
+
+You MUST use ONLY the ACTION BEATS as the source of truth.
+⭐ OUTPUT FORMAT
+
+SECTION 1 — DIALOG BEATS
+
+[Dialog Beat 1]
+
+[Dialog Beat 2]
+
+[Dialog Beat 3]
+
+...
+
+Each dialog beat is a single paragraph containing:
+
+    zone
+
+    beat number
+
+    speaker
+
+    direct quoted dialog
+
+    facial_state (if present)
+

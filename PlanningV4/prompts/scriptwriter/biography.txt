@@ -1,0 +1,129 @@
+⭐ PASS B — SET DEFINITION LAYER (SIMPLIFIED)
+
+Purpose:
+Turn the schematic world from PASS 0A into a filmable environment.
+Each LOCATION becomes a real place.
+Each ZONE becomes a real set.
+No views. No camera orientation. No shot logic.
+
+------------------------------------------------------------
+⭐ SECTION 1 — SETTING
+(2–3 paragraphs, cinematic, filmable)
+
+Expand the SETTING BLOCK into a filmable environment focusing on:
+    • atmosphere
+    • time period (MUST match input)
+    • technology level (MUST match input)
+    • sensory detail
+    • tone
+    • cultural context
+    • environmental mood
+
+STRICT RULES:
+    • MUST be cinematic and filmable
+    • MUST anchor all descriptions to the time period + technology level
+    • MUST NOT add story events
+    • MUST NOT add character actions
+    • MUST NOT add plot
+    • MUST NOT invent new technology
+
+------------------------------------------------------------
+⭐ SECTION 2 — BIOGRAPHY
+(One block per character, fully visual + filmable)
+
+For each character, expand into:
+    • Name
+    • Age
+    • Gender
+    • Race
+    • Ethnicity/Species (only if explicitly given)
+    • Appearance (visual, physical, filmable)
+    • Clothing (time‑period appropriate)
+    • Hair (time‑period appropriate)
+    • Personality (1–2 sentences, filmable traits only)
+    • Movement style
+    • Distinctive physical traits
+
+STRICT RULES:
+    • MUST be visual, physical, and filmable
+    • MUST reflect time period + technology level
+    • MUST NOT include backstory
+    • MUST NOT include internal monologue
+    • MUST NOT include emotional analysis
+    • MUST NOT include story events
+
+------------------------------------------------------------
+⭐ SECTION 3 — LOCATIONS
+
+For each LOCATION, output:
+
+⭐ A. Architectural Shell
+3–5 sentences describing ONLY:
+    • the environment’s overall form (interior/exterior, open/enclosed)
+    • major fixed structures explicitly mentioned in the input
+    • openings explicitly mentioned in the input
+    • ground/terrain material
+    • lighting sources and environmental illumination
+    • architectural or natural style
+
+STRICT RULES:
+    • MUST NOT assume walls, ceilings, floors, or geometry unless input implies them
+    • MUST NOT invent structures
+    • MUST NOT add props or furniture
+    • MUST NOT add characters or story
+
+⭐ B. Environment Objects
+List anchored, non‑movable objects explicitly mentioned in PASS 0A:
+    • material
+    • color
+    • placement
+    • orientation
+    • attachment to fixed structure (if applicable)
+
+STRICT RULES:
+    • MUST NOT invent new objects
+    • MUST NOT assume indoor architecture unless input specifies it
+
+⭐ C. ZONES (SIMPLIFIED)
+Each ZONE contains exactly TWO subsections:
+
+⭐ Zone Name
+A short label for the functional sub‑area.
+
+⭐ 1. Zone Definition
+3–5 sentences describing:
+    • what part of the location this zone represents
+    • which fixed environmental features define it
+    • how it relates to the larger location
+    • the functional purpose of the zone
+    • the general spatial feel (open, narrow, crowded, quiet)
+
+MUST NOT assume walls or room geometry unless implied by input.
+
+⭐ 2. Anchored Elements
+List 3–6 fixed or semi‑fixed objects explicitly mentioned in PASS 0A:
+    • what they are
+    • what material they are
+    • where they are positioned
+    • how they are oriented
+
+STRICT RULES:
+    • MUST NOT invent new objects
+    • MUST NOT add props
+    • MUST NOT add furniture not in PASS 0A
+    • MUST NOT add story
+
+------------------------------------------------------------
+⭐ GLOBAL RULES (SET DEFINITION LAYER)
+
+    • MUST use ONLY the input text as truth
+    • MUST NOT invent new locations
+    • MUST NOT invent new furniture
+    • MUST NOT invent new architecture
+    • MUST NOT add narrative
+    • MUST NOT add props
+    • MUST NOT add character actions
+    • MUST NOT skip any required section
+
+This layer’s ONLY job:
+    Turn conceptual scaffolding into a real, anchored, filmable environment.

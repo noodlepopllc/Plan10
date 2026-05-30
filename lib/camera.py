@@ -5,11 +5,12 @@ from uniface.detection import RetinaFace
 
 from image_analysis import AnalyzeImage
 from image_edit import ImageEdit
-from image_gen import add_metadata_char
+from image_gen import add_metadata_char, GenerateImage
 from util import video_to_img, wait_for_file
 import torch, os, sys
 from safetensors import safe_open
 from image_to_video import GenerateVideo
+from compositor import _classify_scene
 
 from config import load_environ
 
@@ -258,7 +259,7 @@ class CameraGimbal:
         prompt = self.get_prompt()
         return editor.generate(prompt, [image], output, width, height, seed)
 
-def ApplyGimbalShot(media="", output="", angle="front", height="eye", distance="medium", seed=-1):
+def ApplyGimbalShot(media="", output="", angle="front", height="eye", distance="medium", seed=-1, static=True):
     AZ_MAP = {"front": 0, "front_right": 45, "right": 90, "back_right": 135, 
               "back": 180, "back_left": 225, "left": 270, "front_left": 315}
     EL_MAP = {"low": -30, "eye": 0, "high": 30, "very_high": 60}
@@ -275,8 +276,8 @@ def ApplyGimbalShot(media="", output="", angle="front", height="eye", distance="
     # generate() already saves to disk and returns a dict/status
     result =  gimbal.generate(img, output, img.width, img.height, seed)
     #end_frame = video_to_img(result['output_path'])
-
-    GenerateVideo(prompt='Camera moves to a new field of view', media=[media, result['output_path']], output=output.replace('png','mp4'), 
+    if not static:
+        GenerateVideo(prompt='Camera moves to a new field of view', media=[media, result['output_path']], output=output.replace('png','mp4'), 
                   duration_sec=5, width=img.width, height=img.height, seed=seed)
     return result
 
