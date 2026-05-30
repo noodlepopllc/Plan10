@@ -1,129 +1,205 @@
-⭐ PASS B — SET DEFINITION LAYER (SIMPLIFIED)
+PASS 0B — FILMABLE SET DEFINITION (ROOM‑LEVEL)
 
-Purpose:
-Turn the schematic world from PASS 0A into a filmable environment.
-Each LOCATION becomes a real place.
-Each ZONE becomes a real set.
-No views. No camera orientation. No shot logic.
-
-------------------------------------------------------------
+Purpose:  
+Turn the schematic world from PASS 0A into a single filmable room with multiple spacious, two‑orientation‑compatible ZONES.
+PASS 0B does not generate views — it ensures the room’s geometry supports them.
 ⭐ SECTION 1 — SETTING
-(2–3 paragraphs, cinematic, filmable)
 
-Expand the SETTING BLOCK into a filmable environment focusing on:
-    • atmosphere
-    • time period (MUST match input)
-    • technology level (MUST match input)
-    • sensory detail
-    • tone
-    • cultural context
-    • environmental mood
+(2–3 paragraphs, cinematic, filmable, spatially generous)
 
-STRICT RULES:
-    • MUST be cinematic and filmable
-    • MUST anchor all descriptions to the time period + technology level
-    • MUST NOT add story events
-    • MUST NOT add character actions
-    • MUST NOT add plot
-    • MUST NOT invent new technology
+Expand the SETTING BLOCK into a single room that is:
 
-------------------------------------------------------------
+    filmable
+
+    open and breathable
+
+    consistent with the time period
+
+    consistent with the technology level
+
+    grounded in sensory detail
+
+    culturally and atmospherically coherent
+
+SPACIOUSNESS RULES (MANDATORY)
+
+    MUST describe the room as open, wide, generous in volume, or expansive, unless the input explicitly states confinement.
+
+    MUST anchor all descriptions to the time period and technology level.
+
+    MUST NOT add story events, plot, or character actions.
+
+    MUST NOT invent new technology.
+
+    MUST NOT imply the existence of other rooms unless PASS 0A explicitly mentions them.
+
 ⭐ SECTION 2 — BIOGRAPHY
+
 (One block per character, fully visual + filmable)
 
 For each character, expand into:
-    • Name
-    • Age
-    • Gender
-    • Race
-    • Ethnicity/Species (only if explicitly given)
-    • Appearance (visual, physical, filmable)
-    • Clothing (time‑period appropriate)
-    • Hair (time‑period appropriate)
-    • Personality (1–2 sentences, filmable traits only)
-    • Movement style
-    • Distinctive physical traits
 
-STRICT RULES:
-    • MUST be visual, physical, and filmable
-    • MUST reflect time period + technology level
-    • MUST NOT include backstory
-    • MUST NOT include internal monologue
-    • MUST NOT include emotional analysis
-    • MUST NOT include story events
+    Name
 
-------------------------------------------------------------
-⭐ SECTION 3 — LOCATIONS
+    Age
 
-For each LOCATION, output:
+    Gender
 
+    Race
+
+    Ethnicity/Species (only if explicitly given)
+
+    Appearance (visual, physical, filmable)
+
+    Clothing (time‑period appropriate)
+
+    Hair (time‑period appropriate)
+
+    Personality (1–2 sentences, filmable traits only)
+
+    Movement style
+
+    Distinctive physical traits
+
+SPACIOUSNESS RULES (BIOGRAPHY)
+
+    Movement style MUST be compatible with open‑space blocking (e.g., “moves with measured steps across wide interiors”).
+
+    MUST NOT include backstory, internal monologue, emotional analysis, or story events.
+
+⭐ SECTION 3 — LOCATIONS (ROOM‑LEVEL)
+
+PASS 0B outputs one LOCATION = one room.
 ⭐ A. Architectural Shell
-3–5 sentences describing ONLY:
-    • the environment’s overall form (interior/exterior, open/enclosed)
-    • major fixed structures explicitly mentioned in the input
-    • openings explicitly mentioned in the input
-    • ground/terrain material
-    • lighting sources and environmental illumination
-    • architectural or natural style
 
-STRICT RULES:
-    • MUST NOT assume walls, ceilings, floors, or geometry unless input implies them
-    • MUST NOT invent structures
-    • MUST NOT add props or furniture
-    • MUST NOT add characters or story
+(3–5 sentences)  
+Describe ONLY:
+
+    the room’s overall form (interior, open, expansive)
+
+    major fixed structures explicitly mentioned in PASS 0A
+
+    openings explicitly mentioned in PASS 0A
+
+    ground/terrain material
+
+    lighting sources and environmental illumination
+
+    architectural or natural style
+
+    spatial scale (MUST feel open unless input forbids it)
+
+SPACIOUSNESS RULES (ARCHITECTURE)
+
+    MUST bias toward open floor plans, wide interior volumes, generous negative space, broad layouts, uncluttered geometry.
+
+    MUST NOT invent walls, ceilings, floors, or geometry unless PASS 0A implies them.
+
+    MUST NOT invent structures or props.
 
 ⭐ B. Environment Objects
+
 List anchored, non‑movable objects explicitly mentioned in PASS 0A:
-    • material
-    • color
-    • placement
-    • orientation
-    • attachment to fixed structure (if applicable)
 
-STRICT RULES:
-    • MUST NOT invent new objects
-    • MUST NOT assume indoor architecture unless input specifies it
+    material
 
-⭐ C. ZONES (SIMPLIFIED)
-Each ZONE contains exactly TWO subsections:
+    color
 
+    placement
+
+    orientation
+
+    attachment to fixed structure (if applicable)
+
+SPACIOUSNESS RULES (OBJECTS)
+
+    MUST describe placement with ample spacing and clear negative space.
+
+    MUST NOT invent new objects or assume indoor architecture unless PASS 0A specifies it.
+
+⭐ C. ZONES (ANGLES INSIDE THE ROOM)
+
+Each ZONE contains exactly two subsections:
 ⭐ Zone Name
+
 A short label for the functional sub‑area.
-
 ⭐ 1. Zone Definition
-3–5 sentences describing:
-    • what part of the location this zone represents
-    • which fixed environmental features define it
-    • how it relates to the larger location
-    • the functional purpose of the zone
-    • the general spatial feel (open, narrow, crowded, quiet)
 
-MUST NOT assume walls or room geometry unless implied by input.
+(3–5 sentences)  
+Describe:
+
+    what part of the room this zone represents
+
+    which fixed environmental features define it
+
+    how it relates to the larger room
+
+    the architectural function of the zone (e.g., seating cluster, entry transition, display wall), 
+      described ONLY in terms of physical layout and anchored objects, 
+      NEVER in terms of people, activities, or narrative behavior.
+
+
+    the general spatial feel (MUST be open unless input forbids it)
+
+    the presence of two usable orientations (without mentioning cameras)
+
+TWO‑VIEW COMPATIBILITY RULES
+
+The Zone Definition MUST:
+
+    imply two opposite, filmable sides of the space
+
+    describe anchored elements as defining one side of the zone
+
+    describe the opposite side as open, unobstructed, or spacious
+
+    avoid boxed‑in or three‑wall geometry
+
+    support clean staging for reverse shots (without mentioning cameras)
+
+Allowed phrasing:
+
+    “The anchored elements define one side of the zone, leaving the opposite side open.”
+
+    “The space maintains clear sightlines in both directions.”
+
+    “The layout naturally supports viewing the zone from multiple orientations.”
+
+    “The zone remains wide and breathable, with open space extending behind the primary features.”
 
 ⭐ 2. Anchored Elements
+
 List 3–6 fixed or semi‑fixed objects explicitly mentioned in PASS 0A:
-    • what they are
-    • what material they are
-    • where they are positioned
-    • how they are oriented
 
-STRICT RULES:
-    • MUST NOT invent new objects
-    • MUST NOT add props
-    • MUST NOT add furniture not in PASS 0A
-    • MUST NOT add story
+    what they are
 
-------------------------------------------------------------
+    what material they are
+
+    where they are positioned
+
+    how they are oriented
+
+SPACIOUSNESS + TWO‑VIEW RULES (ANCHORS)
+
+    MUST describe placement with clear spacing and non‑cramped orientation.
+
+    MUST position anchored elements so they define one side of the zone, leaving the opposite side open.
+
+    MUST NOT invent new objects, props, or furniture.
+
+    MUST NOT add story.
+
 ⭐ GLOBAL RULES (SET DEFINITION LAYER)
 
-    • MUST use ONLY the input text as truth
-    • MUST NOT invent new locations
-    • MUST NOT invent new furniture
-    • MUST NOT invent new architecture
-    • MUST NOT add narrative
-    • MUST NOT add props
-    • MUST NOT add character actions
-    • MUST NOT skip any required section
+    MUST use ONLY the input text as truth.
 
-This layer’s ONLY job:
-    Turn conceptual scaffolding into a real, anchored, filmable environment.
+    MUST NOT invent new locations, furniture, or architecture.
+
+    MUST NOT add narrative or character actions.
+
+    MUST NOT skip any required section.
+
+    MUST bias toward spacious, open, two‑orientation‑compatible environments unless the input explicitly states otherwise.
+
+This layer’s ONLY job:  
+Turn conceptual scaffolding into a real, anchored, spacious, two‑view‑compatible room‑level film set.

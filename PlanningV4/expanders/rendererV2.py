@@ -61,6 +61,8 @@ def get_backgrounds(registry, mappings, prompt_path=''):
 create_background cinematic widescreen composition with generous negative space at left and right frame edges, 
 primary focal objects positioned safely within center 60% of frame, smooth flooring extends toward edges to provide 
 clean tracking margins for camera movement, {views[view][camera]}, Seed: {SEED}'''
+
+'''
             if camera == 'background':
                 yield f'''
 >> ALIAS: {normalize(view)}_BACKGROUND_RESIZED
@@ -69,6 +71,7 @@ edit_image {normalize(view)}_BACKGROUND asset resize image to the new resolution
                     yield f'''
 >> ALIAS: {normalize(view)}_{normalize(position)}
 apply_gimbal_shot {normalize(view)}_BACKGROUND_RESIZED asset angle="{position}", Seed: {SEED}'''
+'''
 
 if __name__ == '__main__':
     import sys, json

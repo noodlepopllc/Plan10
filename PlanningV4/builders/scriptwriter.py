@@ -8,7 +8,7 @@ BIOGRAPHY = Path('./PlanningV4/prompts/scriptwriter/biography.txt').read_text()
 ACTION = Path('./PlanningV4/prompts/scriptwriter/action.txt').read_text()
 DIALOG = Path('./PlanningV4/prompts/scriptwriter/dialog.txt').read_text()
 STORY = Path('./PlanningV4/prompts/scriptwriter/story.txt').read_text()
-NARRATOR = Path('./PlanningV4/prompts/scriptwriter/narratorV2.txt').read_text()
+NARRATOR = Path('./PlanningV4/prompts/scriptwriter/narratorV3.txt').read_text()
 
 
 def run_prompt(prompt, system, pth):
