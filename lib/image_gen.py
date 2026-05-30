@@ -290,39 +290,6 @@ def CreateCharacterSheet(prompt='', output='character_tmp.png',seed=-1, imagegen
     status['prompt'] = prompt
     return status
 
-def CreateBackgroundV2(prompt='', output='location_tmp.png', seed=-1):
-    seed = int(seed)
-    print("CREATE SPLIT BACKGROUND (BACK-FOCUSED / RIGHT-FOCUSED VIEWS)")
-
-    room_description = prompt
-
-    if not room_description:
-        room_description = "A simple interior room."
-
-    final_prompt = f"""
-Create a single image divided into TWO equal vertical panels.
-
-SHARED ROOM DESCRIPTION:
-{room_description}
-
-GLOBAL REQUIREMENTS:
-• Both panels show the SAME room with matching architecture, materials, and lighting.
-• Each panel presents a DISTINCT view by changing which wall is the main surface.
-• The image contains only environmental elements.
-• Panels are clean, empty, and unlabelled.
-• Lighting is cinematic and consistent across both views.
-""".strip()
-
-    gen = ImageGen()
-    status = gen.generate(final_prompt, output, 1024, 512, seed)
-    del gen
-
-    status['description'] = add_metadata_loc(output, final_prompt, seed)
-    status['prompt'] = final_prompt
-    return status
-
-
-
 def CreateBackground(prompt='', output='location_tmp.png',seed=-1):
     seed=int(seed)
     print("CREATE BACKGROUND")

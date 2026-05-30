@@ -118,6 +118,7 @@ The reversed version is the other half of the room
 - If two people were talking face the face,
    the reversed is what the person in the zone would see 
    behind the person they are talking to
+- Do not include any characters in anchored objects or description
 
 ------------------------------------------------------------
 ⭐ GLOBAL RULES (SET DEFINITION LAYER)
