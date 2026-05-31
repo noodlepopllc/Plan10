@@ -136,12 +136,13 @@ def bind_identity(action: str, names: dict) -> str:
 
 def bind_identity_first_only(actions, names):
     if not actions:
-        return "", ""
+        return {}, ""
+
     if isinstance(actions, str):
         actions = [actions]
 
-    used_identity = set()
-    pose_action = None
+    used_identity = {char: False for char in names}
+    pose_actions = {}          # ← FIX: per-character pose bucket
     motion_parts = []
 
     for action in actions:
@@ -153,30 +154,36 @@ def bind_identity_first_only(actions, names):
         first_word_raw = parts[0]
         first_char = None
 
+        # Identify which character this action belongs to
         for char in names:
             if soft_normalize(char) == soft_normalize(first_word_raw):
                 first_char = char
                 break
 
+        # Rewrite with identity binding
         if first_char is not None:
             identity = names[first_char]
-            if first_char not in used_identity:
-                used_identity.add(first_char)
+
+            if not used_identity[first_char]:
+                used_identity[first_char] = True
                 rewritten = identity + " " + parts[1] if len(parts) > 1 else identity
-                if pose_action is None:
-                    pose_action = rewritten
+
+                # FIX: store pose for THIS character only
+                if first_char not in pose_actions:
+                    pose_actions[first_char] = rewritten
+
             else:
                 rewritten = parts[1] if len(parts) > 1 else ""
+
         else:
             rewritten = action
-            if pose_action is None:
-                pose_action = rewritten
 
         rewritten = resolve_character_mentions(rewritten, names)
         motion_parts.append(rewritten)
 
     motion = motion_parts[0] if len(motion_parts) == 1 else motion_parts[0] + ", " + ", ".join(motion_parts[1:])
-    return pose_action, motion
+    return pose_actions, motion
+
 
 # ---------------------------------------------------------
 # ZONE BACKGROUNDS
