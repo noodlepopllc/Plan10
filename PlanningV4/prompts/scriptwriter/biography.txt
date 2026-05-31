@@ -1,43 +1,39 @@
-PASS 0B — FILMABLE SET DEFINITION (ROOM‑LEVEL)
+⭐ UPDATED PASS 0B — FILMABLE SET DEFINITION (ROOM‑LEVEL)
 
-Purpose:  
-Turn the schematic world from PASS 0A into a single filmable room with multiple spacious, two‑orientation‑compatible ZONES.
-PASS 0B does not generate views — it ensures the room’s geometry supports them.
+(With Purpose added to Zones, without violating architectural determinism)
 ⭐ SECTION 1 — SETTING
 
-(2–3 paragraphs, cinematic, filmable, spatially generous)
+(unchanged — but clarified)
 
-Expand the SETTING BLOCK into a single room that is:
+Goal: Expand the SETTING BLOCK from PASS 0A into a single filmable room that is:
 
-    filmable
+    open, breathable, and spacious
 
-    open and breathable
-
-    consistent with the time period
-
-    consistent with the technology level
+    consistent with time period + technology level
 
     grounded in sensory detail
 
-    culturally and atmospherically coherent
+    architecturally coherent
 
-SPACIOUSNESS RULES (MANDATORY)
+    large enough to support multiple orientations
 
-    MUST describe the room as open, wide, generous in volume, or expansive, unless the input explicitly states confinement.
+Rules:
 
-    MUST anchor all descriptions to the time period and technology level.
+    MUST describe the room as open, wide, or expansive unless PASS 0A forbids it.
+
+    MUST anchor all descriptions to time period + technology level.
 
     MUST NOT add story events, plot, or character actions.
 
     MUST NOT invent new technology.
 
-    MUST NOT imply the existence of other rooms unless PASS 0A explicitly mentions them.
+    MUST NOT imply other rooms unless PASS 0A explicitly mentions them.
 
 ⭐ SECTION 2 — BIOGRAPHY
 
-(One block per character, fully visual + filmable)
+(unchanged — but clarified)
 
-For each character, expand into:
+For each character, output:
 
     Name
 
@@ -55,27 +51,28 @@ For each character, expand into:
 
     Hair (time‑period appropriate)
 
-    Personality (1–2 sentences, filmable traits only)
+    Personality (1–2 filmable traits)
 
-    Movement style
+    Movement style (compatible with open‑space blocking)
 
     Distinctive physical traits
 
-SPACIOUSNESS RULES (BIOGRAPHY)
+Rules:
 
-    Movement style MUST be compatible with open‑space blocking (e.g., “moves with measured steps across wide interiors”).
+    MUST NOT include backstory, internal monologue, or narrative events.
 
-    MUST NOT include backstory, internal monologue, emotional analysis, or story events.
+    MUST NOT contradict the room’s spaciousness.
 
 ⭐ SECTION 3 — LOCATIONS (ROOM‑LEVEL)
 
 PASS 0B outputs one LOCATION = one room.
 ⭐ A. Architectural Shell
 
-(3–5 sentences)  
-Describe ONLY:
+(unchanged — but clarified)
 
-    the room’s overall form (interior, open, expansive)
+3–5 sentences describing ONLY:
+
+    the room’s overall form
 
     major fixed structures explicitly mentioned in PASS 0A
 
@@ -83,19 +80,19 @@ Describe ONLY:
 
     ground/terrain material
 
-    lighting sources and environmental illumination
+    lighting sources
 
-    architectural or natural style
+    architectural style
 
     spatial scale (MUST feel open unless input forbids it)
 
-SPACIOUSNESS RULES (ARCHITECTURE)
+Rules:
 
-    MUST bias toward open floor plans, wide interior volumes, generous negative space, broad layouts, uncluttered geometry.
+    MUST bias toward open floor plans, wide volumes, generous negative space.
 
-    MUST NOT invent walls, ceilings, floors, or geometry unless PASS 0A implies them.
+    MUST NOT invent geometry or structures not implied by PASS 0A.
 
-    MUST NOT invent structures or props.
+    MUST NOT invent props or furniture.
 
 ⭐ B. Environment Objects
 
@@ -111,51 +108,55 @@ List anchored, non‑movable objects explicitly mentioned in PASS 0A:
 
     attachment to fixed structure (if applicable)
 
-SPACIOUSNESS RULES (OBJECTS)
+Rules:
 
-    MUST describe placement with ample spacing and clear negative space.
+    MUST describe placement with ample spacing.
 
-    MUST NOT invent new objects or assume indoor architecture unless PASS 0A specifies it.
+    MUST NOT invent new objects.
 
 ⭐ C. ZONES (ANGLES INSIDE THE ROOM)
 
-Each ZONE contains exactly two subsections:
+Each Zone now contains THREE subsections:
+
+    Zone Name
+
+    Zone Definition (purely physical)
+
+    Purpose (NEW — semantic, but non‑architectural)
+
+    Anchored Elements
+
+This preserves determinism while giving the narrator semantic richness.
 ⭐ Zone Name
 
 A short label for the functional sub‑area.
-⭐ 1. Zone Definition
+⭐ 1. Zone Definition (Physical Only)
 
-(3–5 sentences)  
-Describe:
+3–5 sentences describing:
 
-    what part of the room this zone represents
+    what part of the room the zone represents
 
     which fixed environmental features define it
 
     how it relates to the larger room
 
-    the architectural function of the zone (e.g., seating cluster, entry transition, display wall), 
-      described ONLY in terms of physical layout and anchored objects, 
-      NEVER in terms of people, activities, or narrative behavior.
+    the architectural function (seating cluster, entry threshold, counter area, etc.)
 
-
-    the general spatial feel (MUST be open unless input forbids it)
+    the general spatial feel (open, breathable)
 
     the presence of two usable orientations (without mentioning cameras)
 
-TWO‑VIEW COMPATIBILITY RULES
+Rules:
 
-The Zone Definition MUST:
+    MUST be purely physical.
 
-    imply two opposite, filmable sides of the space
+    MUST NOT reference people, actions, or narrative behavior.
 
-    describe anchored elements as defining one side of the zone
+    MUST imply two opposite, filmable sides.
 
-    describe the opposite side as open, unobstructed, or spacious
+    MUST describe anchored elements defining one side and open space on the opposite side.
 
-    avoid boxed‑in or three‑wall geometry
-
-    support clean staging for reverse shots (without mentioning cameras)
+    MUST support clean reverse‑shot staging.
 
 Allowed phrasing:
 
@@ -167,7 +168,41 @@ Allowed phrasing:
 
     “The zone remains wide and breathable, with open space extending behind the primary features.”
 
-⭐ 2. Anchored Elements
+⭐ 2. Purpose (Narrative‑Friendly, Non‑Architectural)
+
+(NEW — added per your request)
+
+1–2 sentences describing:
+
+    the functional or narrative purpose of the zone
+
+    how the zone is typically used in the world (e.g., dining, ordering, entering)
+
+    WITHOUT describing actions happening right now
+
+    WITHOUT referencing specific characters
+
+    WITHOUT adding story events
+
+Examples:
+
+    “A natural area for seated dining and quiet moments.”
+
+    “A transitional space used for entering or exiting the room.”
+
+    “A functional zone for ordering or customer interaction.”
+
+Rules:
+
+    MUST NOT affect geometry.
+
+    MUST NOT imply current activity.
+
+    MUST NOT introduce new objects.
+
+    MUST NOT reference cameras.
+
+⭐ 3. Anchored Elements
 
 List 3–6 fixed or semi‑fixed objects explicitly mentioned in PASS 0A:
 
@@ -179,13 +214,15 @@ List 3–6 fixed or semi‑fixed objects explicitly mentioned in PASS 0A:
 
     how they are oriented
 
-SPACIOUSNESS + TWO‑VIEW RULES (ANCHORS)
+Rules:
 
-    MUST describe placement with clear spacing and non‑cramped orientation.
+    MUST describe placement with clear spacing.
 
-    MUST position anchored elements so they define one side of the zone, leaving the opposite side open.
+    MUST position anchored elements so they define one side of the zone.
 
-    MUST NOT invent new objects, props, or furniture.
+    MUST leave the opposite side open.
+
+    MUST NOT invent new objects.
 
     MUST NOT add story.
 
@@ -199,7 +236,7 @@ SPACIOUSNESS + TWO‑VIEW RULES (ANCHORS)
 
     MUST NOT skip any required section.
 
-    MUST bias toward spacious, open, two‑orientation‑compatible environments unless the input explicitly states otherwise.
+    MUST bias toward spacious, open, two‑orientation‑compatible environments unless the input forbids it.
 
 This layer’s ONLY job:  
 Turn conceptual scaffolding into a real, anchored, spacious, two‑view‑compatible room‑level film set.

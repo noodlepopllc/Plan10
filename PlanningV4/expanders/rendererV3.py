@@ -111,9 +111,10 @@ clean tracking margins for camera movement, {prompt}, Seed: {SEED}"""
 def render_beats_actions(assets, actions):
     """
     For each beat:
-      - ONE wide shot with all characters in that beat (zone background)
-      - ONE medium shot per character (same zone background)
-    Zones are already camera angles; we do NOT change backgrounds per character.
+      - ONE wide shot using the FIRST action as the pose
+      - ONE wide video using ALL actions as the motion sequence
+      - ONE medium shot per character using the FIRST action involving that character
+      - ONE medium video per character using ALL actions as the motion sequence
     """
     names = build_identity_map(assets)
 
@@ -124,6 +125,12 @@ def render_beats_actions(assets, actions):
         beat_actions = beat.get('actions') or []
         if not beat_actions:
             continue
+
+        # FIRST ACTION = POSE
+        pose_action = bind_identity(beat_actions[0], names)
+
+        # ALL ACTIONS = MOTION
+        motion_actions = "; ".join(bind_identity(a, names) for a in beat_actions)
 
         zone_base = normalize(beat['zone'])
         zone_alias = f"{zone_base}_BACKGROUND"
@@ -139,40 +146,44 @@ def render_beats_actions(assets, actions):
             continue
 
         # -----------------------------
-        # WIDE SHOT (zone background)
+        # WIDE SHOT (POSE)
         # -----------------------------
         char_assets = " and ".join(f"{char_aliases[c]} asset" for c in chars_in_beat)
-        wide_prompt = "; ".join(bind_identity(a, names) for a in beat_actions)
 
         print(f"""
 >> ALIAS: BEAT_{beat["beat"]}_WIDE_ACTION
-composite_scene {zone_alias} asset and {char_assets}, {wide_prompt}, Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
+composite_scene {zone_alias} asset and {char_assets}, {pose_action}, Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
 """)
 
+        # -----------------------------
+        # WIDE VIDEO (MOTION)
+        # -----------------------------
         print(f"""
 >> ALIAS: BEAT_{beat["beat"]}_WIDE_ACTION_VIDEO
-image_to_video BEAT_{beat["beat"]}_WIDE_ACTION asset, {wide_prompt}, Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
+image_to_video BEAT_{beat["beat"]}_WIDE_ACTION asset, {motion_actions}, Width: {WIDTH}, Height: {HEIGHT}, Duration: 5, Seed: {SEED}
 """)
 
         # -----------------------------
-        # MEDIUM SHOTS (per character, same zone background)
+        # MEDIUM SHOTS (PER CHARACTER)
         # -----------------------------
         for char in chars_in_beat:
+            # FIRST action involving this character = pose
             char_action = next((a for a in beat_actions if char in a), None)
             if not char_action:
                 continue
 
+            char_pose = bind_identity(char_action, names)
             char_alias = char_aliases[char]
-            medium_prompt = bind_identity(char_action, names)
 
             print(f"""
 >> ALIAS: BEAT_{beat["beat"]}_{normalize(char)}_ACTION
-composite_scene {zone_alias} asset and {char_alias} asset, {medium_prompt}, Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
+composite_scene {zone_alias} asset and {char_alias} asset, {char_pose}, Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
 """)
 
+            # MEDIUM VIDEO uses the full motion sequence
             print(f"""
 >> ALIAS: BEAT_{beat["beat"]}_{normalize(char)}_ACTION_VIDEO
-image_to_video BEAT_{beat["beat"]}_{normalize(char)}_ACTION asset, {medium_prompt}, Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
+image_to_video BEAT_{beat["beat"]}_{normalize(char)}_ACTION asset, {motion_actions}, Width: {WIDTH}, Height: {HEIGHT}, Duration: 5, Seed: {SEED}
 """)
 
 # ---------------------------------------------------------
