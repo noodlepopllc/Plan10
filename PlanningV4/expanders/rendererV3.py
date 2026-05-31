@@ -12,6 +12,48 @@ def normalize(name: str) -> str:
     return ''.join([x for x in name.upper() if x in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789'])
 
 # ---------------------------------------------------------
+# SOFT NORMALIZATION / FUZZY MATCHING FOR NAMES
+# ---------------------------------------------------------
+
+def soft_normalize(text: str) -> str:
+    return re.sub(r"[^A-Za-z0-9]", "", text).lower()
+
+def make_fuzzy_pattern(name: str) -> str:
+    """
+    Match name even if LLM inserts spaces/hyphens/punctuation between chars.
+    Also match possessive forms: Beth-183R's / Beth183R’s
+    """
+    parts = []
+    for ch in name:
+        if ch.isalnum():
+            parts.append(re.escape(ch) + r"[^A-Za-z0-9]*")
+        else:
+            parts.append(re.escape(ch) + r"*")
+
+    pattern = "".join(parts)
+    pattern += r"(?:['’]s)?"
+    return pattern
+
+def resolve_character_mentions(text: str, names: dict) -> str:
+    """
+    Replace ANY mutated form of a character name in `text`
+    with its canonical identity descriptor from `names`.
+    Prevent double-expansion.
+    """
+    rewritten = text
+
+    for char, ident in names.items():
+
+        # If identity already present, skip to avoid duplication
+        if ident in rewritten:
+            continue
+
+        pattern = make_fuzzy_pattern(char)
+        rewritten = re.sub(pattern, ident, rewritten, flags=re.IGNORECASE)
+
+    return rewritten
+
+# ---------------------------------------------------------
 # ZONE LABEL NORMALIZATION + MAPPING
 # ---------------------------------------------------------
 
@@ -25,13 +67,8 @@ def _clean_zone_label(label: str) -> str:
     return label
 
 def create_zone_mapping(registry, story):
-    """
-    Map registry zone_name -> story beat['zone'] label.
-    Matching is done on normalized labels, not raw strings.
-    """
     mappings = {}
 
-    # Pre-normalize beat zones
     beat_zones = {}
     for beat in story:
         bz_raw = beat.get('zone', '')
@@ -43,14 +80,13 @@ def create_zone_mapping(registry, story):
         for zone in location['zones']:
             zn_raw = zone['zone_name']
             zn_clean = _clean_zone_label(zn_raw)
-
             if zn_clean in beat_zones:
                 mappings[zone['zone_name']] = beat_zones[zn_clean]
 
     return mappings
 
 # ---------------------------------------------------------
-# CHARACTER SHEETS + VOICES (CHAR_ ALIASES)
+# CHARACTER SHEETS + VOICES
 # ---------------------------------------------------------
 
 def get_identity(assets):
@@ -72,13 +108,10 @@ def get_identity(assets):
         )
 
 # ---------------------------------------------------------
-# IDENTITY BINDING (TEXT SIDE)
+# IDENTITY BINDING
 # ---------------------------------------------------------
 
 def build_identity_map(assets):
-    """
-    { "Sally": "Sally (Female, A flowing, ...)", ... }
-    """
     names = {}
     for char in assets['characters']:
         bio = char['biography']
@@ -88,32 +121,34 @@ def build_identity_map(assets):
 
 def bind_identity(action: str, names: dict) -> str:
     """
-    Simple identity replacement for single actions (used for medium pose).
+    Identity-bind only the first token (medium shots).
     """
+    if not action:
+        return action
+
+    first_token = action.split(" ", 1)[0]
+    first_clean = soft_normalize(first_token)
+
     for char, ident in names.items():
-        if action.startswith(char):
+        if soft_normalize(char) == first_clean:
             parts = action.split(" ", 1)
             if len(parts) > 1:
                 return f"{ident} {parts[1]}"
             return ident
+
     return action
 
 def bind_identity_first_only(actions, names):
     """
-    Multi-character safe version.
-
-    For each character:
-      - FIRST action for that character: replace FIRST WORD with identity
-      - Continuation actions: remove FIRST WORD only
-
-    Returns:
-      pose_action  -> first rewritten action (for still)
-      motion       -> full comma-separated motion chain
+    Multi-character safe identity binding:
+      - FIRST action for each character → identity-bound
+      - Continuation actions → remove first token
+      - Secondary mentions → fuzzy identity replacement
     """
+
     if not actions:
         return "", ""
 
-    # Guard: if a single string sneaks in, wrap it
     if isinstance(actions, str):
         actions = [actions]
 
@@ -127,13 +162,21 @@ def bind_identity_first_only(actions, names):
             continue
 
         parts = action.split(" ", 1)
-        first_word = parts[0]
+        first_word_raw = parts[0]
+        first_char = None
 
-        if first_word in names:
-            identity = names[first_word]
+        # Resolve canonical character for first token
+        for char in names:
+            if soft_normalize(char) == soft_normalize(first_word_raw):
+                first_char = char
+                break
 
-            if first_word not in used_identity:
-                used_identity.add(first_word)
+        # FIRST WORD HANDLING
+        if first_char is not None:
+            identity = names[first_char]
+
+            if first_char not in used_identity:
+                used_identity.add(first_char)
                 if len(parts) > 1:
                     rewritten = identity + " " + parts[1]
                 else:
@@ -141,22 +184,19 @@ def bind_identity_first_only(actions, names):
 
                 if pose_action is None:
                     pose_action = rewritten
-
-                motion_parts.append(rewritten)
             else:
-                if len(parts) > 1:
-                    rewritten = parts[1]
-                else:
-                    rewritten = ""
-                motion_parts.append(rewritten)
+                rewritten = parts[1] if len(parts) > 1 else ""
         else:
+            rewritten = action
             if pose_action is None:
-                pose_action = action
-            motion_parts.append(action)
+                pose_action = rewritten
 
-    if not motion_parts:
-        motion = pose_action or ""
-    elif len(motion_parts) == 1:
+        # SECONDARY CHARACTER HANDLING
+        rewritten = resolve_character_mentions(rewritten, names)
+
+        motion_parts.append(rewritten)
+
+    if len(motion_parts) == 1:
         motion = motion_parts[0]
     else:
         motion = motion_parts[0] + ", " + ", ".join(motion_parts[1:])
@@ -184,30 +224,29 @@ def get_backgrounds(registry, mappings):
                 f"Anchored objects: {zone['anchored_elements']}"
             )
 
-            yield f"""
+            print(f"""
 >> ALIAS: {zone_alias}_BACKGROUND
 create_background cinematic widescreen composition with generous negative space at left and right frame edges,
 primary focal objects positioned safely within center 60% of frame, smooth flooring extends toward edges to provide
-clean tracking margins for camera movement, {prompt}, Seed: {SEED}"""
+clean tracking margins for camera movement, {prompt}, Seed: {SEED}""")
 
 # ---------------------------------------------------------
 # ACTION RENDERING (SHOT SELECTION)
 # ---------------------------------------------------------
 
-def _get_chars_in_beat(beat_actions, names):
+def _get_chars_in_actions_only(beat_actions, names):
+    """
+    Detect characters appearing in actions (not dialog).
+    """
     chars = []
     for a in beat_actions:
-        first = a.split(" ", 1)[0]
-        if first in names and first not in chars:
-            chars.append(first)
+        clean_a = soft_normalize(a)
+        for char in names:
+            if soft_normalize(char) in clean_a and char not in chars:
+                chars.append(char)
     return chars
 
 def render_beats_actions(assets, actions):
-    """
-    Shot selection rule:
-      - If a beat has ONE character with actions -> MEDIUM only
-      - If a beat has TWO OR MORE characters with actions -> WIDE only
-    """
     names = build_identity_map(assets)
     char_aliases = {c['name']: f"CHAR_{normalize(c['name'])}" for c in assets['characters']}
 
@@ -216,42 +255,41 @@ def render_beats_actions(assets, actions):
         if not beat_actions:
             continue
 
-        chars_in_beat = _get_chars_in_beat(beat_actions, names)
-        if not chars_in_beat:
+        chars_in_actions = _get_chars_in_actions_only(beat_actions, names)
+        if not chars_in_actions:
             continue
 
         zone_base = normalize(beat['zone'])
         zone_alias = f"{zone_base}_BACKGROUND"
 
-        # Single-character beat → MEDIUM only
-        if len(chars_in_beat) == 1:
-            char = chars_in_beat[0]
+        # SINGLE CHARACTER → MEDIUM
+        if len(chars_in_actions) == 1:
+            char = chars_in_actions[0]
             char_alias = char_aliases[char]
 
-            # Pose = identity-bound first action for this character
-            char_action = next((a for a in beat_actions if a.startswith(char)), beat_actions[0])
+            char_action = next(
+                (a for a in beat_actions if soft_normalize(a.split(" ", 1)[0]) == soft_normalize(char)),
+                beat_actions[0]
+            )
             char_pose = bind_identity(char_action, names)
 
-            # Build full motion chain ONCE
-            pose_action, motion_actions = bind_identity_first_only(beat_actions, names)
+            _, motion_actions = bind_identity_first_only(beat_actions, names)
 
-            # Medium still
             print(f"""
-        >> ALIAS: BEAT_{beat["beat"]}_{normalize(char)}_ACTION
-        composite_scene {zone_alias} asset and {char_alias} asset, {char_pose}, Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
-        """)
+>> ALIAS: BEAT_{beat["beat"]}_{normalize(char)}_ACTION
+composite_scene {zone_alias} asset and {char_alias} asset, {char_pose}, Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
+""")
 
-            # Medium video uses FULL motion chain
             print(f"""
-        >> ALIAS: BEAT_{beat["beat"]}_{normalize(char)}_ACTION_VIDEO
-        image_to_video BEAT_{beat["beat"]}_{normalize(char)}_ACTION asset, {motion_actions}, Width: {WIDTH}, Height: {HEIGHT}, Duration: 5, Seed: {SEED}
-        """)
+>> ALIAS: BEAT_{beat["beat"]}_{normalize(char)}_ACTION_VIDEO
+image_to_video BEAT_{beat["beat"]}_{normalize(char)}_ACTION asset, {motion_actions}, Width: {WIDTH}, Height: {HEIGHT}, Duration: 5, Seed: {SEED}
+""")
+
             continue
 
-
-        # Multi-character beat -> WIDE only
+        # MULTI-CHARACTER → WIDE
         pose_action, motion_actions = bind_identity_first_only(beat_actions, names)
-        char_assets = " and ".join(f"{char_aliases[c]} asset" for c in chars_in_beat)
+        char_assets = " and ".join(f"{char_aliases[c]} asset" for c in chars_in_actions)
 
         print(f"""
 >> ALIAS: BEAT_{beat["beat"]}_WIDE_ACTION
@@ -273,46 +311,45 @@ def _get_per_speaker_value(beat, key, speaker, default):
         return val.get(speaker, default)
     return val
 
-def build_dialog_closeup_prompt(beat, speaker, names):
-    facial = _get_per_speaker_value(beat, 'facial_state', speaker, 'neutral')
-    head   = _get_per_speaker_value(beat, 'head_gesture', speaker, 'none')
-    tone   = _get_per_speaker_value(beat, 'tone', speaker, 'neutral')
-
-    head_desc = "no notable head movement" if head == "none" else f"head gesture {head}"
-
-    return (
-        f"closeup shot of {names[speaker]} performing: "
-        f"facial expression {facial}, {head_desc}, vocal tone {tone}"
-    )
-
 def render_beats_dialog(assets, actions):
     names = build_identity_map(assets)
     char_aliases = {c['name']: f"CHAR_{normalize(c['name'])}" for c in assets['characters']}
 
     for beat in actions:
-        raw_dialog = beat.get('dialog') or []
-
         dialog_list = [
-            d for d in raw_dialog
+            d for d in beat.get('dialog') or []
             if d.get("line") and d.get("line").strip().lower() not in ("", "none")
         ]
         if not dialog_list:
             continue
 
+        beat_actions = beat.get('actions') or []
+        chars_in_actions = _get_chars_in_actions_only(beat_actions, names)
+
         zone_base = normalize(beat['zone'])
         zone_alias = f"{zone_base}_BACKGROUND"
 
-        base_alias = f"BEAT_{beat['beat']}_WIDE_ACTION"
+        # Determine whether wide exists
+        if len(chars_in_actions) >= 2:
+            base_alias = f"BEAT_{beat['beat']}_WIDE_ACTION"
+        else:
+            # Use the speaker's medium shot
+            base_alias = None  # resolved per speaker
 
         for dlg in dialog_list:
             speaker = dlg['speaker']
             line = dlg['line']
+
             if speaker not in char_aliases:
                 continue
 
             speaker_alias = char_aliases[speaker]
             facial = _get_per_speaker_value(beat, 'facial_state', speaker, 'neutral')
             head   = _get_per_speaker_value(beat, 'head_gesture', speaker, 'none')
+
+            # Resolve base alias for single-character beats
+            if base_alias is None:
+                base_alias = f"BEAT_{beat['beat']}_{normalize(speaker)}_ACTION"
 
             print(f"""
 >> ALIAS: BEAT_{beat["beat"]}_{normalize(speaker)}_DIALOG_FRAME
@@ -347,8 +384,7 @@ def main():
         print(x)
 
     mappings = create_zone_mapping(assets, actions)
-    for x in get_backgrounds(assets, mappings):
-        print(x)
+    get_backgrounds(assets, mappings)
 
     render_beats_actions(assets, actions)
     render_beats_dialog(assets, actions)
