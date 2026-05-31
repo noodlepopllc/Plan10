@@ -224,6 +224,17 @@ def _get_chars_in_actions_only(beat_actions, names):
                 chars.append(char)
     return chars
 
+def format_pose_block(pose_actions):
+    blocks = []
+    for char, action in pose_actions.items():
+        # Strip identity prefix from the action for cleaner DSL
+        # e.g. "Samuel (Male...) tilts his head" → "tilts his head"
+        parts = action.split(" ", 1)
+        pose = parts[1] if len(parts) > 1 else action
+        blocks.append(f"{char} asset ({pose})")
+    return " and ".join(blocks)
+
+
 def render_beats_actions(assets, actions, mappings):
     names = build_identity_map(assets)
     char_aliases = {c['name']: f"CHAR_{normalize(c['name'])}" for c in assets['characters']}
@@ -263,10 +274,11 @@ image_to_video BEAT_{beat["beat"]}_{normalize(char)}_ACTION asset, {motion_actio
 
         pose_action, motion_actions = bind_identity_first_only(beat_actions, names)
         char_assets = " and ".join(f"{char_aliases[c]} asset" for c in chars_in_actions)
+        pose_block = format_pose_block(pose_action)
 
         print(f"""
 >> ALIAS: BEAT_{beat["beat"]}_WIDE_ACTION
-composite_scene {zone_alias} asset and {char_assets}, {pose_action}, Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
+composite_scene {zone_alias} asset and {char_assets}, {pose_block}, Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
 """)
 
         print(f"""
