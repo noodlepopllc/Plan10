@@ -1,4 +1,4 @@
-import os, sys, json
+import os, sys, json,re 
 sys.path.append('./lib')
 from config import load_environ
 from qwen_llm import llm_analyze_media  # kept for consistency, unused here
@@ -11,6 +11,44 @@ SEED = int(os.environ.get("SEED", "123456"))
 def normalize(name: str) -> str:
     name = name.replace(' ', '_').replace('/', '_')
     return ''.join([x for x in name.upper() if x in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789'])
+
+def _clean_zone_label(label: str) -> str:
+    if not label:
+        return ""
+    # lowercase, strip, remove numbering and punctuation
+    label = label.lower().strip()
+    label = re.sub(r"^\d+\.\s*", "", label)
+    label = re.sub(r"[^a-z0-9\s]", " ", label)
+    # collapse whitespace
+    label = re.sub(r"\s+", " ", label)
+    return label
+
+def create_zone_mapping(registry, story):
+    """
+    Map registry zone_name -> story beat['zone'] label.
+    Zones are camera angles inside a location.
+    Matching is done on normalized labels, not raw strings.
+    """
+    mappings = {}
+
+    # Pre-normalize beat zones
+    beat_zones = {}
+    for beat in story:
+        bz_raw = beat.get('zone', '')
+        bz_clean = _clean_zone_label(bz_raw)
+        if bz_clean:
+            beat_zones[bz_clean] = beat['zone']
+
+    for location in registry['locations']:
+        for zone in location['zones']:
+            zn_raw = zone['zone_name']
+            zn_clean = _clean_zone_label(zn_raw)
+
+            if zn_clean in beat_zones:
+                mappings[zone['zone_name']] = beat_zones[zn_clean]
+
+    return mappings
+
 
 # ---------------------------------------------------------
 # CHARACTER SHEETS + VOICES (CHAR_ ALIASES)
@@ -58,6 +96,74 @@ def bind_identity(action: str, names: dict) -> str:
             return action.replace(char, ident)
     return action
 
+def bind_identity_first_only(actions, names):
+    """
+    Multi-character safe version.
+
+    For each character:
+      - FIRST action for that character: replace FIRST WORD with identity
+      - Continuation actions: remove FIRST WORD only
+    """
+
+    if not actions:
+        return "", ""
+
+    # Track which characters have already had their identity applied
+    used_identity = set()
+
+    pose_action = None
+    motion_parts = []
+
+    for idx, action in enumerate(actions):
+        action = action.strip()
+        parts = action.split(" ", 1)
+        first_word = parts[0]
+
+        # Determine if this first word is a character
+        if first_word in names:
+            identity = names[first_word]
+
+            # FIRST action for this character
+            if first_word not in used_identity:
+                used_identity.add(first_word)
+
+                # Replace first word with identity
+                if len(parts) > 1:
+                    rewritten = identity + " " + parts[1]
+                else:
+                    rewritten = identity
+
+                # FIRST action of the entire beat = pose
+                if pose_action is None:
+                    pose_action = rewritten
+
+                motion_parts.append(rewritten)
+
+            else:
+                # Continuation action for this character → remove first word only
+                if len(parts) > 1:
+                    rewritten = parts[1]
+                else:
+                    rewritten = ""
+
+                motion_parts.append(rewritten)
+
+        else:
+            # Not a character action → leave untouched
+            if pose_action is None:
+                pose_action = action
+            motion_parts.append(action)
+
+    # Build motion string
+    if len(motion_parts) > 1:
+        motion = motion_parts[0] + ", " + ", ".join(f"then {m}" for m in motion_parts[1:])
+    else:
+        motion = motion_parts[0]
+
+    return pose_action, motion
+
+
+
 # ---------------------------------------------------------
 # ZONE MAPPING + BACKGROUNDS (ZONES = CAMERA ANGLES)
 # ---------------------------------------------------------
@@ -78,10 +184,6 @@ def create_zone_mapping(registry, story):
     return mappings
 
 def get_backgrounds(registry, mappings):
-    """
-    ONE background per zone (zone = camera angle).
-    All characters that use that zone share this plate.
-    """
     for location in registry['locations']:
         architecture = location['architectural_shell']
 
@@ -103,6 +205,7 @@ def get_backgrounds(registry, mappings):
 create_background cinematic widescreen composition with generous negative space at left and right frame edges,
 primary focal objects positioned safely within center 60% of frame, smooth flooring extends toward edges to provide
 clean tracking margins for camera movement, {prompt}, Seed: {SEED}"""
+
 
 # ---------------------------------------------------------
 # ACTION RENDERING (WIDE + MEDIUM, SAME ZONE BACKGROUND)
@@ -127,10 +230,10 @@ def render_beats_actions(assets, actions):
             continue
 
         # FIRST ACTION = POSE
-        pose_action = bind_identity(beat_actions[0], names)
+        pose_action, motion_actions = bind_identity_first_only(beat_actions, names)
 
         # ALL ACTIONS = MOTION
-        motion_actions = "; ".join(bind_identity(a, names) for a in beat_actions)
+        #motion_actions = "; ".join(bind_identity(a, names) for a in beat_actions)
 
         zone_base = normalize(beat['zone'])
         zone_alias = f"{zone_base}_BACKGROUND"
@@ -219,7 +322,14 @@ def render_beats_dialog(assets, actions):
     char_aliases = {c['name']: f"CHAR_{normalize(c['name'])}" for c in assets['characters']}
 
     for beat in actions:
-        dialog_list = beat.get('dialog') or []
+        raw_dialog = beat.get('dialog') or []
+
+        # Filter out empty, null, whitespace, or placeholder dialog
+        dialog_list = [
+            d for d in raw_dialog
+            if d.get("line") and d.get("line").strip().lower() not in ("", "none")
+        ]
+
         if not dialog_list:
             continue
 

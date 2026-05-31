@@ -45,8 +45,7 @@ JSON STRUCTURE:
         {
           "zone_name": string,
           "definition": string,
-
-          "anchored_elements": string,
+          "anchored_elements": string
         }
       ]
     }
@@ -69,15 +68,20 @@ For each character:
 
 3. LOCATIONS
 For each location:
-- name = location heading
+- name = location heading (markdown removed)
 - architectural_shell = full Architectural Shell text, markdown removed
 - environment_objects = full Environment Objects text, markdown removed
 
 4. ZONES
 For each zone:
-- zone_name = zone heading with numbering removed
-- definition = full Zone Definition text
-- anchored_elements = full Anchored Elements text, markdown removed
+- zone_name = zone heading with:
+    • ALL numbering removed (e.g., “1.”, “2.”, “3.”)
+    • ALL markdown removed
+    • ONLY the first line kept if multiple lines exist
+    • Leading/trailing whitespace removed
+- definition = full Zone Definition text (markdown removed)
+- anchored_elements = full Anchored Elements text (markdown removed)
+
 
 PROHIBITIONS:
 - Do NOT output markdown.
