@@ -224,11 +224,20 @@ def render_beats_dialog(assets, actions):
             speaker_alias = char_aliases[speaker]
             closeup_prompt = build_dialog_closeup_prompt(beat, speaker, names)
 
+            base_alias = f"BEAT_{beat['beat']}_WIDE_ACTION"
+            facial = _get_per_speaker_value(beat, 'facial_state', speaker, 'neutral')
+            head   = _get_per_speaker_value(beat, 'head_gesture', speaker, 'none')
+            tone   = _get_per_speaker_value(beat, 'tone', speaker, 'neutral')
+
             print(f"""
 >> ALIAS: BEAT_{beat["beat"]}_{normalize(speaker)}_DIALOG_FRAME
-composite_scene {zone_alias} asset and {speaker_alias} asset,
-{closeup_prompt}, Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
+edit_image {base_alias} asset,
+apply: facial expression {facial}, head gesture {head},
+crop: closeup_of_face,
+Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
 """)
+
+
 
             print(f"""
 >> ALIAS: BEAT_{beat["beat"]}_{normalize(speaker)}_DIALOG_VIDEO
