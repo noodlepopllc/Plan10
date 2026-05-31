@@ -136,6 +136,24 @@ You MUST NOT:
     use anything outside the input text
 
 You MUST use ONLY the ACTION BEATS as the source of truth.
+
+⭐ NATURAL SPEECH EXPANSION RULE (NEW)
+
+When rewriting a dialog hint into direct quoted dialog,
+you MAY expand the line into a natural, conversational sentence as long as:
+
+    you do NOT add new topics
+
+    you do NOT add new facts
+
+    you do NOT contradict the hint
+
+    you do NOT add emotional interpretation beyond tone/facial cues
+
+    you stay within the meaning of the hint
+
+    you keep it one line of dialog
+
 ⭐ OUTPUT FORMAT
 
 SECTION 1 — DIALOG BEATS
