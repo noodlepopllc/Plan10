@@ -14,7 +14,7 @@ if [[ ! -f "$output/registry.json" ]]; then
     python lib/qwen_llm.py -P "$(cat "$output/biography.txt")" -S PlanningV4/prompts/assets.txt | tail -n +2 > $output/registry.json
 fi
 
-python PlanningV4/expanders/rendererV3.py $2 | tail -n +2 > $2/scene.txt
+python PlanningV4/expanders/rendererV3.py $2 > $2/scene.txt
 
 
 echo "✅ Pipeline complete: scene $2"
