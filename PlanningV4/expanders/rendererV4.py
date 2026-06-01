@@ -340,7 +340,7 @@ shot_type: "closeup",
 prompt: "{dialog_pose_prompt}",
 Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
 """)
-
+                '''
                 # PASS B2: micro‑motion for dialog (I2V)
                 motion_prompt = (
                     f"{speaker} subtle head movement, slight breathing, "
@@ -351,11 +351,12 @@ Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
 >> ALIAS: {motion_alias}
 image_to_video {base_alias} asset, "{motion_prompt}", Width: {WIDTH}, Height: {HEIGHT}, Duration: 5, Seed: {SEED}
 """)
+                '''
 
                 # PASS B3: lip‑sync on top of dialog motion
                 print(f"""
 >> ALIAS: {final_alias}
-speech_to_video using={motion_alias}
+speech_to_video using={base_alias}
 audio={speaker_alias}_VOICE
 text="{sentence}"
 Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
