@@ -356,7 +356,7 @@ image_to_video {base_alias} asset, "{motion_prompt}", Width: {WIDTH}, Height: {H
                 # PASS B3: lip‑sync on top of dialog motion
                 print(f"""
 >> ALIAS: {final_alias}
-speech_to_video using={base_alias}
+dialog_to_video media={base_alias} asset
 audio={speaker_alias}_VOICE
 text="{sentence}"
 Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
