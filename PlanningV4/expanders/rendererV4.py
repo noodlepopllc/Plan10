@@ -234,12 +234,13 @@ def render_beats_actions(assets, actions, mappings):
     char_aliases = {c['name']: f"CHAR_{normalize(c['name'])}" for c in assets['characters']}
 
     for beat in actions:
-        if beat.continuity.object_introductions:
-            pose_action = beat.continuity.object_introductions[0]["action"]
-        else:
-            pose_action = beat.actions[0]
+        pose_action = None
+        if continuity := beat.get('continuity',None):
+            pose_action = continuity.get('object_introductions', None)[0]["action"] if continuity.get('object_introductions', None) else None
+        if not pose_action:
+            pose_action = beat['actions'][0]
 
-        beat_actions = [pose_action] + [a for a in beat.actions if a != pose_action] or []
+        beat_actions = [pose_action] + [a for a in beat['actions'] if a != pose_action] or []
         if not beat_actions:
             continue
 
