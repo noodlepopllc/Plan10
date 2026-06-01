@@ -38,13 +38,15 @@ def build_script(story, outpath):
         ACTION,
         f'{outpath}/action_beats.txt')
 
+'''
     dialog_beats = run_prompt(
         f'World: {biography}, Story Beats: {action_beats}, Narrative: {narrative}', 
         DIALOG,
         f'{outpath}/dialog_beats.txt')
 
+'''
     complete = run_prompt(
-        f'World: {biography}, Action Beats: {action_beats}, Dialog Beats: {dialog_beats}, Narrative: {narrative}',
+        f'World: {biography}, Action Beats: {action_beats}, Dialog Beats: "", Narrative: {narrative}',
         STORY,
         f'{outpath}/complete.json')
     

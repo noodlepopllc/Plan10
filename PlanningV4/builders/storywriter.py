@@ -26,8 +26,8 @@ Lisa is texting on her bed. Maria enters the room.
 
 SEED = """
 Characters:
-- Alora: princess, tattered brown dress, blonde hair, prisoner of Quin
-- Quin: sorceress, believes rightful queen, aunt of Alora, regal red dress, black hair
+- Alora: princess, short tattered low cut tight fitting brown dress, blonde hair, prisoner of Quin
+- Quin: sorceress, believes rightful queen, aunt of Alora, regal red dress, black hair in a bun with a crown
 
 Location: medieval style dungeon in a fantasy world of high magic
 
