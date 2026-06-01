@@ -77,5 +77,5 @@ if __name__ == '__main__':
     parser.add_argument('-S', '--story', type=str, default='')
     parser.add_argument('-O', '--output', type=str, default='story.txt')
     args = parser.parse_args()
-    story = Path(args.story).read_text() if args.story else STORY
+    story = Path(args.story).read_text() if args.story else SEED
     print(run_prompt(story, SYSTEM, args.output))
