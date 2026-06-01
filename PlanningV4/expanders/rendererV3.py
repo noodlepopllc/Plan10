@@ -350,7 +350,7 @@ def render_beats_dialog(assets, actions, mappings):
 edit_image {base_alias} asset,
 reference_face: {speaker_alias} asset,
 subject: the person matching the description of {speaker_alias} asset,
-apply: facial expression {facial}, head gesture {head},
+apply: facial expression {facial}, 
 crop: closeup_of_face,
 Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
 """)

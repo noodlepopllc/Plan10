@@ -143,7 +143,10 @@ def CompositeScene(
     print(f"\n📝 PROMPT ({len(task.split())} words):\n{task}\n")
 
     # 5. Generate
-    ref_paths = [background_path] + characters
+    if framing == "wide":
+        ref_paths = [background_path] + characters
+    else:
+        ref_paths = characters
     status = EditImage(task, ref_paths, output, width, height, seed)
 
     # 6. Embed metadata for I2V handoff
