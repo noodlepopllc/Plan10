@@ -473,7 +473,7 @@ def render_beats_dialog(assets, actions, mappings, commands: CommandBuffer):
 >> ALIAS: {base_alias}
 composite_scene {zone_alias} asset and {speaker_alias} asset,
 shot_type: "closeup",
-prompt: "{dialog_pose_prompt}",
+prompt: "{dialog_pose_prompt_close}",
 Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
 """
                 img_medium = f"""
