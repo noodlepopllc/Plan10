@@ -465,6 +465,8 @@ def render_beats_dialog(assets, actions, mappings, commands: CommandBuffer):
                 motion_alias = f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_MOTION_{idx:02d}_{s_idx:02d}"
                 final_alias  = f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_VIDEO_{idx:02d}_{s_idx:02d}"
 
+                dialog_pose_prompt_close = f"{speaker} ({tone} tone, facial expression {facial})"
+
                 dialog_pose_prompt = f"{speaker} ({tone} tone, facial expression {facial}, head gesture {head})"
 
                 img_close = f"""
