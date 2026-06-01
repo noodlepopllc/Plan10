@@ -340,18 +340,27 @@ shot_type: "closeup",
 prompt: "{dialog_pose_prompt}",
 Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
 """)
-                '''
-                # PASS B2: micro‑motion for dialog (I2V)
+                print(f"""
+>> ALIAS: {base_alias}_medium
+composite_scene {zone_alias} asset and {speaker_alias} asset,
+shot_type: "medium",
+prompt: "{dialog_pose_prompt}",
+Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
+""")
+
                 motion_prompt = (
-                    f"{speaker} subtle head movement, slight breathing, "
+                    f"{speaker}, calm and still, "
+                    f"lips gently closed, jaw unmoving, "
+                    f"eyes with tiny natural micro‑saccades only, "
+                    f"stable head position, minimal idle motion, "
                     f"maintain facial expression {facial}, head gesture {head}, "
                     f"no large body motion"
                 )
+
                 print(f"""
->> ALIAS: {motion_alias}
-image_to_video {base_alias} asset, "{motion_prompt}", Width: {WIDTH}, Height: {HEIGHT}, Duration: 5, Seed: {SEED}
-""")
-                '''
+                >> ALIAS: {motion_alias}
+                image_to_video {base_alias}_medium asset, "{motion_prompt}", Width: {WIDTH}, Height: {HEIGHT}, Duration: 1.2, Seed: {SEED}
+                """)
 
                 # PASS B3: lip‑sync on top of dialog motion
                 print(f"""
