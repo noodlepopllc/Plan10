@@ -207,9 +207,13 @@ def get_backgrounds(registry, mappings):
 
             print(f"""
 >> ALIAS: {zone_alias}_BACKGROUND
-create_background cinematic widescreen composition with generous negative space at left and right frame edges,
-primary focal objects positioned safely within center 60% of frame, smooth flooring extends toward edges to provide
-clean tracking margins for camera movement, {prompt}, Seed: {SEED}""")
+create_background cinematic composition with tighter framing focused on the primary functional area,
+minimize negative space at the frame edges,
+center the back wall as the dominant architectural surface,
+include only the objects positioned against or near the back wall,
+preserve natural perspective and room geometry,
+{prompt}, Seed: {SEED}""")
+
 
 # ---------------------------------------------------------
 # ACTION RENDERING
@@ -263,7 +267,7 @@ def render_beats_actions(assets, actions, mappings):
 
             print(f"""
 >> ALIAS: BEAT_{beat["beat"]}_{normalize(char)}_ACTION
-composite_scene {zone_alias} asset and {char_alias} asset, {char_pose}, Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
+composite_scene {zone_alias} asset and {char_alias} asset, shot_type: "medium", prompt: "{char_pose}", Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
 """)
 
             print(f"""
@@ -274,11 +278,20 @@ image_to_video BEAT_{beat["beat"]}_{normalize(char)}_ACTION asset, {motion_actio
 
         pose_action, motion_actions = bind_identity_first_only(beat_actions, names)
         char_assets = " and ".join(f"{char_aliases[c]} asset" for c in chars_in_actions)
+
+        # Ensure every character in the shot has a pose
+        for c in chars_in_actions:
+            if c not in pose_action:
+                identity = names[c]
+                # You can specialize this per zone/character if you want
+                pose_action[c] = f"{identity} stands neutrally"
+                # or e.g. f"{identity} sits calmly in the reclining lounge chair"
+
         pose_block = format_pose_block(pose_action)
 
         print(f"""
 >> ALIAS: BEAT_{beat["beat"]}_WIDE_ACTION
-composite_scene {zone_alias} asset and {char_assets}, {pose_block}, Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
+composite_scene {zone_alias} asset and {char_assets}, shot_type: "two_shot", prompt: "{pose_block}", Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
 """)
 
         print(f"""
