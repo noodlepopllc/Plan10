@@ -87,7 +87,7 @@ def CompositeScene(
     framing = {
         "closeup": (
             "EXTREME FACE CLOSE-UP. Face fills 80% of frame. "
-            "Crop at chin. No shoulders. Camera distance: very close."
+            "Crop at chin. Camera distance: very close."
         ),
         "medium": (
             "WAIST-UP FRAMING. Camera distance: tight medium. "
@@ -97,6 +97,7 @@ def CompositeScene(
         "two_shot": (
             "Tight waist-up framing of two characters shoulder-to-shoulder. "
             "Camera distance: medium close. Subject scale: large. "
+            "Waist-up only. "
         ),
         "wide": (
             "Full body shot. Character small in frame."
