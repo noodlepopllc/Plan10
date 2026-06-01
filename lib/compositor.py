@@ -85,14 +85,35 @@ def CompositeScene(
     # 3. Explicit Framing Dictionary
     # Note: Profile uses "Position on X looking Y" to force direction
     framing = {
-        "closeup": "EXTREME FACE CLOSE-UP. Face fills frame. Crop below chin. Zero shoulders. High focus on facial expression details and eyes.",
-        "profile_left": "STRICT PROFILE FACING LEFT. Character positioned on RIGHT side of frame looking off-screen LEFT. Large empty negative space on left.",
-        "profile_right": "STRICT PROFILE FACING RIGHT. Character positioned on LEFT side of frame looking off-screen RIGHT. Large empty negative space on right.",
-        "ots": "over-the-shoulder",
-        "wide": "Full body shot, character small in frame.",
-        "two_shot": "Tight waist-up framing. Characters standing shoulder-to-shoulder with minimal gap. Neutral stance.",
-        "medium": "Waist-up, centered."
-    }.get(shot_type, "medium shot")
+        "closeup": (
+            "EXTREME FACE CLOSE-UP. Face fills 80% of frame. "
+            "Crop at chin. No shoulders. Camera distance: very close."
+        ),
+        "medium": (
+            "WAIST-UP FRAMING. Camera distance: tight medium. "
+            "Subject scale: large. Face occupies upper third of frame. "
+            "NO legs, NO hips, NO full body, NO knees visible. "
+            "Anchor face at vertical 0.32. Centered horizontally."
+        ),
+        "two_shot": (
+            "Tight waist-up framing of two characters shoulder-to-shoulder. "
+            "Camera distance: medium close. Subject scale: large. "
+            "NO full body, NO legs, NO knees visible."
+        ),
+        "wide": (
+            "Full body shot. Character small in frame."
+        ),
+        "profile_left": (
+            "STRICT PROFILE FACING LEFT. Character on RIGHT side of frame. "
+            "Camera distance: medium close. Waist-up only."
+        ),
+        "profile_right": (
+            "STRICT PROFILE FACING RIGHT. Character on LEFT side of frame. "
+            "Camera distance: medium close. Waist-up only."
+        ),
+        "ots": "over-the-shoulder"
+    }.get(shot_type, "WAIST-UP FRAMING. Camera distance: tight medium.")
+
 
     # 4. Route to specific prompt logic
     # In the prompt construction section, replace the "REF 1" handling:

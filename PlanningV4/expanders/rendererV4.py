@@ -8,13 +8,44 @@ WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
 SEED = int(os.environ.get("SEED", "123456"))
 
+# ---------------------------------------------------------
+# COMMAND BUFFER
+# ---------------------------------------------------------
+
+class CommandBuffer:
+    def __init__(self):
+        self.identity = []
+        self.images = []
+        self.videos = []
+
+    def add_identity(self, cmd: str):
+        self.identity.append(cmd)
+
+    def add_image(self, cmd: str):
+        self.images.append(cmd)
+
+    def add_video(self, cmd: str):
+        self.videos.append(cmd)
+
+    def dump(self, mode: str = "all"):
+        mode = mode.lower()
+        if mode in ("all", "identity", "images", "videos"):
+            for c in self.identity:
+                print(c)
+        if mode in ("all", "images", "videos"):
+            for c in self.images:
+                print(c)
+        if mode in ("all", "videos"):
+            for c in self.videos:
+                print(c)
+
+# ---------------------------------------------------------
+# NORMALIZATION / FUZZY MATCHING
+# ---------------------------------------------------------
+
 def normalize(name: str) -> str:
     name = name.replace(' ', '_').replace('/', '_')
     return ''.join([x for x in name.upper() if x in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ_0123456789'])
-
-# ---------------------------------------------------------
-# SOFT NORMALIZATION / FUZZY MATCHING FOR NAMES
-# ---------------------------------------------------------
 
 def soft_normalize(text: str) -> str:
     return re.sub(r"[^A-Za-z0-9]", "", text).lower()
@@ -55,7 +86,6 @@ def _clean_zone_label(label: str) -> str:
 def create_zone_mapping(registry, story):
     mappings = {}
 
-    # Pre-normalize beat zones
     beat_zones = {}
     for beat in story:
         bz_raw = beat.get('zone', '')
@@ -63,13 +93,11 @@ def create_zone_mapping(registry, story):
         if bz_clean:
             beat_zones[bz_clean] = beat['zone']
 
-    # Fuzzy match registry zones to beat zones
     for location in registry['locations']:
         for zone in location['zones']:
             zn_raw = zone['zone_name']
             zn_clean = _clean_zone_label(zn_raw)
 
-            # CONTAINS MATCH
             for bz_clean, bz_raw in beat_zones.items():
                 if bz_clean in zn_clean or zn_clean in bz_clean:
                     mappings[zone['zone_name']] = bz_raw
@@ -91,7 +119,7 @@ def resolve_zone_alias(beat_zone: str, mappings: dict) -> str:
 # CHARACTER SHEETS + VOICES
 # ---------------------------------------------------------
 
-def get_identity(assets):
+def get_identity(assets, commands: CommandBuffer):
     for char in assets['characters']:
         bio = char['biography']
         description = (
@@ -102,12 +130,13 @@ def get_identity(assets):
         )
         name = description[0]
         char_alias = f"CHAR_{normalize(name)}"
-        yield (
+        cmd = (
             f">> ALIAS: {char_alias}\n"
             f"create a character sheet of {description[1]}, Seed: {SEED}\n\n"
             f">> ALIAS: {char_alias}_VOICE\n"
             f"design a voice for {','.join(description[1].split(',')[:3])}\n"
         )
+        commands.add_identity(cmd)
 
 # ---------------------------------------------------------
 # IDENTITY BINDING
@@ -183,7 +212,7 @@ def bind_identity_first_only(actions, names):
 # ZONE BACKGROUNDS
 # ---------------------------------------------------------
 
-def get_backgrounds(registry, mappings):
+def get_backgrounds(registry, mappings, commands: CommandBuffer):
     for location in registry['locations']:
         architecture = location['architectural_shell']
         for zone in location['zones']:
@@ -199,14 +228,15 @@ def get_backgrounds(registry, mappings):
                 f"Anchored objects: {zone['anchored_elements']}"
             )
 
-            print(f"""
+            cmd = f"""
 >> ALIAS: {zone_alias}_BACKGROUND
 create_background cinematic composition with tighter framing focused on the primary functional area,
 minimize negative space at the frame edges,
 center the back wall as the dominant architectural surface,
 include only the objects positioned against or near the back wall,
 preserve natural perspective and room geometry,
-{prompt}, Seed: {SEED}""")
+{prompt}, Seed: {SEED}"""
+            commands.add_image(cmd)
 
 # ---------------------------------------------------------
 # ACTION RENDERING (PASS A)
@@ -229,13 +259,13 @@ def format_pose_block(pose_actions):
         blocks.append(f"{char} asset ({pose})")
     return " and ".join(blocks)
 
-def render_beats_actions(assets, actions, mappings):
+def render_beats_actions(assets, actions, mappings, commands: CommandBuffer):
     names = build_identity_map(assets)
     char_aliases = {c['name']: f"CHAR_{normalize(c['name'])}" for c in assets['characters']}
 
     for beat in actions:
         pose_action = None
-        if continuity := beat.get('continuity',None):
+        if continuity := beat.get('continuity', None):
             pose_action = continuity.get('object_introductions', None)[0]["action"] if continuity.get('object_introductions', None) else None
         if not pose_action:
             pose_action = beat['actions'][0]
@@ -261,36 +291,38 @@ def render_beats_actions(assets, actions, mappings):
             char_pose = bind_identity(char_action, names)
             _, motion_actions = bind_identity_first_only(beat_actions, names)
 
-            print(f"""
+            img_cmd = f"""
 >> ALIAS: BEAT_{beat["beat"]}_{normalize(char)}_ACTION
 composite_scene {zone_alias} asset and {char_alias} asset, shot_type: "medium", prompt: "{char_pose}", Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
-""")
-
-            print(f"""
+"""
+            vid_cmd = f"""
 >> ALIAS: BEAT_{beat["beat"]}_{normalize(char)}_ACTION_VIDEO
 image_to_video BEAT_{beat["beat"]}_{normalize(char)}_ACTION asset, {motion_actions}, Width: {WIDTH}, Height: {HEIGHT}, Duration: 5, Seed: {SEED}
-""")
+"""
+            commands.add_image(img_cmd)
+            commands.add_video(vid_cmd)
             continue
 
-        pose_action, motion_actions = bind_identity_first_only(beat_actions, names)
+        pose_action_map, motion_actions = bind_identity_first_only(beat_actions, names)
         char_assets = " and ".join(f"{char_aliases[c]} asset" for c in chars_in_actions)
 
         for c in chars_in_actions:
-            if c not in pose_action:
+            if c not in pose_action_map:
                 identity = names[c]
-                pose_action[c] = f"{identity} stands neutrally"
+                pose_action_map[c] = f"{identity} stands neutrally"
 
-        pose_block = format_pose_block(pose_action)
+        pose_block = format_pose_block(pose_action_map)
 
-        print(f"""
+        img_cmd = f"""
 >> ALIAS: BEAT_{beat["beat"]}_WIDE_ACTION
 composite_scene {zone_alias} asset and {char_assets}, shot_type: "two_shot", prompt: "{pose_block}", Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
-""")
-
-        print(f"""
+"""
+        vid_cmd = f"""
 >> ALIAS: BEAT_{beat["beat"]}_WIDE_ACTION_VIDEO
 image_to_video BEAT_{beat["beat"]}_WIDE_ACTION asset, {motion_actions}, Width: {WIDTH}, Height: {HEIGHT}, Duration: 5, Seed: {SEED}
-""")
+"""
+        commands.add_image(img_cmd)
+        commands.add_video(vid_cmd)
 
 # ---------------------------------------------------------
 # DIALOG CLOSEUPS (PASS B, DIALOG‑FORWARD)
@@ -302,90 +334,13 @@ def _get_per_speaker_value(beat, key, speaker, default):
         return val.get(speaker, default)
     return val
 
-def render_beats_dialog(assets, actions, mappings):
-    names = build_identity_map(assets)
-    char_aliases = {c['name']: f"CHAR_{normalize(c['name'])}" for c in assets['characters']}
-
-    for beat in actions:
-        dialog_list = [
-            d for d in beat.get('dialog') or []
-            if d.get("line") and d.get("line").strip().lower() not in ("", "none")
-        ]
-        if not dialog_list:
-            continue
-
-        zone_alias = resolve_zone_alias(beat['zone'], mappings)
-
-        for idx, dlg in enumerate(dialog_list, start=1):
-            speaker = dlg['speaker']
-            line = dlg['line']
-
-            if speaker not in char_aliases:
-                continue
-
-            speaker_alias = char_aliases[speaker]
-            facial = _get_per_speaker_value(beat, 'facial_state', speaker, 'neutral')
-            head   = _get_per_speaker_value(beat, 'head_gesture', speaker, 'none')
-            tone   = _get_per_speaker_value(beat, 'tone', speaker, 'neutral')
-
-            # NEW: split into sentences
-            sentences = split_dialog_into_sentences(line)
-
-            for s_idx, sentence in enumerate(sentences, start=1):
-
-                base_alias   = f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_BASE_{idx:02d}_{s_idx:02d}"
-                motion_alias = f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_MOTION_{idx:02d}_{s_idx:02d}"
-                final_alias  = f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_VIDEO_{idx:02d}_{s_idx:02d}"
-
-                # PASS B1: dialog base closeup
-                dialog_pose_prompt = f"{speaker} ({tone} tone, facial expression {facial}, head gesture {head})"
-                print(f"""
->> ALIAS: {base_alias}
-composite_scene {zone_alias} asset and {speaker_alias} asset,
-shot_type: "closeup",
-prompt: "{dialog_pose_prompt}",
-Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
-""")
-                print(f"""
->> ALIAS: {base_alias}_medium
-composite_scene {zone_alias} asset and {speaker_alias} asset,
-shot_type: "medium",
-prompt: "{dialog_pose_prompt}",
-Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
-""")
-
-                motion_prompt = (
-                    f"{speaker}, calm and still, "
-                    f"lips gently closed, jaw unmoving, "
-                    f"eyes with tiny natural micro‑saccades only, "
-                    f"stable head position, minimal idle motion, "
-                    f"maintain facial expression {facial}, head gesture {head}, "
-                    f"no large body motion"
-                )
-
-                print(f"""
-                >> ALIAS: {motion_alias}
-                image_to_video {base_alias}_medium asset, "{motion_prompt}", Width: {WIDTH}, Height: {HEIGHT}, Duration: 2, Seed: {SEED}
-                """)
-
-                # PASS B3: lip‑sync on top of dialog motion
-                print(f"""
->> ALIAS: {final_alias}
-dialog_to_video media={base_alias} asset
-audio={speaker_alias}_VOICE
-text="{sentence}"
-Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
-""")
-
 def split_dialog_into_sentences(line):
     import re
 
-    # Normalize whitespace
     text = " ".join(line.split()).strip()
     if not text:
         return []
 
-    # STEP 1 — split on major punctuation (including semicolon)
     major_parts = re.split(r'([.!?…;])', text)
     major_units = []
     for i in range(0, len(major_parts) - 1, 2):
@@ -396,7 +351,6 @@ def split_dialog_into_sentences(line):
     if not major_units:
         major_units = [text]
 
-    # STEP 2 — split long units on clause boundaries
     clause_regex = r",|;| but | and | so | because | although | though | however "
     natural_units = []
     for unit in major_units:
@@ -409,19 +363,16 @@ def split_dialog_into_sentences(line):
         sub = [s.strip() for s in sub if s.strip()]
         natural_units.extend(sub)
 
-    # STEP 3 — merge units that are too short (<5 words)
     merged = []
     i = 0
     while i < len(natural_units):
         cur = natural_units[i].strip()
         wc = len(cur.split())
 
-        # Allow vocatives: short units ending in punctuation
         if wc >= 5 or cur.endswith(('.', '?', '!')):
             merged.append(cur)
             i += 1
             continue
-
 
         if i + 1 < len(natural_units):
             merged.append(cur + " " + natural_units[i+1].strip())
@@ -433,7 +384,6 @@ def split_dialog_into_sentences(line):
                 merged.append(cur)
             i += 1
 
-    # STEP 4 — enforce max length (>12 words)
     final_units = []
     for unit in merged:
         words = unit.split()
@@ -448,10 +398,8 @@ def split_dialog_into_sentences(line):
             final_units.append(chunk)
             start = end
 
-    # CLEANUP: remove empty units BEFORE conjunction check
     final_units = [u.strip() for u in final_units if u.strip()]
 
-    # STEP 5 — NEVER allow a unit to end with a conjunction
     bad_endings = {"but", "and", "or", "so", "but by", "and by"}
     cleaned = []
     skip_next = False
@@ -483,8 +431,82 @@ def split_dialog_into_sentences(line):
 
     return cleaned
 
+def render_beats_dialog(assets, actions, mappings, commands: CommandBuffer):
+    names = build_identity_map(assets)
+    char_aliases = {c['name']: f"CHAR_{normalize(c['name'])}" for c in assets['characters']}
 
+    for beat in actions:
+        dialog_list = [
+            d for d in beat.get('dialog') or []
+            if d.get("line") and d.get("line").strip().lower() not in ("", "none")
+        ]
+        if not dialog_list:
+            continue
 
+        zone_alias = resolve_zone_alias(beat['zone'], mappings)
+
+        for idx, dlg in enumerate(dialog_list, start=1):
+            speaker = dlg['speaker']
+            line = dlg['line']
+
+            if speaker not in char_aliases:
+                continue
+
+            speaker_alias = char_aliases[speaker]
+            facial = _get_per_speaker_value(beat, 'facial_state', speaker, 'neutral')
+            head   = _get_per_speaker_value(beat, 'head_gesture', speaker, 'none')
+            tone   = _get_per_speaker_value(beat, 'tone', speaker, 'neutral')
+
+            sentences = split_dialog_into_sentences(line)
+
+            for s_idx, sentence in enumerate(sentences, start=1):
+
+                base_alias   = f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_BASE_{idx:02d}_{s_idx:02d}"
+                motion_alias = f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_MOTION_{idx:02d}_{s_idx:02d}"
+                final_alias  = f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_VIDEO_{idx:02d}_{s_idx:02d}"
+
+                dialog_pose_prompt = f"{speaker} ({tone} tone, facial expression {facial}, head gesture {head})"
+
+                img_close = f"""
+>> ALIAS: {base_alias}
+composite_scene {zone_alias} asset and {speaker_alias} asset,
+shot_type: "closeup",
+prompt: "{dialog_pose_prompt}",
+Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
+"""
+                img_medium = f"""
+>> ALIAS: {base_alias}_medium
+composite_scene {zone_alias} asset and {speaker_alias} asset,
+shot_type: "medium",
+prompt: "{dialog_pose_prompt}",
+Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
+"""
+                commands.add_image(img_close)
+                commands.add_image(img_medium)
+
+                motion_prompt = (
+                    f"{speaker}, calm and still, "
+                    f"lips gently closed, jaw unmoving, "
+                    f"eyes with tiny natural micro‑saccades only, "
+                    f"stable head position, minimal idle motion, "
+                    f"maintain facial expression {facial}, head gesture {head}, "
+                    f"no large body motion"
+                )
+
+                motion_cmd = f"""
+>> ALIAS: {motion_alias}
+image_to_video {base_alias}_medium asset, "{motion_prompt}", Width: {WIDTH}, Height: {HEIGHT}, Duration: 2, Seed: {SEED}
+"""
+                commands.add_video(motion_cmd)
+
+                final_cmd = f"""
+>> ALIAS: {final_alias}
+dialog_to_video media={base_alias} asset
+audio={speaker_alias}_VOICE
+text="{sentence}"
+Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
+"""
+                commands.add_video(final_cmd)
 
 # ---------------------------------------------------------
 # MAIN
@@ -497,17 +519,21 @@ def main():
     with open(f"{basepath}/output/complete.json") as act:
         actions = json.load(act)
 
-    for x in get_identity(assets):
-        print(x)
+    commands = CommandBuffer()
+
+    get_identity(assets, commands)
 
     mappings = create_zone_mapping(assets, actions)
-    get_backgrounds(assets, mappings)
+    get_backgrounds(assets, mappings, commands)
 
-    # PASS A: staging / action
-    render_beats_actions(assets, actions, mappings)
-
-    # PASS B: dialog‑centric closeups
-    render_beats_dialog(assets, actions, mappings)
+    render_beats_actions(assets, actions, mappings, commands)
+    render_beats_dialog(assets, actions, mappings, commands)
+    
+    if len(sys.argv) > 2 and sys.argv[2] in ("images","all","videos", "identity"):
+        mode = sys.argv[2]
+    else:
+        mode = os.environ.get("MODE", "all")
+    commands.dump(mode)
 
 if __name__ == "__main__":
     main()
