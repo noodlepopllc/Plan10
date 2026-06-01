@@ -1,37 +1,40 @@
-⭐ UPDATED PASS 0B — FILMABLE SET DEFINITION (ROOM‑LEVEL)
+⭐ PASS 0B — FILMABLE SET DEFINITION (EXECUTABLE VERSION)
 
-(With Purpose added to Zones, without violating architectural determinism)
-⭐ SECTION 1 — SETTING
+TASK:  
+Expand the PASS 0A SETTING into a single filmable room.
+Output SECTION 1, SECTION 2, and SECTION 3 exactly as defined.
+⭐ RULES (GLOBAL)
 
-(unchanged — but clarified)
+    Use ONLY information from PASS 0A.
 
-Goal: Expand the SETTING BLOCK from PASS 0A into a single filmable room that is:
+    Do NOT invent new objects, furniture, rooms, or technology.
 
-    open, breathable, and spacious
+    Do NOT add story events or character actions.
 
-    consistent with time period + technology level
+    The room MUST feel open, spacious, and two‑orientation‑compatible unless PASS 0A forbids it.
 
-    grounded in sensory detail
+    All descriptions MUST be physical, filmable, and deterministic.
 
-    architecturally coherent
+⭐ SECTION 1 — SETTING (ROOM‑LEVEL)
 
-    large enough to support multiple orientations
+Write 3–5 sentences describing:
 
-Rules:
+    the room’s overall form
 
-    MUST describe the room as open, wide, or expansive unless PASS 0A forbids it.
+    major fixed structures explicitly in PASS 0A
 
-    MUST anchor all descriptions to time period + technology level.
+    openings explicitly in PASS 0A
 
-    MUST NOT add story events, plot, or character actions.
+    ground/terrain material
 
-    MUST NOT invent new technology.
+    lighting sources
 
-    MUST NOT imply other rooms unless PASS 0A explicitly mentions them.
+    architectural style
 
+    spatial scale (open unless forbidden)
+
+Do NOT add props or furniture.
 ⭐ SECTION 2 — BIOGRAPHY
-
-(unchanged — but clarified)
 
 For each character, output:
 
@@ -43,60 +46,45 @@ For each character, output:
 
     Race
 
-    Ethnicity/Species (only if explicitly given)
+    Ethnicity/Species (if given)
 
-    Appearance (visual, physical, filmable)
+    Appearance (physical, filmable)
 
-    Clothing (time‑period appropriate)
+    Clothing
 
-    Hair (time‑period appropriate)
+    Hair
 
     Personality (1–2 filmable traits)
 
-    Movement style (compatible with open‑space blocking)
+    Movement style
 
     Distinctive physical traits
 
-Rules:
-
-    MUST NOT include backstory, internal monologue, or narrative events.
-
-    MUST NOT contradict the room’s spaciousness.
-
+Do NOT add backstory or narrative.
 ⭐ SECTION 3 — LOCATIONS (ROOM‑LEVEL)
 
-PASS 0B outputs one LOCATION = one room.
+Output ONE LOCATION = the room.
 ⭐ A. Architectural Shell
 
-(unchanged — but clarified)
+Write 3–5 sentences describing:
 
-3–5 sentences describing ONLY:
+    the room’s shape
 
-    the room’s overall form
+    fixed structures
 
-    major fixed structures explicitly mentioned in PASS 0A
+    openings
 
-    openings explicitly mentioned in PASS 0A
+    materials
 
-    ground/terrain material
+    lighting
 
-    lighting sources
+    scale (open, breathable)
 
-    architectural style
-
-    spatial scale (MUST feel open unless input forbids it)
-
-Rules:
-
-    MUST bias toward open floor plans, wide volumes, generous negative space.
-
-    MUST NOT invent geometry or structures not implied by PASS 0A.
-
-    MUST NOT invent props or furniture.
-
+Do NOT add new structures.
 ⭐ B. Environment Objects
 
-List anchored, non‑movable objects explicitly mentioned in PASS 0A:
+List ONLY anchored, non‑movable objects explicitly in PASS 0A.
+For each, describe:
 
     material
 
@@ -106,137 +94,68 @@ List anchored, non‑movable objects explicitly mentioned in PASS 0A:
 
     orientation
 
-    attachment to fixed structure (if applicable)
+Do NOT invent objects.
+⭐ C. ZONES
 
-Rules:
-
-    MUST describe placement with ample spacing.
-
-    MUST NOT invent new objects.
-
-⭐ C. ZONES (ANGLES INSIDE THE ROOM)
-
-Each Zone now contains THREE subsections:
-
-    Zone Name
-
-    Zone Definition (purely physical)
-
-    Purpose (NEW — semantic, but non‑architectural)
-
-    Anchored Elements
-
-This preserves determinism while giving the narrator semantic richness.
-⭐ Zone Name
-
-A short label for the functional sub‑area.
-⭐ 1. Zone Definition (Physical Only)
+Output 2–4 Zones.
+Each Zone contains:
+1. Zone Definition (Physical Only)
 
 3–5 sentences describing:
 
-    what part of the room the zone represents
+    what part of the room the zone occupies
 
-    which fixed environmental features define it
+    which fixed features define it
 
-    how it relates to the larger room
+    how it relates to the room
 
-    the architectural function (seating cluster, entry threshold, counter area, etc.)
+    open space on the opposite side
 
-    the general spatial feel (open, breathable)
+    two usable orientations
 
-    the presence of two usable orientations (without mentioning cameras)
-
-Rules:
-
-    MUST be purely physical.
-
-    MUST NOT reference people, actions, or narrative behavior.
-
-    MUST imply two opposite, filmable sides.
-
-    MUST describe anchored elements defining one side and open space on the opposite side.
-
-    MUST support clean reverse‑shot staging.
-
-Allowed phrasing:
-
-    “The anchored elements define one side of the zone, leaving the opposite side open.”
-
-    “The space maintains clear sightlines in both directions.”
-
-    “The layout naturally supports viewing the zone from multiple orientations.”
-
-    “The zone remains wide and breathable, with open space extending behind the primary features.”
-
-⭐ 2. Purpose (Narrative‑Friendly, Non‑Architectural)
-
-(NEW — added per your request)
+No people. No actions.
+2. Purpose (Non‑Architectural)
 
 1–2 sentences describing:
 
-    the functional or narrative purpose of the zone
+    the functional purpose of the zone in the world
 
-    how the zone is typically used in the world (e.g., dining, ordering, entering)
+No story events. No characters.
+3. Anchored Elements
 
-    WITHOUT describing actions happening right now
-
-    WITHOUT referencing specific characters
-
-    WITHOUT adding story events
-
-Examples:
-
-    “A natural area for seated dining and quiet moments.”
-
-    “A transitional space used for entering or exiting the room.”
-
-    “A functional zone for ordering or customer interaction.”
-
-Rules:
-
-    MUST NOT affect geometry.
-
-    MUST NOT imply current activity.
-
-    MUST NOT introduce new objects.
-
-    MUST NOT reference cameras.
-
-⭐ 3. Anchored Elements
-
-List 3–6 fixed or semi‑fixed objects explicitly mentioned in PASS 0A:
+List 3–6 anchored elements from PASS 0A.
+Describe:
 
     what they are
 
-    what material they are
+    material
 
-    where they are positioned
+    position
 
-    how they are oriented
+    orientation
 
-Rules:
+Do NOT invent objects.
+⭐ OUTPUT FORMAT
 
-    MUST describe placement with clear spacing.
+SECTION 1 — SETTING
+[paragraphs]
 
-    MUST position anchored elements so they define one side of the zone.
+SECTION 2 — BIOGRAPHY
+[character blocks]
 
-    MUST leave the opposite side open.
+SECTION 3 — LOCATIONS
+A. Architectural Shell
+[paragraphs]
 
-    MUST NOT invent new objects.
+B. Environment Objects
+[list]
 
-    MUST NOT add story.
+C. ZONES
+[Zone 1]
+- Zone Definition:
+- Purpose:
+- Anchored Elements:
 
-⭐ GLOBAL RULES (SET DEFINITION LAYER)
+[Zone 2]
+...
 
-    MUST use ONLY the input text as truth.
-
-    MUST NOT invent new locations, furniture, or architecture.
-
-    MUST NOT add narrative or character actions.
-
-    MUST NOT skip any required section.
-
-    MUST bias toward spacious, open, two‑orientation‑compatible environments unless the input forbids it.
-
-This layer’s ONLY job:  
-Turn conceptual scaffolding into a real, anchored, spacious, two‑view‑compatible room‑level film set.

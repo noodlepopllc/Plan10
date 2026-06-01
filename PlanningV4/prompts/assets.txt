@@ -10,12 +10,10 @@ GLOBAL RULES:
 - Output MUST include ALL required closing braces and brackets. The JSON MUST be syntactically complete.
 
 JSON STRUCTURE:
-
 {
   "world": {
     "setting": string
   },
-
   "characters": [
     {
       "name": string,
@@ -34,13 +32,11 @@ JSON STRUCTURE:
       }
     }
   ],
-
   "locations": [
     {
       "name": string,
       "architectural_shell": string,
       "environment_objects": string,
-
       "zones": [
         {
           "zone_name": string,
@@ -62,26 +58,36 @@ SECTION RULES:
 
 2. BIOGRAPHY
 For each character:
-- Extract each field by its label (Name, Age, Gender, Race, Ethnicity/Species, Appearance, Clothing, Hair, Personality, Movement style, Distinctive physical traits).
+- Extract each field by its label exactly as written:
+  Name:
+  Age:
+  Gender:
+  Race:
+  Ethnicity:
+  Appearance:
+  Clothing:
+  Hair:
+  Personality:
+  Movement Style:
+  Distinctive physical traits:
 - Strip markdown formatting.
 - Store each field verbatim in the biography dictionary.
 
 3. LOCATIONS
-For each location:
-- name = location heading (markdown removed)
+For the room-level location:
+- name = the location heading text with markdown removed
 - architectural_shell = full Architectural Shell text, markdown removed
 - environment_objects = full Environment Objects text, markdown removed
 
 4. ZONES
 For each zone:
-- zone_name = zone heading with:
-    • ALL numbering removed (e.g., “1.”, “2.”, “3.”)
+- zone_name = the zone heading with:
+    • ALL numbering removed (e.g., “1.”, “2.”)
     • ALL markdown removed
-    • ONLY the first line kept if multiple lines exist
+    • ONLY the first line kept
     • Leading/trailing whitespace removed
 - definition = full Zone Definition text (markdown removed)
 - anchored_elements = full Anchored Elements text (markdown removed)
-
 
 PROHIBITIONS:
 - Do NOT output markdown.

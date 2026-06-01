@@ -17,6 +17,13 @@ RULES:
 8. If the narrative contains dialog, extract the exact quoted line.
 9. If the narrative contains no quotes, infer the dialog line from the narrative but DO NOT summarize — reconstruct the literal line.
 10. NEVER include narrative prose in actions or dialog.
+11. A beat is only valid if it contains at least one meaningful interaction:
+    - emotional interaction (character → character), OR
+    - physical interaction with an object or environment (character → object), OR
+    - physical interaction with another character (character → character).
+12. Filler or idle actions (hair adjusting, shifting weight, glancing) may only appear if the beat already contains a meaningful interaction.
+13. Do NOT output beats that consist solely of idle or filler actions.
+
 
 OUTPUT FORMAT:
 
