@@ -92,13 +92,11 @@ def CompositeScene(
         "medium": (
             "WAIST-UP FRAMING. Camera distance: tight medium. "
             "Subject scale: large. Face occupies upper third of frame. "
-            "NO legs, NO hips, NO full body, NO knees visible. "
             "Anchor face at vertical 0.32. Centered horizontally."
         ),
         "two_shot": (
             "Tight waist-up framing of two characters shoulder-to-shoulder. "
             "Camera distance: medium close. Subject scale: large. "
-            "NO full body, NO legs, NO knees visible."
         ),
         "wide": (
             "Full body shot. Character small in frame."
