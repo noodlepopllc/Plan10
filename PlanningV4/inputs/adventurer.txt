@@ -1,5 +1,5 @@
 Characters:
-- Elara: an elven adventurer, blonde hair, light leather armor, short green tunic, leather boots; confident, talkative, eager for connection.
+- Elara: a female elven adventurer, blonde hair, light leather armor, short green tunic, leather boots; confident, talkative, eager for connection.
 - Nadia: a young half‑elf barmaid, early 20s, red hair in a ponytail, tattered light blue dress, sandals; polite, reserved, easily overwhelmed by attention.
 
 Location:
