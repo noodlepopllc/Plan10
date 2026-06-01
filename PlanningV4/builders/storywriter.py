@@ -74,7 +74,8 @@ def run_prompt(prompt, system, pth):
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('-S', '--story', type=str, default=SEED)
+    parser.add_argument('-S', '--story', type=str, default='')
     parser.add_argument('-O', '--output', type=str, default='story.txt')
     args = parser.parse_args()
-    print(run_prompt(args.story, SYSTEM, args.output))
+    story = Path(args.story).read_text() if args.story else STORY
+    print(run_prompt(story, SYSTEM, args.output))
