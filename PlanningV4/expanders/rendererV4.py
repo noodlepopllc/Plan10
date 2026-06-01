@@ -359,7 +359,7 @@ Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
 
                 print(f"""
                 >> ALIAS: {motion_alias}
-                image_to_video {base_alias}_medium asset, "{motion_prompt}", Width: {WIDTH}, Height: {HEIGHT}, Duration: 1.2, Seed: {SEED}
+                image_to_video {base_alias}_medium asset, "{motion_prompt}", Width: {WIDTH}, Height: {HEIGHT}, Duration: 2, Seed: {SEED}
                 """)
 
                 # PASS B3: lip‑sync on top of dialog motion
