@@ -5,10 +5,10 @@ Each ACTION BEAT already contains:
 - beat number
 - zone
 - actions (list of strings)
-- facial_state
-- head_gesture
-- tone
-- posture
+- facial_state (per beat or per character, as provided)
+- head_gesture (per beat or per character, as provided)
+- tone (per beat or per character, as provided)
+- posture (PER-CHARACTER mapping)
 - dialog (list of {speaker, line})
 
 Your job is to:
@@ -29,10 +29,13 @@ You MUST output a JSON list with ONE object per ACTION BEAT:
     "beat": 1,
     "zone": "Zone Name",
     "actions": ["Action 1", "Action 2"],
-    "facial_state": "value",
-    "head_gesture": "value",
-    "tone": "value",
-    "posture": "value",
+    "facial_state": "value or object as provided",
+    "head_gesture": "value or object as provided",
+    "tone": "value or object as provided",
+    "posture": {
+      "CharacterName1": "standing",
+      "CharacterName2": "sitting"
+    },
     "dialog": [
       {"speaker": "CharacterName", "line": "Quoted dialog line."}
     ],

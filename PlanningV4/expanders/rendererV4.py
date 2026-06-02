@@ -8,6 +8,8 @@ WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
 SEED = int(os.environ.get("SEED", "123456"))
 
+POSTURE = {}
+
 # ---------------------------------------------------------
 # COMMAND BUFFER
 # ---------------------------------------------------------
@@ -142,11 +144,17 @@ def get_identity(assets, commands: CommandBuffer):
 # IDENTITY BINDING
 # ---------------------------------------------------------
 
-def build_identity_map(assets):
+def build_identity_map(assets, beat=None):
     names = {}
+    if beat:
+        for k, v in beat['posture'].items():
+            POSTURE[k] = v
     for char in assets['characters']:
         bio = char['biography']
-        desc = f"{char['name']} ({bio['gender']}, {bio['clothing']})"
+        if beat:
+            desc = f"{char['name']} {POSTURE[char['name']]}, {bio['gender']}, {bio['clothing'].replace('.','')},"
+        else:
+            desc = f"{char['name']} ({bio['gender']}, {bio['clothing']})"
         names[char['name']] = desc
     return names
 
@@ -260,10 +268,10 @@ def format_pose_block(pose_actions):
     return " and ".join(blocks)
 
 def render_beats_actions(assets, actions, mappings, commands: CommandBuffer):
-    names = build_identity_map(assets)
     char_aliases = {c['name']: f"CHAR_{normalize(c['name'])}" for c in assets['characters']}
 
     for beat in actions:
+        names = build_identity_map(assets, beat)
         pose_action = None
         if continuity := beat.get('continuity', None):
             pose_action = continuity.get('object_introductions', None)[0]["action"] if continuity.get('object_introductions', None) else None
@@ -433,10 +441,10 @@ def split_dialog_into_sentences(line):
     return cleaned
 
 def render_beats_dialog(assets, actions, mappings, commands: CommandBuffer):
-    names = build_identity_map(assets)
     char_aliases = {c['name']: f"CHAR_{normalize(c['name'])}" for c in assets['characters']}
 
     for beat in actions:
+        names = build_identity_map(assets, beat)
         dialog_list = [
             d for d in beat.get('dialog') or []
             if d.get("line") and d.get("line").strip().lower() not in ("", "none")
