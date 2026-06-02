@@ -69,7 +69,13 @@ def resolve_character_mentions(text: str, names: dict) -> str:
         if ident in rewritten:
             continue
         pattern = make_fuzzy_pattern(char)
-        rewritten = re.sub(pattern, ident, rewritten, flags=re.IGNORECASE)
+        rewritten = re.sub(
+            pattern,
+            lambda m: f"{m.group(0)} ({ident})",
+            rewritten,
+            flags=re.IGNORECASE
+        )
+
     return rewritten
 
 # ---------------------------------------------------------
