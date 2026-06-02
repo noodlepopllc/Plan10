@@ -218,7 +218,7 @@ def bind_identity_first_only(actions, names):
 
             if not used_identity[first_char]:
                 used_identity[first_char] = True
-                rewritten = identity + " " + parts[1] if len(parts) > 1 else identity
+                rewritten = f"{first_char} ({strip_name_from_ident(first_char, identity)}) {parts[1]}" if len(parts) > 1 else f"{first_char} ({strip_name_from_ident(first_char, identity)})"
 
                 if first_char not in pose_actions:
                     pose_actions[first_char] = rewritten
