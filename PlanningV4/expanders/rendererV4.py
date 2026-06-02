@@ -65,6 +65,13 @@ def make_fuzzy_pattern(name: str) -> str:
     pattern += r"(?:['’]s)"
     return pattern
 
+def strip_name_from_ident(name, ident):
+    # Remove the name only if it appears at the start
+    if ident.lower().startswith(name.lower()):
+        return ident[len(name):].lstrip(" ,")
+    return ident
+
+
 def resolve_character_mentions(text: str, names: dict) -> str:
     rewritten = text
     for char, ident in names.items():
@@ -73,10 +80,11 @@ def resolve_character_mentions(text: str, names: dict) -> str:
         pattern = make_fuzzy_pattern(char)
         rewritten = re.sub(
             pattern,
-            lambda m: f"{m.group(0)} ({ident})",
+            lambda m: f"{m.group(0)} ({strip_name_from_ident(char, ident)})",
             rewritten,
             flags=re.IGNORECASE
         )
+
 
 
     return rewritten
