@@ -330,6 +330,13 @@ def _get_per_speaker_value(beat, key, speaker, default):
     return val
 
 def split_dialog_into_sentences(line):
+    text = " ".join(line.split()).strip()
+    if not text:
+        return []
+    return [text]
+
+
+def split_dialog_into_sentences_old(line):
     import re
 
     text = " ".join(line.split()).strip()
