@@ -330,10 +330,31 @@ def _get_per_speaker_value(beat, key, speaker, default):
     return val
 
 def split_dialog_into_sentences(line):
+    import re
+
+    # Normalize whitespace
     text = " ".join(line.split()).strip()
     if not text:
         return []
-    return [text]
+
+    # Extract quoted dialog segments
+    quoted = re.findall(r'"(.*?)"', text)
+    if not quoted:
+        return [text]
+
+    # If only one quoted segment → return whole line
+    if len(quoted) == 1:
+        return [quoted[0].strip()]
+
+    # If first segment is 1 word → merge with next
+    first = quoted[0].strip()
+    if len(first.split()) <= 1:
+        merged = f"{first} {quoted[1].strip()}"
+        return [merged]
+
+    # Otherwise return each quoted segment as-is
+    return [q.strip() for q in quoted]
+
 
 
 def split_dialog_into_sentences_old(line):
