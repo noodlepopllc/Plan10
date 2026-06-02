@@ -146,13 +146,14 @@ def get_identity(assets, commands: CommandBuffer):
 
 def build_identity_map(assets, beat=None):
     names = {}
+    print(beat)
     if beat:
         for k, v in beat['posture'].items():
             POSTURE[k] = v
     for char in assets['characters']:
         bio = char['biography']
         if beat:
-            desc = f"{char['name']} {POSTURE[char['name']]}, {bio['gender']}, {bio['clothing'].replace('.','')},"
+            desc = f"{char['name']} {POSTURE.get(char['name'],'neutral')}, {bio['gender']}, {bio['clothing'].replace('.','')},"
         else:
             desc = f"{char['name']} ({bio['gender']}, {bio['clothing']})"
         names[char['name']] = desc
