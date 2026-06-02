@@ -74,18 +74,19 @@ def strip_name_from_ident(name, ident):
 
 def resolve_character_mentions(text: str, names: dict) -> str:
     rewritten = text
+
     for char, ident in names.items():
-        if ident in rewritten:
-            continue
         pattern = make_fuzzy_pattern(char)
-        rewritten = re.sub(
-            pattern,
-            lambda m: f"{m.group(0)} ({strip_name_from_ident(char, ident)})",
-            rewritten,
-            flags=re.IGNORECASE
-        )
+
+        def repl(m):
+            # Always rewrite the matched name
+            clean_ident = strip_name_from_ident(char, ident)
+            return f"{m.group(0)} ({clean_ident})"
+
+        rewritten = re.sub(pattern, repl, rewritten, flags=re.IGNORECASE)
 
     return rewritten
+
 
 # ---------------------------------------------------------
 # ZONE LABEL NORMALIZATION + MAPPING
