@@ -146,7 +146,6 @@ def get_identity(assets, commands: CommandBuffer):
 
 def build_identity_map(assets, beat=None):
     names = {}
-    print(beat)
     if beat:
         for k, v in beat['posture'].items():
             POSTURE[k] = v
