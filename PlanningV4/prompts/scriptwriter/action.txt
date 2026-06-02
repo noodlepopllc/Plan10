@@ -70,6 +70,8 @@ CORE RULES
 
 14. DO NOT output beats that consist solely of idle or filler actions.
 
+
+
 ============================================================
 OUTPUT FORMAT
 ============================================================

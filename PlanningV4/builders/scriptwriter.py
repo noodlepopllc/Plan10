@@ -8,6 +8,7 @@ BIOGRAPHY = Path('./PlanningV4/prompts/scriptwriter/biography.txt').read_text()
 ACTION = Path('./PlanningV4/prompts/scriptwriter/action.txt').read_text()
 STORY = Path('./PlanningV4/prompts/scriptwriter/story.txt').read_text()
 NARRATOR = Path('./PlanningV4/prompts/scriptwriter/narratorV3.txt').read_text()
+VALIDATOR = Path('./PlanningV4/prompts/scriptwriter/validator.txt').read_text()
 
 
 def run_prompt(prompt, system, pth):
@@ -37,8 +38,10 @@ def build_script(story, outpath):
         ACTION,
         f'{outpath}/action_beats.txt')
 
+    validator = run_prompt(action_beats, VALIDATOR, f'{outpath}/validated.txt')
+
     complete = run_prompt(
-        f'World: {biography}, Action Beats: {action_beats}, Narrative: {narrative}',
+        f'World: {biography}, Action Beats: {validator}, Narrative: {narrative}',
         STORY,
         f'{outpath}/complete.json')
     
