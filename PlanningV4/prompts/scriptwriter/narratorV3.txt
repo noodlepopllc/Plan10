@@ -48,6 +48,49 @@ If NO such cues are present, you MUST output:
 [tone: neutral]
 [posture: neutral]
 
+⭐ The final posture rule (the one that fixes everything)
+
+Posture = the body’s base physical configuration.  
+It must be one of:
+
+    standing
+
+    sitting
+
+    kneeling
+
+    crouching
+
+    lying/prone
+
+    leaning (against a surface) — only when explicitly stated
+
+Actions = micro‑movements layered on top of posture.  
+Examples:
+
+    lean forward
+
+    lean back
+
+    recoil
+
+    tremble
+
+    flinch
+
+    gesture
+
+    raise hand
+
+    lower hand
+
+    look away
+
+    look down
+
+These are NOT posture.
+These are actions.
+
 ⭐ ACTION RULE
 
 Each paragraph MUST begin with the acting character’s name and a single macro‑action.
