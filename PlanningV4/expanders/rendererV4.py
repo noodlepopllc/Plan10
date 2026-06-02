@@ -184,8 +184,11 @@ def bind_identity(action: str, names: dict) -> str:
         if soft_normalize(char) == first_clean:
             parts = action.split(" ", 1)
             if len(parts) > 1:
-                return f"{ident} ({parts[1]})"
-            return ident
+                clean_ident = strip_name_from_ident(char, ident)
+                return f"{char} ({clean_ident}) {parts[1]}"
+
+            clean_ident = strip_name_from_ident(char, ident)
+            return f"{char} ({clean_ident})"
     return action
 
 def bind_identity_first_only(actions, names):
