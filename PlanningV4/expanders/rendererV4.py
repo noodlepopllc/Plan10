@@ -42,7 +42,7 @@ class CommandBuffer:
                 print(c)
 
 # ---------------------------------------------------------
-# NORMALIZATION / FUZZY MATCHING
+# NORMALIZATION / MATCHING
 # ---------------------------------------------------------
 
 def normalize(name: str) -> str:
@@ -53,40 +53,28 @@ def soft_normalize(text: str) -> str:
     return re.sub(r"[^A-Za-z0-9]", "", text).lower()
 
 def make_fuzzy_pattern(name: str) -> str:
-    parts = []
-    for ch in name:
-        if ch.isalnum():
-            parts.append(re.escape(ch) + r"[^A-Za-z0-9]*")
-        else:
-            parts.append(re.escape(ch) + r"*")
-    pattern = "".join(parts)
-
-    # Force possessive 's to be matched as a single atomic unit
-    pattern += r"(?:['’]s)"
-    return pattern
+    # Match whole name, optional possessive
+    return rf"\b{re.escape(name)}\b(?:['’]s)?"
 
 def strip_name_from_ident(name, ident):
-    # Remove the name only if it appears at the start
-    if ident.lower().startswith(name.lower()):
-        return ident[len(name):].lstrip(" ,")
+    # Identity map no longer contains the name, so this is trivial
     return ident
 
+# ---------------------------------------------------------
+# SINGLE IDENTITY BINDER
+# ---------------------------------------------------------
 
 def resolve_character_mentions(text: str, names: dict) -> str:
     rewritten = text
-
     for char, ident in names.items():
         pattern = make_fuzzy_pattern(char)
-
-        def repl(m):
-            # Always rewrite the matched name
-            clean_ident = strip_name_from_ident(char, ident)
-            return f"{m.group(0)} ({clean_ident})"
-
-        rewritten = re.sub(pattern, repl, rewritten, flags=re.IGNORECASE)
-
+        rewritten = re.sub(
+            pattern,
+            lambda m: f"{m.group(0)} ({ident})",
+            rewritten,
+            flags=re.IGNORECASE
+        )
     return rewritten
-
 
 # ---------------------------------------------------------
 # ZONE LABEL NORMALIZATION + MAPPING
@@ -157,7 +145,7 @@ def get_identity(assets, commands: CommandBuffer):
         commands.add_identity(cmd)
 
 # ---------------------------------------------------------
-# IDENTITY BINDING
+# IDENTITY MAP (description only)
 # ---------------------------------------------------------
 
 def build_identity_map(assets, beat=None):
@@ -165,30 +153,28 @@ def build_identity_map(assets, beat=None):
     if beat:
         for k, v in beat['posture'].items():
             POSTURE[k] = v
+
     for char in assets['characters']:
         bio = char['biography']
-        if beat:
-            desc = f"{char['name']} {POSTURE.get(char['name'],'neutral')}, {bio['gender']}, {bio['clothing'].replace('.','')},"
+
+        posture = POSTURE.get(char['name'], 'neutral')
+        gender = bio['gender']
+        clothing = bio['clothing'].replace('.', '')
+
+        # Hair is optional — include only if present and not redundant
+        hair = bio.get('hair', '').strip()
+        if hair:
+            desc = f"{posture}, {gender}, {clothing}, {hair}"
         else:
-            desc = f"{char['name']} ({bio['gender']}, {bio['clothing']})"
+            desc = f"{posture}, {gender}, {clothing}"
+
         names[char['name']] = desc
+
     return names
 
-def bind_identity(action: str, names: dict) -> str:
-    if not action:
-        return action
-    first_token = action.split(" ", 1)[0]
-    first_clean = soft_normalize(first_token)
-    for char, ident in names.items():
-        if soft_normalize(char) == first_clean:
-            parts = action.split(" ", 1)
-            if len(parts) > 1:
-                clean_ident = strip_name_from_ident(char, ident)
-                return f"{char} ({clean_ident}) {parts[1]}"
-
-            clean_ident = strip_name_from_ident(char, ident)
-            return f"{char} ({clean_ident})"
-    return action
+# ---------------------------------------------------------
+# POSE EXTRACTOR (NO IDENTITY LOGIC)
+# ---------------------------------------------------------
 
 def bind_identity_first_only(actions, names):
     if not actions:
@@ -205,33 +191,21 @@ def bind_identity_first_only(actions, names):
         if not action:
             continue
 
-        # Determine which character this action belongs to
         parts = action.split(" ", 1)
         first_word_raw = parts[0]
-        first_char = None
 
+        # Determine which character this action belongs to
         for char in names:
             if soft_normalize(char) == soft_normalize(first_word_raw):
-                first_char = char
+                if char not in pose_actions:
+                    pose_actions[char] = action
                 break
 
-        # First action for each character becomes the pose
-        if first_char and first_char not in pose_actions:
-            pose_actions[first_char] = action
+        # Identity binding happens ONLY here
+        motion_parts.append(resolve_character_mentions(action, names))
 
-        # Rewrite ALL character mentions (including the first one)
-        rewritten = resolve_character_mentions(action, names)
-        motion_parts.append(rewritten)
-
-    # Build motion string
-    motion = (
-        motion_parts[0]
-        if len(motion_parts) == 1
-        else motion_parts[0] + ", " + ", ".join(motion_parts[1:])
-    )
-
+    motion = ", ".join(motion_parts)
     return pose_actions, motion
-
 
 # ---------------------------------------------------------
 # ZONE BACKGROUNDS
@@ -314,7 +288,7 @@ def render_beats_actions(assets, actions, mappings, commands: CommandBuffer):
                 (a for a in beat_actions if soft_normalize(a.split(" ", 1)[0]) == soft_normalize(char)),
                 beat_actions[0]
             )
-            char_pose = bind_identity(char_action, names)
+            char_pose = resolve_character_mentions(char_action, names)
             _, motion_actions = bind_identity_first_only(beat_actions, names)
 
             img_cmd = f"""
@@ -332,11 +306,6 @@ image_to_video BEAT_{beat["beat"]}_{normalize(char)}_ACTION asset, {motion_actio
         pose_action_map, motion_actions = bind_identity_first_only(beat_actions, names)
         char_assets = " and ".join(f"{char_aliases[c]} asset" for c in chars_in_actions)
 
-        for c in chars_in_actions:
-            if c not in pose_action_map:
-                identity = names[c]
-                pose_action_map[c] = f"{identity} stands neutrally"
-
         pose_block = format_pose_block(pose_action_map)
 
         img_cmd = f"""
@@ -351,7 +320,7 @@ image_to_video BEAT_{beat["beat"]}_WIDE_ACTION asset, {motion_actions}, Width: {
         commands.add_video(vid_cmd)
 
 # ---------------------------------------------------------
-# DIALOG CLOSEUPS (PASS B, DIALOG‑FORWARD)
+# DIALOG CLOSEUPS (PASS B)
 # ---------------------------------------------------------
 
 def _get_per_speaker_value(beat, key, speaker, default):
