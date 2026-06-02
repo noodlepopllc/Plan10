@@ -85,8 +85,6 @@ def resolve_character_mentions(text: str, names: dict) -> str:
             flags=re.IGNORECASE
         )
 
-
-
     return rewritten
 
 # ---------------------------------------------------------
@@ -198,7 +196,6 @@ def bind_identity_first_only(actions, names):
     if isinstance(actions, str):
         actions = [actions]
 
-    used_identity = {char: False for char in names}
     pose_actions = {}
     motion_parts = []
 
@@ -207,6 +204,7 @@ def bind_identity_first_only(actions, names):
         if not action:
             continue
 
+        # Determine which character this action belongs to
         parts = action.split(" ", 1)
         first_word_raw = parts[0]
         first_char = None
@@ -216,25 +214,23 @@ def bind_identity_first_only(actions, names):
                 first_char = char
                 break
 
-        if first_char is not None:
-            identity = names[first_char]
+        # First action for each character becomes the pose
+        if first_char and first_char not in pose_actions:
+            pose_actions[first_char] = action
 
-            if not used_identity[first_char]:
-                used_identity[first_char] = True
-                rewritten = f"{first_char} ({strip_name_from_ident(first_char, identity)}) {parts[1]}" if len(parts) > 1 else f"{first_char} ({strip_name_from_ident(first_char, identity)})"
-
-                if first_char not in pose_actions:
-                    pose_actions[first_char] = rewritten
-            else:
-                rewritten = parts[1] if len(parts) > 1 else ""
-        else:
-            rewritten = action
-
-        rewritten = resolve_character_mentions(rewritten, names)
+        # Rewrite ALL character mentions (including the first one)
+        rewritten = resolve_character_mentions(action, names)
         motion_parts.append(rewritten)
 
-    motion = motion_parts[0] if len(motion_parts) == 1 else motion_parts[0] + ", " + ", ".join(motion_parts[1:])
+    # Build motion string
+    motion = (
+        motion_parts[0]
+        if len(motion_parts) == 1
+        else motion_parts[0] + ", " + ", ".join(motion_parts[1:])
+    )
+
     return pose_actions, motion
+
 
 # ---------------------------------------------------------
 # ZONE BACKGROUNDS
