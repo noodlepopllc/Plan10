@@ -271,6 +271,7 @@ def render_beats_actions(assets, actions, mappings, commands: CommandBuffer):
             pose_action = beat['actions'][0]
 
         beat_actions = [pose_action] + [a for a in beat['actions'] if a != pose_action] or []
+        beat_actions = [a for a in beat_actions if 'speak' not in a and 'voice' not in a]
         if not beat_actions:
             continue
 
@@ -355,7 +356,7 @@ def split_dialog_into_sentences(line):
     natural_units = []
     for unit in major_units:
         words = unit.split()
-        if len(words) <= 12:
+        if len(words) <= 16:
             natural_units.append(unit)
             continue
 
@@ -369,7 +370,7 @@ def split_dialog_into_sentences(line):
         cur = natural_units[i].strip()
         wc = len(cur.split())
 
-        if wc >= 5 or cur.endswith(('.', '?', '!')):
+        if wc >= 8 or cur.endswith(('.', '?', '!')):
             merged.append(cur)
             i += 1
             continue
@@ -387,7 +388,7 @@ def split_dialog_into_sentences(line):
     final_units = []
     for unit in merged:
         words = unit.split()
-        if len(words) <= 12:
+        if len(words) <= 16:
             final_units.append(unit)
             continue
 
