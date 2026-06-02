@@ -60,7 +60,9 @@ def make_fuzzy_pattern(name: str) -> str:
         else:
             parts.append(re.escape(ch) + r"*")
     pattern = "".join(parts)
-    pattern += r"(?:['’]s)?"
+
+    # Force possessive 's to be matched as a single atomic unit
+    pattern += r"(?:['’]s)"
     return pattern
 
 def resolve_character_mentions(text: str, names: dict) -> str:
@@ -75,6 +77,7 @@ def resolve_character_mentions(text: str, names: dict) -> str:
             rewritten,
             flags=re.IGNORECASE
         )
+
 
     return rewritten
 
