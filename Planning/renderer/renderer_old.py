@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import os, sys, json, re
+import os, sys, json, re, unicodedata
 sys.path.append('./lib')
 from config import load_environ
 
@@ -9,6 +9,29 @@ HEIGHT = int(os.environ.get("HEIGHT", "480"))
 SEED = int(os.environ.get("SEED", "123456"))
 
 POSTURE = {}
+
+# ---------------------------------------------------------
+# CANONICAL CHARACTER NAME NORMALIZATION (A2)
+# ---------------------------------------------------------
+
+def canonical(name: str) -> str:
+    """
+    Convert any character name into a stable ASCII-only identity key.
+    Removes all symbols, punctuation, unicode variants.
+    Keeps only A-Z and 0-9.
+    Uppercase for stability.
+    """
+    if not name:
+        return ""
+
+    # Normalize unicode to NFKD and strip accents
+    name = unicodedata.normalize("NFKD", name)
+
+    # Keep only ASCII letters and digits
+    name = "".join(ch for ch in name if ch.isascii() and ch.isalnum())
+
+    return name.upper()
+
 
 # ---------------------------------------------------------
 # COMMAND BUFFER
@@ -41,6 +64,7 @@ class CommandBuffer:
             for c in self.videos:
                 print(c)
 
+
 # ---------------------------------------------------------
 # NORMALIZATION / MATCHING
 # ---------------------------------------------------------
@@ -53,12 +77,8 @@ def soft_normalize(text: str) -> str:
     return re.sub(r"[^A-Za-z0-9]", "", text).lower()
 
 def make_fuzzy_pattern(name: str) -> str:
-    # Match whole name, optional possessive
     return rf"\b{re.escape(name)}\b(?:['’]s)?"
 
-def strip_name_from_ident(name, ident):
-    # Identity map no longer contains the name, so this is trivial
-    return ident
 
 # ---------------------------------------------------------
 # SINGLE IDENTITY BINDER
@@ -75,6 +95,7 @@ def resolve_character_mentions(text: str, names: dict) -> str:
             flags=re.IGNORECASE
         )
     return rewritten
+
 
 # ---------------------------------------------------------
 # ZONE LABEL NORMALIZATION + MAPPING
@@ -111,6 +132,7 @@ def create_zone_mapping(registry, story):
 
     return mappings
 
+
 # ---------------------------------------------------------
 # RESOLVE BACKGROUND ALIAS
 # ---------------------------------------------------------
@@ -120,6 +142,7 @@ def resolve_zone_alias(beat_zone: str, mappings: dict) -> str:
         if mapped_beat_zone == beat_zone:
             return f"{normalize(mapped_beat_zone)}_BACKGROUND"
     return f"{normalize(beat_zone)}_BACKGROUND"
+
 
 # ---------------------------------------------------------
 # CHARACTER SHEETS + VOICES
@@ -144,36 +167,114 @@ def get_identity(assets, commands: CommandBuffer):
         )
         commands.add_identity(cmd)
 
+
 # ---------------------------------------------------------
-# IDENTITY MAP (description only)
+# IDENTITY MAP (CANONICAL KEYS)
 # ---------------------------------------------------------
 
 def build_identity_map(assets, beat=None):
     names = {}
+
     if beat:
         for k, v in beat['posture'].items():
-            POSTURE[k] = v
+            POSTURE[canonical(k)] = v
 
     for char in assets['characters']:
         bio = char['biography']
+        ckey = canonical(char['name'])
 
-        posture = POSTURE.get(char['name'], 'neutral')
+        posture = POSTURE.get(ckey, 'neutral')
         gender = bio['gender']
         clothing = bio['clothing'].replace('.', '')
-
-        # Hair is optional — include only if present and not redundant
         hair = bio.get('hair', '').strip()
+
         if hair:
             desc = f"{posture}, {gender}, {clothing}, {hair}"
         else:
             desc = f"{posture}, {gender}, {clothing}"
 
-        names[char['name']] = desc
+        names[ckey] = desc
 
     return names
 
+
 # ---------------------------------------------------------
-# POSE EXTRACTOR (NO IDENTITY LOGIC)
+# PRONOUN RESOLUTION (REFLEXIVE-SAFE)
+# ---------------------------------------------------------
+
+def resolve_pronouns(text: str, names: dict):
+    if len(names) != 2:
+        return text
+
+    chars = list(names.keys())
+    c1, c2 = chars[0], chars[1]
+
+    def get_gender(desc):
+        parts = [p.strip().lower() for p in desc.split(",")]
+        if len(parts) >= 2:
+            return parts[1]
+        return ""
+
+    g1 = get_gender(names[c1])
+    g2 = get_gender(names[c2])
+
+    pronoun_map = {}
+
+    # Female
+    if g1 == "female":
+        pronoun_map["her"] = c1
+        pronoun_map["hers"] = c1
+    if g2 == "female":
+        pronoun_map["her"] = c2
+        pronoun_map["hers"] = c2
+
+    # Male (NO "his" to avoid reflexive corruption)
+    if g1 == "male":
+        pronoun_map["him"] = c1
+    if g2 == "male":
+        pronoun_map["him"] = c2
+
+    # Neutral plural
+    pronoun_map["them"] = c2
+    pronoun_map["their"] = c2
+
+    for p, target in pronoun_map.items():
+        text = re.sub(rf"\b{p}\b", target, text, flags=re.IGNORECASE)
+
+    return text
+
+
+# ---------------------------------------------------------
+# BEAT-SCOPED CHARACTER DETECTION
+# ---------------------------------------------------------
+
+def get_beat_characters(beat, all_names):
+    chars = set()
+
+    # posture
+    for c in beat.get("posture", {}).keys():
+        c_norm = canonical(c)
+        if c_norm in all_names:
+            chars.add(c_norm)
+
+    # actions
+    for a in beat.get("actions", []):
+        ca = soft_normalize(a)
+        for c in all_names:
+            if soft_normalize(c) in ca:
+                chars.add(c)
+
+    # dialog
+    for d in beat.get("dialog", []):
+        speaker = canonical(d.get("speaker"))
+        if speaker in all_names:
+            chars.add(speaker)
+
+    return list(chars)
+
+
+# ---------------------------------------------------------
+# POSE EXTRACTOR
 # ---------------------------------------------------------
 
 def bind_identity_first_only(actions, names):
@@ -192,20 +293,20 @@ def bind_identity_first_only(actions, names):
             continue
 
         parts = action.split(" ", 1)
-        first_word_raw = parts[0]
+        first_word_raw = canonical(parts[0])
 
-        # Determine which character this action belongs to
         for char in names:
             if soft_normalize(char) == soft_normalize(first_word_raw):
                 if char not in pose_actions:
                     pose_actions[char] = action
                 break
 
-        # Identity binding happens ONLY here
-        motion_parts.append(resolve_character_mentions(action, names))
+        resolved = resolve_character_mentions(action, names)
+        motion_parts.append(resolved)
 
     motion = ", ".join(motion_parts)
     return pose_actions, motion
+
 
 # ---------------------------------------------------------
 # ZONE BACKGROUNDS
@@ -237,18 +338,29 @@ preserve natural perspective and room geometry,
 {prompt}, Seed: {SEED}"""
             commands.add_image(cmd)
 
+
 # ---------------------------------------------------------
-# ACTION RENDERING (PASS A)
+# ACTION RENDERING
 # ---------------------------------------------------------
 
 def _get_chars_in_actions_only(beat_actions, names):
     chars = []
+    pronouns = {"her", "him", "them", "their", "hers", "the other", "each other", "one another"}
+
     for a in beat_actions:
         clean_a = soft_normalize(a)
+
         for char in names:
             if soft_normalize(char) in clean_a and char not in chars:
                 chars.append(char)
+
+        lower = a.lower()
+        if any(p in lower for p in pronouns):
+            if len(names) >= 2:
+                return list(names.keys())
+
     return chars
+
 
 def format_pose_block(pose_actions):
     blocks = []
@@ -258,11 +370,18 @@ def format_pose_block(pose_actions):
         blocks.append(f"{char} asset ({pose})")
     return " and ".join(blocks)
 
+
 def render_beats_actions(assets, actions, mappings, commands: CommandBuffer):
-    char_aliases = {c['name']: f"CHAR_{normalize(c['name'])}" for c in assets['characters']}
+    char_aliases = {canonical(c['name']): f"CHAR_{normalize(c['name'])}" for c in assets['characters']}
 
     for beat in actions:
-        names = build_identity_map(assets, beat)
+        all_names = build_identity_map(assets, beat)
+        beat_chars = get_beat_characters(beat, all_names)
+        if not beat_chars:
+            continue
+
+        names = {c: all_names[c] for c in beat_chars}
+
         pose_action = None
         if continuity := beat.get('continuity', None):
             pose_action = continuity.get('object_introductions', None)[0]["action"] if continuity.get('object_introductions', None) else None
@@ -274,7 +393,9 @@ def render_beats_actions(assets, actions, mappings, commands: CommandBuffer):
         if not beat_actions:
             continue
 
-        chars_in_actions = _get_chars_in_actions_only(beat_actions, names)
+        resolved_actions = [resolve_pronouns(a, names) for a in beat_actions]
+
+        chars_in_actions = _get_chars_in_actions_only(resolved_actions, names)
         if not chars_in_actions:
             continue
 
@@ -285,11 +406,11 @@ def render_beats_actions(assets, actions, mappings, commands: CommandBuffer):
             char_alias = char_aliases[char]
 
             char_action = next(
-                (a for a in beat_actions if soft_normalize(a.split(" ", 1)[0]) == soft_normalize(char)),
-                beat_actions[0]
+                (a for a in resolved_actions if soft_normalize(canonical(a.split(" ", 1)[0])) == soft_normalize(char)),
+                resolved_actions[0]
             )
             char_pose = resolve_character_mentions(char_action, names)
-            _, motion_actions = bind_identity_first_only(beat_actions, names)
+            _, motion_actions = bind_identity_first_only(resolved_actions, names)
 
             img_cmd = f"""
 >> ALIAS: BEAT_{beat["beat"]}_{normalize(char)}_ACTION
@@ -303,7 +424,7 @@ image_to_video BEAT_{beat["beat"]}_{normalize(char)}_ACTION asset, {motion_actio
             commands.add_video(vid_cmd)
             continue
 
-        pose_action_map, motion_actions = bind_identity_first_only(beat_actions, names)
+        pose_action_map, motion_actions = bind_identity_first_only(resolved_actions, names)
         char_assets = " and ".join(f"{char_aliases[c]} asset" for c in chars_in_actions)
 
         pose_block = format_pose_block(pose_action_map)
@@ -319,8 +440,9 @@ image_to_video BEAT_{beat["beat"]}_WIDE_ACTION asset, {motion_actions}, Width: {
         commands.add_image(img_cmd)
         commands.add_video(vid_cmd)
 
+
 # ---------------------------------------------------------
-# DIALOG CLOSEUPS (PASS B)
+# DIALOG RENDERING
 # ---------------------------------------------------------
 
 def _get_per_speaker_value(beat, key, speaker, default):
@@ -331,131 +453,23 @@ def _get_per_speaker_value(beat, key, speaker, default):
 
 def split_dialog_into_sentences(line):
     import re
-
-    # Normalize whitespace
     text = " ".join(line.split()).strip()
     if not text:
         return []
-
-    # Extract quoted dialog segments
     quoted = re.findall(r'"(.*?)"', text)
     if not quoted:
         return [text]
-
-    # If only one quoted segment → return whole line
     if len(quoted) == 1:
         return [quoted[0].strip()]
-
-    # If first segment is 1 word → merge with next
     first = quoted[0].strip()
     if len(first.split()) <= 1:
         merged = f"{first} {quoted[1].strip()}"
         return [merged]
-
-    # Otherwise return each quoted segment as-is
     return [q.strip() for q in quoted]
 
 
-
-def split_dialog_into_sentences_old(line):
-    import re
-
-    text = " ".join(line.split()).strip()
-    if not text:
-        return []
-
-    major_parts = re.split(r'([.!?…;])', text)
-    major_units = []
-    for i in range(0, len(major_parts) - 1, 2):
-        unit = (major_parts[i].strip() + major_parts[i+1]).strip()
-        if unit:
-            major_units.append(unit)
-
-    if not major_units:
-        major_units = [text]
-
-    clause_regex = r",|;| but | and | so | because | although | though | however "
-    natural_units = []
-    for unit in major_units:
-        words = unit.split()
-        if len(words) <= 16:
-            natural_units.append(unit)
-            continue
-
-        sub = re.split(clause_regex, unit)
-        sub = [s.strip() for s in sub if s.strip()]
-        natural_units.extend(sub)
-
-    merged = []
-    i = 0
-    while i < len(natural_units):
-        cur = natural_units[i].strip()
-        wc = len(cur.split())
-
-        if wc >= 8 or cur.endswith(('.', '?', '!')):
-            merged.append(cur)
-            i += 1
-            continue
-
-        if i + 1 < len(natural_units):
-            merged.append(cur + " " + natural_units[i+1].strip())
-            i += 2
-        else:
-            if merged:
-                merged[-1] = merged[-1] + " " + cur
-            else:
-                merged.append(cur)
-            i += 1
-
-    final_units = []
-    for unit in merged:
-        words = unit.split()
-        if len(words) <= 16:
-            final_units.append(unit)
-            continue
-
-        start = 0
-        while start < len(words):
-            end = min(start + 10, len(words))
-            chunk = " ".join(words[start:end])
-            final_units.append(chunk)
-            start = end
-
-    final_units = [u.strip() for u in final_units if u.strip()]
-
-    bad_endings = {"but", "and", "or", "so", "but by", "and by"}
-    cleaned = []
-    skip_next = False
-
-    for i, unit in enumerate(final_units):
-        if skip_next:
-            skip_next = False
-            continue
-
-        words = unit.split()
-        if not words:
-            continue
-
-        last_one = words[-1]
-        last_two = " ".join(words[-2:]) if len(words) >= 2 else last_one
-
-        if last_one in bad_endings or last_two in bad_endings:
-            if i + 1 < len(final_units):
-                merged_unit = unit + " " + final_units[i+1]
-                cleaned.append(merged_unit.strip())
-                skip_next = True
-            else:
-                if cleaned:
-                    cleaned[-1] = cleaned[-1] + " " + unit
-                else:
-                    cleaned.append(unit)
-        else:
-            cleaned.append(unit)
-
-    return cleaned
-
 def render_beats_dialog(assets, actions, mappings, commands: CommandBuffer):
-    char_aliases = {c['name']: f"CHAR_{normalize(c['name'])}" for c in assets['characters']}
+    char_aliases = {canonical(c['name']): f"CHAR_{normalize(c['name'])}" for c in assets['characters']}
 
     for beat in actions:
         names = build_identity_map(assets, beat)
@@ -469,7 +483,7 @@ def render_beats_dialog(assets, actions, mappings, commands: CommandBuffer):
         zone_alias = resolve_zone_alias(beat['zone'], mappings)
 
         for idx, dlg in enumerate(dialog_list, start=1):
-            speaker = dlg['speaker']
+            speaker = canonical(dlg['speaker'])
             line = dlg['line']
 
             if speaker not in char_aliases:
@@ -488,9 +502,8 @@ def render_beats_dialog(assets, actions, mappings, commands: CommandBuffer):
                 motion_alias = f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_MOTION_{idx:02d}_{s_idx:02d}"
                 final_alias  = f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_VIDEO_{idx:02d}_{s_idx:02d}"
 
-                dialog_pose_prompt_close = f"{speaker} ({tone} tone, facial expression {facial})"
-
-                dialog_pose_prompt = f"{speaker} ({tone} tone, facial expression {facial}, head gesture {head})"
+                dialog_pose_prompt_close = f"{dlg['speaker']} ({tone} tone, facial expression {facial})"
+                dialog_pose_prompt = f"{dlg['speaker']} ({tone} tone, facial expression {facial}, head gesture {head})"
 
                 img_close = f"""
 >> ALIAS: {base_alias}
@@ -510,7 +523,7 @@ Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
                 commands.add_image(img_medium)
 
                 motion_prompt = (
-                    f"{speaker}, calm and still, "
+                    f"{dlg['speaker']}, calm and still, "
                     f"lips gently closed, jaw unmoving, "
                     f"eyes with tiny natural micro‑saccades only, "
                     f"stable head position, minimal idle motion, "
@@ -533,6 +546,7 @@ Width: {WIDTH}, Height: {HEIGHT}, Seed: {SEED}
 """
                 commands.add_video(final_cmd)
 
+
 # ---------------------------------------------------------
 # MAIN
 # ---------------------------------------------------------
@@ -553,12 +567,13 @@ def main():
 
     render_beats_actions(assets, actions, mappings, commands)
     render_beats_dialog(assets, actions, mappings, commands)
-    
-    if len(sys.argv) > 2 and sys.argv[2] in ("images","all","videos", "identity"):
+
+    if len(sys.argv) > 2 and sys.argv[2] in ("images", "all", "videos", "identity"):
         mode = sys.argv[2]
     else:
         mode = os.environ.get("MODE", "all")
     commands.dump(mode)
+
 
 if __name__ == "__main__":
     main()
