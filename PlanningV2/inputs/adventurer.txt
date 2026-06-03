@@ -1,10 +1,19 @@
+Characters:
+- Elara: a female elven adventurer, blonde hair, light leather armor, short green tunic, leather boots; confident, talkative, eager for connection.
+- Nadia: a young half‑elf barmaid, early 20s, red hair in a ponytail, tattered light blue dress, sandals; polite, reserved, easily overwhelmed by attention.
 
-This is a medieval fantasy scene, the clothing and technology should reflect what existed in the 1400s.
+Location:
+A medieval fantasy tavern in the style of the 1400s: a large open room with wooden benches and tables, a bar serving mead, a small kitchen with bread and porridge, and a staircase leading to a few rooms for rent.
 
-Elara is an elven adventurer (blonde hair female, light leather armor, short green tunic worn as a dress underneath, leather boots) who is sitting in the fantasy setting tavern. 
-Nadia the local bar maid of the tavern (early 20s, Asian half elf, red hair in ponytail, she looks beautiful in a tattered short light blue dress with sandals). 
-Nadia brings a beer to Elara. 
-Nadia captures Elara's eye and she begins to flirt with the young maiden. Boasting about her latest adventure. 
-Nadia politely laughs and smiles beautifully. Nadia in response tells a joke and Elara laughs as if it is the funniest thing she has ever heard. 
-It gets awkward and Nadia walks off. 
-Elara frowns and then takes a deep drink from her the tankard of her beer, then closes her eyes and smiles as if remembering another maiden in another town. 
+Motivations:
+- Elara wants friendly conversation and someone to listen to her stories.
+- Nadia wants to do her job efficiently and avoid uncomfortable social situations.
+
+Spark:
+Nadia brings Elara a beer, and Elara begins enthusiastically telling stories and trying to engage her in extended conversation.
+
+Story Goal:
+Elara wants friendly connection, but Nadia becomes increasingly uncomfortable as the conversation drags on.
+
+Initial Situation:
+Elara is seated at a wooden table in the tavern. Nadia approaches with a tankard of beer and sets it down in front of her.
