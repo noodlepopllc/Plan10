@@ -1,13 +1,13 @@
 Characters:
-- Idol A: an android with Asian facial features, wearing a glossy pink latex bodysuit; blonde hair in a bobcut; expressive, energetic, and curious about human nightlife.
-- Idol B: an android with Asian facial features, wearing a white sailor‑style outfit; black hair in twin pigtails; cheerful, observant, and supportive.
+- Idol Ako: an android with Asian facial features, wearing a glossy pink latex bodysuit; blonde hair in a bobcut; expressive, energetic, and curious about human nightlife.
+- Idol Bko: an android with Asian facial features, wearing a white sailor‑style outfit; black hair in twin pigtails; cheerful, observant, and supportive.
 
 Location:
 A futuristic nightclub in a large metropolitan city. The space features neon lighting, holographic projections, a crowded dance floor, a raised DJ platform, and reflective metallic surfaces. Music pulses through the room, and the atmosphere is lively and colorful.
 
 Motivations:
-- Idol A wants to explore the nightclub environment and enjoy the sensory experience.
-- Idol B wants to share the night with Idol A and keep the outing fun and harmonious.
+- Idol Ako wants to explore the nightclub environment and enjoy the sensory experience.
+- Idol Bko wants to share the night with Idol A and keep the outing fun and harmonious.
 
 Spark:
 The two android idols enter the nightclub together, excited by the lights, music, and energy of the crowd.

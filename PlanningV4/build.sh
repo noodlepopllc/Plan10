@@ -4,6 +4,10 @@ set -euo pipefail
 mkdir -p $2/output
 output="$2/output"
 
+if [[ ! -f "$output/story.txt" ]]; then
+    python PlanningV4/builders/storywriter.py -S $1 -O $output/story.txt
+fi
+
 if [[ ! -f "$output/complete.json" ]]; then
     python PlanningV4/builders/scriptwriter.py $1 $output
 fi

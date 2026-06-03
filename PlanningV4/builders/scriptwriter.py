@@ -29,9 +29,10 @@ def run_prompt(prompt, system, pth):
 
 
 def build_script(story, outpath):
-    world = run_prompt(story, WORLD, f'{outpath}/world.txt')
+    expanded = Path(f'{outpath}/story.txt').read_text()
+    world = run_prompt(f'{story} {expanded}', WORLD, f'{outpath}/world.txt')
     biography = run_prompt(world, BIOGRAPHY, f'{outpath}/biography.txt')
-    narrative = run_prompt(f'Biography: {biography}, Story: {story}', NARRATOR, f'{outpath}/narrative.txt')
+    narrative = run_prompt(f'Biography: {biography}, Story: {expanded}', NARRATOR, f'{outpath}/narrative.txt')
 
     action_beats = run_prompt(
         f'World: {biography}, Narrative: {narrative}', 
