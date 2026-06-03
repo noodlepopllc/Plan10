@@ -30,8 +30,12 @@ OUTPUT FORMAT:
 SYS_EOF
 
 # 3. User prompt: STORY ONLY (style & composition handled by system)
-USER_PROMPT="$1 create a 6-panel spread with dialogue"
+USER_PROMPT=$1 
 
-echo "$(python lib/qwen_llm.py -S "$SYS_FILE" -P "$USER_PROMPT" | sed 's/`//g' | tr -d '\n')"
+FINAL="$USER_PROMPT, create a 6-panel spread with dialogue."
+echo $FINAL
+
+STORY="$(python lib/qwen_llm.py -S "$SYS_FILE" -P "$FINAL" | sed 's/`//g' | tr -d '\n')"
+echo $STORY
 # 4. Run pipeline
-python lib/graphics_gen.py -P "$(python lib/qwen_llm.py -S "$SYS_FILE" -P "$USER_PROMPT" | sed 's/`//g' | tr -d '\n')" -O tests/manga.pngcreate a 6-panel spread with dialogue between them"
+python lib/graphics_gen.py -P "$STORY" -O tests/$2
