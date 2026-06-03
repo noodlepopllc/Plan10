@@ -15,13 +15,13 @@ touch $output/empty.txt
 if [[ ! -f "$output/registry.json" ]]; then
     # 1. Asset Registry (unchanged)
     echo "creating $output/registry.json"
-    python lib/qwen_llm.py -P "$(cat "$1")" -S PlanningV2/prompts/assets.txt | tail -n +2 > $output/registry.json
+    python lib/qwen_llm.py -P "$(cat "$1")" -S Planning/prompts/assets.txt | tail -n +2 > $output/registry.json
 fi
 
 if [[ ! -f "$output/visual_prompt.txt" || ! -f "$output/action.txt" ]]; then
     # 2. Plain English Visual Expansion
     echo "creating $output/visual_prompt.txt"
-    python PlanningV2/expanders/beat_expansionV2.py "$(cat "$1")" $output/registry.json 8 > $output/visual_prompt.txt
+    python Planning/expanders/beat_expansion.py "$(cat "$1")" $output/registry.json 8 > $output/visual_prompt.txt
 
 fi
 
@@ -33,55 +33,55 @@ fi
 if [[ ! -f "$output/dialog.txt"  ]]; then
     # 3. Generate Dialog (EXACTLY as you had it)
     echo "creating $output/dialog.txt"
-    DIALOG_PROMPT=$(python PlanningV2/expanders/dialog_headshotV2.py "$1" $output/registry.json 8)
+    DIALOG_PROMPT=$(python Planning/expanders/dialog_headshot.py "$1" $output/registry.json 8)
     python lib/qwen_llm.py -P "$DIALOG_PROMPT" | tail -n +2 > $output/dialog.txt
 fi
 
 if [[ ! -f "$output/map_prompt_dialog.txt" || ! -f "$output/sequence_dialog.json" ]]; then
     # 4. Schema Mapper (combines visuals + dialog + registry → final JSON)
     echo "creating $output/map_prompt_dialog.txt"
-    python PlanningV2/expanders/beat_mapper.py $output/registry.json $output/empty.txt $output/dialog.txt "$1" > $output/map_prompt_dialog.txt
+    python Planning/expanders/beat_mapper.py $output/registry.json $output/empty.txt $output/dialog.txt "$1" > $output/map_prompt_dialog.txt
 
     echo "creating $output/sequence_dialog.json"
-    python lib/qwen_llm.py -P "$(cat $output/map_prompt_dialog.txt)" -S PlanningV2/prompts/sequence.txt | tail -n +2 > $output/sequence_dialog.json
+    python lib/qwen_llm.py -P "$(cat $output/map_prompt_dialog.txt)" -S Planning/prompts/sequence.txt | tail -n +2 > $output/sequence_dialog.json
 fi
 
 if [[ ! -f "$output/map_prompt_action.txt" || ! -f "$output/sequence_action.json" ]]; then
     echo "creating $output/map_prompt_action.txt"
-    python PlanningV2/expanders/beat_mapper.py $output/registry.json $output/action.txt $output/empty.txt "$1" > $output/map_prompt_action.txt
+    python Planning/expanders/beat_mapper.py $output/registry.json $output/action.txt $output/empty.txt "$1" > $output/map_prompt_action.txt
     
     echo "creating $output/sequence_action.json"
-    python lib/qwen_llm.py -P "$(cat $output/map_prompt_action.txt)" -S PlanningV2/prompts/sequence.txt | tail -n +2 > $output/sequence_action.json
+    python lib/qwen_llm.py -P "$(cat $output/map_prompt_action.txt)" -S Planning/prompts/sequence.txt | tail -n +2 > $output/sequence_action.json
 fi
 
 
 if [[ ! -f "$2/identity.txt" ]]; then
-    python PlanningV2/builders/identity.py $output/registry.json > $2/identity.txt
+    python Planning/builders/identity.py $output/registry.json > $2/identity.txt
 fi
 
 
 if [[ ! -f "$2/action_images.txt" ]]; then
-    python PlanningV2/builders/actions.py $output/registry.json $output/sequence_action.json --images-only > "$2/action_images.txt"
+    python Planning/builders/actions.py $output/registry.json $output/sequence_action.json --images-only > "$2/action_images.txt"
 fi
 
 if [[ ! -f "$2/action_videos.txt" ]]; then
-    python PlanningV2/builders/actions.py $output/registry.json $output/sequence_action.json > "$2/action_videos.txt"
+    python Planning/builders/actions.py $output/registry.json $output/sequence_action.json > "$2/action_videos.txt"
 fi
 
 
 
 if [[ ! -f "$2/headshots.txt" ]]; then
-    python PlanningV2/builders/dialog.py $output/registry.json $output/sequence_dialog.json --headshots-only > "$2/headshots.txt"
+    python Planning/builders/dialog.py $output/registry.json $output/sequence_dialog.json --headshots-only > "$2/headshots.txt"
 fi
 
 
 if [[ ! -f "$2/static_dialog.txt" ]]; then
-    python PlanningV2/builders/dialog.py $output/registry.json $output/sequence_dialog.json --images-only > "$2/static_dialog.txt"
+    python Planning/builders/dialog.py $output/registry.json $output/sequence_dialog.json --images-only > "$2/static_dialog.txt"
 fi
 
 
 if [[ ! -f "$2/all_dialog.txt" ]]; then
-    python PlanningV2/builders/dialog.py $output/registry.json $output/sequence_dialog.json > "$2/all_dialog.txt"
+    python Planning/builders/dialog.py $output/registry.json $output/sequence_dialog.json > "$2/all_dialog.txt"
 fi
 
 if [[ ! -f "$2/final.sh" ]]; then
