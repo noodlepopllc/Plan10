@@ -30,8 +30,8 @@ OUTPUT FORMAT:
 SYS_EOF
 
 # 3. User prompt: STORY ONLY (style & composition handled by system)
-USER_PROMPT="princess captured and chained in an old dungeon of an abandoned castle by an evil wizard, her clothes are in tatters as she looks sad and defeated, create a 6-panel spread with dialogue between them"
+USER_PROMPT="$1 create a 6-panel spread with dialogue"
 
 echo "$(python lib/qwen_llm.py -S "$SYS_FILE" -P "$USER_PROMPT" | sed 's/`//g' | tr -d '\n')"
 # 4. Run pipeline
-#python lib/graphics_gen.py -P "$(python lib/qwen_llm.py -S "$SYS_FILE" -P "$USER_PROMPT" | sed 's/`//g' | tr -d '\n')" -O tests/manga.png
+python lib/graphics_gen.py -P "$(python lib/qwen_llm.py -S "$SYS_FILE" -P "$USER_PROMPT" | sed 's/`//g' | tr -d '\n')" -O tests/manga.pngcreate a 6-panel spread with dialogue between them"
