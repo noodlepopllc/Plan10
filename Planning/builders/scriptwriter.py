@@ -3,12 +3,12 @@ sys.path.append('./lib')
 from qwen_llm import llm_analyze_media
 from pathlib import Path
 
-WORLD = Path('./PlanningV2/prompts/scriptwriter/world.txt').read_text()
-BIOGRAPHY = Path('./PlanningV2/prompts/scriptwriter/biography.txt').read_text()
-ACTION = Path('./PlanningV2/prompts/scriptwriter/action.txt').read_text()
-STORY = Path('./PlanningV2/prompts/scriptwriter/story.txt').read_text()
-NARRATOR = Path('./PlanningV2/prompts/scriptwriter/narrator.txt').read_text()
-VALIDATOR = Path('./PlanningV2/prompts/scriptwriter/validator.txt').read_text()
+WORLD = Path('./Planning/prompts/scriptwriter/world.txt').read_text()
+BIOGRAPHY = Path('./Planning/prompts/scriptwriter/biography.txt').read_text()
+ACTION = Path('./Planning/prompts/scriptwriter/action.txt').read_text()
+STORY = Path('./Planning/prompts/scriptwriter/story.txt').read_text()
+NARRATOR = Path('./Planning/prompts/scriptwriter/narrator.txt').read_text()
+VALIDATOR = Path('./Planning/prompts/scriptwriter/validator.txt').read_text()
 
 
 def run_prompt(prompt, system, pth):
@@ -30,7 +30,7 @@ def run_prompt(prompt, system, pth):
 
 def build_script(story, outpath):
     expanded = Path(f'{outpath}/story.txt').read_text()
-    world = run_prompt(f'{story} {expanded}', WORLD, f'{outpath}/world.txt')
+    world = run_prompt(f'{expanded}', WORLD, f'{outpath}/world.txt')
     biography = run_prompt(world, BIOGRAPHY, f'{outpath}/biography.txt')
     narrative = run_prompt(f'Biography: {biography}, Story: {expanded}', NARRATOR, f'{outpath}/narrative.txt')
 
