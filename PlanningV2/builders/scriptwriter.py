@@ -3,12 +3,12 @@ sys.path.append('./lib')
 from qwen_llm import llm_analyze_media
 from pathlib import Path
 
-WORLD = Path('./PlanningV4/prompts/scriptwriter/world.txt').read_text()
-BIOGRAPHY = Path('./PlanningV4/prompts/scriptwriter/biography.txt').read_text()
-ACTION = Path('./PlanningV4/prompts/scriptwriter/action.txt').read_text()
-STORY = Path('./PlanningV4/prompts/scriptwriter/story.txt').read_text()
-NARRATOR = Path('./PlanningV4/prompts/scriptwriter/narratorV3.txt').read_text()
-VALIDATOR = Path('./PlanningV4/prompts/scriptwriter/validator.txt').read_text()
+WORLD = Path('./PlanningV2/prompts/scriptwriter/world.txt').read_text()
+BIOGRAPHY = Path('./PlanningV2/prompts/scriptwriter/biography.txt').read_text()
+ACTION = Path('./PlanningV2/prompts/scriptwriter/action.txt').read_text()
+STORY = Path('./PlanningV2/prompts/scriptwriter/story.txt').read_text()
+NARRATOR = Path('./PlanningV2/prompts/scriptwriter/narratorV3.txt').read_text()
+VALIDATOR = Path('./PlanningV2/prompts/scriptwriter/validator.txt').read_text()
 
 
 def run_prompt(prompt, system, pth):
