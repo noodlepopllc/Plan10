@@ -130,7 +130,7 @@ Width: {self.WIDTH}, Height: {self.HEIGHT}, Duration: {duration}, Seed: {self.SE
         self.buffer.videos.append(f"""
 >> ALIAS: {alias}
 dialog_to_video media={base_alias} asset
-audio={voice_alias}
+audio={voice_alias} asset
 text="{text}"
 Width: {self.WIDTH}, Height: {self.HEIGHT}, Seed: {self.SEED}
 """)

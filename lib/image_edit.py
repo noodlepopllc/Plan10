@@ -73,7 +73,7 @@ class ImageEditQwen(object):
 
     def generate(self, prompt, images, output, width, height, seed):
         if not self.pipe:
-            self.__enter__(self)
+            self.__enter__()
         # Safely handle empty/character-only lists
         edit_images = []
         for item in images:
