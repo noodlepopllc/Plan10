@@ -9,3 +9,4 @@ uniface
 omnivoice
 librosa
 faster-whisper
+spacy_download

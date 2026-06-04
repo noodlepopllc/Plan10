@@ -50,3 +50,16 @@ def video_to_img(vid, width=832, height=480, resize=False, getlast=True):
         return Image.fromarray(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
     finally:
         cap.release()
+
+# ---------------------------------------------------------
+# SENTENCE SEGMENTATION (SpaCy sentencizer)
+# ---------------------------------------------------------
+
+from spacy_download import load_spacy
+NLP = load_spacy("en_core_web_sm", exclude=["parser", "tagger"])
+NLP.add_pipe("sentencizer")
+
+def segment_sentences(text: str):
+    """Return a clean list of sentences using SpaCy's sentencizer."""
+    doc = NLP(text)
+    return [s.text.strip() for s in doc.sents if s.text.strip()]
