@@ -63,3 +63,4 @@ def segment_sentences(text: str):
     """Return a clean list of sentences using SpaCy's sentencizer."""
     doc = NLP(text)
     return [s.text.strip() for s in doc.sents if s.text.strip()]
+
