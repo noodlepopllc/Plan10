@@ -108,6 +108,8 @@ dialog:
   - speaker: <name>
     line: "<exact dialog>"
     facial_state: <value or none>
+    head_gesture: null
+    tone: null
 posture:
   - <character>: <posture>
 

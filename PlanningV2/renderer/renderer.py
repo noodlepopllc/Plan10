@@ -57,9 +57,9 @@ def build_identity_map(assets, beat=None):
         hair = bio.get('hair', '').strip()
 
         if hair:
-            desc = f"{posture}, {gender}, {clothing}, {hair}"
+            desc = f"{gender}, {clothing}, {hair}"
         else:
-            desc = f"{posture}, {gender}, {clothing}"
+            desc = f"{gender}, {clothing}"
 
         names[ckey] = desc
 
@@ -116,8 +116,29 @@ def format_pose_block(pose_actions):
     for char, action in pose_actions.items():
         parts = action.split(" ", 1)
         pose = parts[1] if len(parts) > 1 else action
-        blocks.append(f"{char} asset ({pose})")
+        # pose is something like "leans in closer" or "wipes counter"
+        pose = pose.strip()
+
+        # Normalize pose into a sentence
+        if pose.startswith("is ") or pose.startswith("sits") or pose.startswith("stands"):
+            blocks.append(f"{char} {pose}.")
+        else:
+            blocks.append(f"{char} {pose}.")
+
     return " and ".join(blocks)
+
+def posture_sentence(char, posture):
+    if posture == "sitting":
+        return f"{char} is sitting."
+    if posture == "standing":
+        return f"{char} is standing."
+    return ""
+
+def strip_leading_name(action, char):
+    # Remove leading character name (any case)
+    pattern = re.compile(rf"^{char}\s+", re.IGNORECASE)
+    return pattern.sub("", action).strip()
+
 
 
 def render_beats_actions(assets, actions, mappings, T):
@@ -155,16 +176,23 @@ def render_beats_actions(assets, actions, mappings, T):
             char = chars_in_actions[0]
             char_alias = char_aliases[char]
 
+            pose = POSTURE.get(char, None)
+            if pose and pose != "neutral":
+                pose_sentence = f"{char} is {pose}."
+            else:
+                pose_sentence = ""
+
             char_action = next(
                 (a for a in resolved_actions if soft_normalize(canonical(a.split(" ", 1)[0])) == soft_normalize(char)),
                 resolved_actions[0]
             )
+
             char_pose = resolve_character_mentions(char_action, names)
             _, motion_actions = bind_identity_first_only(resolved_actions, names)
 
             alias = f"BEAT_{beat['beat']}_{normalize(char)}_ACTION"
 
-            T.action_medium(alias, zone_alias, char_alias, char_pose)
+            T.action_medium(alias, zone_alias, char_alias, f"{pose_sentence} {char_pose}")
             T.action_video(
                 f"{alias}_VIDEO",
                 alias,
@@ -180,7 +208,24 @@ def render_beats_actions(assets, actions, mappings, T):
 
         alias = f"BEAT_{beat['beat']}_WIDE_ACTION"
 
-        T.action_wide(alias, zone_alias, char_assets, pose_block)
+        sentences = []
+
+        for char in chars_in_actions:
+            posture = POSTURE.get(char, None)
+            if posture:
+                sentences.append(posture_sentence(char, posture))
+
+        for char, action in pose_action_map.items():
+            clean_action = strip_leading_name(action, char)
+            sentences.append(f"{char} {clean_action}.")
+
+
+        sentences.append("The scene is framed as a two-shot.")
+
+        wide_prompt = " ".join(sentences)
+
+        T.action_wide(alias, zone_alias, char_assets, wide_prompt)
+
         T.action_video(
             f"{alias}_VIDEO",
             alias,
@@ -228,10 +273,12 @@ def render_beats_dialog(assets, actions, mappings, T):
             speaker_alias = char_aliases[speaker]
             line = dlg['line']
 
-            # Per‑speaker attributes
-            facial = _get_per_speaker_value(beat, 'facial_state', speaker, 'neutral')
-            head   = _get_per_speaker_value(beat, 'head_gesture', speaker, 'none')
-            tone   = _get_per_speaker_value(beat, 'tone', speaker, 'neutral')
+            raw_speaker = dlg['speaker']  # "Elara", "Nadia"
+
+            facial = beat.get('facial_state', {}).get(raw_speaker, 'neutral')
+            head   = beat.get('head_gesture', {}).get(raw_speaker, 'none')
+            tone   = beat.get('tone', {}).get(raw_speaker, 'neutral')
+
 
             # Split dialog into sentences
             sentences = [line]
@@ -246,13 +293,22 @@ def render_beats_dialog(assets, actions, mappings, T):
                 dialog_pose_prompt_close = (
                     f"{dlg['speaker']} ({tone} tone, facial expression {facial})"
                 )
-                dialog_pose_prompt = (
-                    f"{dlg['speaker']} ({tone} tone, facial expression {facial}, head gesture {head})"
+                posture = POSTURE.get(speaker, None)
+                if posture == "sitting":
+                    pose_sentence = f"{dlg['speaker']} is sitting."
+                elif posture == "standing":
+                    pose_sentence = f"{dlg['speaker']} is standing."
+                else:
+                    pose_sentence = ""
+
+                expr_sentence = f"{dlg['speaker']} has a {facial} expression." if facial != "neutral" else ""
+                dialog_prompt = " ".join(
+                    s for s in [pose_sentence, expr_sentence] if s
                 )
 
                 # ONE closeup + ONE medium per beat per speaker
                 T.dialog_closeup(base_alias, zone_alias, speaker_alias, dialog_pose_prompt_close)
-                T.dialog_medium(f"{base_alias}_medium", zone_alias, speaker_alias, dialog_pose_prompt)
+                T.dialog_medium(f"{base_alias}_medium", zone_alias, speaker_alias, dialog_prompt)
                             
                 motion_alias = (
                     f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_MOTION_01"
