@@ -375,6 +375,41 @@ Validator must not invent emotion.
 Validator must not interpret tone.
 Validator must not rewrite meaning.
 
+11.8 TONE GENERATION (NEW RULE)
+
+If tone is null, missing, or none:
+
+    Infer tone deterministically from facial_state using the emotion-family mapping:
+
+        Positive/Upbeat family (smiling, soft, softening, friendly)
+            → friendly
+
+        Excited/Enthusiastic family (excited, enthusiastic, amused)
+            → excited
+
+        Curiosity/Confusion family (curious, puzzled, uncertain)
+            → curious
+
+        Anger family (angry, irritated, annoyed, furious)
+            → angry
+
+        Sadness/Strain family (strained, distressed, tired)
+            → strained
+
+        Fear/Panic family (panicked, terrified, anxious)
+            → panicked
+
+        Neutral/Reserved family (neutral, reserved, flat)
+            → neutral
+
+Tone generation must be:
+    deterministic
+    rule-based
+    non-creative
+    non-inferential
+    consistent with facial_state
+
+
 ------------------------------------------------------------
 ⭐ 12. OUTPUT ONLY THE REPAIRED BEATS
 ------------------------------------------------------------

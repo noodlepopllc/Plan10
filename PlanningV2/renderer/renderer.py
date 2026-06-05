@@ -275,9 +275,14 @@ def render_beats_dialog(assets, actions, mappings, T):
 
             raw_speaker = dlg['speaker']  # "Elara", "Nadia"
 
-            facial = beat.get('facial_state', {}).get(raw_speaker, 'neutral')
-            head   = beat.get('head_gesture', {}).get(raw_speaker, 'none')
-            tone   = beat.get('tone', {}).get(raw_speaker, 'neutral')
+            facial_state_map = beat.get('facial_state') or {}
+            head_gesture_map = beat.get('head_gesture') or {}
+            tone_map         = beat.get('tone') or {}
+
+            facial = facial_state_map.get(raw_speaker, 'neutral')
+            head   = head_gesture_map.get(raw_speaker, 'none')
+            tone   = tone_map.get(raw_speaker, 'neutral')
+
 
 
             # Split dialog into sentences
