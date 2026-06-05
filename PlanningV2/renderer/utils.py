@@ -202,6 +202,61 @@ import sys
 sys.path.append('./lib')
 from util import segment_sentences
 
+import re
+
+def count_syllables(text):
+    """
+    Fast syllable estimator based on vowel groups.
+    Good enough for dialog segmentation decisions.
+    """
+    text = text.lower()
+
+    # Remove punctuation
+    text = re.sub(r"[^a-zA-Z']", " ", text)
+
+    # Special case: empty or weird input
+    if not text.strip():
+        return 1
+
+    # Count vowel groups as syllables
+    groups = re.findall(r"[aeiouy]+", text)
+
+    # Ensure at least 1 syllable
+    return max(1, len(groups))
+
+def recombine_by_syllables(sentences, threshold=16):
+    """
+    Merge consecutive sentences until each combined segment
+    exceeds the syllable threshold.
+    """
+    combined = []
+    buffer = ""
+
+    for sent in sentences:
+        sent = sent.strip()
+
+        # If buffer is empty, start it
+        if not buffer:
+            buffer = sent
+            continue
+
+        # Check syllable count of the NEXT sentence
+        if count_syllables(sent) < threshold:
+            # Merge into buffer
+            buffer = buffer + " " + sent
+        else:
+            # Finalize buffer, start new one
+            combined.append(buffer)
+            buffer = sent
+
+    # Add leftover buffer
+    if buffer:
+        combined.append(buffer)
+
+    return combined
+
+
+
 def split_dialog_sentences(beats):
     """Return a new list of beats with dialog lines split into sentences."""
     new_beats = []
@@ -212,9 +267,16 @@ def split_dialog_sentences(beats):
         for entry in beat.get("dialog", []):
             speaker = entry["speaker"]
             line = entry["line"]
+            if count_syllables(line) < 16:
+                new_dialog.append({
+                    "speaker": speaker,
+                    "line": line
+                })
+                continue
 
             # Segment into sentences
             sentences = segment_sentences(line)
+            sentences = recombine_by_syllables(sentences)
 
             # Rebuild dialog entries, one per sentence
             for sent in sentences:

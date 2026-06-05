@@ -199,66 +199,76 @@ def _get_per_speaker_value(beat, key, speaker, default):
         return val.get(speaker, default)
     return val
 
-def split_dialog_into_sentences(line):
-    text = " ".join(line.split()).strip()
-    if not text:
-        return []
-    quoted = re.findall(r'"(.*?)"', text)
-    if not quoted:
-        return [text]
-    if len(quoted) == 1:
-        return [quoted[0].strip()]
-    first = quoted[0].strip()
-    if len(first.split()) <= 1:
-        merged = f"{first} {quoted[1].strip()}"
-        return [merged]
-    return [q.strip() for q in quoted]
-
-
 def render_beats_dialog(assets, actions, mappings, T):
-    char_aliases = {canonical(c['name']): f"CHAR_{normalize(c['name'])}" for c in assets['characters']}
+    # Map canonical character names → CHAR_<NAME> alias
+    char_aliases = {
+        canonical(c['name']): f"CHAR_{normalize(c['name'])}"
+        for c in assets['characters']
+    }
+
+    # Cache to ensure we only generate ONE dialog base per (beat, speaker)
+    generated_bases = set()
 
     for beat in actions:
-        names = build_identity_map(assets, beat)
         dialog_list = [
-            d for d in beat.get('dialog') or []
+            d for d in (beat.get('dialog') or [])
             if d.get("line") and d.get("line").strip().lower() not in ("", "none")
         ]
         if not dialog_list:
             continue
 
         zone_alias = resolve_zone_alias(beat['zone'], mappings)
+        s_idx = 1
 
-        for idx, dlg in enumerate(dialog_list, start=1):
+        for dlg in dialog_list:
             speaker = canonical(dlg['speaker'])
-            line = dlg['line']
-
             if speaker not in char_aliases:
                 continue
 
             speaker_alias = char_aliases[speaker]
+            line = dlg['line']
+
+            # Per‑speaker attributes
             facial = _get_per_speaker_value(beat, 'facial_state', speaker, 'neutral')
             head   = _get_per_speaker_value(beat, 'head_gesture', speaker, 'none')
             tone   = _get_per_speaker_value(beat, 'tone', speaker, 'neutral')
 
-            sentences = split_dialog_into_sentences(line)
+            # Split dialog into sentences
+            sentences = [line]
 
-            for s_idx, sentence in enumerate(sentences, start=1):
+            # Shared base alias for this beat + speaker
+            base_alias = f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_BASE"
 
-                base_alias   = f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_BASE_{idx:02d}_{s_idx:02d}"
-                motion_alias = f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_MOTION_{idx:02d}_{s_idx:02d}"
-                final_alias  = f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_VIDEO_{idx:02d}_{s_idx:02d}"
+            # Only generate the base images ONCE per beat per speaker
+            if base_alias not in generated_bases:
+                generated_bases.add(base_alias)
 
-                dialog_pose_prompt_close = f"{dlg['speaker']} ({tone} tone, facial expression {facial})"
-                dialog_pose_prompt = f"{dlg['speaker']} ({tone} tone, facial expression {facial}, head gesture {head})"
+                dialog_pose_prompt_close = (
+                    f"{dlg['speaker']} ({tone} tone, facial expression {facial})"
+                )
+                dialog_pose_prompt = (
+                    f"{dlg['speaker']} ({tone} tone, facial expression {facial}, head gesture {head})"
+                )
 
+                # ONE closeup + ONE medium per beat per speaker
                 T.dialog_closeup(base_alias, zone_alias, speaker_alias, dialog_pose_prompt_close)
                 T.dialog_medium(f"{base_alias}_medium", zone_alias, speaker_alias, dialog_pose_prompt)
+                            
+                motion_alias = (
+                    f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_MOTION_01"
+                )
 
                 motion_prompt = T.dialog_motion_prompt(dlg['speaker'], facial, head)
-
                 T.dialog_motion(motion_alias, base_alias, motion_prompt, duration=2)
-                T.dialog_final(final_alias, base_alias, f"{speaker_alias}_VOICE", sentence)
+
+            # Now generate motion + final video PER SENTENCE
+            final_alias = (
+                f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_VIDEO_{s_idx:02d}"
+            )
+
+            T.dialog_final(final_alias, base_alias, f"{speaker_alias}_VOICE", line)
+            s_idx += 1
+
 
 
 # ---------------------------------------------------------
