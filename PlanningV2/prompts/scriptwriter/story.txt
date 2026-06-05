@@ -29,9 +29,10 @@ You MUST output a JSON list with ONE object per ACTION BEAT:
     "beat": 1,
     "zone": "Zone Name",
     "actions": ["Action 1", "Action 2"],
-    "facial_state": "value or object as provided",
-    "head_gesture": "value or object as provided",
-    "tone": "value or object as provided",
+    "facial_state": { "CharacterName": "value", ... },
+    "head_gesture": { "CharacterName": "value", ... },
+    "tone": { "CharacterName": "value", ... },
+
     "posture": {
       "CharacterName1": "standing",
       "CharacterName2": "sitting"
@@ -52,6 +53,8 @@ You MUST output a JSON list with ONE object per ACTION BEAT:
   },
   ...
 ]
+
+If the input provides a single value instead of a map, convert it into a per-character map by assigning the same value to every character in the beat.
 
 ------------------------------------------------------------
 CONTINUITY RULES (CRITICAL)
