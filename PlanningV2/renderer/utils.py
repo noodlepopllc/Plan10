@@ -225,40 +225,35 @@ def count_syllables(text):
     return max(1, len(groups))
 
 def recombine_by_syllables(sentences, threshold=16):
-    """
-    Merge consecutive sentences until each combined segment
-    exceeds the syllable threshold.
-    """
     combined = []
     buffer = ""
+    buffer_syllables = 0
 
     for sent in sentences:
         sent = sent.strip()
+        sent_syllables = count_syllables(sent)
 
-        # If buffer is empty, start it
-        if not buffer:
-            buffer = sent
-            continue
-
-        # Check syllable count of the NEXT sentence
-        if count_syllables(sent) < threshold:
-            # Merge into buffer
+        # If adding this sentence stays under threshold → merge
+        if buffer and (buffer_syllables + sent_syllables) < threshold:
             buffer = buffer + " " + sent
+            buffer_syllables += sent_syllables
         else:
-            # Finalize buffer, start new one
-            combined.append(buffer)
-            buffer = sent
+            # Flush old buffer
+            if buffer:
+                combined.append(buffer)
 
-    # Add leftover buffer
+            # Start new buffer
+            buffer = sent
+            buffer_syllables = sent_syllables
+
+    # Flush last buffer
     if buffer:
         combined.append(buffer)
 
     return combined
 
 
-
-def split_dialog_sentences(beats):
-    """Return a new list of beats with dialog lines split into sentences."""
+def split_dialog_sentences(beats, syllable_threshold=16):
     new_beats = []
 
     for beat in beats:
@@ -266,26 +261,34 @@ def split_dialog_sentences(beats):
 
         for entry in beat.get("dialog", []):
             speaker = entry["speaker"]
-            line = entry["line"]
-            if count_syllables(line) < 16:
-                new_dialog.append({
-                    "speaker": speaker,
-                    "line": line
-                })
-                continue
+            line = entry["line"].strip()
 
-            # Segment into sentences
+            # Step 1: Always segment into sentences first
             sentences = segment_sentences(line)
-            sentences = recombine_by_syllables(sentences)
 
-            # Rebuild dialog entries, one per sentence
+            # Step 2: If it's only one sentence, apply syllable gating
+            if len(sentences) == 1:
+                if count_syllables(line) < syllable_threshold:
+                    # Keep the single short sentence as-is
+                    new_dialog.append({
+                        "speaker": speaker,
+                        "line": line
+                    })
+                    continue
+                else:
+                    # Too many syllables → segment again (already done)
+                    pass
+
+            # Step 3: Now we have multiple sentences → recombine small ones
+            sentences = recombine_by_syllables(sentences, threshold=syllable_threshold)
+
+            # Step 4: Emit each final segment
             for sent in sentences:
                 new_dialog.append({
                     "speaker": speaker,
-                    "line": sent
+                    "line": sent.strip()
                 })
 
-        # Replace dialog with segmented version
         beat["dialog"] = new_dialog
         new_beats.append(beat)
 
