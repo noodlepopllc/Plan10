@@ -141,10 +141,14 @@ Width: {self.WIDTH}, Height: {self.HEIGHT}, Seed: {self.SEED}
 
     def dialog_motion_prompt(self, speaker, facial, head):
         return (
-            f"{speaker}, calm and still, "
-            f"lips gently closed, jaw unmoving, "
-            f"eyes with tiny natural micro‑saccades only, "
-            f"stable head position, minimal idle motion, "
-            f"maintain facial expression {facial}, head gesture {head}, "
-            f"no large body motion"
-        )
+        f"{speaker}, neutral expression, "
+        f"soft breathing motion in chest and shoulders, "
+        f"eyes performing tiny natural micro‑saccades, "
+        f"head stable and still, "
+        f"lips fully closed with no speech motion, "
+        f"jaw relaxed and unmoving, "
+        f"maintain facial expression {facial}, "
+        f"head gesture {head}, "
+        f"no large body motion"
+    )
+
