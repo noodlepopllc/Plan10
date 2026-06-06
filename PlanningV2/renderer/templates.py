@@ -71,7 +71,7 @@ Seed: {self.SEED}
     # ---------------------------------------------------------
     # ACTION
     # ---------------------------------------------------------
-
+    '''
     def action_medium(self, alias, zone_alias, char_alias, prompt):
         self.buffer.images.append(f"""
 >> ALIAS: {alias}
@@ -89,6 +89,28 @@ shot_type: "two_shot",
 prompt: "{prompt}",
 Width: {self.WIDTH}, Height: {self.HEIGHT}, Seed: {self.SEED}
 """)
+    '''
+
+    def action_medium(self, alias, zone_alias, char_alias, prompt, arc=None):
+        arc_text = f" Motion arc: {arc}" if arc else ""
+        self.buffer.images.append(f"""
+>> ALIAS: {alias}
+composite_scene {zone_alias} asset and {char_alias} asset,
+shot_type: "medium",
+prompt: "{prompt}{arc_text}",
+Width: {self.WIDTH}, Height: {self.HEIGHT}, Seed: {self.SEED}
+""")
+
+    def action_wide(self, alias, zone_alias, char_assets, prompt, arc=None):
+        arc_text = f" Motion arc: {arc}" if arc else ""
+        self.buffer.images.append(f"""
+>> ALIAS: {alias}
+composite_scene {zone_alias} asset and {char_assets},
+shot_type: "two_shot",
+prompt: "{prompt}{arc_text}",
+Width: {self.WIDTH}, Height: {self.HEIGHT}, Seed: {self.SEED}
+""")
+
 
     def action_video(self, alias, image_alias, motion, duration=5):
         self.buffer.videos.append(f"""

@@ -9,6 +9,7 @@ ACTION = Path(f'{prompt_path}/scriptwriter/action.txt').read_text()
 STORY = Path(f'{prompt_path}/scriptwriter/story.txt').read_text()
 NARRATOR = Path(f'{prompt_path}/scriptwriter/narrator.txt').read_text()
 VALIDATOR = Path(f'{prompt_path}/scriptwriter/validator.txt').read_text()
+REWRITER = Path(f'{prompt_path}/scriptwriter/rewriter.txt').read_text()
 
 
 def run_prompt(prompt, system, pth):
@@ -40,6 +41,7 @@ def build_script(story, outpath):
         f'{outpath}/action_beats.txt')
 
     validator = run_prompt(action_beats, VALIDATOR, f'{outpath}/validated.txt')
+    validator = run_prompt(validator, REWRITER, f'{outpath}/rewrite.json')
 
     complete = run_prompt(validator,STORY,f'{outpath}/complete.json')
     

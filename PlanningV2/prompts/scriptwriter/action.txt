@@ -60,10 +60,15 @@ CORE RULES
 11. NEVER include narrative prose in actions or dialog.
     Only extract physical actions and literal dialog.
 
-12. A beat is only valid if it contains at least one meaningful interaction:
+12. A beat is valid if it contains ANY of the following:
+    - dialog (this ALONE is sufficient)
     - emotional interaction (character → character)
-    - physical interaction with an object or environment (character → object)
-    - physical interaction with another character (character → character)
+    - physical interaction with an object or environment
+    - physical interaction with another character
+
+Dialog ALONE counts as a meaningful interaction.
+A beat DOES NOT require a physical action.
+
 
 13. Idle or filler actions (glancing, shifting weight, adjusting hair)
     may ONLY appear if the beat already contains a meaningful interaction.
@@ -93,7 +98,29 @@ The extractor MUST NOT:
     • “clean up” the text for readability
 Pronoun tokens MUST be treated as literal text.
 
+============================================================
+BEATS DO NOT REQUIRE A PHYSICAL ACTION (CRITICAL OVERRIDE)
+============================================================
 
+The extractor MUST NOT invent or synthesize ANY action to
+"complete" a beat.
+
+A beat MAY contain:
+    • ONLY dialog
+    • ONLY posture
+    • ONLY a meaningful emotional exchange
+
+A beat DOES NOT require:
+    • a physical action
+    • a gesture
+    • a movement
+    • a filler action
+    • ANY synthetic action
+
+Under NO circumstances may the extractor create an action
+to "fill" a beat that contains dialog but no physical action.
+
+This rule OVERRIDES all learned cinematic heuristics.
 
 ============================================================
 OUTPUT FORMAT

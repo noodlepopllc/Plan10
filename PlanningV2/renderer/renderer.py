@@ -139,7 +139,7 @@ def strip_leading_name(action, char):
     pattern = re.compile(rf"^{char}\s+", re.IGNORECASE)
     return pattern.sub("", action).strip()
 
-
+'''
 
 def render_beats_actions(assets, actions, mappings, T):
     char_aliases = {canonical(c['name']): f"CHAR_{normalize(c['name'])}" for c in assets['characters']}
@@ -233,6 +233,47 @@ def render_beats_actions(assets, actions, mappings, T):
             duration=5
         )
 
+'''
+
+def render_beats_actions(assets, actions, mappings, T):
+    char_aliases = {canonical(c['name']): f"CHAR_{normalize(c['name'])}" for c in assets['characters']}
+
+    for beat in actions:
+        all_names = build_identity_map(assets, beat)
+        beat_chars = get_beat_characters(beat, all_names)
+        if not beat_chars:
+            continue
+
+        names = {c: all_names[c] for c in beat_chars}
+        zone_alias = resolve_zone_alias(beat['zone'], mappings)
+
+        # --- NEW: starting description integration ---
+        start_desc = beat.get('starting_description', {})
+        start_sentences = [f"{char} is {desc}." for char, desc in start_desc.items()]
+
+        # --- existing action resolution ---
+        resolved_actions = [resolve_pronouns(a, names) for a in beat['actions']]
+        pose_action_map, motion_actions = bind_identity_first_only(resolved_actions, names)
+
+        # --- NEW: arc integration ---
+        arc = beat.get('arc', "")
+        arc_sentence = f"Motion arc: {arc}" if arc else ""
+
+        # --- build prompt ---
+        sentences = start_sentences
+        for char, action in pose_action_map.items():
+            clean_action = strip_leading_name(action, char)
+            sentences.append(f"{char} {clean_action}.")
+        if arc_sentence:
+            sentences.append(arc_sentence)
+
+        wide_prompt = " ".join(sentences)
+
+        alias = f"BEAT_{beat['beat']}_WIDE_ACTION"
+        char_assets = " and ".join(f"{char_aliases[c]} asset" for c in beat_chars)
+
+        T.action_wide(alias, zone_alias, char_assets, wide_prompt)
+        T.action_video(f"{alias}_VIDEO", alias, motion_actions, duration=5)
 
 # ---------------------------------------------------------
 # DIALOG RENDERING
@@ -244,6 +285,98 @@ def _get_per_speaker_value(beat, key, speaker, default):
         return val.get(speaker, default)
     return val
 
+def normalize_tone(tone):
+    # Map freeform tones into controlled vocabulary
+    tone_map = {
+        "whispering": "softer",
+        "rising": "strained",
+        "cracked": "strained",
+        "pleading": "strained",
+        "hurried": "softer",
+        "silent": "neutral"
+    }
+    return tone_map.get(tone.lower(), tone)
+
+def clean_dialog_line(line):
+    # Strip narration cues like 'she whispers' from dialog strings
+    # Keep only quoted speech
+    # If narration is embedded, remove it
+    return re.sub(r'"\s*[^"]*"\s*', lambda m: m.group(0), line).strip()
+
+def render_beats_dialog(assets, actions, mappings, T):
+    char_aliases = {
+        canonical(c['name']): f"CHAR_{normalize(c['name'])}"
+        for c in assets['characters']
+    }
+
+    generated_bases = set()
+
+    for beat in actions:
+        dialog_list = [
+            d for d in (beat.get('dialog') or [])
+            if d.get("line") and d.get("line").strip().lower() not in ("", "none")
+        ]
+        if not dialog_list:
+            continue
+
+        zone_alias = resolve_zone_alias(beat['zone'], mappings)
+        s_idx = 1
+
+        for dlg in dialog_list:
+            speaker = canonical(dlg['speaker'])
+            if speaker not in char_aliases:
+                continue
+
+            speaker_alias = char_aliases[speaker]
+            raw_line = dlg['line']
+
+            # --- NEW: clean dialog line ---
+            line = clean_dialog_line(raw_line)
+
+            raw_speaker = dlg['speaker']
+
+            facial_state_map = beat.get('facial_state') or {}
+            head_gesture_map = beat.get('head_gesture') or {}
+            tone_map         = beat.get('tone') or {}
+
+            facial = facial_state_map.get(raw_speaker, 'neutral')
+            head   = head_gesture_map.get(raw_speaker, 'none')
+            tone   = normalize_tone(tone_map.get(raw_speaker, 'neutral'))
+
+            # --- NEW: posture alignment from starting_description ---
+            start_desc = beat.get('starting_description', {})
+            posture = start_desc.get(raw_speaker, None)
+            if posture:
+                pose_sentence = f"{dlg['speaker']} is {posture}."
+            else:
+                pose_sentence = ""
+
+            expr_sentence = f"{dlg['speaker']} has a {facial} expression." if facial != "neutral" else ""
+            dialog_prompt = " ".join(s for s in [pose_sentence, expr_sentence] if s)
+
+            base_alias = f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_BASE"
+
+            if base_alias not in generated_bases:
+                generated_bases.add(base_alias)
+
+                dialog_pose_prompt_close = (
+                    f"{dlg['speaker']} ({tone} tone, facial expression {facial})"
+                )
+
+                # ONE closeup + ONE medium per beat per speaker
+                T.dialog_closeup(base_alias, zone_alias, speaker_alias, dialog_pose_prompt_close)
+                T.dialog_medium(f"{base_alias}_medium", zone_alias, speaker_alias, dialog_prompt)
+
+                motion_alias = f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_MOTION_01"
+                motion_prompt = T.dialog_motion_prompt(dlg['speaker'], facial, head)
+                T.dialog_motion(motion_alias, base_alias, motion_prompt, duration=2)
+
+            final_alias = f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_VIDEO_{s_idx:02d}"
+            T.dialog_final(final_alias, base_alias, f"{speaker_alias}_VOICE", line)
+            s_idx += 1
+
+
+'''
 def render_beats_dialog(assets, actions, mappings, T):
     # Map canonical character names → CHAR_<NAME> alias
     char_aliases = {
@@ -330,7 +463,7 @@ def render_beats_dialog(assets, actions, mappings, T):
             T.dialog_final(final_alias, base_alias, f"{speaker_alias}_VOICE", line)
             s_idx += 1
 
-
+'''
 
 # ---------------------------------------------------------
 # MAIN
@@ -341,7 +474,7 @@ def main():
 
     with open(f"{basepath}/output/registry.json") as ass:
         assets = json.load(ass)
-    with open(f"{basepath}/output/complete.json") as act:
+    with open(f"{basepath}/output/rewrite.json") as act:
         actions = json.load(act)
     
     actions = split_dialog_sentences(actions)
