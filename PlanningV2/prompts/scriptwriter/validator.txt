@@ -409,10 +409,52 @@ Tone generation must be:
     non-inferential
     consistent with facial_state
 
+12. MOTION‑ARC EXPANSION (NEW RULE)
 
-------------------------------------------------------------
-⭐ 12. OUTPUT ONLY THE REPAIRED BEATS
-------------------------------------------------------------
+(This fits right after action cleanup and before continuity checks.)
+If an action is atomic and under‑specified (e.g., “leans forward”, “gestures”):
+
+Expand it into a deterministic motion arc:
+
+    start pose (derived from posture)
+
+    timed motion (1–2 seconds)
+
+    end pose
+
+    idle anchor (breathing + micro‑saccades)
+
+Example expansions:
+
+leans forward →
+Code
+
+<CHAR> begins in their current posture, then slowly leans forward over two seconds,
+ending in a steady leaned‑forward posture. After reaching the final position,
+they remain still with soft breathing motion and tiny micro‑saccades.
+
+gestures →
+Code
+
+<CHAR> begins in a neutral posture, then performs a small controlled hand gesture
+over one second, returning to a resting position afterward and remaining still
+with soft breathing motion and micro‑saccades.
+
+Deterministic rules:
+
+    Never change meaning
+
+    Never add new story content
+
+    Never invent emotion
+
+    Never modify dialog
+
+    Never contradict posture
+
+    Never break continuity
+
+This is exactly the validator’s job.
 
 No commentary.
 No explanations.
