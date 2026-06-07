@@ -41,9 +41,9 @@ def build_script(story, outpath):
         f'{outpath}/action_beats.txt')
 
     validator = run_prompt(action_beats, VALIDATOR, f'{outpath}/validated.txt')
-    validator = run_prompt(validator, REWRITER, f'{outpath}/rewrite.json')
+    rewriter = run_prompt(validator, REWRITER, f'{outpath}/rewrite.json')
 
-    complete = run_prompt(validator,STORY,f'{outpath}/complete.json')
+    #complete = run_prompt(validator,STORY,f'{outpath}/complete.json')
     
 if __name__ == '__main__':
     from pathlib import Path
