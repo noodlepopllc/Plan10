@@ -139,101 +139,6 @@ def strip_leading_name(action, char):
     pattern = re.compile(rf"^{char}\s+", re.IGNORECASE)
     return pattern.sub("", action).strip()
 
-'''
-
-def render_beats_actions(assets, actions, mappings, T):
-    char_aliases = {canonical(c['name']): f"CHAR_{normalize(c['name'])}" for c in assets['characters']}
-
-    for beat in actions:
-        all_names = build_identity_map(assets, beat)
-        beat_chars = get_beat_characters(beat, all_names)
-        if not beat_chars:
-            continue
-
-        names = {c: all_names[c] for c in beat_chars}
-
-        pose_action = None
-        if continuity := beat.get('continuity', None):
-            pose_action = continuity.get('object_introductions', None)[0]["action"] if continuity.get('object_introductions', None) else None
-        if not pose_action:
-            pose_action = beat['actions'][0]
-
-        beat_actions = [pose_action] + [a for a in beat['actions'] if a != pose_action] or []
-        beat_actions = [a for a in beat_actions if 'speak' not in a and 'voice' not in a]
-        if not beat_actions:
-            continue
-
-        resolved_actions = [resolve_pronouns(a, names) for a in beat_actions]
-
-        chars_in_actions = _get_chars_in_actions_only(resolved_actions, names)
-        if not chars_in_actions:
-            continue
-
-        zone_alias = resolve_zone_alias(beat['zone'], mappings)
-
-        # SINGLE CHARACTER
-        if len(chars_in_actions) == 1:
-            char = chars_in_actions[0]
-            char_alias = char_aliases[char]
-
-            pose = POSTURE.get(char, None)
-            if pose and pose != "neutral":
-                pose_sentence = f"{char} is {pose}."
-            else:
-                pose_sentence = ""
-
-            char_action = next(
-                (a for a in resolved_actions if soft_normalize(canonical(a.split(" ", 1)[0])) == soft_normalize(char)),
-                resolved_actions[0]
-            )
-
-            char_pose = resolve_character_mentions(char_action, names)
-            _, motion_actions = bind_identity_first_only(resolved_actions, names)
-
-            alias = f"BEAT_{beat['beat']}_{normalize(char)}_ACTION"
-
-            T.action_medium(alias, zone_alias, char_alias, f"{pose_sentence} {char_pose}")
-            T.action_video(
-                f"{alias}_VIDEO",
-                alias,
-                motion_actions,
-                duration=5
-            )
-            continue
-
-        # MULTI-CHARACTER
-        pose_action_map, motion_actions = bind_identity_first_only(resolved_actions, names)
-        char_assets = " and ".join(f"{char_aliases[c]} asset" for c in chars_in_actions)
-        pose_block = format_pose_block(pose_action_map)
-
-        alias = f"BEAT_{beat['beat']}_WIDE_ACTION"
-
-        sentences = []
-
-        for char in chars_in_actions:
-            posture = POSTURE.get(char, None)
-            if posture:
-                sentences.append(posture_sentence(char, posture))
-
-        for char, action in pose_action_map.items():
-            clean_action = strip_leading_name(action, char)
-            sentences.append(f"{char} {clean_action}.")
-
-
-        sentences.append("The scene is framed as a two-shot.")
-
-        wide_prompt = " ".join(sentences)
-
-        T.action_wide(alias, zone_alias, char_assets, wide_prompt)
-
-        T.action_video(
-            f"{alias}_VIDEO",
-            alias,
-            motion_actions,
-            duration=5
-        )
-
-'''
 
 def render_beats_actions(assets, actions, mappings, T):
     char_aliases = {canonical(c['name']): f"CHAR_{normalize(c['name'])}" for c in assets['characters']}
@@ -264,16 +169,22 @@ def render_beats_actions(assets, actions, mappings, T):
         for char, action in pose_action_map.items():
             clean_action = strip_leading_name(action, char)
             sentences.append(f"{char} {clean_action}.")
-        if arc_sentence:
-            sentences.append(arc_sentence)
 
-        wide_prompt = " ".join(sentences)
+
+        wide_prompt = " ".join(sentences[:len(beat_chars)])
 
         alias = f"BEAT_{beat['beat']}_WIDE_ACTION"
         char_assets = " and ".join(f"{char_aliases[c]} asset" for c in beat_chars)
+        if len(beat_chars) == 1:
+            ide_prompt = sentences[0]
+            T.action_medium(alias, zone_alias, char_assets, resolve_character_mentions(wide_prompt, names))
 
-        T.action_wide(alias, zone_alias, char_assets, wide_prompt)
-        T.action_video(f"{alias}_VIDEO", alias, motion_actions, duration=5)
+        T.action_wide(alias, zone_alias, char_assets, resolve_character_mentions(wide_prompt, names))
+        sentences = sentences[:len(beat_chars)]
+        if arc_sentence:
+            sentences.append(arc_sentence)
+        wide_prompt = " ".join(sentences)
+        T.action_video(f"{alias}_VIDEO", alias, resolve_character_mentions(wide_prompt, names), duration=5)
 
 # ---------------------------------------------------------
 # DIALOG RENDERING

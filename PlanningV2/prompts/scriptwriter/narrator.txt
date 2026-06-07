@@ -165,6 +165,38 @@ Rules:
 
     Every block begins with (Zone: NAME).
 
+Secondary Object Rule (MANDATORY)
+
+    Every ACTION line must specify the object or surface being acted upon.
+
+    If the object is explicitly in the story → use it.
+
+    If the object is implied by the action → anchor to the most natural environment or prop.
+
+        Nadia sips from tankard (explicit).
+
+        Elara sits on wooden bench (bench implied by zone).
+
+        Nadia walks across tavern floorboards (floor implied by zone).
+
+    If no prop/environment is available → anchor to the zone name.
+
+        Elara sits in Seated Dining Position zone.
+
+Posture & Locomotion Rule (MANDATORY)
+
+    Sit/stand/kneel/lie → must specify surface or zone.
+
+        Elara sits on stool at table surface.
+
+    Walk/step/approach/retreat → must specify destination or surface.
+
+        Nadia walks toward kitchen door.
+
+    Facial/emotional cues (smile, laugh, frown) → redirect into facial tags.
+
+        [Nadia: facial smiling]
+
 ⭐ PROHIBITIONS
 
 You MUST NOT:

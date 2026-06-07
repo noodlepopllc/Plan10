@@ -97,7 +97,7 @@ Width: {self.WIDTH}, Height: {self.HEIGHT}, Seed: {self.SEED}
 >> ALIAS: {alias}
 composite_scene {zone_alias} asset and {char_alias} asset,
 shot_type: "medium",
-prompt: "{prompt}{arc_text}",
+prompt: "{prompt}",
 Width: {self.WIDTH}, Height: {self.HEIGHT}, Seed: {self.SEED}
 """)
 
@@ -107,7 +107,7 @@ Width: {self.WIDTH}, Height: {self.HEIGHT}, Seed: {self.SEED}
 >> ALIAS: {alias}
 composite_scene {zone_alias} asset and {char_assets},
 shot_type: "two_shot",
-prompt: "{prompt}{arc_text}",
+prompt: "{prompt}",
 Width: {self.WIDTH}, Height: {self.HEIGHT}, Seed: {self.SEED}
 """)
 
