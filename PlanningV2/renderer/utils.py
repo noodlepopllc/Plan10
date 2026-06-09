@@ -40,7 +40,7 @@ def resolve_character_mentions(text: str, names: dict) -> str:
         pattern = make_fuzzy_pattern(char)
         rewritten = re.sub(
             pattern,
-            lambda m: f"{m.group(0)} ({ident})",
+            lambda m: f"{m.group(0)}, {ident} ",
             rewritten,
             flags=re.IGNORECASE
         )
@@ -256,38 +256,46 @@ def recombine_by_syllables(sentences, threshold=16):
 def split_dialog_sentences(beats, syllable_threshold=16):
     new_beats = []
 
-    for beat in beats:
+    for ndx, beat in enumerate(beats):
         new_dialog = []
 
-        for entry in beat.get("dialog", []):
-            speaker = entry["speaker"]
-            line = entry["line"].strip()
+        line = beat.get("dialog", '')
+        beat['arc'] = f"{beat['actor']} {beat['posture']} with {beat['facial']} and {beat['action']}"
+        speaker = beat['speaker']
+        beat['beat'] = ndx
+        beat['posture'] = {beat['actor'] : beat['posture']}
+        beat['actions'] = [beat['action']]
+        if not line:
+            beat["dialog"] = []
+            new_beats.append(beat)
+            continue
+        line = line.strip()
 
-            # Step 1: Always segment into sentences first
-            sentences = segment_sentences(line)
+        # Step 1: Always segment into sentences first
+        sentences = segment_sentences(line)
 
-            # Step 2: If it's only one sentence, apply syllable gating
-            if len(sentences) == 1:
-                if count_syllables(line) < syllable_threshold:
-                    # Keep the single short sentence as-is
-                    new_dialog.append({
-                        "speaker": speaker,
-                        "line": line
-                    })
-                    continue
-                else:
-                    # Too many syllables → segment again (already done)
-                    pass
-
-            # Step 3: Now we have multiple sentences → recombine small ones
-            sentences = recombine_by_syllables(sentences, threshold=syllable_threshold)
-
-            # Step 4: Emit each final segment
-            for sent in sentences:
+        # Step 2: If it's only one sentence, apply syllable gating
+        if len(sentences) == 1:
+            if count_syllables(line) < syllable_threshold:
+                # Keep the single short sentence as-is
                 new_dialog.append({
                     "speaker": speaker,
-                    "line": sent.strip()
+                    "line": line
                 })
+                continue
+            else:
+                # Too many syllables → segment again (already done)
+                pass
+
+        # Step 3: Now we have multiple sentences → recombine small ones
+        sentences = recombine_by_syllables(sentences, threshold=syllable_threshold)
+
+        # Step 4: Emit each final segment
+        for sent in sentences:
+            new_dialog.append({
+                "speaker": speaker,
+                "line": sent.strip()
+            })
 
         beat["dialog"] = new_dialog
         new_beats.append(beat)

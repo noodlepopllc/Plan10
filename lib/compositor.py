@@ -10,6 +10,7 @@ load_environ()
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
 
+
 def CompositeScene(
     background_path: str,
     characters: list[str],
@@ -31,7 +32,6 @@ def CompositeScene(
         desc = add_metadata_loc(background_path, '', seed)
 
     bg_desc = desc
-
 
     # Establishing shot mode (no characters)
     if len(characters) == 0:

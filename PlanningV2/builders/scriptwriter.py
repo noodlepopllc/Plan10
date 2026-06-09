@@ -5,12 +5,7 @@ from pathlib import Path
 prompt_path = './PlanningV2/prompts'
 WORLD = Path(f'{prompt_path}/scriptwriter/world.txt').read_text()
 BIOGRAPHY = Path(f'{prompt_path}/scriptwriter/biography.txt').read_text()
-ACTION = Path(f'{prompt_path}/scriptwriter/action.txt').read_text()
-STORY = Path(f'{prompt_path}/scriptwriter/story.txt').read_text()
 NARRATOR = Path(f'{prompt_path}/scriptwriter/narrator.txt').read_text()
-VALIDATOR = Path(f'{prompt_path}/scriptwriter/validator.txt').read_text()
-REWRITER = Path(f'{prompt_path}/scriptwriter/rewriter.txt').read_text()
-
 
 def run_prompt(prompt, system, pth):
     if not Path(pth).exists():
@@ -27,23 +22,11 @@ def run_prompt(prompt, system, pth):
       print(f'{pth} Exists')
       return Path(pth).read_text()
 
-
-
 def build_script(story, outpath):
     expanded = Path(f'{outpath}/story.txt').read_text()
     world = run_prompt(f'{expanded}', WORLD, f'{outpath}/world.txt')
     biography = run_prompt(world, BIOGRAPHY, f'{outpath}/biography.txt')
-    narrative = run_prompt(f'Biography: {biography}, Story: {expanded}', NARRATOR, f'{outpath}/narrative.txt')
-
-    action_beats = run_prompt(
-        f'World: {biography}, Narrative: {narrative}', 
-        ACTION,
-        f'{outpath}/action_beats.txt')
-
-    validator = run_prompt(action_beats, VALIDATOR, f'{outpath}/validated.txt')
-    rewriter = run_prompt(validator, REWRITER, f'{outpath}/rewrite.json')
-
-    #complete = run_prompt(validator,STORY,f'{outpath}/complete.json')
+    narrative = run_prompt(f'Biography: {biography}, Story: {expanded}', NARRATOR, f'{outpath}/narrative.json')
     
 if __name__ == '__main__':
     from pathlib import Path

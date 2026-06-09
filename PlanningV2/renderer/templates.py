@@ -9,19 +9,32 @@ load_environ()
 class CommandBuffer:
     def __init__(self):
         self.identity = []
-        self.images = []
         self.videos = []
+        self.images = []
+        self.video_images = []
+        self.dialog = []
+        self.dialog_images = []
 
     def dump(self, mode="all"):
         mode = mode.lower()
-        if mode in ("all", "identity", "images", "videos"):
-            for c in self.identity:
+        for c in self.identity:
+            print(c)
+        for c in self.images:
+            print(c)
+        if mode in ("images"):
+            for c in self.video_images:
                 print(c)
-        if mode in ("all", "images", "videos"):
-            for c in self.images:
+            for c in self.dialog_images:
                 print(c)
         if mode in ("all", "videos"):
+            for c in self.video_images:
+                print(c)
             for c in self.videos:
+                print(c)
+        if mode in ("all", "dialog"):
+            for c in self.dialog_images:
+                print(c)
+            for c in self.dialog:
                 print(c)
 
 
@@ -93,7 +106,7 @@ Width: {self.WIDTH}, Height: {self.HEIGHT}, Seed: {self.SEED}
 
     def action_medium(self, alias, zone_alias, char_alias, prompt, arc=None):
         arc_text = f" Motion arc: {arc}" if arc else ""
-        self.buffer.images.append(f"""
+        self.buffer.video_images.append(f"""
 >> ALIAS: {alias}
 composite_scene {zone_alias} asset and {char_alias} asset,
 shot_type: "medium",
@@ -103,7 +116,7 @@ Width: {self.WIDTH}, Height: {self.HEIGHT}, Seed: {self.SEED}
 
     def action_wide(self, alias, zone_alias, char_assets, prompt, arc=None):
         arc_text = f" Motion arc: {arc}" if arc else ""
-        self.buffer.images.append(f"""
+        self.buffer.video_images.append(f"""
 >> ALIAS: {alias}
 composite_scene {zone_alias} asset and {char_assets},
 shot_type: "two_shot",
@@ -124,7 +137,7 @@ Width: {self.WIDTH}, Height: {self.HEIGHT}, Duration: {duration}, Seed: {self.SE
     # ---------------------------------------------------------
 
     def dialog_closeup(self, alias, zone_alias, char_alias, prompt):
-        self.buffer.images.append(f"""
+        self.buffer.dialog_images.append(f"""
 >> ALIAS: {alias}
 composite_scene {zone_alias} asset and {char_alias} asset,
 shot_type: "closeup",
@@ -133,7 +146,7 @@ Width: {self.WIDTH}, Height: {self.HEIGHT}, Seed: {self.SEED}
 """)
 
     def dialog_medium(self, alias, zone_alias, char_alias, prompt):
-        self.buffer.images.append(f"""
+        self.buffer.dialog_images.append(f"""
 >> ALIAS: {alias}
 composite_scene {zone_alias} asset and {char_alias} asset,
 shot_type: "medium",
@@ -142,14 +155,14 @@ Width: {self.WIDTH}, Height: {self.HEIGHT}, Seed: {self.SEED}
 """)
 
     def dialog_motion(self, alias, base_alias, motion_prompt, duration=2):
-        self.buffer.videos.append(f"""
+        self.buffer.dialog.append(f"""
 >> ALIAS: {alias}
 image_to_video {base_alias}_medium asset, "{motion_prompt}",
 Width: {self.WIDTH}, Height: {self.HEIGHT}, Duration: {duration}, Seed: {self.SEED}
 """)
 
     def dialog_final(self, alias, base_alias, voice_alias, text):
-        self.buffer.videos.append(f"""
+        self.buffer.dialog.append(f"""
 >> ALIAS: {alias}
 dialog_to_video media={base_alias} asset
 audio={voice_alias} asset

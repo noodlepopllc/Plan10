@@ -11,6 +11,7 @@ import random
 from config import load_environ
 load_environ()
 from image_gen import GenerateImage
+from image_edit import EditImage
 
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
@@ -58,6 +59,8 @@ def _ensure_pipeline(vrlimit=14):
 def GenerateVideo(prompt='', media='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
 
+        print(f"PROMPT: {prompt}")
+
         
         if isinstance(prompt, list):
             prompt = prompt.pop()
@@ -75,6 +78,9 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
                 end_image = video_to_img(media.pop(), width, height, True, False)
         else:
             start_image = media
+
+
+        original_prompt = prompt
 
         width = int(width)
         height = int(height)
@@ -133,7 +139,7 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
                 "output_path": output,
                 "frames": len(video),
                 "description": description,
-                "prompt": prompt
+                "prompt": eprompt
             }
             
         except Exception as e:
