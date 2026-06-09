@@ -188,7 +188,7 @@ def render_beats_actions(assets, actions, mappings, T):
         if arc_sentence:
             sentences.append(arc_sentence)
         wide_prompt = " ".join(sentences)
-        T.action_video(f"{alias}_VIDEO", alias, resolve_character_mentions(arc_sentence, names), duration=3)
+        T.action_video(f"{alias}_VIDEO", alias, resolve_character_mentions(arc_sentence, names), duration=5)
 
 # ---------------------------------------------------------
 # DIALOG RENDERING
