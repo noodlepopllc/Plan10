@@ -295,19 +295,24 @@ def render_beats_dialog(assets, actions, mappings, T):
 # ---------------------------------------------------------
 
 def main():
+    from pathlib import Path
+    
     basepath = sys.argv[1]
 
     with open(f"{basepath}/output/registry.json") as ass:
         assets = json.load(ass)
     actions = []
-    with open(f"{basepath}/output/narrative.json") as act:
-        for line in act:
-            actions.append(json.loads(line))
-    
-    actions = split_dialog_sentences(actions)
+    if not Path(f"{basepath}/output/complete_segmented.json").exists():
+        with open(f"{basepath}/output/narrative.json") as act:
+            for line in act:
+                actions.append(json.loads(line))
+        
+        actions = split_dialog_sentences(actions)
 
-    with open(f"{basepath}/output/complete_segmented.json", 'w') as act:
-        json.dump(actions,act,indent=4)
+        with open(f"{basepath}/output/complete_segmented.json", 'w') as act:
+            json.dump(actions,act,indent=4)
+    else:
+        actions = json.loads(Path(f"{basepath}/output/complete_segmented.json").read_text())
 
     T = Templates()   # ← ONE OBJECT
 

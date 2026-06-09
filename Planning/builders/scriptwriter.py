@@ -2,7 +2,7 @@ import json, sys
 sys.path.append('./lib')
 from qwen_llm import llm_analyze_media
 from pathlib import Path
-prompt_path = './PlanningV2/prompts'
+prompt_path = './Planning/prompts'
 WORLD = Path(f'{prompt_path}/scriptwriter/world.txt').read_text()
 BIOGRAPHY = Path(f'{prompt_path}/scriptwriter/biography.txt').read_text()
 NARRATOR = Path(f'{prompt_path}/scriptwriter/narrator.txt').read_text()
