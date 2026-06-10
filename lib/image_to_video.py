@@ -162,8 +162,8 @@ def GenerateVideoSchema():
                 "properties": {
                     "prompt": {"type": "string", "description": "Prompt for what should be happening in the video"},
                     "media": {"type": "string", "description": "Path to starting image or video."},
-                    "width": {"type": "integer", "default": 864},
-                    "height": {"type": "integer", "default": 480},
+                    "width": {"type": "integer", "default": f'{WIDTH}'},
+                    "height": {"type": "integer", "default": f'{HEIGHT}'},
                     "seed": {"type": "integer", "default": 42},
                     "duration_sec": {"type": "integer", "description": "Total length in seconds", "default": 10}
                 },

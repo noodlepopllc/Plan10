@@ -282,8 +282,8 @@ def GenerateTalkingVideoSchema():
                         "type": "string",
                         "description": "Path to audio file to for reference audio"
                     },
-                    "width": {"type": "integer", "description": "Video width (divisible by 64). Default: 480."},
-                    "height": {"type": "integer", "description": "Video height (divisible by 64). Default: 832."},
+                    "width": {"type": "integer", "description": f"Video width (divisible by 64). Default: {WIDTH}."},
+                    "height": {"type": "integer", "description": f"Video height (divisible by 64). Default: {HEIGHT}."},
                     "seed": {"type": "integer", "description": "Random seed for reproducibility. -1 for random."}
                 },
                 "required": ["prompt", "media", "audio"]

@@ -2,6 +2,11 @@ import torch, torchaudio, gc, librosa, traceback
 from omnivoice import OmniVoice
 import numpy as np
 from faster_whisper import WhisperModel
+from config import load_environ
+
+load_environ()
+WIDTH = int(os.environ.get("WIDTH", "832"))
+HEIGHT = int(os.environ.get("HEIGHT", "480"))
 
 
 def transcribe(path):
