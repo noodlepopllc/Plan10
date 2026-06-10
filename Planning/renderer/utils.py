@@ -40,7 +40,7 @@ def resolve_character_mentions(text: str, names: dict) -> str:
         pattern = make_fuzzy_pattern(char)
         rewritten = re.sub(
             pattern,
-            lambda m: f"{m.group(0)}, {ident} ",
+            lambda m: f"{m.group(0)} ({ident}) ",
             rewritten,
             flags=re.IGNORECASE
         )

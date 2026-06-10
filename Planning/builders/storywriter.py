@@ -54,6 +54,57 @@ Escalate tension based on the spark.
 Stop when the story goal is resolved.
 Keep the scene grounded in the location.
 Use natural dialog and physical blocking.
+
+STRICT PRONOUN ANNOTATION RULE
+
+When narration uses a pronoun referring to a character or object, annotate the pronoun itself, not the noun.
+
+    Correct:
+
+        “he [ref: George] sits down”
+
+        “her [ref: Melissa] voice rises”
+
+        “it [ref: comic] falls to the floor”
+
+        “next to him [ref: George]”
+
+    Incorrect (never do this):
+
+        “George [ref: George] sits down”
+
+        “Melissa [ref: Melissa] crosses her arms”
+
+        “comic [ref: comic] falls to the floor”
+
+Do NOT annotate names.
+Do NOT annotate nouns.
+Do NOT annotate dialog.
+Only annotate pronouns in narration.
+"""
+
+SYSTEM_NOPE = """
+⭐ REVISED STORY GENERATOR INSTRUCTION
+
+Using the structured seed below, write a coherent cinematic scene of 8–12 beats.
+
+    Do not introduce new characters or objects.
+
+    Escalate tension based on the spark.
+
+    Stop when the story goal is resolved.
+
+    Keep the scene grounded in the location.
+
+    Use natural dialog and physical blocking.
+
+    Minimize pronouns in narration. Prefer explicit character names.
+
+    Use pronouns in dialog only when natural.
+
+    Avoid ambiguous references (“he”, “she”, “they”, “it”) in narration.
+
+    When describing physical action, always use explicit character names.
 """
 
 def run_prompt(prompt, system, pth):
