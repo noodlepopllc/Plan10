@@ -55,33 +55,6 @@ Stop when the story goal is resolved.
 Keep the scene grounded in the location.
 Use natural dialog and physical blocking.
 
-STRICT PRONOUN ANNOTATION RULE
-
-When narration uses a pronoun referring to a character or object, annotate the pronoun itself, not the noun.
-
-    Correct:
-
-        “he [ref: George] sits down”
-
-        “her [ref: Melissa] voice rises”
-
-        “it [ref: comic] falls to the floor”
-
-        “next to him [ref: George]”
-
-    Incorrect (never do this):
-
-        “George [ref: George] sits down”
-
-        “Melissa [ref: Melissa] crosses her arms”
-
-        “comic [ref: comic] falls to the floor”
-
-Do NOT annotate names.
-Do NOT annotate nouns.
-Do NOT annotate dialog.
-Only annotate pronouns in narration.
-
 DETAIL EXPANSION RULE (MANDATORY)
 
 All narration MUST include rich, concrete physical detail.
@@ -90,9 +63,7 @@ You MUST describe the environment, anchored objects, and how characters interact
 You MUST expand each beat into a fully realized cinematic moment.
 You MUST NOT leave beats minimal or vague.
 You MUST NOT omit physical blocking or emotional cues.
-
 """
-
 
 def run_prompt(prompt, system, pth):
     if not Path(pth).exists():

@@ -6,13 +6,9 @@ Output SECTION 1, SECTION 2, and SECTION 3 exactly as defined.
 ⭐ RULES (GLOBAL)
 
     Use ONLY information from PASS 0A.
-
     Do NOT invent new objects, furniture, rooms, or technology.
-
     Do NOT add story events or character actions.
-
     The room MUST feel open, spacious, and two‑orientation‑compatible unless PASS 0A forbids it.
-
     All descriptions MUST be physical, filmable, and deterministic.
 
 ⭐ SECTION 1 — SETTING (ROOM‑LEVEL)
@@ -20,17 +16,11 @@ Output SECTION 1, SECTION 2, and SECTION 3 exactly as defined.
 Write 3–5 sentences describing:
 
     the room’s overall form
-
     major fixed structures explicitly in PASS 0A
-
     openings explicitly in PASS 0A
-
     ground/terrain material
-
     lighting sources
-
     architectural style
-
     spatial scale (open unless forbidden)
 
 Do NOT add props or furniture.
@@ -39,25 +29,15 @@ Do NOT add props or furniture.
 For each character, output:
 
     Name
-
     Age
-
     Gender
-
     Race
-
     Ethnicity/Species (if given)
-
     Appearance (physical, filmable)
-
     Clothing
-
     Hair
-
     Personality (1–2 filmable traits)
-
     Movement style
-
     Distinctive physical traits
 
 Do NOT add backstory or narrative.
@@ -69,15 +49,10 @@ Output ONE LOCATION = the room.
 Write 3–5 sentences describing:
 
     the room’s shape
-
     fixed structures
-
     openings
-
     materials
-
     lighting
-
     scale (open, breathable)
 
 Do NOT add new structures.
@@ -87,11 +62,8 @@ List ONLY anchored, non‑movable objects explicitly in PASS 0A.
 For each, describe:
 
     material
-
     color
-
     placement
-
     orientation
 
 Do NOT invent objects.
@@ -104,13 +76,9 @@ Each Zone contains:
 3–5 sentences describing:
 
     what part of the room the zone occupies
-
     which fixed features define it
-
     how it relates to the room
-
     open space on the opposite side
-
     two usable orientations
 
 No people. No actions.
@@ -127,11 +95,8 @@ List 3–6 anchored elements from PASS 0A.
 Describe:
 
     what they are
-
     material
-
     position
-
     orientation
 
 Do NOT invent objects.
