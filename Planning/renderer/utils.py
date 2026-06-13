@@ -282,10 +282,9 @@ def split_dialog_sentences(beats, syllable_threshold=16):
                     "speaker": speaker,
                     "line": line
                 })
+                beat["dialog"] = new_dialog
+                new_beats.append(beat)
                 continue
-            else:
-                # Too many syllables → segment again (already done)
-                pass
 
         # Step 3: Now we have multiple sentences → recombine small ones
         sentences = recombine_by_syllables(sentences, threshold=syllable_threshold)
