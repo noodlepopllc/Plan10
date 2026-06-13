@@ -21,7 +21,7 @@ class CommandBuffer:
             print(c)
         for c in self.images:
             print(c)
-        if mode in ("images"):
+        if mode in ("all","images"):
             for c in self.video_images:
                 print(c)
             for c in self.dialog_images:
