@@ -81,31 +81,18 @@ Do NOT annotate names.
 Do NOT annotate nouns.
 Do NOT annotate dialog.
 Only annotate pronouns in narration.
+
+DETAIL EXPANSION RULE (MANDATORY)
+
+All narration MUST include rich, concrete physical detail.
+You MUST describe posture, movement, gestures, facial cues, and spatial relationships.
+You MUST describe the environment, anchored objects, and how characters interact with them.
+You MUST expand each beat into a fully realized cinematic moment.
+You MUST NOT leave beats minimal or vague.
+You MUST NOT omit physical blocking or emotional cues.
+
 """
 
-SYSTEM_NOPE = """
-⭐ REVISED STORY GENERATOR INSTRUCTION
-
-Using the structured seed below, write a coherent cinematic scene of 8–12 beats.
-
-    Do not introduce new characters or objects.
-
-    Escalate tension based on the spark.
-
-    Stop when the story goal is resolved.
-
-    Keep the scene grounded in the location.
-
-    Use natural dialog and physical blocking.
-
-    Minimize pronouns in narration. Prefer explicit character names.
-
-    Use pronouns in dialog only when natural.
-
-    Avoid ambiguous references (“he”, “she”, “they”, “it”) in narration.
-
-    When describing physical action, always use explicit character names.
-"""
 
 def run_prompt(prompt, system, pth):
     if not Path(pth).exists():
