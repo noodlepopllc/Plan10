@@ -54,15 +54,6 @@ Escalate tension based on the spark.
 Stop when the story goal is resolved.
 Keep the scene grounded in the location.
 Use natural dialog and physical blocking.
-
-DETAIL EXPANSION RULE (MANDATORY)
-
-All narration MUST include rich, concrete physical detail.
-You MUST describe posture, movement, gestures, facial cues, and spatial relationships.
-You MUST describe the environment, anchored objects, and how characters interact with them.
-You MUST expand each beat into a fully realized cinematic moment.
-You MUST NOT leave beats minimal or vague.
-You MUST NOT omit physical blocking or emotional cues.
 """
 
 def run_prompt(prompt, system, pth):
