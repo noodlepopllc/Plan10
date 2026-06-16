@@ -27,13 +27,13 @@ def CompositeScene(
     # 2. Extract metadata (source of truth)
     img = Image.open(background_path)
 
-    if shot_type == 'closeup':
-        desc = img.info.get("Breif")
+    if shot_type in ['closeup','medium','ots']:
+        desc = img.info.get("Brief")
     else:
         desc = img.info.get("Description")
 
     if desc is None:
-        if shot_type =='closeup':
+        if shot_type in ['closeup','medium','ots']
             desc = add_metadata_loc(background_path, '', seed, True)
         else:
             desc = add_metadata_loc(background_path, '', seed)
