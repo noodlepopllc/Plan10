@@ -263,7 +263,7 @@ def add_metadata_char(imgpath, prompt='', seed=-1):
     target_image.save(imgpath, pnginfo=metadata)
     return clean_string
 
-def add_metadata_loc(imgpath, prompt='', seed=-1):
+def add_metadata_loc(imgpath, prompt='', seed=-1, brief=False):
     target_image = Image.open(imgpath)
     metadata = PngInfo()
     analysis_prompt = '''
@@ -280,7 +280,10 @@ Return ONLY the following fields:
 
 Keep each field to 1 concise sentence. No characters, no narrative.
     '''
-    #bg_analysis = AnalyzeImage(imgpath, "Description, Style, lighting, weather in <15 words.")
+    if brief:
+        bg_brief = AnalyzeImage(imgpath, "Description, Style, lighting, weather in <15 words.")['analysis'].strip()
+        metadata.add_text("Brief", bg_brief)
+        return bg_brief
     bg_analysis = AnalyzeImage(imgpath, analysis_prompt)
     bg_desc = bg_analysis['analysis'].strip()
     metadata.add_text("Description", bg_desc)
