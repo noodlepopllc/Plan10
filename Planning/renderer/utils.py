@@ -260,11 +260,16 @@ def split_dialog_sentences(beats, syllable_threshold=16):
         new_dialog = []
 
         line = beat.get("dialog", '')
-        beat['arc'] = f"{beat['actor']} {beat['posture']} with {beat['facial']} and {beat['action']}"
+        expression = beat.get('facial')
+        expression = expression if expression else 'neutral'
+        beat['facial'] = expression
         speaker = beat['speaker']
+        if not beat['actor']:
+            beat['actor'] = speaker
         beat['beat'] = ndx
         beat['posture'] = {beat['actor'] : beat['posture']}
         beat['actions'] = [beat['action']]
+        beat['arc'] = f"{beat['actor']} {beat['posture'][beat['actor']]} with a {expression} expression, {beat['action']}"
         if not line:
             beat["dialog"] = []
             new_beats.append(beat)

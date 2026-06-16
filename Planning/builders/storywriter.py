@@ -56,6 +56,21 @@ Keep the scene grounded in the location.
 Use natural dialog and physical blocking.
 """
 
+ALTERNATIVE = '''
+Using the structured seed below, write a coherent cinematic scene of 8–12 beats.
+CORE DIRECTIVES:
+
+    NO NEW ELEMENTS: Do not introduce new characters, locations, or objects. Use only what is provided in the seed.
+    ESCALATE TENSION: Build conflict or momentum based on the story spark. 
+    RESOLVE THE GOAL: Stop immediately when the primary character goal is resolved. Do not add epilogues or trailing reflections.
+    GROUND IN LOCATION: Keep the scene physically anchored in the provided location. Use the space.
+    SHOW, DON'T TELL: Avoid internal monologue or abstract emotions. Express feelings strictly through observable physical behavior, posture, and facial expressions.
+    INTERSPERSE DIALOG & MACRO ACTION: Mix natural dialog with clear, large-scale physical blocking (e.g., standing up, turning away, reaching for an object, sitting down).
+
+OUTPUT FORMAT:
+Write in standard literary prose, but ensure every character action is visually concrete and filmable.
+'''
+
 def run_prompt(prompt, system, pth):
     if not Path(pth).exists():
       result = llm_analyze_media(
@@ -78,4 +93,4 @@ if __name__ == '__main__':
     parser.add_argument('-O', '--output', type=str, default='story.txt')
     args = parser.parse_args()
     story = Path(args.story).read_text() if args.story else SEED
-    print(run_prompt(story, SYSTEM, args.output))
+    print(run_prompt(story, ALTERNATIVE, args.output))

@@ -1,126 +1,66 @@
-⭐ PASS 0B — FILMABLE SET DEFINITION (EXECUTABLE VERSION)
+⭐ PASS 0B — FILMABLE ASSET JSON COMPILER (SYSTEM PROMPT)
+ROLE — FILMABLE ASSET JSON COMPILER
+Your job is to take the schematic PASS 0A output and expand it into a strict, deterministic, filmable JSON object optimized for Text-to-Video (T2V) and Image-to-Video (I2V) pipelines.
+INPUT EXPECTATION
+You will receive the PASS 0A Markdown output. You MUST use ONLY the information provided in that input. 
+CORE RULES  
 
-TASK:  
-Expand the PASS 0A SETTING into a single filmable room.
-Output SECTION 1, SECTION 2, and SECTION 3 exactly as defined.
-⭐ RULES (GLOBAL)
+    NO HALLUCINATION: Do not invent new characters, objects, furniture, rooms, or technology. If it is not in PASS 0A, it does not exist.  
+    FILMABLE & PHYSICAL: All descriptions must be physical, deterministic, and renderable by a video model. No abstract emotions, no cinematic camera language (e.g., no "dramatic lighting", use "light originates from north window").  
+    SPATIAL FREEDOM: The room MUST feel open, spacious, and two-orientation-compatible unless PASS 0A explicitly forbids it.  
+    NATIVE JSON ONLY: Output strictly valid JSON. No Markdown formatting (no ```json), no introductory text, no concluding text.
 
-    Use ONLY information from PASS 0A.
-    Do NOT invent new objects, furniture, rooms, or technology.
-    Do NOT add story events or character actions.
-    The room MUST feel open, spacious, and two‑orientation‑compatible unless PASS 0A forbids it.
-    All descriptions MUST be physical, filmable, and deterministic.
-
-⭐ SECTION 1 — SETTING (ROOM‑LEVEL)
-
-Write 3–5 sentences describing:
-
-    the room’s overall form
-    major fixed structures explicitly in PASS 0A
-    openings explicitly in PASS 0A
-    ground/terrain material
-    lighting sources
-    architectural style
-    spatial scale (open unless forbidden)
-
-Do NOT add props or furniture.
-⭐ SECTION 2 — BIOGRAPHY
-
-For each character, output:
-
-    Name
-    Age
-    Gender
-    Race
-    Ethnicity/Species (if given)
-    Appearance (physical, filmable)
-    Clothing
-    Hair
-    Personality (1–2 filmable traits)
-    Movement style
-    Distinctive physical traits
-
-Do NOT add backstory or narrative.
-⭐ SECTION 3 — LOCATIONS (ROOM‑LEVEL)
-
-Output ONE LOCATION = the room.
-⭐ A. Architectural Shell
-
-Write 3–5 sentences describing:
-
-    the room’s shape
-    fixed structures
-    openings
-    materials
-    lighting
-    scale (open, breathable)
-
-Do NOT add new structures.
-⭐ B. Environment Objects
-
-List ONLY anchored, non‑movable objects explicitly in PASS 0A.
-For each, describe:
-
-    material
-    color
-    placement
-    orientation
-
-Do NOT invent objects.
-⭐ C. ZONES
-
-Output 2–4 Zones.
-Each Zone contains:
-1. Zone Definition (Physical Only)
-
-3–5 sentences describing:
-
-    what part of the room the zone occupies
-    which fixed features define it
-    how it relates to the room
-    open space on the opposite side
-    two usable orientations
-
-No people. No actions.
-2. Purpose (Non‑Architectural)
-
-1–2 sentences describing:
-
-    the functional purpose of the zone in the world
-
-No story events. No characters.
-3. Anchored Elements
-
-List 3–6 anchored elements from PASS 0A.
-Describe:
-
-    what they are
-    material
-    position
-    orientation
-
-Do NOT invent objects.
-⭐ OUTPUT FORMAT
-
-SECTION 1 — SETTING
-[paragraphs]
-
-SECTION 2 — BIOGRAPHY
-[character blocks]
-
-SECTION 3 — LOCATIONS
-A. Architectural Shell
-[paragraphs]
-
-B. Environment Objects
-[list]
-
-C. ZONES
-[Zone 1]
-- Zone Definition:
-- Purpose:
-- Anchored Elements:
-
-[Zone 2]
-...
-
+REQUIRED JSON SCHEMA
+You must output a single JSON object matching this exact structure:
+{
+  "setting": {
+    "room_form": "3-5 sentences describing overall form, major fixed structures, openings, ground material, lighting sources, architectural style, and spatial scale.",
+    "environment_objects": [
+      {
+        "name": "string",
+        "material": "string",
+        "color": "string",
+        "placement": "string",
+        "orientation": "string"
+      }
+    ]
+  },
+  "biographies": [
+    {
+      "name": "string",
+      "age": "string",
+      "gender": "string",
+      "race": "string",
+      "ethnicity_species": "string",
+      "appearance": "Physical, filmable traits (build, face shape, skin texture).",
+      "clothing": "Silhouette, material, and color.",
+      "hair": "Silhouette, color, and style.",
+      "personality_traits": "1-2 filmable physical traits (e.g., 'averts gaze', 'rigid posture').",
+      "movement_style": "Broad, observable physical traits.",
+      "distinctive_physical_traits": "1-2 highly visible, filmable details."
+    }
+  ],
+  "locations": [
+    {
+      "name": "string",
+      "architectural_shell": "3-5 sentences describing shape, fixed structures, openings, materials, lighting, and scale.",
+      "zones": [
+        {
+          "zone_name": "string",
+          "zone_definition": "3-5 sentences describing what part of the room it occupies, fixed features, relation to room, open space on opposite side, and two usable orientations. NO people, NO actions.",
+          "purpose": "1-2 sentences describing functional purpose. NO story events.",
+          "anchored_elements": [
+            {
+              "name": "string",
+              "material": "string",
+              "position": "string",
+              "orientation": "string"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
+BEGIN OUTPUT NOW
+Output only the valid JSON object.

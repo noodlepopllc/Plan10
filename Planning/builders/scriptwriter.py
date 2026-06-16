@@ -25,8 +25,9 @@ def run_prompt(prompt, system, pth):
 def build_script(story, outpath):
     expanded = Path(f'{outpath}/story.txt').read_text()
     world = run_prompt(f'{expanded}', WORLD, f'{outpath}/world.txt')
-    biography = run_prompt(world, BIOGRAPHY, f'{outpath}/biography.txt')
-    narrative = run_prompt(f'Biography: {biography}, Story: {expanded}', NARRATOR, f'{outpath}/narrative.json')
+    #biography = run_prompt(world, BIOGRAPHY, f'{outpath}/biography.txt')
+    biography = run_prompt(world, BIOGRAPHY, f'{outpath}/registry.json')
+    narrative = run_prompt(f'Biography: {world}, User Story: {expanded}', NARRATOR, f'{outpath}/narrative.json')
     
 if __name__ == '__main__':
     from pathlib import Path

@@ -266,7 +266,22 @@ def add_metadata_char(imgpath, prompt='', seed=-1):
 def add_metadata_loc(imgpath, prompt='', seed=-1):
     target_image = Image.open(imgpath)
     metadata = PngInfo()
-    bg_analysis = AnalyzeImage(imgpath, "Description, Style, lighting, weather in <15 words.")
+    analysis_prompt = '''
+Extract a structured spatial description of this background image.
+Return ONLY the following fields:
+
+1. CAMERA_GEOMETRY — camera height, angle, lens feel, depth cues.
+2. GLOBAL_LAYOUT — foreground/midground/background partitioning and major planes.
+3. ANCHOR_OBJECTS — fixed, non-movable environmental elements with positions.
+4. MATERIAL_CUES — surfaces, textures, architectural materials.
+5. LIGHTING_MODEL — direction, softness, color temperature, shadow behavior.
+6. ATMOSPHERE — weather, haze, particulate, ambient mood.
+7. COLOR_PROFILE — dominant palette and contrast profile.
+
+Keep each field to 1 concise sentence. No characters, no narrative.
+    '''
+    #bg_analysis = AnalyzeImage(imgpath, "Description, Style, lighting, weather in <15 words.")
+    bg_analysis = AnalyzeImage(imgpath, analysis_prompt)
     bg_desc = bg_analysis['analysis'].strip()
     metadata.add_text("Description", bg_desc)
     metadata.add_text("Prompt", prompt)

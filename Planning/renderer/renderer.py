@@ -21,8 +21,8 @@ POSTURE = {}
 # ---------------------------------------------------------
 
 def get_identity(assets, T):
-    for char in assets['characters']:
-        bio = char['biography']
+    for bio in assets['biographies']:
+        #bio = char['biography']
         name = bio['name']
         alias = f"CHAR_{normalize(name)}"
 
@@ -47,9 +47,9 @@ def build_identity_map(assets, beat=None):
         for k, v in beat['posture'].items():
             POSTURE[canonical(k)] = v
 
-    for char in assets['characters']:
-        bio = char['biography']
-        ckey = canonical(char['name'])
+    for bio in assets['biographies']:
+        #bio = char['biography']
+        ckey = canonical(bio['name'])
 
         posture = POSTURE.get(ckey, 'neutral')
         gender = bio['gender']
@@ -83,7 +83,7 @@ def get_backgrounds(assets, mappings, T):
             T.background(
                 alias,
                 architecture,
-                zone['definition'],
+                zone['zone_definition'],
                 zone['anchored_elements']
             )
 
@@ -141,7 +141,7 @@ def strip_leading_name(action, char):
 
 
 def render_beats_actions(assets, actions, mappings, T):
-    char_aliases = {canonical(c['name']): f"CHAR_{normalize(c['name'])}" for c in assets['characters']}
+    char_aliases = {canonical(c['name']): f"CHAR_{normalize(c['name'])}" for c in assets['biographies']}
 
     for beat in actions:
         if not beat['action']:
@@ -181,9 +181,10 @@ def render_beats_actions(assets, actions, mappings, T):
         char_assets = " and ".join(f"{char_aliases[c]} asset" for c in beat_chars)
         if len(beat_chars) == 1:
             ide_prompt = sentences[0]
-            T.action_medium(alias, zone_alias, char_assets, resolve_character_mentions(arc_sentence, names))
+            alias = f"BEAT_{beat['beat']}_MEDIUM_ACTION"
+            T.action_medium(alias, zone_alias, char_assets, resolve_character_mentions(arc, names))
         else:
-            T.action_wide(alias, zone_alias, char_assets, resolve_character_mentions(arc_sentence, names))
+            T.action_wide(alias, zone_alias, char_assets, resolve_character_mentions(arc, names))
         sentences = sentences[:len(beat_chars)]
         if arc_sentence:
             sentences.append(arc_sentence)
@@ -221,7 +222,7 @@ def clean_dialog_line(line):
 def render_beats_dialog(assets, actions, mappings, T):
     char_aliases = {
         canonical(c['name']): f"CHAR_{normalize(c['name'])}"
-        for c in assets['characters']
+        for c in assets['biographies']
     }
 
     generated_bases = set()

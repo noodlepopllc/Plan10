@@ -1,19 +1,19 @@
 Characters:
 - Samuel: a 23‑year‑old human male, nerdy, wearing baggy blue jeans, a plain white T‑shirt, and sneakers; insecure, earnest, and seeking reassurance.
-- BETH‑183R: an android with East Asian facial features, a red synthetic body with hard plastic panels over visible mechatronic cabling, and black bob‑cut hair; logical, literal, and emotionally neutral.
+- BETH: an android with East Asian facial features, a red synthetic body with hard plastic panels over visible mechatronic cabling, and black bob‑cut hair; logical, literal, and emotionally neutral.
 
 Location:
 A futuristic apartment in a large metropolitan city in the year 2040. The space includes a compact living area with modular furniture, ambient lighting, a wall‑mounted display, and a small kitchenette with modern appliances.
 
 Motivations:
 - Samuel wants emotional reassurance and validation from his android partner.
-- BETH‑183R wants to respond according to her programmed directives and maintain clarity about her functional limitations.
+- BETH wants to respond according to her programmed directives and maintain clarity about her functional limitations.
 
 Spark:
-Samuel asks BETH‑183R if she loves him, prompting her to give a literal, programmed response that unintentionally creates emotional tension.
+Samuel asks BETH if she loves him, prompting her to give a literal, programmed response that unintentionally creates emotional tension.
 
 Story Goal:
-Samuel wants genuine emotional affirmation, but BETH‑183R responds with programmed honesty that complicates the moment.
+Samuel wants genuine emotional affirmation, but BETH responds with programmed honesty that complicates the moment.
 
 Initial Situation:
-Samuel stands in the living area of the apartment while BETH‑183R is nearby in an idle posture. He gathers the courage to ask her a personal question.
+Samuel stands in the living area of the apartment while BETH is nearby in an idle posture. He gathers the courage to ask her a personal question.
