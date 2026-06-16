@@ -89,7 +89,7 @@ Seed: {self.SEED}
         arc_text = f" Motion arc: {arc}" if arc else ""
         self.buffer.video_images.append(f"""
 >> ALIAS: {alias}
-composite_scene {zone_alias} asset and {char_alias} asset,
+composite_scene {zone_alias} asset and {char_alias} ,
 shot_type: "medium",
 prompt: "{prompt}",
 Width: {self.WIDTH}, Height: {self.HEIGHT}, Seed: {self.SEED}

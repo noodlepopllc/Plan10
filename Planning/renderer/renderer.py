@@ -178,7 +178,7 @@ def render_beats_actions(assets, actions, mappings, T):
         identity = '\n'.join([f'{x.capitalize()} ({y})' for x, y in names.items()])
 
         alias = f"BEAT_{beat['beat']}_WIDE_ACTION"
-        char_assets = " and ".join(f"{char_aliases[c]} asset" for c in beat_chars)
+        char_assets = " and ".join(f"{char_aliases[c]} asset " for c in beat_chars)
         if len(beat_chars) == 1:
             ide_prompt = sentences[0]
             alias = f"BEAT_{beat['beat']}_MEDIUM_ACTION"
