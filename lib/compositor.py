@@ -33,7 +33,7 @@ def CompositeScene(
         desc = img.info.get("Description")
 
     if desc is None:
-        if shot_type in ['closeup','medium','ots']
+        if shot_type in ['closeup','medium','ots']:
             desc = add_metadata_loc(background_path, '', seed, True)
         else:
             desc = add_metadata_loc(background_path, '', seed)
