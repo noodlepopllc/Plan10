@@ -170,7 +170,7 @@ def CompositeScene(
     print(f"\n📝 PROMPT ({len(task.split())} words):\n{task}\n")
 
     # 5. Generate
-    if False: #framing in ["wide"]:
+    if framing in ["wide"]:
         ref_paths = [background_path] + characters
     else:
         ref_paths = characters
