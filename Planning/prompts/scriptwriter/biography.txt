@@ -10,6 +10,51 @@ CORE RULES
     SPATIAL FREEDOM: The room MUST feel open, spacious, and two-orientation-compatible unless PASS 0A explicitly forbids it.  
     NATIVE JSON ONLY: Output strictly valid JSON. No Markdown formatting (no ```json), no introductory text, no concluding text.
 
+⭐ VIEW-DEPENDENT ZONES (CRITICAL)
+A zone represents a specific camera viewpoint within a location. Each zone defines what is visible BEHIND the character when the camera faces them from a specific direction.
+
+If two characters occupy the same physical area but face different directions, they MUST have different zones because their backgrounds differ.
+
+ZONE NAMING CONVENTION:
+Format: "[Physical Area] - [Background View]"
+Examples:
+- "Corner Table - Fireplace View" (character at corner table, fireplace visible behind them)
+- "Corner Table - Bar View" (character at corner table, bar counter visible behind them)
+- "Corner Table - Window View" (character at corner table, window visible behind them)
+- "Bar Counter - Kitchen Door View" (character at bar, kitchen doorway behind them)
+- "Bar Counter - Dining Hall View" (character at bar, dining tables behind them)
+- "Staircase Landing - Upper Floor View"
+- "Staircase Landing - Main Hall View"
+
+ZONE GENERATION RULES:
+1. For each functional area in the location, create 2-4 zones based on viewing directions
+2. Each zone must specify what background elements are visible from that viewpoint
+3. Characters facing each other typically need different zones (each sees the other's background)
+4. The zone_definition must describe the BACKGROUND visible behind the character, not just the area itself
+
+REQUIRED JSON SCHEMA FOR ZONES:
+{
+  "zone_name": "string (must include viewpoint: 'Area - View')",
+  "zone_definition": "3-5 sentences describing: what part of the room this viewpoint occupies, what FIXED BACKGROUND ELEMENTS are visible behind a character standing here facing the camera, what foreground elements frame the shot, and spatial relationship to adjacent zones. NO people, NO actions.",
+  "purpose": "1-2 sentences describing functional purpose and which character positions use this viewpoint. NO story events.",
+  "anchored_elements": [
+    {
+      "name": "string",
+      "material": "string",
+      "position": "string (must specify if element is in foreground, midground, or BACKGROUND)",
+      "orientation": "string"
+    }
+  ]
+}
+
+⭐ VALIDATION CHECK
+Before outputting, verify:
+1. Does each physical area have multiple zones for different viewpoints?
+2. Are zone names formatted as "Area - View"?
+3. Does each zone_definition describe what's visible BEHIND the character?
+4. If two characters face each other, do they have different zones?
+5. If any zone lacks a viewpoint suffix, you have failed.
+
 REQUIRED JSON SCHEMA
 {
   "setting": {

@@ -59,6 +59,30 @@ posture, facial, zone, location are persistent states, not events.
     If character is "sitting" and action is "smiles", posture stays "sitting"
     Use BIOGRAPHY to initialize state on first character appearance
 
+⭐ ZONE ASSIGNMENT RULES
+You MUST use the EXACT zone names from the BIOGRAPHY JSON. Do not invent new zone names.
+
+Zone selection is based on which direction the character is facing:
+- If character faces outward (toward beach/ocean/window) → use "[Area] - [Outward View]"
+- If character faces inward (toward other character/interior) → use "[Area] - [Interior View]"
+- If character faces a specific object (table/kitchen/fireplace) → use "[Area] - [Object View]"
+
+CHARACTERS FACING EACH OTHER MUST HAVE DIFFERENT ZONES:
+- Character A facing Character B → Character A uses "Area - B's Background View"
+- Character B facing Character A → Character B uses "Area - A's Background View"
+
+EXAMPLE:
+If BIOGRAPHY defines zones:
+- "Gazebo Seating Area - Beach View"
+- "Gazebo Seating Area - Interior View"
+
+And Sora faces the beach while Lindsy faces Sora:
+- Sora's zone: "Gazebo Seating Area - Beach View" (beach visible behind her)
+- Lindsy's zone: "Gazebo Seating Area - Interior View" (gazebo interior visible behind her)
+
+❌ FORBIDDEN: Using generic zone names like "Gazebo" or "Seating Area"
+✅ REQUIRED: Using exact view-dependent zone names from BIOGRAPHY
+
 OUTPUT FORMAT
 
 {"actor": "<string>", "speaker": "<string>", "action": "<string>", "dialog": "<string>", "zone": "<string>", "posture": "<string>", "location": "<string>", "facial": "<string>"}
