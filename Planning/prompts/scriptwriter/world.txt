@@ -13,14 +13,18 @@ SECTION 1 — WORLD SUMMARY
     ❌ FORBIDDEN: Story events, character actions, detailed visuals.
 
 SECTION 2 — CHARACTER SUMMARIES
-For each character, provide a bulleted list:  
+For each character, provide a bulleted list:
 
-    Name, Age, Gender, Race (default "humanoid"), Ethnicity/Species.  
-    Appearance silhouette (broad strokes: build, face shape).  
-    Clothing silhouette (broad strokes: type, material, color).  
-    Hair silhouette (broad strokes: style, color).  
-    Movement style (broad strokes: e.g., "heavy steps", "quick movements").  
-    ❌ FORBIDDEN: Specific visual details, props, backstory, lore, emotional analysis, story events.
+- Name, Age, Gender, Race (default "humanoid"), Ethnicity/Species.
+- Face shape and distinctive facial features (e.g., "sharp jawline, prominent nose, high cheekbones, scar above left eye").
+- Build and posture (e.g., "tall and lean, slightly hunched").
+- Clothing details (specific garments, materials, colors, condition).
+- Hair (exact style, color, length, how it's worn).
+- Movement style (broad strokes: e.g., "heavy steps", "quick movements").
+- DISTINCTIVE VISUAL MARKERS: 2-3 highly specific, unique visual traits that make this character instantly recognizable (e.g., "tattoo of serpent on neck", "missing left ear", "always wears red scarf").
+
+❌ FORBIDDEN: Backstory, lore, emotional analysis, story events, internal thoughts.
+✅ REQUIRED: Specific visual details that distinguish this character from others.
 
 SECTION 3 — LOCATION SUMMARY  
 

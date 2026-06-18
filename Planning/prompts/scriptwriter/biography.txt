@@ -11,7 +11,6 @@ CORE RULES
     NATIVE JSON ONLY: Output strictly valid JSON. No Markdown formatting (no ```json), no introductory text, no concluding text.
 
 REQUIRED JSON SCHEMA
-You must output a single JSON object matching this exact structure:
 {
   "setting": {
     "room_form": "3-5 sentences describing overall form, major fixed structures, openings, ground material, lighting sources, architectural style, and spatial scale.",
@@ -32,12 +31,15 @@ You must output a single JSON object matching this exact structure:
       "gender": "string",
       "race": "string",
       "ethnicity_species": "string",
-      "appearance": "Physical, filmable traits (build, face shape, skin texture).",
-      "clothing": "Silhouette, material, and color.",
-      "hair": "Silhouette, color, and style.",
-      "personality_traits": "1-2 filmable physical traits (e.g., 'averts gaze', 'rigid posture').",
-      "movement_style": "Broad, observable physical traits.",
-      "distinctive_physical_traits": "1-2 highly visible, filmable details."
+      "appearance": "Combined physical description (build, face shape, skin, facial features) - ethnicity-appropriate",
+      "clothing": "Silhouette, material, and color",
+      "hair": "Silhouette, color, and style",
+      "distinctive_visual_markers": [
+        "Unique visual trait 1",
+        "Unique visual trait 2"
+      ],
+      "movement_style": "Broad, observable physical traits",
+      "personality_traits": "1-2 filmable physical traits"
     }
   ],
   "locations": [
@@ -62,5 +64,12 @@ You must output a single JSON object matching this exact structure:
     }
   ]
 }
+
+⭐ CHARACTER DISTINCTIVENESS RULES
+- Each character MUST have unique facial_features (different face shape, different specific features).
+- Each character MUST have at least 2 distinctive_visual_markers that are highly specific and unique.
+- If two characters share the same facial features or lack distinctive markers, you have failed.
+- These details are CRITICAL for T2V rendering - they prevent character blending.
+
 BEGIN OUTPUT NOW
 Output only the valid JSON object.

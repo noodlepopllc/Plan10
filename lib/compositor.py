@@ -84,46 +84,6 @@ def CompositeScene(
     if shot_type not in ("two_shot", "ots"):
         descriptions = [descriptions.pop(0)] 
     
-    if len(descriptions) > 1:
-        chars_desc = f"Character 1: {descriptions[0]}. Character 2: {descriptions[1]}. "
-    else:
-        chars_desc = f"Character 1: {descriptions[0]}. " 
-
-    # 3. Explicit Framing Dictionary
-    # Note: Profile uses "Position on X looking Y" to force direction
-    framing = {
-        "closeup": (
-            "EXTREME FACE CLOSE-UP. Face fills 80% of frame. "
-            "Crop at chin. Camera distance: very close."
-        ),
-        "medium": (
-            "WAIST-UP FRAMING. Camera distance: tight medium. "
-            "Subject scale: large. Face occupies upper third of frame. "
-            "Anchor face at vertical 0.32. Centered horizontally."
-        ),
-        "two_shot": (
-            "Tight waist-up framing of two characters shoulder-to-shoulder. "
-            "Camera distance: medium close. Subject scale: large. "
-            "Waist-up only. "
-        ),
-        "wide": (
-            "Full body shot. Character small in frame."
-        ),
-        "profile_left": (
-            "STRICT PROFILE FACING LEFT. Character on RIGHT side of frame. "
-            "Camera distance: medium close. Waist-up only."
-        ),
-        "profile_right": (
-            "STRICT PROFILE FACING RIGHT. Character on LEFT side of frame. "
-            "Camera distance: medium close. Waist-up only."
-        ),
-        "ots": "over-the-shoulder"
-    }.get(shot_type, "WAIST-UP FRAMING. Camera distance: tight medium.")
-
-
-    # 4. Route to specific prompt logic
-    # In the prompt construction section, replace the "REF 1" handling:
-
     # 🆕 SPATIAL INTEGRITY RULES (prevents clipping through objects)
     spatial_rules = (
         "SPATIAL RULES: "
@@ -136,11 +96,9 @@ def CompositeScene(
 
     Lighting = '''Soft cinematic key light from camera-left, gentle fill from camera-right, consistent color temperature across all shots. Maintain identical lighting direction and intensity between OTS and medium shots.'''
 
-
     if shot_type == 'ots':
         task = (
             f"REF 1: {bg_desc}. Background source. "
-            # 🆕 Add crop permission
             "ALLOW CROPPING: Background elements may be partially cropped or extend off-frame to maintain composition. DO NOT force-fit entire objects. "
             + spatial_rules +
             "Cinematic close-up, camera is eye level, over-the-shoulder shot of "
@@ -152,16 +110,45 @@ def CompositeScene(
             f"Match REF 1 color temperature. Preserve EXACT rendering style from REF 2 and REF 3. "
             f"NO flat lighting, NO foreground sharpness, NO cartoon shading. --no dark faces, no merged depth"
         )
-    else:
+    elif shot_type == 'two_shot' and len(descriptions) > 1:
+        # 🆕 TWO-SHOT: Separate references for each character with spatial positioning
         task = (
             f"REF 1: {bg_desc}. "
-            # 🆕 Add crop permission + priority
+            "COMPOSITION RULE: Characters are the focal point. Background elements may be cropped, truncated, or extend beyond frame edges naturally. NEVER shrink background or foreground objects to fit—allow natural cropping instead. "
+            + spatial_rules +
+            "TWO-SHOT COMPOSITION with clear spatial separation between characters: "
+            f"REF 2: Character 1 (LEFT SIDE OF FRAME) {descriptions[0]} "
+            f"REF 3: Character 2 (RIGHT SIDE OF FRAME) {descriptions[1]} "
+            "SPATIAL POSITIONING: Characters are shoulder-to-shoulder with clear separation. "
+            "Character 1 is positioned on the LEFT side of the frame. "
+            "Character 2 is positioned on the RIGHT side of the frame. "
+            "NO feature blending between characters—each character maintains distinct visual identity. "
+            f"Action: {action}. "
+            f"Framing: Tight waist-up framing of two characters. Camera distance: medium close. Subject scale: large. Waist-up only. "
+            f"Lighting: {Lighting} Both characters are fully lit and sharp. "
+            f"Match lighting, color temperature, and atmosphere of REF 1 exactly. "
+            f"Preserve EXACT rendering style, proportions, and details from REF 2 and REF 3. "
+            f"NO extras, NO text, NO blur, NO feature merging. --no cartoon, no flat colors, no photorealistic skin, no blended features"
+        )
+    else:
+        # Single character shots
+        chars_desc = f"Character 1: {descriptions[0]}. "
+        framing = {
+            "closeup": "EXTREME FACE CLOSE-UP. Face fills 80% of frame. Crop at chin. Camera distance: very close.",
+            "medium": "WAIST-UP FRAMING. Camera distance: tight medium. Subject scale: large. Face occupies upper third of frame. Anchor face at vertical 0.32. Centered horizontally.",
+            "wide": "Full body shot. Character small in frame.",
+            "profile_left": "STRICT PROFILE FACING LEFT. Character on RIGHT side of frame. Camera distance: medium close. Waist-up only.",
+            "profile_right": "STRICT PROFILE FACING RIGHT. Character on LEFT side of frame. Camera distance: medium close. Waist-up only.",
+        }.get(shot_type, "WAIST-UP FRAMING. Camera distance: tight medium.")
+        
+        task = (
+            f"REF 1: {bg_desc}. "
             "COMPOSITION RULE: Characters are the focal point. Background elements may be cropped, truncated, or extend beyond frame edges naturally. NEVER shrink background or foreground objects to fit—allow natural cropping instead. "
             + spatial_rules + 
             f"REF 2: {chars_desc} "
             f"Action: {action}. "
             f"Framing: {framing}. "
-            f"Lighting: {Lighting} Characters are fully lit and sharp. "
+            f"Lighting: {Lighting} Character is fully lit and sharp. "
             f"Match lighting, color temperature, and atmosphere of REF 1 exactly. "
             f"Preserve EXACT rendering style, proportions, and details from REF 2. "
             f"NO extras, NO text, NO blur. --no cartoon, no flat colors, no photorealistic skin"
@@ -170,10 +157,12 @@ def CompositeScene(
     print(f"\n📝 PROMPT ({len(task.split())} words):\n{task}\n")
 
     # 5. Generate
-    if framing in ["wide"]:
+    # 🆕 For two-shot, pass background + all character images as references
+    if shot_type in ["wide", "two_shot"]:
         ref_paths = [background_path] + characters
     else:
-        ref_paths = characters
+        ref_paths = [background_path] + characters
+    
     status = EditImage(task, ref_paths, output, width, height, seed)
 
     # 6. Embed metadata for I2V handoff

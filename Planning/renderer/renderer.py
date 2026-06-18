@@ -308,7 +308,7 @@ def main():
             for line in act:
                 actions.append(json.loads(line))
         
-        actions = split_dialog_sentences(actions)
+        actions = split_dialog_sentences(actions, assets)
 
         with open(f"{basepath}/output/complete_segmented.json", 'w') as act:
             json.dump(actions,act,indent=4)
