@@ -58,30 +58,33 @@ posture, facial, zone, location are persistent states, not events.
     If current action doesn't explicitly change posture/facial, COPY from previous line
     If character is "sitting" and action is "smiles", posture stays "sitting"
     Use BIOGRAPHY to initialize state on first character appearance
+⭐ ZONE = BACKDROP
+A zone is the visual backdrop behind a character. It is NOT a physical space or camera position.
 
-⭐ ZONE ASSIGNMENT RULES
-You MUST use the EXACT zone names from the BIOGRAPHY JSON. Do not invent new zone names.
+RULES:
+1. When a character is introduced to a location, assign them a zone (their backdrop)
+2. When two characters interact in the SAME SHOT (both visible), they share the same zone
+3. When the camera cuts to look at ONE character directly (solo shot), their zone must be their OWN backdrop, different from the shared zone
 
-Zone selection is based on which direction the character is facing:
-- If character faces outward (toward beach/ocean/window) → use "[Area] - [Outward View]"
-- If character faces inward (toward other character/interior) → use "[Area] - [Interior View]"
-- If character faces a specific object (table/kitchen/fireplace) → use "[Area] - [Object View]"
-
-CHARACTERS FACING EACH OTHER MUST HAVE DIFFERENT ZONES:
-- Character A facing Character B → Character A uses "Area - B's Background View"
-- Character B facing Character A → Character B uses "Area - A's Background View"
+DECISION TREE per beat:
+- Is this a solo shot of one character? → Use that character's personal zone
+- Are both characters visible in frame? → Use the shared interaction zone
+- Did the active character just move to a new area? → Assign new zone for that area
 
 EXAMPLE:
-If BIOGRAPHY defines zones:
-- "Gazebo Seating Area - Beach View"
-- "Gazebo Seating Area - Interior View"
+Location: "Corner Table" has zones:
+- "Corner Table - Shared" (both characters visible, two-shot backdrop)
+- "Corner Table - Sora's Backdrop" (solo shot of Sora, different backdrop)
+- "Corner Table - Lindsy's Backdrop" (solo shot of Lindsy, different backdrop)
 
-And Sora faces the beach while Lindsy faces Sora:
-- Sora's zone: "Gazebo Seating Area - Beach View" (beach visible behind her)
-- Lindsy's zone: "Gazebo Seating Area - Interior View" (gazebo interior visible behind her)
+Beat 1: Two-shot of Sora and Lindsy talking → zone="Corner Table - Shared"
+Beat 2: Solo shot of Sora → zone="Corner Table - Sora's Backdrop"
+Beat 3: Solo shot of Lindsy → zone="Corner Table - Lindsy's Backdrop"
+Beat 4: Two-shot again → zone="Corner Table - Shared"
 
-❌ FORBIDDEN: Using generic zone names like "Gazebo" or "Seating Area"
-✅ REQUIRED: Using exact view-dependent zone names from BIOGRAPHY
+❌ FORBIDDEN: Using the same zone for solo shots of different characters
+✅ REQUIRED: Each character has their own backdrop zone for solo shots
+✅ REQUIRED: Shared zone only when both characters are visible in frame
 
 OUTPUT FORMAT
 
