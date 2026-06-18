@@ -82,6 +82,33 @@ def create_zone_mapping(registry, story):
 
     return mappings
 
+def create_backdrop_mapping(registry, story):
+    """Map registry backdrops to beat backdrops using fuzzy matching."""
+    mappings = {}
+    beat_backdrops = {}
+
+    # Collect all backdrops used in beats
+    for beat in story:
+        bb_raw = beat.get('backdrop', '')
+        bb_clean = _clean_zone_label(bb_raw)  # Reuses same cleaning logic
+        if bb_clean:
+            beat_backdrops[bb_clean] = beat['backdrop']
+
+    # Navigate three-tier structure: locations -> zones -> backdrops
+    for location in registry['locations']:
+        for zone in location.get('zones', []):
+            for backdrop in zone.get('backdrops', []):
+                rb_raw = backdrop.get('backdrop_name', '')
+                rb_clean = _clean_zone_label(rb_raw)
+
+                # Fuzzy match beat backdrops to registry backdrops
+                for bb_clean, bb_raw in beat_backdrops.items():
+                    if bb_clean in rb_clean or rb_clean in bb_clean:
+                        mappings[backdrop['backdrop_name']] = bb_raw
+                        break
+
+    return mappings
+
 
 # ---------------------------------------------------------
 # RESOLVE BACKGROUND ALIAS

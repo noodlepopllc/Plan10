@@ -8,7 +8,8 @@ WORLD = Path(f'{prompt_path}/scriptwriter/world.txt').read_text()
 BIOGRAPHY = Path(f'{prompt_path}/scriptwriter/biography.txt').read_text()
 NARRATOR = Path(f'{prompt_path}/scriptwriter/narrator.txt').read_text()
 
-REQUIRED_FIELDS = ['actor', 'speaker', 'action', 'dialog', 'zone', 'posture', 'location', 'facial']
+# Updated to include backdrop
+REQUIRED_FIELDS = ['actor', 'speaker', 'action', 'dialog', 'location', 'zone', 'backdrop', 'posture', 'facial']
 COLD_OPEN_MARKER = '******* COLD OPEN END ****'
 
 def run_prompt(prompt, system, pth):
@@ -38,7 +39,6 @@ def split_story_at_cold_open(prose):
         story = parts[1].strip() if len(parts) > 1 else ''
         return cold_open, story
     else:
-        # Marker not found, assume no cold open
         print(f'Warning: Cold open marker not found, processing entire story')
         return '', prose
 
@@ -50,24 +50,18 @@ def split_into_paragraphs(prose):
 
 def fix_truncated_json(line):
     """Try to fix truncated JSON by closing unclosed strings and braces."""
-    # Count quotes to see if we have an unclosed string
     quote_count = line.count('"')
     
-    # If odd number of quotes, we have an unclosed string
     if quote_count % 2 == 1:
-        # Add closing quote
         line = line.rstrip() + '"'
     
-    # Count braces
     open_braces = line.count('{')
     close_braces = line.count('}')
     
-    # Add missing closing braces
     if open_braces > close_braces:
         missing = open_braces - close_braces
         line = line.rstrip() + '}' * missing
     
-    # Try to parse
     try:
         return json.loads(line)
     except json.JSONDecodeError:
@@ -117,30 +111,60 @@ def parse_jsonl(text, current_state):
     
     return beats
 
+def extract_initial_backdrop(biography_data):
+    """Extract the first available backdrop from biography."""
+    try:
+        locations = biography_data.get('locations', [])
+        if locations:
+            zones = locations[0].get('zones', [])
+            if zones:
+                backdrops = zones[0].get('backdrops', [])
+                if backdrops:
+                    return backdrops[0].get('backdrop_name', 'Unknown')
+    except:
+        pass
+    return 'Unknown'
+
 def extract_initial_state(biography):
-    """Extract initial state from biography."""
+    """Extract initial state from biography with three-tier location/zone/backdrop."""
     try:
         bio_data = json.loads(biography)
         if 'biographies' in bio_data and len(bio_data['biographies']) > 0:
             first_char = bio_data['biographies'][0]['name']
-            location = bio_data['locations'][0]['name'] if 'locations' in bio_data else "Unknown"
-            zone = bio_data['locations'][0]['zones'][0]['zone_name'] if 'locations' in bio_data and 'zones' in bio_data['locations'][0] else "Unknown"
+            
+            location = "Unknown"
+            zone = "Unknown"
+            backdrop = "Unknown"
+            
+            if 'locations' in bio_data and len(bio_data['locations']) > 0:
+                first_loc = bio_data['locations'][0]
+                location = first_loc.get('name', 'Unknown')
+                
+                if 'zones' in first_loc and len(first_loc['zones']) > 0:
+                    first_zone = first_loc['zones'][0]
+                    zone = first_zone.get('zone_name', 'Unknown')
+                    
+                    # Extract first backdrop from this zone
+                    backdrop = extract_initial_backdrop(bio_data)
             
             return {
                 "posture": "standing",
                 "facial": "neutral",
-                "zone": zone,
                 "location": location,
+                "zone": zone,
+                "backdrop": backdrop,
                 "last_actor": first_char
             }
-    except:
+    except Exception as e:
+        print(f"Warning: Could not extract initial state: {e}")
         pass
     
     return {
         "posture": "standing",
         "facial": "neutral",
-        "zone": "Unknown",
         "location": "Unknown",
+        "zone": "Unknown",
+        "backdrop": "Unknown",
         "last_actor": ""
     }
 
@@ -187,11 +211,13 @@ Paragraph: {paragraph}"""
             
             if beats:
                 last_beat = beats[-1]
+                # Update state with all three tiers
                 current_state = {
                     "posture": last_beat.get("posture", current_state["posture"]),
                     "facial": last_beat.get("facial", current_state["facial"]),
-                    "zone": last_beat.get("zone", current_state["zone"]),
                     "location": last_beat.get("location", current_state["location"]),
+                    "zone": last_beat.get("zone", current_state["zone"]),
+                    "backdrop": last_beat.get("backdrop", current_state["backdrop"]),
                     "last_actor": last_beat.get("actor", current_state["last_actor"])
                 }
         

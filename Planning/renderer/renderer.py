@@ -8,7 +8,7 @@ from templates import Templates
 from utils import (
     canonical, normalize, soft_normalize,
     resolve_character_mentions, resolve_pronouns,
-    create_zone_mapping, resolve_zone_alias,
+    create_backdrop_mapping, resolve_zone_alias,
     get_beat_characters, bind_identity_first_only,
     split_dialog_sentences
 )
@@ -69,7 +69,7 @@ def build_identity_map(assets, beat=None):
 # ---------------------------------------------------------
 # BACKGROUNDS
 # ---------------------------------------------------------
-
+'''
 def get_backgrounds(assets, mappings, T):
     for location in assets['locations']:
         architecture = location['architectural_shell']
@@ -86,6 +86,23 @@ def get_backgrounds(assets, mappings, T):
                 zone['zone_definition'],
                 zone['anchored_elements']
             )
+'''
+
+def get_backgrounds(assets, mappings, T):
+    for location in assets['locations']:
+        architecture = location['architectural_shell']
+        for zone in location['zones']:
+            for backdrop in zone['backdrops']:
+                if backdrop['backdrop_name'] not in mappings:
+                    continue
+                bd_key = mappings[backdrop['backdrop_name']]
+                alias = normalize(bd_key)
+                T.background(
+                    alias,
+                    architecture,
+                    backdrop['backdrop_definition'],
+                    backdrop['visible_background_elements']
+                )
 
 
 # ---------------------------------------------------------
@@ -152,7 +169,7 @@ def render_beats_actions(assets, actions, mappings, T):
             continue
 
         names = {c: all_names[c] for c in beat_chars}
-        zone_alias = resolve_zone_alias(beat['zone'], mappings)
+        zone_alias = resolve_zone_alias(beat['backdrop'], mappings)
 
         # --- NEW: starting description integration ---
         #start_desc = beat.get('starting_description', {})
@@ -235,7 +252,7 @@ def render_beats_dialog(assets, actions, mappings, T):
         if not dialog_list:
             continue
 
-        zone_alias = resolve_zone_alias(beat['zone'], mappings)
+        zone_alias = resolve_zone_alias(beat['backdrop'], mappings)
         s_idx = 1
 
         for dlg in dialog_list:
@@ -297,6 +314,7 @@ def render_beats_dialog(assets, actions, mappings, T):
 
 def main():
     from pathlib import Path
+    import sys
     
     basepath = sys.argv[1]
 
@@ -318,7 +336,7 @@ def main():
     T = Templates()   # ← ONE OBJECT
 
     get_identity(assets, T)
-    mappings = create_zone_mapping(assets, actions)
+    mappings = create_backdrop_mapping(assets, actions)
     get_backgrounds(assets, mappings, T)
 
     render_beats_actions(assets, actions, mappings, T)
