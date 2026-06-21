@@ -308,23 +308,30 @@ def CreateCharacterSheet(prompt='', output='character_tmp.png',seed=-1, imagegen
     status['prompt'] = prompt
     return status
 
-def CreateBackground(prompt='', output='location_tmp.png',seed=-1):
-    seed=int(seed)
+def CreateBackground(prompt='', output='location_tmp.png', seed=-1):
+    seed = int(seed)
     print("CREATE BACKGROUND")
+    
+    # Positive-only: describe what IS there, not what isn't
     base_prompt = (
-        "A pure environmental background plate with absolutely no characters, people, animals, or foreground subjects. "
-        "Focus solely on scenery, lighting, atmosphere, and spatial composition. "
+        "Empty architectural interior, wide-angle environmental shot, "
+        "detailed background plate, atmospheric lighting, spatial composition, "
+        "unoccupied space, vacant room, still life environment. "
     )
     
-    # 2. Combine user input + hard exclusion cues
-    user_part = prompt.strip() if prompt else "empty, atmospheric location"
+    user_part = prompt.strip() if prompt else "empty atmospheric location"
     combined = f"{base_prompt} {user_part}"
     
-    exclusion_suffix = (
-        " Composition: edge-to-edge environment, uniform depth, no central focal point, background-only layout. "
-        " Exclude: figures, faces, silhouettes, text, logos, living beings, narrative subjects."
+    # Overwhelm with environmental detail instead of exclusion
+    environmental_suffix = (
+        " Detailed textures on walls and floors, ambient lighting from multiple sources, "
+        "furniture and objects arranged naturally, dust motes in light beams, "
+        "shadows cast by architectural features, depth and perspective lines, "
+        "wide establishing shot, no focal subject, panoramic view."
     )
-    final_prompt = (combined + exclusion_suffix).strip() + "When enhancing background prompts, preserve all exclusion constraints. Do not add people, animals, or narrative subjects. Maintain environmental/empty scene focus."
+    
+    final_prompt = (combined + environmental_suffix).strip()
+    
     gen = ImageGen()
     status = gen.generate(final_prompt, output, 1328, 1328, seed)
     del gen

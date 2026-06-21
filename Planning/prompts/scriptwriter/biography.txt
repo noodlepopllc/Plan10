@@ -52,22 +52,38 @@ Examples:
 - "Corner Table - Maya's View" (camera positioned behind Maya, sees what's behind her)
 - "Corner Table - Elias's View" (camera positioned behind Elias, sees what's behind him)
 
-Backdrop definition must describe:
-- Which character this backdrop is for (solo) or that it's for both (two_shot)
-- What background elements are visible behind the character(s)
-- What foreground elements frame the shot
-- Camera positioning relative to zone and character
+Backdrop definition MUST describe ONLY:
+- Camera positioning relative to zone (e.g., "Camera positioned at eye level", "Camera positioned behind character")
+- What environmental elements are visible in background (furniture, walls, windows, lighting)
+- What environmental elements frame the foreground (architectural features, objects)
+- Spatial layout and depth
+
+Backdrop definition MUST NOT describe:
+- Character appearance (clothing, hair, body)
+- Character actions (holding, wearing, standing, sitting)
+- Character positioning (where they stand, what they do)
+- Any character-specific details
+
+The "character" field identifies WHO the backdrop is for, but backdrop_definition describes ONLY the environment.
+
+✅ CORRECT backdrop_definition:
+"Camera positioned at eye level behind the plush velvet sofa. Background shows warm amber artificial lighting reflecting off polished mahogany surfaces. Floor-to-ceiling glass windows reveal dark city skyline with neon lights. Foreground framed by dark velvet sofa texture on left side."
+
+❌ WRONG backdrop_definition:
+"Camera positioned behind Seraphina. She is visible from chest up wearing her sheer white lace top and micro-shorts, clutching a legislative folder. Her platinum blonde twin-tails are prominent in foreground. Background shows warm ambient lighting on mahogany table edge."
+
+The wrong version describes the character. The correct version describes only the environment and camera position.
 
 REQUIRED BACKDROPS PER ZONE:
-1. At least 1 two-shot backdrop (for when both characters are visible)
-2. At least 1 solo backdrop PER CHARACTER (each character must have their own backdrop)
+1. At least 1 two-shot backdrop named "[Zone] - Two-Shot"
+2. At least 1 solo backdrop PER CHARACTER named "[Zone] - [Character]'s View"
 
 Example for 2-character scene:
 - Zone: "Corner Table"
 - Backdrops:
-  - "Corner Table - Two-Shot" (both visible)
-  - "Corner Table - Maya's View" (solo, camera behind Maya)
-  - "Corner Table - Elias's View" (solo, camera behind Elias)
+  - "Corner Table - Two-Shot" (both visible, backdrop_definition describes environment only)
+  - "Corner Table - Maya's View" (solo, character="Maya", backdrop_definition describes environment only)
+  - "Corner Table - Elias's View" (solo, character="Elias", backdrop_definition describes environment only)
 
 ⭐ VALIDATION CHECK
 Before outputting, verify:
@@ -76,7 +92,8 @@ Before outputting, verify:
 3. Does each zone have exactly 1 two-shot backdrop named "[Zone] - Two-Shot"?
 4. Does each zone have 1 solo backdrop PER CHARACTER named "[Zone] - [Character]'s View"?
 5. Are all character names from biographies represented in solo backdrops?
-6. If any character lacks their own solo backdrop in a zone, you have failed.
+6. Does each backdrop_definition contain ONLY environmental descriptions (NO character appearance, clothing, actions)?
+7. If any backdrop_definition mentions character clothing, hair, body, or actions, you have failed.
 
 ⭐ GLOBAL LIGHTING STATE (CRITICAL FOR CONTINUITY)
 The setting MUST establish a single, fixed time of day and lighting condition that applies to ALL backdrops in ALL zones.
