@@ -10,9 +10,6 @@ from image_gen import (
     GenerateImageSchema, 
 ) 
 from graphics_gen import GenerateGraphic, GenerateGraphicSchema
-from image_to_video import GenerateVideoSchema
-from wgp import GenerateVideo, GenerateTalkingVideo
-from speech_to_video import GenerateTalkingVideoSchema
 from image_analysis import EnhancePrompt
 from dialog import VoiceDesignSchema, VoiceCloneSchema, DesignVoice, CloneVoice
 from compositor import (
@@ -30,6 +27,21 @@ from image_edit import (
 )
 
 from camera import GimbalShotSchema, ApplyGimbalShot
+
+from config import load_environ
+
+load_environ()
+
+from image_to_video import GenerateVideoSchema
+from speech_to_video import GenerateTalkingVideoSchema
+
+if os.environ.get('WGP','False') == 'True':
+    from wgp import GenerateVideo, GenerateTalkingVideo
+else:
+    from image_to_video import GenerateVideo
+    from speech_to_video import GenerateTalkingVideo
+
+
 
 # =============================================================================
 # PARAMETER VALIDATION & FIXES

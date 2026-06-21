@@ -21,7 +21,8 @@ def load_config():
         "WIDTH": "832",
         "HEIGHT": "480",
         "SEED": "122333",
-        "TRANSFORMERS_CACHE":"$HF_HOME"
+        "TRANSFORMERS_CACHE":"$HF_HOME",
+        "WGP": "False"
     }
     if os.path.exists(CONFIG_FILE):
         try:
