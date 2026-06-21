@@ -432,19 +432,22 @@ if __name__ == '__main__':
         # TOPICAL PIPELINE: seed generation → scene expansion
         # ====================================================================
         output_path = Path(args.output)
-        seed_path = output_path.with_name(output_path.stem + '_seed.txt')
+        if args.story:
+            seed = Path(args.story).read_text()
+        else:
+            seed_path = output_path.with_name(output_path.stem + '_seed.txt')
 
-        # Build seed prompt
-        inputs = 'Generate a topical seed\n'
-        if args.topic:
-            inputs += f'Topic: {args.topic}\n'
-        if args.scenario:
-            if args.scenario.upper() in TOPICAL_SCENARIOS:
-                inputs += f'Scenario Type: {args.scenario.upper()}\n'
-            else:
-                print(f'Warning: Unknown scenario "{args.scenario}", using random')
+            # Build seed prompt
+            inputs = 'Generate a topical seed\n'
+            if args.topic:
+                inputs += f'Topic: {args.topic}\n'
+            if args.scenario:
+                if args.scenario.upper() in TOPICAL_SCENARIOS:
+                    inputs += f'Scenario Type: {args.scenario.upper()}\n'
+                else:
+                    print(f'Warning: Unknown scenario "{args.scenario}", using random')
 
-        seed = run_prompt(inputs, TOPICAL_SEED_GENERATOR, str(seed_path))
+            seed = run_prompt(inputs, TOPICAL_SEED_GENERATOR, str(seed_path))
 
         if not args.seed_only:
             # Expand seed into full topical scene
