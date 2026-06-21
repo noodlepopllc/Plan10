@@ -161,7 +161,7 @@ def CompositeScene(
     if shot_type in ["wide", "two_shot"]:
         ref_paths = [background_path] + characters
     else:
-        ref_paths = [background_path] + characters
+        ref_paths = characters
     
     status = EditImage(task, ref_paths, output, width, height, seed)
 
