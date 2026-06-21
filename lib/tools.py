@@ -10,8 +10,9 @@ from image_gen import (
     GenerateImageSchema, 
 ) 
 from graphics_gen import GenerateGraphic, GenerateGraphicSchema
-from image_to_video import GenerateVideoSchema, GenerateVideo
-from speech_to_video import GenerateTalkingVideo, GenerateTalkingVideoSchema
+from image_to_video import GenerateVideoSchema
+from wgp import GenerateVideo, GenerateTalkingVideo
+from speech_to_video import GenerateTalkingVideoSchema
 from image_analysis import EnhancePrompt
 from dialog import VoiceDesignSchema, VoiceCloneSchema, DesignVoice, CloneVoice
 from compositor import (

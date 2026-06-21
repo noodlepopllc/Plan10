@@ -43,35 +43,75 @@ Zone definition must describe:
 ⭐ BACKDROP DEFINITION (CAMERA VIEW)
 A backdrop is a camera viewpoint within a zone. It describes WHAT THE CAMERA SEES when filming in that zone.
 
-Backdrop naming: Format is "[Zone Name] - [View Description]"
+Backdrop naming format:
+- Two-shot: "[Zone Name] - Two-Shot"
+- Solo: "[Zone Name] - [Character Name]'s View"
+
 Examples:
-- "Corner Table - Fireplace View" (camera sees fireplace behind character)
-- "Corner Table - Bar View" (camera sees bar counter behind character)
-- "Corner Table - Two-Shot" (camera sees both characters with table between them)
+- "Corner Table - Two-Shot" (camera sees both characters)
+- "Corner Table - Maya's View" (camera positioned behind Maya, sees what's behind her)
+- "Corner Table - Elias's View" (camera positioned behind Elias, sees what's behind him)
 
 Backdrop definition must describe:
+- Which character this backdrop is for (solo) or that it's for both (two_shot)
 - What background elements are visible behind the character(s)
 - What foreground elements frame the shot
-- Camera positioning relative to zone
-- Shot type (solo or two_shot)
+- Camera positioning relative to zone and character
 
 REQUIRED BACKDROPS PER ZONE:
-1. At least 2 solo backdrops (different viewing angles for individual characters)
-2. At least 1 two-shot backdrop (for when both characters are visible)
+1. At least 1 two-shot backdrop (for when both characters are visible)
+2. At least 1 solo backdrop PER CHARACTER (each character must have their own backdrop)
+
+Example for 2-character scene:
+- Zone: "Corner Table"
+- Backdrops:
+  - "Corner Table - Two-Shot" (both visible)
+  - "Corner Table - Maya's View" (solo, camera behind Maya)
+  - "Corner Table - Elias's View" (solo, camera behind Elias)
 
 ⭐ VALIDATION CHECK
 Before outputting, verify:
 1. Does each location have 2-4 zones (physical sub-areas)?
 2. Does each zone have 2-4 backdrops (camera viewpoints)?
-3. Are backdrop names formatted as "[Zone] - [View]"?
-4. Does each zone have at least one two-shot backdrop?
-5. Does each zone have at least two solo backdrops?
-6. If any zone lacks backdrops, you have failed.
+3. Does each zone have exactly 1 two-shot backdrop named "[Zone] - Two-Shot"?
+4. Does each zone have 1 solo backdrop PER CHARACTER named "[Zone] - [Character]'s View"?
+5. Are all character names from biographies represented in solo backdrops?
+6. If any character lacks their own solo backdrop in a zone, you have failed.
+
+⭐ GLOBAL LIGHTING STATE (CRITICAL FOR CONTINUITY)
+The setting MUST establish a single, fixed time of day and lighting condition that applies to ALL backdrops in ALL zones.
+
+In the setting.room_form field, you MUST specify:
+- Exact time of day (e.g., "mid-morning", "late afternoon", "night")
+- Sky condition (e.g., "clear blue sky", "overcast grey", "stormy dark clouds")
+- Sun position (e.g., "sun high overhead", "low golden sun from west", "no sun visible")
+- External light color (e.g., "warm golden daylight", "cool blue twilight", "dark night with no natural light")
+
+ALL backdrops MUST reference this same lighting state when describing windows or exterior views.
+
+Example:
+If setting says "late afternoon with low golden sun from west", then:
+- Every window view MUST show "low golden sunlight from west"
+- Every window view MUST show "warm orange sky"
+- NO backdrop can show "bright midday sun" or "dark night sky"
+
+⭐ WINDOW VIEW CONSISTENCY
+For any backdrop that includes windows or exterior views:
+- visible_background_elements MUST include sky condition matching global lighting
+- backdrop_definition MUST describe exterior lighting consistent with time of day
+- If time is "night", windows show dark sky, no sunlight
+- If time is "day", windows show sky color matching global state
+
+❌ FORBIDDEN: Inconsistent sky/lighting across backdrops
+✅ REQUIRED: All windows show same time of day and sky condition
 
 REQUIRED JSON SCHEMA
 {
   "setting": {
-    "room_form": "3-5 sentences describing overall form, major fixed structures, openings, ground material, lighting sources, architectural style, and spatial scale.",
+    "room_form": "3-5 sentences describing overall form, major fixed structures, openings, ground material, lighting sources, architectural style, and spatial scale. MUST include exact time of day, sky condition, sun position, and external light color.",
+    "time_of_day": "string (e.g., 'late afternoon', 'night', 'early morning')",
+    "sky_condition": "string (e.g., 'clear blue', 'overcast grey', 'dark with stars')",
+    "external_lighting": "string (e.g., 'warm golden sunlight from west', 'no natural light', 'cool blue twilight')",
     "environment_objects": [
       {
         "name": "string",
@@ -119,9 +159,10 @@ REQUIRED JSON SCHEMA
           ],
           "backdrops": [
             {
-              "backdrop_name": "string (format: '[Zone Name] - [View Description]')",
-              "backdrop_definition": "3-5 sentences describing camera view: what background elements are visible, what foreground elements frame the shot, camera positioning. NO people, NO actions.",
+              "backdrop_name": "string (format: '[Zone Name] - Two-Shot' OR '[Zone Name] - [Character Name]'s View')",
+              "backdrop_definition": "3-5 sentences describing camera view: which character this is for (or 'both characters' for two-shot), what background elements are visible, what foreground elements frame the shot, camera positioning. NO actions.",
               "shot_type": "string ('solo' or 'two_shot')",
+              "character": "string (character name for solo, empty string for two_shot)",
               "visible_background_elements": [
                 "string (list of background elements visible from this viewpoint)"
               ]

@@ -69,24 +69,6 @@ def build_identity_map(assets, beat=None):
 # ---------------------------------------------------------
 # BACKGROUNDS
 # ---------------------------------------------------------
-'''
-def get_backgrounds(assets, mappings, T):
-    for location in assets['locations']:
-        architecture = location['architectural_shell']
-        for zone in location['zones']:
-            if zone['zone_name'] not in mappings:
-                continue
-
-            zone_key = mappings[zone['zone_name']]
-            alias = normalize(zone_key)
-
-            T.background(
-                alias,
-                architecture,
-                zone['zone_definition'],
-                zone['anchored_elements']
-            )
-'''
 
 def get_backgrounds(assets, mappings, T):
     for location in assets['locations']:
@@ -206,7 +188,7 @@ def render_beats_actions(assets, actions, mappings, T):
         if arc_sentence:
             sentences.append(arc_sentence)
         wide_prompt = " ".join(sentences)
-        T.action_video(f"{alias}_VIDEO", alias, resolve_character_mentions(arc_sentence, names), duration=5)
+        T.action_video(f"{alias}_VIDEO", alias, resolve_character_mentions(arc_sentence, names), duration=10)
 
 # ---------------------------------------------------------
 # DIALOG RENDERING
@@ -342,7 +324,7 @@ def main():
     render_beats_actions(assets, actions, mappings, T)
     render_beats_dialog(assets, actions, mappings, T)
 
-    if len(sys.argv) > 2 and sys.argv[2] in ("images", "all", "videos", "identity"):
+    if len(sys.argv) > 2 and sys.argv[2] in ("images", "all", "videos", "identity", "dialog"):
         mode = sys.argv[2]
     else:
         mode = os.environ.get("MODE", "all")

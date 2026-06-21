@@ -1,14 +1,39 @@
 from PIL import Image
 import os, time
 
-def wait_for_file(path: str, timeout: float = 5.0, min_size: int = 1024):
-    """Wait until file exists and has reasonable size"""
+def wait_for_file(path: str, timeout: float = 30.0, min_size: int = 1024, stable_for: float = 1.5):
+    """Wait until file exists, has reasonable size, AND stops growing."""
     start = time.time()
+    last_size = -1
+    stable_start = None
+    
     while time.time() - start < timeout:
-        if os.path.exists(path) and os.path.getsize(path) >= min_size:
+        if not os.path.exists(path):
+            time.sleep(0.1)
+            continue
+        
+        current_size = os.path.getsize(path)
+        
+        if current_size < min_size:
+            time.sleep(0.1)
+            continue
+        
+        # File meets minimum size, now check stability
+        if current_size != last_size:
+            # Size changed, reset stability timer
+            last_size = current_size
+            stable_start = time.time()
+            time.sleep(0.1)
+            continue
+        
+        # Size unchanged, check if stable long enough
+        if stable_start and (time.time() - stable_start) >= stable_for:
             return True
-        time.sleep(0.05)
-    print(f"⚠️  File {path} not ready after {timeout}s (size: {os.path.getsize(path) if os.path.exists(path) else 'N/A'})")
+        
+        time.sleep(0.1)
+    
+    size = os.path.getsize(path) if os.path.exists(path) else 'N/A'
+    print(f"⚠️  File {path} not ready after {timeout}s (size: {size})")
     return False
 
 def video_to_img(vid, width=832, height=480, resize=False, getlast=True):

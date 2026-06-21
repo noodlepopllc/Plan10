@@ -227,9 +227,9 @@ def VoiceCloneSchema():
     }
 
 def DesignVoice(voice, output, seed=-1):
-    duration=10.0
+    duration=5.0
     # The actual prompt fed into the model
-    text = "The quick, anxious boy judged the rough wizard's vibrant, icy voice as a huge, sharp, mellow echo drifting through the quiet, yellow forest."
+    text = "The quick, anxious boy judged the rough wizard's vibrant, icy voice..." # as a huge, sharp, mellow echo drifting through the quiet, yellow forest."
     final_prompt = f"{text} | voice: {voice}"
     duration=float(duration)
     seed=int(seed)

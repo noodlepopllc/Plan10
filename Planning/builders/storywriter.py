@@ -57,11 +57,10 @@ Use natural dialog and physical blocking.
 """
 
 ALTERNATIVE = '''
-🎬 STORY EXPANSION PROMPT (ANTI-DEGENERATION EDITION)
-Using the structured seed below, write a coherent cinematic scene consisting of:
-
-    1 COLD OPEN (establishing moment, not counted as a story beat)
-    8–12 STORY BEATS (actual narrative progression)
+🎬 SCENE EXPANSION PROMPT
+Using the structured seed below, write a single continuous scene consisting of:
+1 COLD OPEN (establishing moment, not counted as a scene beat)
+8–12 SCENE BEATS (action/dialog within this single moment)
 
 CORE DIRECTIVES:
 
@@ -117,6 +116,30 @@ The species information must be visible in the prose so the biography extractor 
     Stop immediately when the primary character goal is resolved or definitively failed. Do not add epilogues.
     GROUND IN LOCATION & SHOW, DON'T TELL
     Keep the scene physically anchored. Reference specific objects and spatial relationships. Express internal states strictly through observable physical behavior, posture, and facial expressions.
+
+⭐ ENRICHED MACRO ACTIONS
+Each action beat should be a clear, visible movement WITH descriptive context.
+
+Structure: [verb] + [object] + [quality/manner]
+
+Examples:
+- "grasps cylinder" → "grasps heavy metal cylinder with both hands"
+- "steps forward" → "steps forward with determined stride"
+- "looks at Elias" → "locks eyes with Elias across the alley"
+- "hands over package" → "extends package toward Elias's waiting hands"
+
+Rules:
+- Use the full 12-word allowance
+- Include physical qualities: weight, texture, temperature
+- Include manner: speed, force, direction
+- Keep actions macro-level (visible body movements, not subtle gestures)
+- No micro-details like "fingers tremble" or "breath catches"
+
+❌ TOO MICRO: "fingers brush the cold metal"
+✅ GOOD: "grasps cold metal cylinder firmly"
+
+❌ TOO MICRO: "eyes dart to the cylinder"
+✅ GOOD: "turns head to look at cylinder"
 
 OUTPUT FORMAT:
 Write in standard literary prose. Begin with the cold open, insert the ******* COLD OPEN END **** marker, then write exactly 8-12 story beats. Dialog must appear every 2-3 beats. No nested stories.
