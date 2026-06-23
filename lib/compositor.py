@@ -10,6 +10,82 @@ load_environ()
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
 
+from PIL import Image
+
+def CompositeBackground(
+    background_path: str,
+    shot_type: str = "wide",  # "wide", "left", "right"
+    output: str = "composite.png",
+    seed: int = -1,
+    width: int = WIDTH,   # Target video width (e.g., 1280 or 720)
+    height: int = HEIGHT  # Target video height (e.g., 720 or 1280)
+):
+    """Generate left/right/wide backdrop from wide background image at target resolution."""
+    
+    # 1. Validate
+    if not os.path.exists(background_path):
+        raise FileNotFoundError(f"Background not found: {background_path}")
+
+    # 2. Load wide image (1664x928 base)
+    wide = Image.open(background_path)
+    wide_width, wide_height = wide.size
+    
+    # 3. Crop based on shot_type
+    if shot_type == "left":
+        # Left half
+        cropped = wide.crop((0, 0, wide_width // 2, wide_height))
+        crop_desc = "LEFT SIDE of environment"
+    elif shot_type == "right":
+        # Right half
+        cropped = wide.crop((wide_width // 2, 0, wide_width, wide_height))
+        crop_desc = "RIGHT SIDE of environment"
+    else:  # wide
+        cropped = wide
+        crop_desc = "FULL WIDE SHOT of environment"
+    
+    # 4. Save cropped version temporarily (832x928 for left/right)
+    crop_path = output.replace('.png', '_crop.png')
+    cropped.save(crop_path)
+    
+    # 5. Analyze the cropped version
+    analysis = AnalyzeImage(crop_path, "Describe this environment in detail, focusing on architectural elements, lighting, materials, and spatial layout. 100-150 words.")
+    bg_desc = analysis['analysis']
+    
+    # 6. Build prompt for regeneration at TARGET resolution
+    task = (
+        f"REF 1: {bg_desc}. "
+        f"{crop_desc}. "
+        "No characters, no silhouettes, no human forms. "
+        "Preserve exact rendering style, lighting, and atmosphere of REF 1. "
+        "Maintain all environmental details and spatial relationships. "
+        "ALLOW CROPPING of background elements naturally at frame edges."
+    )
+    
+    print(f'\n📝 PROMPT ({shot_type} shot, target {width}x{height}):\n{task}\n')
+    
+    # 7. Regenerate at TARGET resolution using cropped version as reference
+    # This ensures the output matches video generation resolution
+    status = EditImage(task, [crop_path], output, width, height, seed)
+    
+    # 8. Clean up temporary crop
+    if os.path.exists(crop_path):
+        os.remove(crop_path)
+    
+    # 9. Embed metadata
+    img = Image.open(output)
+    meta = PngImagePlugin.PngInfo()
+    meta.add_text("Prompt", task)
+    meta.add_text("ShotType", shot_type)
+    meta.add_text("Description", bg_desc)
+    meta.add_text("Resolution", f"{width}x{height}")
+    img.save(output, pnginfo=meta)
+    
+    status.update({"prompt": task, "description": bg_desc, "shot_type": shot_type, "resolution": f"{width}x{height}"})
+    if os.environ['BATCH'] == 'False':
+        analysis = AnalyzeImage(output, "Briefly describe this image, no more than 100 words")
+        status['description'] = analysis['analysis']
+    return status
+
 
 def CompositeScene(
     background_path: str,
@@ -179,6 +255,64 @@ def CompositeScene(
         status['description'] = analysis['analysis']
     status['prompt'] = task
     return status
+
+def CompositeBackgroundSchema():
+    return {
+        "type": "function",
+        "function": {
+            "name": "composite_background",
+            "description": (
+                "Generates cropped background variants from a wide reference image at target resolution. "
+                "Takes a wide background (e.g., 1664x928) and creates left/right/wide versions for different "
+                "camera positions within a zone. The cropped version is used as a reference to regenerate "
+                "the background at the target video resolution, maintaining visual consistency."
+            ),
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "background_path": {
+                        "type": "string",
+                        "description": (
+                            "Path to the wide reference background image (must contain 'Description' metadata). "
+                            "This is the master wide shot of the zone that will be cropped."
+                        )
+                    },
+                    "shot_type": {
+                        "type": "string",
+                        "enum": ["wide", "left", "right"],
+                        "default": "wide",
+                        "description": (
+                            "Which portion of the wide background to use. "
+                            "'wide' = full image (for Two-Shot). "
+                            "'left' = left half (for character positioned on left side of zone). "
+                            "'right' = right half (for character positioned on right side of zone)."
+                        )
+                    },
+                    "output": {
+                        "type": "string",
+                        "default": "composite_bg.png",
+                        "description": "Output filename for the generated background."
+                    },
+                    "seed": {
+                        "type": "integer",
+                        "default": -1,
+                        "description": "Random seed for reproducibility. -1 for random."
+                    },
+                    "width": {
+                        "type": "integer",
+                        "default": 1280,
+                        "description": "Target output width (should match video generation resolution)."
+                    },
+                    "height": {
+                        "type": "integer",
+                        "default": 720,
+                        "description": "Target output height (should match video generation resolution)."
+                    }
+                },
+                "required": ["background_path"]
+            }
+        }
+    }
 
 def CompositeSceneSchema():
     return {

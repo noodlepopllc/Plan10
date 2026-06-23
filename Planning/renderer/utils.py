@@ -82,43 +82,86 @@ def create_zone_mapping(registry, story):
 
     return mappings
 
-def create_backdrop_mapping(registry, story):
-    """Map registry backdrops to beat backdrops using fuzzy matching."""
+# utils.py
+
+def create_backdrop_mapping(assets, actions):
+    """Create mapping from beat backdrop names to generated asset aliases."""
     mappings = {}
-    beat_backdrops = {}
-
-    # Collect all backdrops used in beats
-    for beat in story:
-        bb_raw = beat.get('backdrop', '')
-        bb_clean = _clean_zone_label(bb_raw)  # Reuses same cleaning logic
-        if bb_clean:
-            beat_backdrops[bb_clean] = beat['backdrop']
-
-    # Navigate three-tier structure: locations -> zones -> backdrops
-    for location in registry['locations']:
-        for zone in location.get('zones', []):
-            for backdrop in zone.get('backdrops', []):
-                rb_raw = backdrop.get('backdrop_name', '')
-                rb_clean = _clean_zone_label(rb_raw)
-
-                # Fuzzy match beat backdrops to registry backdrops
-                for bb_clean, bb_raw in beat_backdrops.items():
-                    if bb_clean in rb_clean or rb_clean in bb_clean:
-                        mappings[backdrop['backdrop_name']] = bb_raw
-                        break
-
+    
+    for location in assets['locations']:
+        location_name = location['name']
+        
+        for zone in location['zones']:
+            zone_name = zone['zone_name']
+            char_positions = zone.get('character_positions', [])
+            
+            # Two-shot mapping
+            two_shot_key = f"{zone_name} - Two-Shot"
+            zone_key = f"{location_name}_{zone_name}".replace(' ', '_').upper()
+            mappings[two_shot_key] = f"{zone_key}_WIDE_BACKDROP"
+            
+            # Character-specific mappings
+            for cp in char_positions:
+                char_name = cp['character']
+                position = cp.get('position', '').lower()
+                
+                # Same unique key format as get_backgrounds
+                char_key = f"{location_name}__{zone_name}__{char_name}".replace(' ', '_').upper()
+                
+                if 'left' in position:
+                    shot_type = "LEFT"
+                elif 'right' in position:
+                    shot_type = "RIGHT"
+                else:
+                    shot_type = "WIDE"
+                
+                backdrop_key = f"{zone_name} - {char_name}"
+                mappings[backdrop_key] = f"{char_key}_{shot_type}_BACKDROP"
+    
     return mappings
 
 
-# ---------------------------------------------------------
-# RESOLVE BACKGROUND ALIAS
-# ---------------------------------------------------------
+def resolve_zone_alias(backdrop_name, mappings):
+    """Resolve zone name to backdrop alias based on character position."""
+    # backdrop_name is now just the zone name like "Beach Shoreline"
+    
+    if backdrop_name not in mappings:
+        return "UNKNOWN"
+    
+    zone_mappings = mappings[backdrop_name]
+    
+    # This function needs access to the current beat to determine which character
+    # But it's called from render_beats_actions/dialog without beat context
+    # So we need to pass the beat or character info
+    
+    # For now, return MIDDLE as default (two-shot)
+    return zone_mappings.get('MIDDLE', 'UNKNOWN')
 
-def resolve_zone_alias(beat_zone: str, mappings: dict) -> str:
-    for reg_zone_name, mapped_beat_zone in mappings.items():
-        if mapped_beat_zone == beat_zone:
-            return f"{normalize(mapped_beat_zone)}_BACKGROUND"
-    return f"{normalize(beat_zone)}_BACKGROUND"
+
+def resolve_zone_alias_for_beat(beat, mappings):
+    """Resolve zone to backdrop alias based on beat's actor/speaker."""
+    zone_name = beat.get('zone', '')
+    
+    if zone_name not in mappings:
+        return "UNKNOWN"
+    
+    zone_mappings = mappings[zone_name]
+    
+    actor = beat.get('actor', '')
+    speaker = beat.get('speaker', '')
+    
+    # Both characters present → MIDDLE (two-shot)
+    if actor and speaker and actor != speaker:
+        return zone_mappings.get('MIDDLE', 'UNKNOWN')
+    
+    # Solo shot - need to determine left/right
+    # This requires knowing character order from biographies
+    # For now, default to MIDDLE
+    # TODO: Pass biographies or character index to determine LEFT/RIGHT
+    
+    return zone_mappings.get('MIDDLE', 'UNKNOWN')
+
+    
 
 
 # ---------------------------------------------------------

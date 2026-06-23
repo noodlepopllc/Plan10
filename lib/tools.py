@@ -15,8 +15,9 @@ from dialog import VoiceDesignSchema, VoiceCloneSchema, DesignVoice, CloneVoice
 from compositor import (
     CompositeSceneSchema, 
     CompositeScene,
-    GenerateBackdropSchema, 
-    GenerateZoneBackdrop)
+    CompositeBackgroundSchema,
+    CompositeBackground
+    )
 
 import traceback
 
@@ -73,7 +74,7 @@ class ToolHandler(object):
         GenerateImageSchema(),
         CompositeSceneSchema(),
         EditImageSchema(), 
-        GenerateBackdropSchema(),
+        CompositeBackgroundSchema(),
         GenerateVideoSchema(),
         GenerateTalkingVideoSchema(),
         VoiceDesignSchema(),
@@ -166,12 +167,12 @@ class ToolHandler(object):
             "create_background": ["prompt", "output", "alias"],
             "generate_image": ["prompt", "width", "height", "seed", "output", "alias"],
             "composite_scene": ["background_path", "characters", "shot_type", "action", "width", "height", "output", "alias","seed"],
+            "composite_background": ["background_path", "shot_type", "width", "height", "output", "alias","seed"],
             "edit_image": ["images", "prompt", "width", "height", "seed", "output", "alias"],
             "image_to_video": ["prompt", "media", "width", "height", "seed", "duration_sec", "output", "alias"],
             "dialog_to_video": ["prompt", "text", "media", "audio", "width", "height", "seed", "output", "alias"],
             "design_voice": ["voice", "output", "seed"],
             "generate_graphic": ["prompt", "output", "width", "height", "seed", "target_video_size", "padding_style", "alias"],
-            "generate_backdrop": ["media", "zone", "width", "height", "seed","char_image", "output", "alias"],
             "apply_gimbal_shot": ["media", "output", "angle", "height", "distance", "alias"]
         }
         
@@ -208,6 +209,11 @@ class ToolHandler(object):
                 filtered['output'] = f"{OUTPUT_DIR}/gen_{chosen_alias or ''}_{ts}.png"
                 result = GenerateImage(**filtered)
                 return self._handle_success(tool_name, filtered, chosen_alias, ctx, result)
+
+            elif tool_name == "composite_background":
+                filtered['output'] = f"{OUTPUT_DIR}/bd_{chosen_alias or ''}_{ts}.png"
+                result = CompositeBackground(**filtered)
+                return self._handle_success(tool_name, filtered, chosen_alias, ctx, result, ext_override=".png")
                 
             elif tool_name == "composite_scene":
                 filtered['output'] = f"{OUTPUT_DIR}/comp_{chosen_alias or ''}_{ts}.png"
@@ -244,10 +250,7 @@ class ToolHandler(object):
                 result = GenerateGraphic(**filtered)
                 return self._handle_success(tool_name, filtered, chosen_alias, ctx, result, ext_override=".png")
 
-            elif tool_name == "generate_backdrop":
-                filtered['output'] = f"{OUTPUT_DIR}/bd_{chosen_alias or ''}_{ts}.png"
-                result = GenerateZoneBackdrop(**filtered)
-                return self._handle_success(tool_name, filtered, chosen_alias, ctx, result, ext_override=".png")
+
 
             elif tool_name == "apply_gimbal_shot":
                 filtered['output'] = f"{OUTPUT_DIR}/camera_{chosen_alias or ''}_{ts}.png"

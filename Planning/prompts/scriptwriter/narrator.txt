@@ -43,30 +43,21 @@ facial: EXACTLY ONE of: "neutral", "smiling", "frowning", "laughing", "angry", "
         "downcast" → "looking down"
         "disappointed" → "frowning"
 
-⭐ THREE-TIER SELECTION LOGIC (LOCATION / ZONE / BACKDROP)
-The BIOGRAPHY defines a strict hierarchy. You MUST output all three fields for every beat.
+⭐ TWO-TIER SELECTION LOGIC (LOCATION / ZONE)
+The BIOGRAPHY defines a strict hierarchy. You MUST output location and zone for every beat.
 
 1. location: Top-level space (e.g., "The Gilded Tankard")
    - Copy from previous beat unless story explicitly moves to a new place.
 
 2. zone: Physical sub-area within location (e.g., "Corner Table", "Bar Counter")
    - Copy from previous beat unless character physically moves to a different area.
-
-3. backdrop: Camera viewpoint within zone (e.g., "Corner Table - Fireplace View")
-   - BACKDROP CHANGES BASED ON ACTIVE CHARACTER/SHOT TYPE:
-   - Determine active character: actor field → if empty, speaker field → if empty, previous actor.
-   - If both characters are visible in frame (two-shot) → Use the two-shot backdrop from BIOGRAPHY.
-   - If solo shot → Use the character-specific backdrop that shows what is BEHIND them.
-   - When active character changes, backdrop MUST change to match the new viewpoint.
-
-❌ FORBIDDEN: Inventing backdrop names, using the same backdrop for different solo angles, or mixing zone/backdrop logic.
-✅ REQUIRED: Exact string match from BIOGRAPHY for location, zone, and backdrop.
+   - Use EXACT zone_name from BIOGRAPHY.
 
 STATE PERSISTENCE
-posture, facial, location, zone are persistent states. backdrop changes with active character/shot type.
+posture, facial, location, and zone are persistent states.
     Before generating each line, check the previous line's state
     If current action doesn't explicitly change posture/facial/location/zone, COPY from previous line
-    Use BIOGRAPHY to initialize all four fields on first character appearance
+    Use BIOGRAPHY to initialize all fields on first character appearance
 
 COMPOUND ACTION SPLITTING:
 If a paragraph contains multiple actions connected by "and", "before", "as", or commas:
@@ -81,13 +72,13 @@ Paragraph: "Maya nods once, then spins on her heel and sprints toward the darkne
 → Beat 3: actor="Maya", action="sprints toward darkness"
 
 OUTPUT FORMAT
-{"actor": "<string>", "speaker": "<string>", "action": "<string>", "dialog": "<string>", "location": "<string>", "zone": "<string>", "backdrop": "<string>", "posture": "<string>", "facial": "<string>"}
+{"actor": "<string>", "speaker": "<string>", "action": "<string>", "dialog": "<string>", "location": "<string>", "zone": "<string>", "posture": "<string>", "facial": "<string>"}
 
     Raw JSONL only (no markdown, no intro/outro)
     One JSON object per line
     All values are strings (never null)
     Use "" for inapplicable fields (actor/speaker/action/dialog)
-    posture/facial/location/zone/backdrop must always have values
+    posture/facial/location/zone must always have values
 
 BEGIN OUTPUT NOW
-Generate JSONL beats following all rules above. Maintain state persistence. Split interspersed dialog/action. Use only allowed posture/facial values. Select location, zone, and backdrop exactly as defined in BIOGRAPHY.
+Generate JSONL beats following all rules above. Maintain state persistence. Split interspersed dialog/action. Use only allowed posture/facial values. Select location and zone exactly as defined in BIOGRAPHY.

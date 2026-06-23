@@ -312,36 +312,31 @@ def CreateBackground(prompt='', output='location_tmp.png', seed=-1):
     seed = int(seed)
     print("CREATE BACKGROUND")
     
-    # Positive-only: describe what IS there, not what isn't
+    # Environment-agnostic base prompt
     base_prompt = (
-        "Empty architectural interior, wide-angle environmental shot, "
-        "detailed background plate, atmospheric lighting, spatial composition, "
-        "unoccupied space, vacant room, still life environment. "
+        "Empty environmental background plate, wide-angle establishing shot, "
+        "detailed scenery, atmospheric lighting, spatial composition, "
+        "unoccupied space, still life environment, no people, no characters. "
     )
     
     user_part = prompt.strip() if prompt else "empty atmospheric location"
     combined = f"{base_prompt} {user_part}"
     
-    # Overwhelm with environmental detail instead of exclusion
+    # Generic environmental detail (works for indoor and outdoor)
     environmental_suffix = (
-        " Detailed textures on walls and floors, ambient lighting from multiple sources, "
-        "furniture and objects arranged naturally, dust motes in light beams, "
-        "shadows cast by architectural features, depth and perspective lines, "
+        " Detailed textures on surfaces, ambient lighting, "
+        "objects arranged naturally, depth and perspective, "
         "wide establishing shot, no focal subject, panoramic view."
     )
     
     final_prompt = (combined + environmental_suffix).strip()
     
     gen = ImageGen()
-    status = gen.generate(final_prompt, output, 1328, 1328, seed)
+    status = gen.generate(final_prompt, output, 1664, 928, seed)
     del gen
     status['description'] = add_metadata_loc(output, final_prompt, seed)
     status['prompt'] = final_prompt
     return status
-
-
-
-
 
 
 def GenerateImageSchema():

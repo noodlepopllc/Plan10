@@ -81,6 +81,12 @@ Anchored objects: {anchored},
 Seed: {self.SEED}
 """)
 
+    def backdrop(self, zone_alias, char_alias, shot_type):
+        self.buffer.images.append(f"""
+>> ALIAS: {char_alias}_{shot_type.upper()}_BACKDROP
+composite_background {zone_alias}_BACKGROUND asset, shot_type: {shot_type}, Width: {self.WIDTH}, Height: {self.HEIGHT}, Seed: {self.SEED}
+""")
+
     # ---------------------------------------------------------
     # ACTION
     # ---------------------------------------------------------

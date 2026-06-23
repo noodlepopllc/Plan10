@@ -10,24 +10,23 @@ CORE RULES
 - NO HALLUCINATION: Do not invent new characters, objects, furniture, rooms, or technology. If it is not in PASS 0A, it does not exist.
 - FILMABLE & PHYSICAL: All descriptions must be physical, deterministic, and renderable by a video model. No abstract emotions, no cinematic camera language (e.g., no "dramatic lighting", use "light originates from north window").
 - SPATIAL FREEDOM: The room MUST feel open, spacious, and two-orientation-compatible unless PASS 0A explicitly forbids it.
-- NATIVE JSON ONLY: Output strictly valid JSON. No Markdown formatting (no ```json), no introductory text, no concluding text.
+- NATIVE JSON ONLY: Output ONLY the raw JSON object. Do NOT wrap it in markdown code blocks (no ```json or ```). Do NOT add any text before or after the JSON. The output must start with { and end with }.
 
-⭐ THREE-TIER ARCHITECTURE
-The world model has three hierarchical levels:
+⭐ TWO-TIER ARCHITECTURE
+The world model has two hierarchical levels:
 
 1. LOCATIONS: Top-level physical spaces (e.g., "The Gilded Tankard", "Parking Lot", "Back Alley")
 2. ZONES: Physical sub-areas within a location (e.g., "Corner Table", "Bar Counter", "Kitchen")
-3. BACKDROPS: Camera viewpoints within a zone (e.g., "Corner Table - Fireplace View", "Corner Table - Two-Shot")
 
 RULES:
 - Each location contains 2-4 zones (physical sub-areas)
-- Each zone contains 2-4 backdrops (camera viewpoints)
-- Backdrops define what the camera sees when filming in that zone
-- Two-shot backdrops are shared when both characters are visible
-- Solo backdrops are character-specific when camera films one character
+- Each zone generates ONE wide background image
+- The wide image is automatically cropped by the renderer for different character views (left/right)
+- Character positions are determined by biography order: biographies[0] = left, biographies[1] = right
+- No character names needed in zone descriptions - just describe left/right environmental elements
 
-⭐ ZONE DEFINITION (PHYSICAL SPACE)
-A zone is a physical sub-area within a location. It describes WHERE characters stand, not what the camera sees.
+⭐ ZONE DEFINITION (PHYSICAL SPACE + LEFT/RIGHT ELEMENTS)
+A zone is a physical sub-area within a location. It describes WHAT the environment looks like on each side.
 
 Zone naming: Use functional area names (e.g., "Corner Table", "Bar Counter", "Kitchen Pass-Through")
 
@@ -36,67 +35,57 @@ Zone definition must describe:
 - Fixed physical features (furniture, structures)
 - Spatial relationship to other zones
 - Functional purpose (eating, serving, waiting)
+- What environmental elements are on the LEFT side of the zone
+- What environmental elements are on the RIGHT side of the zone
 
-❌ FORBIDDEN: Including camera angles, viewpoints, or backdrop descriptions in zone_definition
-✅ REQUIRED: Describing physical space only
+The zone_definition describes the FULL environment as one continuous space. The renderer will crop this into left/right portions. Character positions are implicit: first character in biographies goes left, second character goes right.
 
-⭐ BACKDROP DEFINITION (CAMERA VIEW)
-A backdrop is a camera viewpoint within a zone. It describes WHAT THE CAMERA SEES when filming in that zone.
+✅ CORRECT zone_definition:
+"Corner Table occupies the central seating area of the tavern. A large wooden table with four chairs sits in the center. Stone walls with mounted torches surround the space. The left side of the zone shows the fireplace and stone wall. The right side shows the bar counter and doorway. Warm torchlight illuminates the entire space."
 
-Backdrop naming format:
-- Two-shot: "[Zone Name] - Two-Shot"
-- Solo: "[Zone Name] - [Character Name]'s View"
+❌ WRONG zone_definition:
+"Corner Table is where Maya and Elias sit. Maya stands on the left near the fireplace. The lighting is warm."
+
+The wrong version mentions character names. Just describe the environment and left/right elements.
+
+⭐ ZONE ENVIRONMENT DESCRIPTION (ENVIRONMENT ONLY)
+The zone_definition describes ONLY the physical environment. It MUST NOT describe:
+- Camera positioning or angles
+- What the camera sees
+- Any subject being filmed
+- Character names, appearance, clothing, or actions
+- Character positions (these are implicit from biography order)
+
+Think of it as: "What does this physical space look like, and what's on the left vs right side?"
+
+The description should cover:
+- Full environment (walls, floor, ceiling, furniture, structures)
+- Left side elements (what's visible on the left portion)
+- Right side elements (what's visible on the right portion)
+- Lighting and atmosphere (consistent across entire zone)
+
+⭐ VISIBLE_BACKGROUND_ELEMENTS (MANDATORY FIELD)
+Every zone MUST include a "visible_background_elements" array listing 5-8 specific environmental elements visible in the full zone.
+
+These elements should cover both left and right sides of the zone.
 
 Examples:
-- "Corner Table - Two-Shot" (camera sees both characters)
-- "Corner Table - Maya's View" (camera positioned behind Maya, sees what's behind her)
-- "Corner Table - Elias's View" (camera positioned behind Elias, sees what's behind him)
+- Beach zone: ["turquoise ocean", "white sand", "clear blue sky", "distant horizon", "sandy dunes on left", "beach chair on right", "cooler in center", "driftwood on left edge"]
+- Tavern zone: ["stone walls", "wooden table", "mounted torches", "fireplace on left", "bar counter on right", "doorway on right", "wooden floor", "ceiling beams"]
 
-Backdrop definition MUST describe ONLY:
-- Camera positioning relative to zone (e.g., "Camera positioned at eye level", "Camera positioned behind character")
-- What environmental elements are visible in background (furniture, walls, windows, lighting)
-- What environmental elements frame the foreground (architectural features, objects)
-- Spatial layout and depth
-
-Backdrop definition MUST NOT describe:
-- Character appearance (clothing, hair, body)
-- Character actions (holding, wearing, standing, sitting)
-- Character positioning (where they stand, what they do)
-- Any character-specific details
-
-The "character" field identifies WHO the backdrop is for, but backdrop_definition describes ONLY the environment.
-
-✅ CORRECT backdrop_definition:
-"Camera positioned at eye level behind the plush velvet sofa. Background shows warm amber artificial lighting reflecting off polished mahogany surfaces. Floor-to-ceiling glass windows reveal dark city skyline with neon lights. Foreground framed by dark velvet sofa texture on left side."
-
-❌ WRONG backdrop_definition:
-"Camera positioned behind Seraphina. She is visible from chest up wearing her sheer white lace top and micro-shorts, clutching a legislative folder. Her platinum blonde twin-tails are prominent in foreground. Background shows warm ambient lighting on mahogany table edge."
-
-The wrong version describes the character. The correct version describes only the environment and camera position.
-
-REQUIRED BACKDROPS PER ZONE:
-1. At least 1 two-shot backdrop named "[Zone] - Two-Shot"
-2. At least 1 solo backdrop PER CHARACTER named "[Zone] - [Character]'s View"
-
-Example for 2-character scene:
-- Zone: "Corner Table"
-- Backdrops:
-  - "Corner Table - Two-Shot" (both visible, backdrop_definition describes environment only)
-  - "Corner Table - Maya's View" (solo, character="Maya", backdrop_definition describes environment only)
-  - "Corner Table - Elias's View" (solo, character="Elias", backdrop_definition describes environment only)
+The visible_background_elements help the renderer understand what props and environmental features exist in the zone.
 
 ⭐ VALIDATION CHECK
 Before outputting, verify:
-1. Does each location have 2-4 zones (physical sub-areas)?
-2. Does each zone have 2-4 backdrops (camera viewpoints)?
-3. Does each zone have exactly 1 two-shot backdrop named "[Zone] - Two-Shot"?
-4. Does each zone have 1 solo backdrop PER CHARACTER named "[Zone] - [Character]'s View"?
-5. Are all character names from biographies represented in solo backdrops?
-6. Does each backdrop_definition contain ONLY environmental descriptions (NO character appearance, clothing, actions)?
-7. If any backdrop_definition mentions character clothing, hair, body, or actions, you have failed.
+1. Does each zone_definition mention ZERO camera references (no "camera", no "angle", no "frame")?
+2. Does each zone_definition mention ZERO character names (no "Maya", no "Elias", no character references)?
+3. Does each zone_definition describe both left and right side environmental elements?
+4. Does each zone have a "visible_background_elements" array with 5-8 items?
+5. If any zone_definition contains camera references or character names, you have failed.
+6. If any zone is missing visible_background_elements, you have failed.
 
 ⭐ GLOBAL LIGHTING STATE (CRITICAL FOR CONTINUITY)
-The setting MUST establish a single, fixed time of day and lighting condition that applies to ALL backdrops in ALL zones.
+The setting MUST establish a single, fixed time of day and lighting condition that applies to ALL zones in ALL locations.
 
 In the setting.room_form field, you MUST specify:
 - Exact time of day (e.g., "mid-morning", "late afternoon", "night")
@@ -104,22 +93,22 @@ In the setting.room_form field, you MUST specify:
 - Sun position (e.g., "sun high overhead", "low golden sun from west", "no sun visible")
 - External light color (e.g., "warm golden daylight", "cool blue twilight", "dark night with no natural light")
 
-ALL backdrops MUST reference this same lighting state when describing windows or exterior views.
+ALL zones MUST reference this same lighting state. The lighting MUST be consistent across all zones.
 
 Example:
 If setting says "late afternoon with low golden sun from west", then:
-- Every window view MUST show "low golden sunlight from west"
-- Every window view MUST show "warm orange sky"
-- NO backdrop can show "bright midday sun" or "dark night sky"
+- Every zone shows "low golden sunlight from west"
+- Every zone shows "warm orange sky" (if windows visible)
+- NO zone can show "bright midday sun" or "dark night sky"
 
 ⭐ WINDOW VIEW CONSISTENCY
-For any backdrop that includes windows or exterior views:
+For any zone that includes windows or exterior views:
 - visible_background_elements MUST include sky condition matching global lighting
-- backdrop_definition MUST describe exterior lighting consistent with time of day
+- zone_definition MUST describe exterior lighting consistent with time of day
 - If time is "night", windows show dark sky, no sunlight
 - If time is "day", windows show sky color matching global state
 
-❌ FORBIDDEN: Inconsistent sky/lighting across backdrops
+❌ FORBIDDEN: Inconsistent sky/lighting across zones
 ✅ REQUIRED: All windows show same time of day and sky condition
 
 REQUIRED JSON SCHEMA
@@ -164,26 +153,18 @@ REQUIRED JSON SCHEMA
       "zones": [
         {
           "zone_name": "string (physical area name, e.g., 'Corner Table', 'Bar Counter')",
-          "zone_definition": "3-5 sentences describing physical space: what part of location it occupies, fixed features, furniture, spatial relationship to other zones. NO camera angles, NO viewpoints. NO people, NO actions.",
+          "zone_definition": "3-5 sentences describing physical space: what part of location it occupies, fixed features, furniture, spatial relationship to other zones, what environmental elements are on left side, what environmental elements are on right side. NO camera references, NO character names, NO character appearance, NO character actions.",
           "purpose": "1-2 sentences describing functional purpose. NO story events.",
           "anchored_elements": [
             {
               "name": "string",
               "material": "string",
-              "position": "string (physical position in zone)",
+              "position": "string (physical position in zone: left side, right side, center)",
               "orientation": "string"
             }
           ],
-          "backdrops": [
-            {
-              "backdrop_name": "string (format: '[Zone Name] - Two-Shot' OR '[Zone Name] - [Character Name]'s View')",
-              "backdrop_definition": "3-5 sentences describing camera view: which character this is for (or 'both characters' for two-shot), what background elements are visible, what foreground elements frame the shot, camera positioning. NO actions.",
-              "shot_type": "string ('solo' or 'two_shot')",
-              "character": "string (character name for solo, empty string for two_shot)",
-              "visible_background_elements": [
-                "string (list of background elements visible from this viewpoint)"
-              ]
-            }
+          "visible_background_elements": [
+            "string (list of 5-8 background elements visible in the full zone)"
           ]
         }
       ]

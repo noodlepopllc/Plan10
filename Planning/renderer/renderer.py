@@ -35,7 +35,6 @@ def get_identity(assets, T):
         T.character_sheet(alias, description)
         T.voice_design(alias, ",".join(description.split(",")[:3]))
 
-
 # ---------------------------------------------------------
 # IDENTITY MAP (CANONICAL KEYS)
 # ---------------------------------------------------------
@@ -69,7 +68,7 @@ def build_identity_map(assets, beat=None):
 # ---------------------------------------------------------
 # BACKGROUNDS
 # ---------------------------------------------------------
-
+'''
 def get_backgrounds(assets, mappings, T):
     for location in assets['locations']:
         architecture = location['architectural_shell']
@@ -85,6 +84,49 @@ def get_backgrounds(assets, mappings, T):
                     backdrop['backdrop_definition'],
                     backdrop['visible_background_elements']
                 )
+'''
+
+
+import os
+
+def get_backgrounds(assets, mappings, T, output_dir="backdrops_tmp"):
+    os.makedirs(output_dir, exist_ok=True)
+    
+    for location in assets['locations']:
+        location_name = location['name']
+        architecture = location['architectural_shell']
+        
+        for zone in location['zones']:
+            zone_name = zone['zone_name']
+            zone_def = zone['zone_definition']
+            elements = zone.get('visible_background_elements', [])
+            
+            # Create canonical zone key
+            zone_key = f"{location_name}_{zone_name}".replace(' ', '_').upper()
+            
+            # 1. Generate the WIDE SHOT (master reference)
+            T.background(
+                zone_key,
+                architecture,
+                zone_def,
+                ', '.join(elements)
+            )
+            
+            # 2. Generate MIDDLE variant for Two-Shot (shows both characters)
+            T.backdrop(zone_key, zone_key, "middle")
+            
+            # 3. Generate LEFT variant (for biographies[0])
+            T.backdrop(zone_key, zone_key, "left")
+            
+            # 4. Generate RIGHT variant (for biographies[1])
+            T.backdrop(zone_key, zone_key, "right")
+            
+            # 5. Map zone name to all three variants
+            mappings[zone_name] = {
+                'LEFT': f"{zone_key}_LEFT_BACKDROP",
+                'MIDDLE': f"{zone_key}_MIDDLE_BACKDROP",
+                'RIGHT': f"{zone_key}_RIGHT_BACKDROP"
+            }
 
 
 # ---------------------------------------------------------
@@ -141,6 +183,9 @@ def strip_leading_name(action, char):
 
 def render_beats_actions(assets, actions, mappings, T):
     char_aliases = {canonical(c['name']): f"CHAR_{normalize(c['name'])}" for c in assets['biographies']}
+    
+    # Build character index map for LEFT/RIGHT determination
+    char_index_map = {canonical(bio['name']): i for i, bio in enumerate(assets['biographies'])}
 
     for beat in actions:
         if not beat['action']:
@@ -151,27 +196,35 @@ def render_beats_actions(assets, actions, mappings, T):
             continue
 
         names = {c: all_names[c] for c in beat_chars}
-        zone_alias = resolve_zone_alias(beat['backdrop'], mappings)
-
-        # --- NEW: starting description integration ---
-        #start_desc = beat.get('starting_description', {})
-        #start_sentences = [f"{char} is {desc}." for char, desc in start_desc.items()]
+        
+        # Determine backdrop variant based on character positions
+        zone_name = beat['zone']
+        zone_mappings = mappings.get(zone_name, {})
+        
+        if len(beat_chars) == 1:
+            # Solo shot - determine LEFT or RIGHT based on character index
+            char_name = list(beat_chars)[0]
+            char_idx = char_index_map.get(canonical(char_name), 0)
+            shot_variant = 'LEFT' if char_idx == 0 else 'RIGHT'
+        else:
+            # Multiple characters - use MIDDLE (two-shot)
+            shot_variant = 'MIDDLE'
+        
+        zone_alias = zone_mappings.get(shot_variant, 'UNKNOWN')
 
         # --- existing action resolution ---
         resolved_actions = [resolve_pronouns(a, names) for a in beat['actions']]
         pose_action_map, motion_actions = bind_identity_first_only(resolved_actions, names)
 
-        # --- NEW: arc integration ---
+        # --- arc integration ---
         arc = beat.get('arc', "")
         arc_sentence = f"Motion arc: {arc}" if arc else ""
 
         # --- build prompt ---
-        #sentences = start_sentences
         sentences = [beat['arc']]
         for char, action in pose_action_map.items():
             clean_action = strip_leading_name(action, char)
             sentences.append(f"{char} {clean_action}.")
-
 
         wide_prompt = " ".join(sentences[:len(beat_chars)])
         identity = '\n'.join([f'{x.capitalize()} ({y})' for x, y in names.items()])
@@ -179,11 +232,11 @@ def render_beats_actions(assets, actions, mappings, T):
         alias = f"BEAT_{beat['beat']}_WIDE_ACTION"
         char_assets = " and ".join(f"{char_aliases[c]} asset " for c in beat_chars)
         if len(beat_chars) == 1:
-            ide_prompt = sentences[0]
             alias = f"BEAT_{beat['beat']}_MEDIUM_ACTION"
             T.action_medium(alias, zone_alias, char_assets, resolve_character_mentions(arc, names))
         else:
             T.action_wide(alias, zone_alias, char_assets, resolve_character_mentions(arc, names))
+        
         sentences = sentences[:len(beat_chars)]
         if arc_sentence:
             sentences.append(arc_sentence)
@@ -224,6 +277,9 @@ def render_beats_dialog(assets, actions, mappings, T):
         canonical(c['name']): f"CHAR_{normalize(c['name'])}"
         for c in assets['biographies']
     }
+    
+    # Build character index map for LEFT/RIGHT determination
+    char_index_map = {canonical(bio['name']): i for i, bio in enumerate(assets['biographies'])}
 
     generated_bases = set()
 
@@ -235,7 +291,6 @@ def render_beats_dialog(assets, actions, mappings, T):
         if not dialog_list:
             continue
 
-        zone_alias = resolve_zone_alias(beat['backdrop'], mappings)
         s_idx = 1
 
         for dlg in dialog_list:
@@ -243,10 +298,19 @@ def render_beats_dialog(assets, actions, mappings, T):
             if speaker not in char_aliases:
                 continue
 
+            # Determine backdrop variant based on speaker position
+            zone_name = beat['zone']
+            zone_mappings = mappings.get(zone_name, {})
+            
+            # Dialog is always solo shot - determine LEFT or RIGHT based on speaker index
+            char_idx = char_index_map.get(speaker, 0)
+            shot_variant = 'LEFT' if char_idx == 0 else 'RIGHT'
+            zone_alias = zone_mappings.get(shot_variant, 'UNKNOWN')
+
             speaker_alias = char_aliases[speaker]
             raw_line = dlg['line']
 
-            # --- NEW: clean dialog line ---
+            # --- clean dialog line ---
             line = clean_dialog_line(raw_line)
 
             raw_speaker = dlg['speaker']
@@ -263,7 +327,7 @@ def render_beats_dialog(assets, actions, mappings, T):
             if not facial:
                 facial = 'neutral'
 
-            # --- NEW: posture alignment from starting_description ---
+            # --- posture alignment from starting_description ---
             start_desc = beat.get('starting_description', {})
             posture = start_desc.get(raw_speaker, None)
             if posture:
@@ -283,7 +347,7 @@ def render_beats_dialog(assets, actions, mappings, T):
                     f"{dlg['speaker']} (facial expression {facial})"
                 )
 
-                # ONE closeup + ONE medium per beat per speaker
+                # ONE closeup per beat per speaker
                 T.dialog_closeup(base_alias, zone_alias, speaker_alias, dialog_pose_prompt_close)
 
             final_alias = f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_VIDEO_{s_idx:02d}"
