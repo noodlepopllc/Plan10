@@ -258,7 +258,7 @@ def GenerateTalkingVideo(
     if not prompt:
         prompt = "The characters stand and act naturally. "
 
-    eprompt = prompt 
+    eprompt = f'{desc}. The person says "{text}." {prompt}.'
 
     print("CURRENT PROMPT: ",eprompt)
 
