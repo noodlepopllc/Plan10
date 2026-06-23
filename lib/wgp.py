@@ -266,7 +266,7 @@ def GenerateTalkingVideo(
     width = int(width)
     height = int(height)
     seed = int(seed)
-    duration_sec = int(estimate_duration(text))
+    duration_sec = int(estimate_duration(text)) + 1
     fps = 24
 
     if seed == -1:
