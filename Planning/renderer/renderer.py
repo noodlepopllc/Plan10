@@ -241,7 +241,7 @@ def render_beats_actions(assets, actions, mappings, T):
         if arc_sentence:
             sentences.append(arc_sentence)
         wide_prompt = " ".join(sentences)
-        duration = 10 if os.environ.get('WGP','False') == 'True' else 5
+        duration = 10 if os.environ.get('WGP','False') == 'True' or os.environ.get('LTX','False') == 'True' else 5
         T.action_video(f"{alias}_VIDEO", alias, resolve_character_mentions(arc_sentence, names), duration=duration)
 
 # ---------------------------------------------------------
