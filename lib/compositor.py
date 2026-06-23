@@ -14,13 +14,13 @@ from PIL import Image
 
 def CompositeBackground(
     background_path: str,
-    shot_type: str = "wide",  # "wide", "left", "right"
+    shot_type: str = "middle",  # "middle", "left", "right"
     output: str = "composite.png",
     seed: int = -1,
     width: int = WIDTH,   # Target video width (e.g., 1280 or 720)
     height: int = HEIGHT  # Target video height (e.g., 720 or 1280)
 ):
-    """Generate left/right/wide backdrop from wide background image at target resolution."""
+    """Generate left/right/middle backdrop from wide background image at target resolution."""
     
     # 1. Validate
     if not os.path.exists(background_path):
@@ -39,11 +39,11 @@ def CompositeBackground(
         # Right half
         cropped = wide.crop((wide_width // 2, 0, wide_width, wide_height))
         crop_desc = "RIGHT SIDE of environment"
-    else:  # wide
+    else:  # middle
         cropped = wide
         crop_desc = "FULL WIDE SHOT of environment"
     
-    # 4. Save cropped version temporarily (832x928 for left/right)
+    # 4. Save cropped version temporarily
     crop_path = output.replace('.png', '_crop.png')
     cropped.save(crop_path)
     
@@ -52,19 +52,21 @@ def CompositeBackground(
     bg_desc = analysis['analysis']
     
     # 6. Build prompt for regeneration at TARGET resolution
+    # CRITICAL: Prevent the model from outpainting or hallucinating elements from the rest of the room
     task = (
         f"REF 1: {bg_desc}. "
         f"{crop_desc}. "
+        "CRITICAL INSTRUCTION: This is a tightly cropped view of a specific section. "
+        "DO NOT outpaint, DO NOT expand the frame, and DO NOT hallucinate or add elements from the rest of the room/location that are not visible in REF 1. "
+        "Strictly limit the generated content to only what is explicitly visible in the reference image. "
+        "ALLOW CROPPING of background elements naturally at frame edges. "
         "No characters, no silhouettes, no human forms. "
-        "Preserve exact rendering style, lighting, and atmosphere of REF 1. "
-        "Maintain all environmental details and spatial relationships. "
-        "ALLOW CROPPING of background elements naturally at frame edges."
+        "Preserve exact rendering style, lighting, and atmosphere of REF 1."
     )
     
     print(f'\n📝 PROMPT ({shot_type} shot, target {width}x{height}):\n{task}\n')
     
     # 7. Regenerate at TARGET resolution using cropped version as reference
-    # This ensures the output matches video generation resolution
     status = EditImage(task, [crop_path], output, width, height, seed)
     
     # 8. Clean up temporary crop
@@ -81,7 +83,7 @@ def CompositeBackground(
     img.save(output, pnginfo=meta)
     
     status.update({"prompt": task, "description": bg_desc, "shot_type": shot_type, "resolution": f"{width}x{height}"})
-    if os.environ['BATCH'] == 'False':
+    if os.environ.get('BATCH', 'False') == 'False':
         analysis = AnalyzeImage(output, "Briefly describe this image, no more than 100 words")
         status['description'] = analysis['analysis']
     return status
