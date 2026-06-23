@@ -1,0 +1,12 @@
+# Action pipeline (original behavior)
+python Planning/builders/debate.py                                          # Use hardcoded SEED
+python Planning/builders/debate.py -S my_seed.txt -O scene.txt              # Expand existing seed
+python Planning/builders/debate.py -T ACTION-HEAVY -G Cyberpunk -O out.txt  # Generate action seed + expand
+python Planning/builders/debate.py -T PROP PASSING --seed-only -O seed.txt  # Seed only, no expansion
+
+# Topical pipeline (new)
+python Planning/builders/debate.py --topical -O debate.txt
+python Planning/builders/debate.py --topical --scenario debate --topic "free will vs determinism" -O debate.txt
+python Planning/builders/debate.py --topical --scenario teaching --topic "quantum entanglement" -O teaching.txt
+python Planning/builders/debate.py --topical --scenario discussion --topic "meaning of consciousness" -O discuss.txt
+python Planning/builders/debate.py --topical --seed-only -O topical_seed.txt  # Seed only
