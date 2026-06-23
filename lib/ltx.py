@@ -136,13 +136,13 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         print("CURRENT PROMPT: ",eprompt)
 
         try:
-            i2v(eprompt, start_image, Path(output).name, 
+            i2v(eprompt, start_image, output, 
                     duration_sec, width, height, seed)
             description = ''
                 
             # Post-processing
             if os.environ.get('BATCH', 'False') == 'False':
-                tmp_img = video_to_img(f'{os.getcwd()}/{output}', width, height)
+                tmp_img = video_to_img(f'{output}', width, height)
                 tmp_img.save('tmp.png')
                 description = AnalyzeImage('tmp.png', "Briefly describe this image, no more than 100 words")['analysis']
             
