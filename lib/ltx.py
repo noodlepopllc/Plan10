@@ -1,0 +1,159 @@
+import torch
+from diffsynth.pipelines.ltx2_audio_video import LTX2AudioVideoPipeline, ModelConfig
+from diffsynth.utils.data.media_io_ltx2 import write_video_audio_ltx2
+from PIL import Image
+from modelscope import dataset_snapshot_download
+
+from config import load_environ
+load_environ()
+
+import logging, os
+import json
+from time import sleep
+from pathlib import Path
+from util import video_to_img
+from image_analysis import AnalyzeImage, EnhancePrompt
+from image_gen import add_metadata_char
+
+WIDTH = int(os.environ.get("WIDTH", "832"))
+HEIGHT = int(os.environ.get("HEIGHT", "480"))
+
+def i2v(prompt='', media='', output='output.mp4', 
+                  duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
+
+    width, height = (720, 1280) if height > width else (1280, 720)
+
+    vram_config = {
+        "offload_dtype": torch.float8_e5m2,
+        "offload_device": "cpu",
+        "onload_dtype": torch.float8_e5m2,
+        "onload_device": "cpu",
+        "preparing_dtype": torch.float8_e5m2,
+        "preparing_device": "cuda",
+        "computation_dtype": torch.bfloat16,
+        "computation_device": "cuda",
+    }
+    pipe = LTX2AudioVideoPipeline.from_pretrained(
+        torch_dtype=torch.bfloat16,
+        device="cuda",
+        model_configs=[
+            ModelConfig(model_id="google/gemma-3-12b-it-qat-q4_0-unquantized", origin_file_pattern="model-*.safetensors", **vram_config),
+            ModelConfig(model_id="Lightricks/LTX-2.3", origin_file_pattern="ltx-2.3-22b-distilled.safetensors", **vram_config),
+            ModelConfig(model_id="Lightricks/LTX-2.3", origin_file_pattern="ltx-2.3-spatial-upscaler-x2-1.0.safetensors", **vram_config),
+        ],
+        tokenizer_config=ModelConfig(model_id="google/gemma-3-12b-it-qat-q4_0-unquantized"),
+        vram_limit=int(os.environ["VRAM"]),
+    )
+
+
+    negative_prompt = (
+        "blurry, out of focus, overexposed, underexposed, low contrast, washed out colors, excessive noise, "
+        "grainy texture, poor lighting, flickering, motion blur, distorted proportions, unnatural skin tones, "
+        "deformed facial features, asymmetrical face, missing facial features, extra limbs, disfigured hands, "
+        "wrong hand count, artifacts around text, inconsistent perspective, camera shake, incorrect depth of "
+        "field, background too sharp, background clutter, distracting reflections, harsh shadows, inconsistent "
+        "lighting direction, color banding, cartoonish rendering, 3D CGI look, unrealistic materials, uncanny "
+        "valley effect, incorrect ethnicity, wrong gender, exaggerated expressions, wrong gaze direction, "
+        "mismatched lip sync, silent or muted audio, distorted voice, robotic voice, echo, background noise, "
+        "off-sync audio, incorrect dialogue, added dialogue, repetitive speech, jittery movement, awkward "
+        "pauses, incorrect timing, unnatural transitions, inconsistent framing, tilted camera, flat lighting, "
+        "inconsistent tone, cinematic oversaturation, stylized filters, or AI artifacts."
+    )
+    num_frames = (duration_sec * 24) + 1
+
+    image = Image.open(media).convert("RGB").resize((width, height))
+    # first frame
+    video, audio = pipe(
+        prompt=prompt,
+        negative_prompt=negative_prompt,
+        seed=seed,
+        height=height,
+        width=width,
+        num_frames=num_frames,
+        tiled=True,
+        use_distilled_pipeline=True,
+        input_images=[image],
+        input_images_indexes=[0],
+        input_images_strength=1.0,
+    )
+    write_video_audio_ltx2(
+        video=video,
+        audio=audio,
+        output_path=output,
+        fps=24,
+        audio_sample_rate=pipe.audio_vocoder.output_sampling_rate,
+    )
+
+
+def GenerateVideo(prompt='', media='', output='output.mp4', 
+                  duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
+
+        print(f"PROMPT: {prompt}")
+        
+        if isinstance(prompt, list):
+            prompt = prompt.pop()
+        
+        start_image = ''
+        end_image = None
+
+        if not media:
+            GenerateImage(prompt = prompt, output='first_frame.png', width=width, height=height, seed=seed)
+            media='first_frame.png'
+
+        if isinstance(media, list):
+            start_image = media.pop(0)
+            if len(media) > 0:
+                end_image = video_to_img(media.pop(), width, height, True, False)
+        else:
+            start_image = f'{os.getcwd()}/{media}'
+
+        print(f"MEDIA: {start_image}")
+
+        original_prompt = prompt
+
+        width = int(width)
+        height = int(height)
+        seed = int(seed)
+        duration_sec = int(duration_sec)
+        fps = 24
+
+        if seed == -1:
+            seed = random.randint(0,1000000)
+
+        total_frames = (duration_sec * fps) + 1
+
+        print(f"\n🎬 Generating {total_frames/fps:.1f}s video ({total_frames} frames)")
+        print(f"   Resolution: {width}x{height}")
+
+        current_source = video_to_img(start_image, width, height, True, True)
+        current_source.save('tmp.png')
+
+        if not prompt:
+            prompt = "The characters stand and act naturally. "
+
+        eprompt = prompt 
+
+        print("CURRENT PROMPT: ",eprompt)
+
+        try:
+            i2v(eprompt, start_image, Path(output).name, 
+                    duration_sec, width, height, seed)
+            description = ''
+                
+            # Post-processing
+            if os.environ.get('BATCH', 'False') == 'False':
+                tmp_img = video_to_img(f'{os.getcwd()}/{output}', width, height)
+                tmp_img.save('tmp.png')
+                description = AnalyzeImage('tmp.png', "Briefly describe this image, no more than 100 words")['analysis']
+            
+            return {
+                "status": "success",
+                "output_path": output,
+                "frames": (duration_sec * fps) + 1,
+                "description": description,
+                "prompt": eprompt
+            }
+            
+        except Exception as e:
+            print(f"❌ Error: {e}")
+            raise

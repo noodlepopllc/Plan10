@@ -38,6 +38,9 @@ from speech_to_video import GenerateTalkingVideoSchema
 
 if os.environ.get('WGP','False') == 'True':
     from wgp import GenerateVideo, GenerateTalkingVideo
+elif os.environ.get('LTX','False') == 'True':
+    from ltx import GenerateVideo
+    from speech_to_video import GenerateTalkingVideo
 else:
     from image_to_video import GenerateVideo
     from speech_to_video import GenerateTalkingVideo
