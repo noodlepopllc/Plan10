@@ -258,6 +258,10 @@ def GenerateTalkingVideo(
     if not prompt:
         prompt = "The characters stand and act naturally. "
 
+    desc = Image.open(start_image).info.get('Description')
+    if not desc:
+        desc = add_metadata_char(start_image, '', seed)
+
     eprompt = f'{desc}. The person says "{text}." {prompt}.'
 
     print("CURRENT PROMPT: ",eprompt)
