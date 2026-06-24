@@ -14,6 +14,7 @@ from pathlib import Path
 from util import video_to_img
 from image_analysis import AnalyzeImage, EnhancePrompt
 from image_gen import add_metadata_char
+import random
 
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))

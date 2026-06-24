@@ -84,8 +84,9 @@ def CompositeBackground(
         os.remove(crop_path)
 
     desc = add_metadata_loc(output, '', seed)
-    
-    status.update({"prompt": task, "description": desc, "shot_type": shot_type, "resolution": f"{img.width}x{img.height}"})
+
+    status = {"status": "success", "output_path": output, "prompt": f"crop {shot_type}", "description": desc}
+    status.update({"shot_type": shot_type, "resolution": f"{img.width}x{img.height}"})
     if os.environ.get('BATCH', 'False') == 'False':
         analysis = AnalyzeImage(output, "Briefly describe this image, no more than 100 words")
         status['description'] = analysis['analysis']
