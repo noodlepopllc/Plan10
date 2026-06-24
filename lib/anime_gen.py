@@ -445,7 +445,7 @@ def CreateCharacterSheet(prompt='', output='character_tmp.png', seed=-1, imagege
         f"Character: {prompt}"
     )
     gen = imagegen if imagegen else ImageGen()
-    status = gen.generate(prompt, output, 1328, 1328, seed)
+    status = gen.generate(prompt, output, 2048, 2048, seed)
     if not imagegen:
         del gen
     status['description'] = add_metadata_char(output, prompt, seed)
@@ -555,7 +555,7 @@ def CreateBackground(
     ).strip()
 
     gen = ImageGen()
-    status = gen.generate(final_prompt, output, 1328, 1328, seed)
+    status = gen.generate(final_prompt, output, 1920, 1080, seed)
     del gen
 
     status['description'] = add_metadata_loc(output, final_prompt, seed)
