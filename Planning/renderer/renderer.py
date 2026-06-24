@@ -113,7 +113,7 @@ def get_backgrounds(assets, mappings, T, output_dir="backdrops_tmp"):
             )
             
             # 2. Generate MIDDLE variant for Two-Shot (shows both characters)
-            T.backdrop(zone_key, zone_key, "middle")
+            #T.backdrop(zone_key, zone_key, "middle")
             
             # 3. Generate LEFT variant (for biographies[0])
             T.backdrop(zone_key, zone_key, "left")
@@ -124,7 +124,7 @@ def get_backgrounds(assets, mappings, T, output_dir="backdrops_tmp"):
             # 5. Map zone name to all three variants
             mappings[zone_name] = {
                 'LEFT': f"{zone_key}_LEFT_BACKDROP",
-                'MIDDLE': f"{zone_key}_MIDDLE_BACKDROP",
+                'MIDDLE': f"{zone_key}_BACKGROUND",
                 'RIGHT': f"{zone_key}_RIGHT_BACKDROP"
             }
 

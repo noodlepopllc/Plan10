@@ -52,8 +52,10 @@ def CompositeBackground(
     
     # 4. Save cropped version temporarily
     crop_path = output.replace('.png', '_crop.png')
-    cropped.save(crop_path)
+    #cropped.save(crop_path)
+    cropped.save(output)
     
+    '''
     # 5. Analyze the cropped version
     analysis = AnalyzeImage(crop_path, "Describe this environment in detail, focusing on architectural elements, lighting, materials, and spatial layout. 100-150 words.")
     bg_desc = analysis['analysis']
@@ -75,21 +77,17 @@ def CompositeBackground(
     
     # 7. Regenerate at TARGET resolution using cropped version as reference
     status = EditImage(task, [crop_path], output, width, height, seed)
-    
+    '''
+
     # 8. Clean up temporary crop
     if os.path.exists(crop_path):
         os.remove(crop_path)
-    
-    # 9. Embed metadata
-    img = Image.open(output)
-    meta = PngImagePlugin.PngInfo()
-    meta.add_text("Prompt", task)
-    meta.add_text("ShotType", shot_type)
-    meta.add_text("Description", bg_desc)
-    meta.add_text("Resolution", f"{width}x{height}")
+
+    desc = add_metadata_loc(output, '', seed)
+
     img.save(output, pnginfo=meta)
     
-    status.update({"prompt": task, "description": bg_desc, "shot_type": shot_type, "resolution": f"{width}x{height}"})
+    status.update({"prompt": task, "description": desc, "shot_type": shot_type, "resolution": f"{img.width}x{img.height}"})
     if os.environ.get('BATCH', 'False') == 'False':
         analysis = AnalyzeImage(output, "Briefly describe this image, no more than 100 words")
         status['description'] = analysis['analysis']
