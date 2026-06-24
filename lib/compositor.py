@@ -1,10 +1,17 @@
 from PIL import Image, PngImagePlugin
 from image_edit import EditImage
-from image_gen import GenerateImage, add_metadata_char, add_metadata_loc
 from image_analysis import AnalyzeImage
 import os
 
 from config import load_environ
+
+if os.config.get('ANIME','False') == 'True':
+    from anime_gen import GenerateImage, add_metadata_char, add_metadata_loc
+else:
+    from image_gen import GenerateImage, add_metadata_char, add_metadata_loc
+
+
+
 
 load_environ()
 WIDTH = int(os.environ.get("WIDTH", "832"))

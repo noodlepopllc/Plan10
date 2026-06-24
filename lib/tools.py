@@ -4,11 +4,12 @@ sys.path.append('./lib')
 from image_gen import (
     CreateCharacterSheetSchema, 
     CreateBackgroundSchema, 
-    CreateCharacterSheet, 
-    CreateBackground, 
-    GenerateImage, 
     GenerateImageSchema, 
 ) 
+if os.config.get('ANIME','False') == 'True':
+    from anime_gen import GenerateImage, CreateBackground, CreateCharacterSheet
+else:
+    from image_gen import GenerateImage, CreateBackground, CreateCharacterSheet
 from graphics_gen import GenerateGraphic, GenerateGraphicSchema
 from image_analysis import EnhancePrompt
 from dialog import VoiceDesignSchema, VoiceCloneSchema, DesignVoice, CloneVoice

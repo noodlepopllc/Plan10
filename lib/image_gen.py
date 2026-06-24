@@ -1,4 +1,5 @@
 from diffsynth.pipelines.flux2_image import Flux2ImagePipeline, ModelConfig
+from diffsynth.pipelines.krea2 import Krea2Pipeline, ModelConfig
 from diffsynth.pipelines.qwen_image import QwenImagePipeline, ModelConfig, FlowMatchScheduler
 from diffsynth.pipelines.z_image import ZImagePipeline, ModelConfig
 import gc
@@ -12,6 +13,61 @@ from PIL.PngImagePlugin import PngInfo
 load_environ()
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
+
+class ImageGenKrea2(object):
+    def __init__(self,vrlimit=14):
+        if "VRAM" in os.environ:
+            vrlimit = int(os.environ["VRAM"])
+        self.vrlimit = vrlimit
+        self.pipe = None
+
+    def __enter__(self):
+        if not self.pipe:
+            vram_config = {
+                "offload_dtype": "disk",
+                "offload_device": "disk",
+                "onload_dtype": torch.float8_e4m3fn,
+                "onload_device": "cpu",
+                "preparing_dtype": torch.float8_e4m3fn,
+                "preparing_device": "cuda",
+                "computation_dtype": torch.bfloat16,
+                "computation_device": "cuda",
+            }
+            self.pipe = Krea2Pipeline.from_pretrained(
+                torch_dtype=torch.bfloat16,
+                device="cuda",
+                model_configs=[
+                    ModelConfig(model_id="krea/Krea-2-Turbo", origin_file_pattern="turbo.safetensors", **vram_config),
+                    ModelConfig(model_id="Qwen/Qwen3-VL-4B-Instruct", origin_file_pattern="*.safetensors", **vram_config),
+                    ModelConfig(model_id="Qwen/Qwen-Image", origin_file_pattern="vae/diffusion_pytorch_model.safetensors", **vram_config),
+                ],
+                tokenizer_config=ModelConfig(model_id="Qwen/Qwen3-VL-4B-Instruct", origin_file_pattern=""),
+                vram_limit=self.vrlimit,
+            )
+
+
+    def generate(self, prompt, output, width, height, seed):
+        if not self.pipe:
+            self.__enter__()
+        image = self.pipe(
+                prompt=prompt,
+                seed=seed,
+                height=height,
+                width=width,
+                num_inference_steps=8, 
+                cfg_scale=1, 
+                mu=1.15
+            )
+        image.save(output)
+        return {"status":"success", "output_path":output}
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.__del__()
+
+    def __del__(self):
+        gc.collect()
+        if torch.cuda.is_available():  # ✅ Was `if torch.cuda:` (always truthy)
+            torch.cuda.empty_cache()
 
 class ImageGenZImage(object):
     def __init__(self,vrlimit=14):
@@ -41,7 +97,7 @@ class ImageGenZImage(object):
                     ModelConfig(model_id="Tongyi-MAI/Z-Image-Turbo", origin_file_pattern="vae/diffusion_pytorch_model.safetensors", **vram_config),
                 ],
                 tokenizer_config=ModelConfig(model_id="Tongyi-MAI/Z-Image-Turbo", origin_file_pattern="tokenizer/"),
-                vram_limit=torch.cuda.mem_get_info("cuda")[1] / (1024 ** 3) - 0.5,
+                vram_limit=self.vrlimit,
             )
 
 
@@ -181,8 +237,10 @@ class ImageGenKlein(object):
 
 if os.environ.get("IMAGE_GEN", "KLEIN") == "KLEIN":
     ImageGen = ImageGenKlein
-elif os.environ.get("IMAGE_GEN", "ZIMAGE") == "ZIMAGE":
+elif os.environ.get("IMAGE_GEN", "KLEIN") == "ZIMAGE":
     ImageGen = ImageGenZImage
+elif os.environ.get("IMAGE_GEN", "KLEIN") == "KREA2":
+    ImageGen = ImageGenKrea2
 else:
     ImageGen = ImageGenQwen
 
@@ -301,7 +359,11 @@ def CreateCharacterSheet(prompt='', output='character_tmp.png',seed=-1, imagegen
     "between the front and back views."
     f"of {prompt}")
     gen = imagegen if imagegen else ImageGen()
-    status = gen.generate(prompt, output, 1328, 1328, seed)
+    if isinstance(gen, ImageGenQwen):
+        width, height = (1328,1328)
+    else:
+        width, height = (2048,2048)
+    status = gen.generate(prompt, output, width, height, seed)
     if not imagegen:
         del gen
     status['description'] = add_metadata_char(output, prompt, seed)
@@ -332,7 +394,11 @@ def CreateBackground(prompt='', output='location_tmp.png', seed=-1):
     final_prompt = (combined + environmental_suffix).strip()
     
     gen = ImageGen()
-    status = gen.generate(final_prompt, output, 1664, 928, seed)
+    if isinstance(gen, ImageGenQwen):
+        width, height = (1664,928)
+    else:
+        width, height = (1920,1080)
+    status = gen.generate(prompt, output, width, height, seed)
     del gen
     status['description'] = add_metadata_loc(output, final_prompt, seed)
     status['prompt'] = final_prompt
