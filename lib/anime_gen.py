@@ -410,7 +410,7 @@ def add_metadata_char(imgpath, prompt='', seed=-1):
     target_image.save(imgpath, pnginfo=metadata)
     return clean_string
 
-def add_metadata_loc(imgpath, prompt='', seed=-1):
+def add_metadata_loc(imgpath, prompt='', seed=-1, brief=False):
     target_image = Image.open(imgpath)
     metadata = PngInfo()
 
