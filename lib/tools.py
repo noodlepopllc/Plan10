@@ -6,7 +6,7 @@ from image_gen import (
     CreateBackgroundSchema, 
     GenerateImageSchema, 
 ) 
-if os.config.get('ANIME','False') == 'True':
+if os.environ.get('ANIME','False') == 'True':
     from anime_gen import GenerateImage, CreateBackground, CreateCharacterSheet
 else:
     from image_gen import GenerateImage, CreateBackground, CreateCharacterSheet
