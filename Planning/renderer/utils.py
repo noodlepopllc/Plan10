@@ -433,7 +433,7 @@ def postprocess_beats(beats, biography):
     beats = filter_empty_beats(beats)
     beats = clean_action_narrative(beats)
     beats = clean_dialog_narrative(beats)
-    beats = fix_posture_zone_contradictions(beats)
+    #beats = fix_posture_zone_contradictions(beats)
     beats = deduplicate_dialog(beats)
     beats = normalize_speaker_names(beats, biography)
     return beats
@@ -454,8 +454,9 @@ def split_dialog_sentences(beats, biography, syllable_threshold=16):
         if not beat['actor']:
             beat['actor'] = speaker
         beat['beat'] = ndx
-        beat['posture'] = {beat['actor'] : beat['posture']}
+        beat['posture'] = {beat['actor'] : f'{beat["posture"]}'}
         beat['actions'] = [beat['action']]
+        beat['pose'] =f"{beat['actor']} {beat['posture'][beat['actor']]} with a {expression} expression"
         beat['arc'] = f"{beat['actor']} {beat['posture'][beat['actor']]} with a {expression} expression, {beat['action']}"
         if not line:
             beat["dialog"] = []

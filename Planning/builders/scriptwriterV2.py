@@ -33,6 +33,7 @@ def split_story_at_cold_open(prose):
     Returns (cold_open_text, story_text).
     If marker not found, returns ('', prose).
     """
+    return '',prose
     if COLD_OPEN_MARKER in prose:
         parts = prose.split(COLD_OPEN_MARKER, 1)
         cold_open = parts[0].strip()

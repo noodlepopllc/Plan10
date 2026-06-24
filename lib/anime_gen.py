@@ -330,11 +330,8 @@ def add_metadata_char(imgpath, prompt='', seed=-1):
             plush_toy, weapon, musical_instrument, neutral
 
         === CRITICAL ANIME RULES ===
-        1. Anime eyes are LARGE by default. Only use "narrow" if they are genuinely
-           drawn narrow (e.g. a stern seinen character). Never describe typical
-           anime eyes as "small" or "narrow".
-        2. Anime noses are OFTEN a dot, line, or shadow. Do NOT describe as
-           "medium" or "large" unless clearly drawn that way.
+        1. NEVER hallucinate animal_ears or cat_ears. Hair buns, twin_tails, side_braids, ahoge, or spiky hair are NOT ears. Only tag animal_ears if distinct, non-human animal appendages are explicitly drawn on top of the head.
+        2. Anime eyes are LARGE by default. Only use "narrow" if they are genuinely drawn narrow.
         3. Hair in anime is GRAVITY-DEFYING and CHUNKY. Use anime-specific
            terms (ahoge, twin_tails, drill_curls) instead of realistic ones.
         4. Skin in anime is CEL-SHADED with prominent blush. Prefer
@@ -503,7 +500,7 @@ def CreateBackground(
     output='location_tmp.png',
     seed=-1,
 ):
-    style = os.environ.get('STYLE','default')
+    style = os.environ.get('STYLE','ghibli')
     time_of_day=None       # optional: 'dawn', 'morning', 'noon', 'golden_hour', 'sunset', 'twilight', 'night'
     weather=None           # optional: 'clear', 'cloudy', 'rain', 'snow', 'fog', 'cherry_blossoms', 'autumn_leaves'
     seed = int(seed)

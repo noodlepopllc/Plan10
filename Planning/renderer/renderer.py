@@ -183,9 +183,10 @@ def strip_leading_name(action, char):
 
 def render_beats_actions(assets, actions, mappings, T):
     char_aliases = {canonical(c['name']): f"CHAR_{normalize(c['name'])}" for c in assets['biographies']}
-    
-    # Build character index map for LEFT/RIGHT determination
     char_index_map = {canonical(bio['name']): i for i, bio in enumerate(assets['biographies'])}
+    
+    pose_cache = {}
+    video_cache = {}
 
     for beat in actions:
         if not beat['action']:
@@ -197,52 +198,100 @@ def render_beats_actions(assets, actions, mappings, T):
 
         names = {c: all_names[c] for c in beat_chars}
         
-        # Determine backdrop variant based on character positions
         zone_name = beat['zone']
         zone_mappings = mappings.get(zone_name, {})
         
         if len(beat_chars) == 1:
-            # Solo shot - determine LEFT or RIGHT based on character index
             char_name = list(beat_chars)[0]
             char_idx = char_index_map.get(canonical(char_name), 0)
             shot_variant = 'LEFT' if char_idx == 0 else 'RIGHT'
         else:
-            # Multiple characters - use MIDDLE (two-shot)
             shot_variant = 'MIDDLE'
         
         zone_alias = zone_mappings.get(shot_variant, 'UNKNOWN')
 
-        # --- existing action resolution ---
         resolved_actions = [resolve_pronouns(a, names) for a in beat['actions']]
         pose_action_map, motion_actions = bind_identity_first_only(resolved_actions, names)
 
-        # --- arc integration ---
         arc = beat.get('arc', "")
-        arc_sentence = f"Motion arc: {arc}" if arc else ""
+        pose = beat.get('pose', "")
 
-        # --- build prompt ---
-        sentences = [beat['arc']]
-        for char, action in pose_action_map.items():
-            clean_action = strip_leading_name(action, char)
-            sentences.append(f"{char} {clean_action}.")
-
-        wide_prompt = " ".join(sentences[:len(beat_chars)])
-        identity = '\n'.join([f'{x.capitalize()} ({y})' for x, y in names.items()])
-
-        alias = f"BEAT_{beat['beat']}_WIDE_ACTION"
-        char_assets = " and ".join(f"{char_aliases[c]} asset " for c in beat_chars)
-        if len(beat_chars) == 1:
-            alias = f"BEAT_{beat['beat']}_MEDIUM_ACTION"
-            T.action_medium(alias, zone_alias, char_assets, resolve_character_mentions(arc, names))
-        else:
-            T.action_wide(alias, zone_alias, char_assets, resolve_character_mentions(arc, names))
+        # 🆕 More robust character ordering with case-insensitive matching
+        ordered_chars = []
+        for char in beat_chars:
+            display_name = names[char]
+            canonical_name = char
+            
+            # Try multiple name variations for matching
+            search_names = [display_name, canonical_name, display_name.lower(), canonical_name.lower()]
+            
+            # Find earliest position in arc or pose
+            first_pos = 999999
+            for search_name in search_names:
+                if arc:
+                    pos = arc.lower().find(search_name.lower())
+                    if pos != -1 and pos < first_pos:
+                        first_pos = pos
+                if pose:
+                    pos = pose.lower().find(search_name.lower())
+                    if pos != -1 and pos < first_pos:
+                        first_pos = pos
+            
+            ordered_chars.append((first_pos, char))
         
-        sentences = sentences[:len(beat_chars)]
-        if arc_sentence:
-            sentences.append(arc_sentence)
-        wide_prompt = " ".join(sentences)
+        # Sort by position (characters not found go to end in original order)
+        ordered_chars.sort(key=lambda x: x[0])
+        ordered_char_list = [c[1] for c in ordered_chars]
+        
+        # Debug output
+        #print(f"Beat {beat['beat']}: ordered chars = {ordered_char_list}")
+        
+        # Build cache key using ordered characters
+        pose_key_parts = []
+        for char in ordered_char_list:
+            posture = beat['posture'].get(char, 'neutral')
+            expression = beat.get('facial', 'neutral')
+            pose_key_parts.append(f"{char}_{posture}_{expression}")
+        
+        if len(beat_chars) > 1:
+            pose_key_parts.append("two_shot")
+        
+        pose_key = "_".join(pose_key_parts)
+        
+        # Build char_assets in the same order as they appear in prompt
+        char_assets = " and ".join(f"{char_aliases[c]} asset " for c in ordered_char_list)
+        
+        # Debug output
+        #print(f"  char_assets = {char_assets}")
+        
+        # Check cache before generating static image
+        if pose_key not in pose_cache:
+            alias = f"BEAT_{beat['beat']}_WIDE_ACTION"
+            if len(beat_chars) == 1:
+                alias = f"BEAT_{beat['beat']}_MEDIUM_ACTION"
+                T.action_medium(alias, zone_alias, char_assets, resolve_character_mentions(pose, names))
+            else:
+                T.action_wide(alias, zone_alias, char_assets, resolve_character_mentions(arc, names))
+            pose_cache[pose_key] = alias
+        else:
+            alias = pose_cache[pose_key]
+        
         duration = 10 if os.environ.get('WGP','False') == 'True' or os.environ.get('LTX','False') == 'True' else 5
-        T.action_video(f"{alias}_VIDEO", alias, resolve_character_mentions(arc_sentence, names), duration=duration)
+        
+        if arc and arc.strip():
+            motion_key = f"{pose_key}_{arc.strip()}"
+            
+            if motion_key not in video_cache:
+                existing_count = len([k for k in video_cache if k.startswith(pose_key)])
+                video_alias = f"{alias}_VIDEO_{existing_count:02d}"
+                
+                T.action_video(
+                    video_alias, 
+                    alias, 
+                    resolve_character_mentions(arc, names), 
+                    duration=duration
+                )
+                video_cache[motion_key] = video_alias
 
 # ---------------------------------------------------------
 # DIALOG RENDERING
@@ -278,10 +327,10 @@ def render_beats_dialog(assets, actions, mappings, T):
         for c in assets['biographies']
     }
     
-    # Build character index map for LEFT/RIGHT determination
     char_index_map = {canonical(bio['name']): i for i, bio in enumerate(assets['biographies'])}
 
-    generated_bases = set()
+    # Cache dialog base images by visual content, not beat number
+    dialog_base_cache = {}
 
     for beat in actions:
         dialog_list = [
@@ -298,36 +347,30 @@ def render_beats_dialog(assets, actions, mappings, T):
             if speaker not in char_aliases:
                 continue
 
-            # Determine backdrop variant based on speaker position
             zone_name = beat['zone']
             zone_mappings = mappings.get(zone_name, {})
             
-            # Dialog is always solo shot - determine LEFT or RIGHT based on speaker index
             char_idx = char_index_map.get(speaker, 0)
             shot_variant = 'LEFT' if char_idx == 0 else 'RIGHT'
             zone_alias = zone_mappings.get(shot_variant, 'UNKNOWN')
 
             speaker_alias = char_aliases[speaker]
             raw_line = dlg['line']
-
-            # --- clean dialog line ---
             line = clean_dialog_line(raw_line)
-
             raw_speaker = dlg['speaker']
 
             facial_state_map = beat.get('facial_state') or {}
             head_gesture_map = beat.get('head_gesture') or {}
-            tone_map         = beat.get('tone') or {}
+            tone_map = beat.get('tone') or {}
 
             facial = facial_state_map.get(raw_speaker, 'neutral')
-            head   = head_gesture_map.get(raw_speaker, 'none')
-            tone   = normalize_tone(tone_map.get(raw_speaker, 'neutral'))
+            head = head_gesture_map.get(raw_speaker, 'none')
+            tone = normalize_tone(tone_map.get(raw_speaker, 'neutral'))
 
-            facial = beat.get('facial','crazy')
+            facial = beat.get('facial', 'crazy')
             if not facial:
                 facial = 'neutral'
 
-            # --- posture alignment from starting_description ---
             start_desc = beat.get('starting_description', {})
             posture = start_desc.get(raw_speaker, None)
             if posture:
@@ -338,17 +381,24 @@ def render_beats_dialog(assets, actions, mappings, T):
             expr_sentence = f"{dlg['speaker']} has a {facial} expression." if facial != "neutral" else ""
             dialog_prompt = " ".join(s for s in [pose_sentence, expr_sentence] if s)
 
-            base_alias = f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_BASE"
+            # Cache key based on visual content
+            dialog_key = f"{speaker}_{facial}_{zone_alias}"
 
-            if base_alias not in generated_bases:
-                generated_bases.add(base_alias)
-
+            if dialog_key not in dialog_base_cache:
+                # Generate new base image and cache it
+                base_alias = f"DIALOG_BASE_{normalize(speaker)}_{facial}_{shot_variant}"
+                
                 dialog_pose_prompt_close = (
                     f"{dlg['speaker']} (facial expression {facial})"
                 )
 
-                # ONE closeup per beat per speaker
                 T.dialog_closeup(base_alias, zone_alias, speaker_alias, dialog_pose_prompt_close)
+                dialog_base_cache[dialog_key] = base_alias
+                #print(f"🎭 Generated dialog base: {base_alias}")
+            else:
+                # Reuse cached base image
+                base_alias = dialog_base_cache[dialog_key]
+                #print(f"♻️ Reusing cached dialog base: {base_alias} for beat {beat['beat']}")
 
             final_alias = f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_VIDEO_{s_idx:02d}"
             T.dialog_final(final_alias, base_alias, f"{speaker_alias}_VOICE", line)

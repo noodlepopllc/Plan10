@@ -104,10 +104,12 @@ def CompositeScene(
     output: str = "composite.png",
     seed: int = -1,
     width: int = WIDTH,
-    height: int = HEIGHT
+    height: int = HEIGHT,
 ):
+    style = "anime" if os.environ.get('ANIME', 'False') == 'True' else "realistic"
     # 1. Validate
-    if not os.path.exists(background_path): raise FileNotFoundError(f"Background not found: {background_path}")
+    if not os.path.exists(background_path): 
+        raise FileNotFoundError(f"Background not found: {background_path}")
 
     # 2. Extract metadata (source of truth)
     img = Image.open(background_path)
@@ -125,6 +127,35 @@ def CompositeScene(
 
     bg_desc = desc
 
+    # 🆕 STYLE-SPECIFIC CONFIGURATION
+    if style == "anime":
+        lighting_desc = (
+            "Anime cel-shaded lighting: soft key light from camera-left with clean shadow edges, "
+            "gentle fill from camera-right, consistent color temperature. "
+            "Maintain identical lighting direction and cel-shading between shots. "
+            "Flat color fills with minimal gradients, bold outlines preserved."
+        )
+        char_preserve = (
+            "Preserve anime proportions: large expressive eyes, minimal nose (dot or line), "
+            "V-line face shape, cel-shaded skin with cel shadows, clean lineart, "
+            "stylized hair with gravity-defying volume. "
+            "Maintain exact anime art style from reference images."
+        )
+        analysis_style = "anime illustration"
+    else:
+        lighting_desc = (
+            "Soft cinematic key light from camera-left, gentle fill from camera-right, "
+            "consistent color temperature across all shots. "
+            "Maintain identical lighting direction and intensity between OTS and medium shots. "
+            "Natural skin texture with subsurface scattering, realistic shadows."
+        )
+        char_preserve = (
+            "Preserve adult facial proportions, light cheekbone definition, "
+            "subtle jawline contour, realistic skin texture with pores and natural imperfections, "
+            "photorealistic rendering. Maintain exact realistic style from reference images."
+        )
+        analysis_style = "photorealistic image"
+
     # Establishing shot mode (no characters)
     if len(characters) == 0:
         task = (
@@ -132,7 +163,7 @@ def CompositeScene(
             f"{shot_type.upper()} SHOT of the environment. "
             f"Camera focus instruction: {action}. "
             "No characters, no silhouettes, no human forms. "
-            "Preserve exact rendering style of REF 1. "
+            f"Preserve exact rendering style of REF 1 ({style} style). "
             "ALLOW CROPPING of background elements naturally."
         )
 
@@ -144,11 +175,15 @@ def CompositeScene(
         meta = PngImagePlugin.PngInfo()
         meta.add_text("Prompt", task)
         meta.add_text("ShotType", "establishing")
+        meta.add_text("Style", style)
         img.save(output, pnginfo=meta)
 
         status.update({"action": action, "prompt": task})
         if os.environ['BATCH'] == 'False':
-            analysis = AnalyzeImage(output, "Briefly describe this image, no more than 100 words")
+            analysis = AnalyzeImage(
+                output, 
+                f"Briefly describe this {analysis_style}, no more than 100 words"
+            )
             status['description'] = analysis['analysis']
         status['prompt'] = task
         return status
@@ -161,62 +196,64 @@ def CompositeScene(
     # Build character descriptions
     descriptions = []
     for c in characters:
+        if not os.path.exists(c): 
+            raise FileNotFoundError(f"Character not found: {c}")
+    
+    # Build character descriptions with explicit identity markers
+    descriptions = []
+    for i, c in enumerate(characters):
         desc = Image.open(c).info.get('Description')
         if not desc:
             desc = add_metadata_char(c, '', seed)
-        descriptions.append(f"{desc}. Preserve adult facial proportions, light cheekbone definition, and subtle jawline contour.")
+        #descriptions.append(f"Character reference sheet showing one character from multiple angles. Render only ONE instance of this character in the scene. {desc}. {char_preserve}")
+        descriptions.append(f"{desc}. {char_preserve}")
 
     if shot_type not in ("two_shot", "ots"):
         descriptions = [descriptions.pop(0)] 
     
-    # 🆕 SPATIAL INTEGRITY RULES (prevents clipping through objects)
     spatial_rules = (
         "SPATIAL RULES: "
         "1. Characters MUST maintain clean spatial boundaries—NO clipping through furniture, walls, tables, or objects. "
         "2. Characters must be properly grounded on floor surfaces with visible foot/leg contact. "
         "3. If furniture (tables, desks, counters) is present, characters are either CLEARLY IN FRONT OF it (occluding it) or CLEARLY BEHIND it (partially occluded by it)—NEVER merged through. "
         "4. Maintain consistent depth layering: foreground elements > characters > midground objects > background. "
-        "5. NO floating, NO intersecting geometry, NO transparency through solid objects."
     )
-
-    Lighting = '''Soft cinematic key light from camera-left, gentle fill from camera-right, consistent color temperature across all shots. Maintain identical lighting direction and intensity between OTS and medium shots.'''
 
     if shot_type == 'ots':
         task = (
             f"REF 1: {bg_desc}. Background source. "
             "ALLOW CROPPING: Background elements may be partially cropped or extend off-frame to maintain composition. DO NOT force-fit entire objects. "
             + spatial_rules +
-            "Cinematic close-up, camera is eye level, over-the-shoulder shot of "
+            f"Cinematic close-up, camera is eye level, over-the-shoulder shot of "
             f"REF 2: Character 1 (foreground character) {descriptions[0]} blurred, face is away from the camera and "
             "focusing on "
             f"REF 3: Character 2 (background character) {descriptions[1]}, clear shot, face towards camera, shoulders squared, visible from shoulders up. "
             f"Action: {action}. "
-            f"Lighting: {Lighting} Foreground character is blurred and slightly darker. "
+            f"Lighting: {lighting_desc} Foreground character is blurred and slightly darker. "
             f"Match REF 1 color temperature. Preserve EXACT rendering style from REF 2 and REF 3. "
-            f"NO flat lighting, NO foreground sharpness, NO cartoon shading. --no dark faces, no merged depth"
         )
     elif shot_type == 'two_shot' and len(descriptions) > 1:
-        # 🆕 TWO-SHOT: Separate references for each character with spatial positioning
-        task = (
+        task = (            
             f"REF 1: {bg_desc}. "
-            "COMPOSITION RULE: Characters are the focal point. Background elements may be cropped, truncated, or extend beyond frame edges naturally. NEVER shrink background or foreground objects to fit—allow natural cropping instead. "
-            + spatial_rules +
-            "TWO-SHOT COMPOSITION with clear spatial separation between characters: "
-            f"REF 2: Character 1 (LEFT SIDE OF FRAME) {descriptions[0]} "
-            f"REF 3: Character 2 (RIGHT SIDE OF FRAME) {descriptions[1]} "
-            "SPATIAL POSITIONING: Characters are shoulder-to-shoulder with clear separation. "
-            "Character 1 is positioned on the LEFT side of the frame. "
-            "Character 2 is positioned on the RIGHT side of the frame. "
-            "NO feature blending between characters—each character maintains distinct visual identity. "
+            "COMPOSITION RULE: Characters are the focal point. Background elements may be cropped naturally. "
+            #+ spatial_rules +
+            
+            "TWO-SHOT COMPOSITION: "
+            f"REF 2: {descriptions[0]} "
+            "POSITION: LEFT SIDE OF FRAME ONLY. "
+            
+            f"REF 3: {descriptions[1]} "
+            "POSITION: RIGHT SIDE OF FRAME ONLY. "
+            
+            
             f"Action: {action}. "
-            f"Framing: Tight waist-up framing of two characters. Camera distance: medium close. Subject scale: large. Waist-up only. "
-            f"Lighting: {Lighting} Both characters are fully lit and sharp. "
+            f"Framing: Tight waist-up framing of two DISTINCT characters. Camera distance: medium close. "
+            f"Lighting: {lighting_desc} Both characters are fully lit and sharp. "
             f"Match lighting, color temperature, and atmosphere of REF 1 exactly. "
-            f"Preserve EXACT rendering style, proportions, and details from REF 2 and REF 3. "
-            f"NO extras, NO text, NO blur, NO feature merging. --no cartoon, no flat colors, no photorealistic skin, no blended features"
+            f"Preserve EXACT rendering style from REF 2 and REF 3. "
         )
     else:
-        # Single character shots
+        # Single character shots (same as before)
         chars_desc = f"Character 1: {descriptions[0]}. "
         framing = {
             "closeup": "EXTREME FACE CLOSE-UP. Face fills 80% of frame. Crop at chin. Camera distance: very close.",
@@ -233,11 +270,11 @@ def CompositeScene(
             f"REF 2: {chars_desc} "
             f"Action: {action}. "
             f"Framing: {framing}. "
-            f"Lighting: {Lighting} Character is fully lit and sharp. "
+            f"Lighting: {lighting_desc} Character is fully lit and sharp. "
             f"Match lighting, color temperature, and atmosphere of REF 1 exactly. "
             f"Preserve EXACT rendering style, proportions, and details from REF 2. "
-            f"NO extras, NO text, NO blur. --no cartoon, no flat colors, no photorealistic skin"
         )
+
 
     print(f"\n📝 PROMPT ({len(task.split())} words):\n{task}\n")
 
@@ -256,11 +293,15 @@ def CompositeScene(
     meta.add_text("Prompt", task)
     meta.add_text("Action", action)
     meta.add_text("ShotType", shot_type)
+    meta.add_text("Style", style)  # 🆕 Track style in metadata
     img.save(output, pnginfo=meta)
 
     status.update({"action": action, "prompt": task})
     if os.environ['BATCH'] == 'False':
-        analysis = AnalyzeImage(output, "Briefly describe this image, no more than 100 words")
+        analysis = AnalyzeImage(
+            output, 
+            f"Briefly describe this {analysis_style}, no more than 100 words"
+        )
         status['description'] = analysis['analysis']
     status['prompt'] = task
     return status
