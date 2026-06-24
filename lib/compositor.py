@@ -84,8 +84,6 @@ def CompositeBackground(
         os.remove(crop_path)
 
     desc = add_metadata_loc(output, '', seed)
-
-    img.save(output, pnginfo=meta)
     
     status.update({"prompt": task, "description": desc, "shot_type": shot_type, "resolution": f"{img.width}x{img.height}"})
     if os.environ.get('BATCH', 'False') == 'False':
