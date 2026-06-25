@@ -365,10 +365,10 @@ def render_beats_dialog(assets, actions, mappings, T):
 
                 T.dialog_closeup(base_alias, zone_alias, speaker_alias, dialog_pose_prompt_close)
                 dialog_base_cache[dialog_key] = base_alias
-                print(f"🎭 Generated dialog base: {base_alias}")
+                #print(f"🎭 Generated dialog base: {base_alias}")
             else:
                 base_alias = dialog_base_cache[dialog_key]
-                print(f"♻️ Reusing cached dialog base: {base_alias} for beat {beat['beat']}")
+                #print(f"♻️ Reusing cached dialog base: {base_alias} for beat {beat['beat']}")
 
             final_alias = f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_VIDEO_{s_idx:02d}"
             T.dialog_final(final_alias, base_alias, f"{speaker_alias}_VOICE", line)
