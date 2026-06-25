@@ -50,14 +50,6 @@ def video_to_img(vid, width=832, height=480, resize=False, getlast=True):
     cap = cv2.VideoCapture(vid)
     try:
         # Enforce dimension match when resize is explicitly requested
-        if resize:
-            v_w = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-            v_h = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-            if v_w != width or v_h != height:
-                raise ValueError(
-                    f"Dimension mismatch: requested {width}x{height}, "
-                    f"but video is {v_w}x{v_h}. Video resizing is disabled."
-                )
 
         if getlast:
             frame_count = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))

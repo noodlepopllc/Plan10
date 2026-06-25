@@ -86,7 +86,7 @@ def CompositeBackground(
     desc = add_metadata_loc(output, '', seed)
 
     status = {"status": "success", "output_path": output, "prompt": f"crop {shot_type}", "description": desc}
-    status.update({"shot_type": shot_type, "resolution": f"{img.width}x{img.height}"})
+    status.update({"shot_type": shot_type, "resolution": f"{cropped.width}x{cropped.height}"})
     if os.environ.get('BATCH', 'False') == 'False':
         analysis = AnalyzeImage(output, "Briefly describe this image, no more than 100 words")
         status['description'] = analysis['analysis']
@@ -280,7 +280,7 @@ def CompositeScene(
     if shot_type in ["wide", "two_shot"]:
         ref_paths = [background_path] + characters
     else:
-        ref_paths = characters
+        ref_paths = [background_path] + characters
     
     status = EditImage(task, ref_paths, output, width, height, seed)
 
