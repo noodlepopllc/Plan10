@@ -286,7 +286,7 @@ def render_beats_actions(assets, actions, mappings, T):
                 existing_count = len([k for k in video_cache if k.startswith(pose_key)])
                 
                 # Determine reference and output alias
-                if existing_count == 0:
+                if True: #existing_count == 0:
                     # First video: use static image as reference
                     ref_alias = alias
                     vid_duration = duration
