@@ -441,11 +441,14 @@ if __name__ == '__main__':
             inputs = 'Generate a topical seed\n'
             if args.topic:
                 inputs += f'Topic: {args.topic}\n'
+            else:
+                inputs += f'Topic: {random.choice(TOPICAL_TOPICS)}\n'
             if args.scenario:
                 if args.scenario.upper() in TOPICAL_SCENARIOS:
                     inputs += f'Scenario Type: {args.scenario.upper()}\n'
                 else:
                     print(f'Warning: Unknown scenario "{args.scenario}", using random')
+                    inputs += f'Scenario Type: {random.choice(TOPICAL_SCENARIOS)}\n'
 
             seed = run_prompt(inputs, TOPICAL_SEED_GENERATOR, str(seed_path))
 
