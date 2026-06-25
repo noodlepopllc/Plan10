@@ -184,9 +184,8 @@ def render_beats_actions(assets, actions, mappings, T):
     char_aliases = {canonical(c['name']): f"CHAR_{normalize(c['name'])}" for c in assets['biographies']}
     char_index_map = {canonical(bio['name']): i for i, bio in enumerate(assets['biographies'])}
     
-    # 🆕 GROUP CONSECUTIVE BEATS WITH SAME POSE
-    beat_groups = []
-    current_group = []
+    pose_cache = {}
+    video_counters = {}  # Track video count per beat
     
     for beat in actions:
         if not beat['action']:
@@ -197,36 +196,6 @@ def render_beats_actions(assets, actions, mappings, T):
         if not beat_chars:
             continue
         
-        # Build pose signature for this beat
-        pose_sig = {
-            'chars': tuple(sorted(beat_chars)),
-            'postures': tuple(sorted([(c, beat['posture'].get(c, 'neutral')) for c in beat_chars])),
-            'expressions': tuple(sorted([(c, beat.get('facial', 'neutral')) for c in beat_chars])),
-            'zone': beat['zone']
-        }
-        
-        # Check if this beat matches current group
-        if current_group and current_group[0]['pose_sig'] == pose_sig:
-            # Same pose, add to current group
-            current_group.append({'beat': beat, 'pose_sig': pose_sig})
-        else:
-            # Different pose, save current group and start new one
-            if current_group:
-                beat_groups.append(current_group)
-            current_group = [{'beat': beat, 'pose_sig': pose_sig}]
-    
-    # Don't forget the last group
-    if current_group:
-        beat_groups.append(current_group)
-    
-    pose_cache = {}
-    
-    # Process each group as a single unit
-    for group in beat_groups:
-        # Use first beat as representative
-        beat = group[0]['beat']
-        all_names = build_identity_map(assets, beat)
-        beat_chars = get_beat_characters(beat, all_names)
         names = {c: all_names[c] for c in beat_chars}
         
         zone_name = beat['zone']
@@ -241,7 +210,7 @@ def render_beats_actions(assets, actions, mappings, T):
         
         zone_alias = zone_mappings.get(shot_variant, 'UNKNOWN')
         
-        # Build cache key from pose signature
+        # Build pose cache key
         pose_key_parts = []
         for char in sorted(beat_chars):
             posture = beat['posture'].get(char, 'neutral')
@@ -257,9 +226,8 @@ def render_beats_actions(assets, actions, mappings, T):
         
         # Generate static image if not cached
         if pose_key not in pose_cache:
-            alias = f"BEAT_{beat['beat']}_WIDE_ACTION"
+            alias = f"BEAT_{beat['beat']}_ACTION"
             if len(beat_chars) == 1:
-                alias = f"BEAT_{beat['beat']}_MEDIUM_ACTION"
                 T.action_medium(alias, zone_alias, char_assets, resolve_character_mentions(beat.get('pose', ''), names))
             else:
                 T.action_wide(alias, zone_alias, char_assets, resolve_character_mentions(beat.get('arc', ''), names))
@@ -267,32 +235,23 @@ def render_beats_actions(assets, actions, mappings, T):
         else:
             alias = pose_cache[pose_key]
         
-        # 🆕 COMBINE ALL ARCS IN THIS GROUP INTO ONE LONGER ARC
-        combined_arc_parts = []
-        for g in group:
-            arc = g['beat'].get('arc', '')
-            if arc and arc.strip():
-                # Extract just the action part (after the comma)
-                if ',' in arc:
-                    action_part = arc.split(',', 1)[1].strip()
-                    combined_arc_parts.append(action_part)
-                else:
-                    combined_arc_parts.append(arc.strip())
-        
-        combined_arc = ", ".join(combined_arc_parts)
-        
-        # Generate ONE video for the entire group
-        if combined_arc:
-            video_alias = f"{alias}_VIDEO_COMBINED"
-            duration = 10 if os.environ.get('WGP','False') == 'True' or os.environ.get('LTX','False') == 'True' else 5
+        # Extract action from arc
+        arc = beat.get('arc', '')
+        if arc and arc.strip():
+            # Initialize counter for this beat if needed
+            if beat['beat'] not in video_counters:
+                video_counters[beat['beat']] = 0
             
-            # Scale duration based on number of actions in group
-            #duration = min(duration * len(group), 30)  # Cap at 30 seconds
+            counter = video_counters[beat['beat']]
+            video_alias = f"BEAT_{beat['beat']}_ACTION_{counter:02d}"
+            video_counters[beat['beat']] += 1
+            
+            duration = 10 if os.environ.get('WGP','False') == 'True' or os.environ.get('LTX','False') == 'True' else 5
             
             T.action_video(
                 video_alias,
                 alias,
-                resolve_character_mentions(combined_arc, names),
+                resolve_character_mentions(arc, names),
                 duration=duration
             )
 
@@ -333,7 +292,15 @@ def render_beats_dialog(assets, actions, mappings, T):
     
     char_index_map = {canonical(bio['name']): i for i, bio in enumerate(assets['biographies'])}
 
-    # Cache dialog base images by visual content, not beat number
+    # 🆕 Build zone index map
+    zone_index_map = {}
+    zone_counter = 0
+    for beat in actions:
+        zone_name = beat['zone']
+        if zone_name and zone_name not in zone_index_map:
+            zone_index_map[zone_name] = zone_counter
+            zone_counter += 1
+
     dialog_base_cache = {}
 
     for beat in actions:
@@ -352,6 +319,7 @@ def render_beats_dialog(assets, actions, mappings, T):
                 continue
 
             zone_name = beat['zone']
+            zone_idx = zone_index_map.get(zone_name, 0)
             zone_mappings = mappings.get(zone_name, {})
             
             char_idx = char_index_map.get(speaker, 0)
@@ -385,12 +353,11 @@ def render_beats_dialog(assets, actions, mappings, T):
             expr_sentence = f"{dlg['speaker']} has a {facial} expression." if facial != "neutral" else ""
             dialog_prompt = " ".join(s for s in [pose_sentence, expr_sentence] if s)
 
-            # Cache key based on visual content
             dialog_key = f"{speaker}_{facial}_{zone_alias}"
 
             if dialog_key not in dialog_base_cache:
-                # Generate new base image and cache it
-                base_alias = f"DIALOG_BASE_{normalize(speaker)}_{facial}_{shot_variant}"
+                # 🆕 Use zone index instead of full name
+                base_alias = f"DIALOG_BASE_{normalize(speaker)}_{facial}_{shot_variant}_Z{zone_idx}"
                 
                 dialog_pose_prompt_close = (
                     f"{dlg['speaker']} (facial expression {facial})"
@@ -398,16 +365,14 @@ def render_beats_dialog(assets, actions, mappings, T):
 
                 T.dialog_closeup(base_alias, zone_alias, speaker_alias, dialog_pose_prompt_close)
                 dialog_base_cache[dialog_key] = base_alias
-                #print(f"🎭 Generated dialog base: {base_alias}")
+                print(f"🎭 Generated dialog base: {base_alias}")
             else:
-                # Reuse cached base image
                 base_alias = dialog_base_cache[dialog_key]
-                #print(f"♻️ Reusing cached dialog base: {base_alias} for beat {beat['beat']}")
+                print(f"♻️ Reusing cached dialog base: {base_alias} for beat {beat['beat']}")
 
             final_alias = f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_VIDEO_{s_idx:02d}"
             T.dialog_final(final_alias, base_alias, f"{speaker_alias}_VOICE", line)
             s_idx += 1
-
 
 # ---------------------------------------------------------
 # MAIN
