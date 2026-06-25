@@ -106,7 +106,7 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
             if len(media) > 0:
                 end_image = video_to_img(media.pop(), width, height, True, False)
         else:
-            start_image = f'{os.getcwd()}/{media}'
+            start_image = media
 
         print(f"MEDIA: {start_image}")
 
@@ -137,7 +137,7 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         print("CURRENT PROMPT: ",eprompt)
 
         try:
-            i2v(eprompt, start_image, output, 
+            i2v(eprompt, 'tmp.png', output, 
                     duration_sec, width, height, seed)
             description = ''
                 
