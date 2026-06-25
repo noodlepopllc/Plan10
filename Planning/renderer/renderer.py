@@ -102,7 +102,7 @@ def get_backgrounds(assets, mappings, T, output_dir="backdrops_tmp"):
             elements = zone.get('visible_background_elements', [])
             
             # Create canonical zone key
-            zone_key = f"{location_name}_{zone_name}".replace(' ', '_').upper()
+            zone_key = f"{location_name}_{zone_name}".replace(' ', '_').replace('/','_').upper()
             
             # 1. Generate the WIDE SHOT (master reference)
             T.background(
@@ -284,12 +284,19 @@ def render_beats_actions(assets, actions, mappings, T):
             if motion_key not in video_cache:
                 existing_count = len([k for k in video_cache if k.startswith(pose_key)])
                 video_alias = f"{alias}_VIDEO_{existing_count:02d}"
+                ref_alias = alias
+                vid_duration = duration
+                if existing_count > 0:
+                    ref_count = existing_count - 1
+                    ref_alias = video_alias = f"{alias}_VIDEO_{ref_count:02d}"
+                    vid_duration = 5
+
                 
                 T.action_video(
                     video_alias, 
-                    alias, 
+                    ref_alias, 
                     resolve_character_mentions(arc, names), 
-                    duration=duration
+                    duration=vid_duration
                 )
                 video_cache[motion_key] = video_alias
 
