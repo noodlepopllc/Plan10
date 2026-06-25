@@ -180,22 +180,53 @@ def strip_leading_name(action, char):
     pattern = re.compile(rf"^{char}\s+", re.IGNORECASE)
     return pattern.sub("", action).strip()
 
-
 def render_beats_actions(assets, actions, mappings, T):
     char_aliases = {canonical(c['name']): f"CHAR_{normalize(c['name'])}" for c in assets['biographies']}
     char_index_map = {canonical(bio['name']): i for i, bio in enumerate(assets['biographies'])}
     
-    pose_cache = {}
-    video_cache = {}
-
+    # 🆕 GROUP CONSECUTIVE BEATS WITH SAME POSE
+    beat_groups = []
+    current_group = []
+    
     for beat in actions:
         if not beat['action']:
             continue
+            
         all_names = build_identity_map(assets, beat)
         beat_chars = get_beat_characters(beat, all_names)
         if not beat_chars:
             continue
-
+        
+        # Build pose signature for this beat
+        pose_sig = {
+            'chars': tuple(sorted(beat_chars)),
+            'postures': tuple(sorted([(c, beat['posture'].get(c, 'neutral')) for c in beat_chars])),
+            'expressions': tuple(sorted([(c, beat.get('facial', 'neutral')) for c in beat_chars])),
+            'zone': beat['zone']
+        }
+        
+        # Check if this beat matches current group
+        if current_group and current_group[0]['pose_sig'] == pose_sig:
+            # Same pose, add to current group
+            current_group.append({'beat': beat, 'pose_sig': pose_sig})
+        else:
+            # Different pose, save current group and start new one
+            if current_group:
+                beat_groups.append(current_group)
+            current_group = [{'beat': beat, 'pose_sig': pose_sig}]
+    
+    # Don't forget the last group
+    if current_group:
+        beat_groups.append(current_group)
+    
+    pose_cache = {}
+    
+    # Process each group as a single unit
+    for group in beat_groups:
+        # Use first beat as representative
+        beat = group[0]['beat']
+        all_names = build_identity_map(assets, beat)
+        beat_chars = get_beat_characters(beat, all_names)
         names = {c: all_names[c] for c in beat_chars}
         
         zone_name = beat['zone']
@@ -209,46 +240,10 @@ def render_beats_actions(assets, actions, mappings, T):
             shot_variant = 'MIDDLE'
         
         zone_alias = zone_mappings.get(shot_variant, 'UNKNOWN')
-
-        resolved_actions = [resolve_pronouns(a, names) for a in beat['actions']]
-        pose_action_map, motion_actions = bind_identity_first_only(resolved_actions, names)
-
-        arc = beat.get('arc', "")
-        pose = beat.get('pose', "")
-
-        # 🆕 More robust character ordering with case-insensitive matching
-        ordered_chars = []
-        for char in beat_chars:
-            display_name = names[char]
-            canonical_name = char
-            
-            # Try multiple name variations for matching
-            search_names = [display_name, canonical_name, display_name.lower(), canonical_name.lower()]
-            
-            # Find earliest position in arc or pose
-            first_pos = 999999
-            for search_name in search_names:
-                if arc:
-                    pos = arc.lower().find(search_name.lower())
-                    if pos != -1 and pos < first_pos:
-                        first_pos = pos
-                if pose:
-                    pos = pose.lower().find(search_name.lower())
-                    if pos != -1 and pos < first_pos:
-                        first_pos = pos
-            
-            ordered_chars.append((first_pos, char))
         
-        # Sort by position (characters not found go to end in original order)
-        ordered_chars.sort(key=lambda x: x[0])
-        ordered_char_list = [c[1] for c in ordered_chars]
-        
-        # Debug output
-        #print(f"Beat {beat['beat']}: ordered chars = {ordered_char_list}")
-        
-        # Build cache key using ordered characters
+        # Build cache key from pose signature
         pose_key_parts = []
-        for char in ordered_char_list:
+        for char in sorted(beat_chars):
             posture = beat['posture'].get(char, 'neutral')
             expression = beat.get('facial', 'neutral')
             pose_key_parts.append(f"{char}_{posture}_{expression}")
@@ -258,53 +253,49 @@ def render_beats_actions(assets, actions, mappings, T):
         
         pose_key = "_".join(pose_key_parts)
         
-        # Build char_assets in the same order as they appear in prompt
-        char_assets = " and ".join(f"{char_aliases[c]} asset " for c in ordered_char_list)
+        char_assets = " and ".join(f"{char_aliases[c]} asset " for c in sorted(beat_chars))
         
-        # Debug output
-        #print(f"  char_assets = {char_assets}")
-        
-        # Check cache before generating static image
+        # Generate static image if not cached
         if pose_key not in pose_cache:
             alias = f"BEAT_{beat['beat']}_WIDE_ACTION"
             if len(beat_chars) == 1:
                 alias = f"BEAT_{beat['beat']}_MEDIUM_ACTION"
-                T.action_medium(alias, zone_alias, char_assets, resolve_character_mentions(pose, names))
+                T.action_medium(alias, zone_alias, char_assets, resolve_character_mentions(beat.get('pose', ''), names))
             else:
-                T.action_wide(alias, zone_alias, char_assets, resolve_character_mentions(arc, names))
+                T.action_wide(alias, zone_alias, char_assets, resolve_character_mentions(beat.get('arc', ''), names))
             pose_cache[pose_key] = alias
         else:
             alias = pose_cache[pose_key]
         
-        duration = 10 if os.environ.get('WGP','False') == 'True' or os.environ.get('LTX','False') == 'True' else 5
-        
-        if arc and arc.strip():
-            motion_key = f"{pose_key}_{arc.strip()}"
-            
-            if motion_key not in video_cache:
-                # Count existing videos for this pose
-                existing_count = len([k for k in video_cache if k.startswith(pose_key)])
-                
-                # Determine reference and output alias
-                if True: #existing_count == 0:
-                    # First video: use static image as reference
-                    ref_alias = alias
-                    vid_duration = duration
+        # 🆕 COMBINE ALL ARCS IN THIS GROUP INTO ONE LONGER ARC
+        combined_arc_parts = []
+        for g in group:
+            arc = g['beat'].get('arc', '')
+            if arc and arc.strip():
+                # Extract just the action part (after the comma)
+                if ',' in arc:
+                    action_part = arc.split(',', 1)[1].strip()
+                    combined_arc_parts.append(action_part)
                 else:
-                    # Continuation: use previous video as reference
-                    ref_count = existing_count - 1
-                    ref_alias = f"{alias}_VIDEO_{ref_count:02d}"
-                    vid_duration = 5  # Shorter duration for continuations
-                
-                video_alias = f"{alias}_VIDEO_{existing_count:02d}"
-                
-                T.action_video(
-                    video_alias, 
-                    ref_alias, 
-                    resolve_character_mentions(arc, names), 
-                    duration=vid_duration
-                )
-                video_cache[motion_key] = video_alias
+                    combined_arc_parts.append(arc.strip())
+        
+        combined_arc = ", ".join(combined_arc_parts)
+        
+        # Generate ONE video for the entire group
+        if combined_arc:
+            video_alias = f"{alias}_VIDEO_COMBINED"
+            duration = 10 if os.environ.get('WGP','False') == 'True' or os.environ.get('LTX','False') == 'True' else 5
+            
+            # Scale duration based on number of actions in group
+            duration = min(duration * len(group), 30)  # Cap at 30 seconds
+            
+            T.action_video(
+                video_alias,
+                alias,
+                resolve_character_mentions(combined_arc, names),
+                duration=duration
+            )
+
 
 # ---------------------------------------------------------
 # DIALOG RENDERING
