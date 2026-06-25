@@ -278,33 +278,33 @@ def render_beats_actions(assets, actions, mappings, T):
         
         duration = 10 if os.environ.get('WGP','False') == 'True' or os.environ.get('LTX','False') == 'True' else 5
         
-    if arc and arc.strip():
-        motion_key = f"{pose_key}_{arc.strip()}"
-        
-        if motion_key not in video_cache:
-            # Count existing videos for this pose
-            existing_count = len([k for k in video_cache if k.startswith(pose_key)])
+        if arc and arc.strip():
+            motion_key = f"{pose_key}_{arc.strip()}"
             
-            # Determine reference and output alias
-            if existing_count == 0:
-                # First video: use static image as reference
-                ref_alias = alias
-                vid_duration = duration
-            else:
-                # Continuation: use previous video as reference
-                ref_count = existing_count - 1
-                ref_alias = f"{alias}_VIDEO_{ref_count:02d}"
-                vid_duration = 5  # Shorter duration for continuations
-            
-            video_alias = f"{alias}_VIDEO_{existing_count:02d}"
-            
-            T.action_video(
-                video_alias, 
-                ref_alias, 
-                resolve_character_mentions(arc, names), 
-                duration=vid_duration
-            )
-            video_cache[motion_key] = video_alias
+            if motion_key not in video_cache:
+                # Count existing videos for this pose
+                existing_count = len([k for k in video_cache if k.startswith(pose_key)])
+                
+                # Determine reference and output alias
+                if existing_count == 0:
+                    # First video: use static image as reference
+                    ref_alias = alias
+                    vid_duration = duration
+                else:
+                    # Continuation: use previous video as reference
+                    ref_count = existing_count - 1
+                    ref_alias = f"{alias}_VIDEO_{ref_count:02d}"
+                    vid_duration = 5  # Shorter duration for continuations
+                
+                video_alias = f"{alias}_VIDEO_{existing_count:02d}"
+                
+                T.action_video(
+                    video_alias, 
+                    ref_alias, 
+                    resolve_character_mentions(arc, names), 
+                    duration=vid_duration
+                )
+                video_cache[motion_key] = video_alias
 
 # ---------------------------------------------------------
 # DIALOG RENDERING
