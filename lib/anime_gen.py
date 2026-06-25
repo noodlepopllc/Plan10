@@ -500,7 +500,7 @@ def CreateBackground(
     output='location_tmp.png',
     seed=-1,
 ):
-    style = os.environ.get('STYLE','ghibli')
+    style = os.environ.get('STYLE','default')
     time_of_day=None       # optional: 'dawn', 'morning', 'noon', 'golden_hour', 'sunset', 'twilight', 'night'
     weather=None           # optional: 'clear', 'cloudy', 'rain', 'snow', 'fog', 'cherry_blossoms', 'autumn_leaves'
     seed = int(seed)
