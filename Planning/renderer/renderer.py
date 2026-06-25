@@ -287,7 +287,7 @@ def render_beats_actions(assets, actions, mappings, T):
             duration = 10 if os.environ.get('WGP','False') == 'True' or os.environ.get('LTX','False') == 'True' else 5
             
             # Scale duration based on number of actions in group
-            duration = min(duration * len(group), 30)  # Cap at 30 seconds
+            #duration = min(duration * len(group), 30)  # Cap at 30 seconds
             
             T.action_video(
                 video_alias,
