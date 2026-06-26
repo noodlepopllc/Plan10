@@ -253,8 +253,6 @@ class ToolHandler(object):
                 result = GenerateGraphic(**filtered)
                 return self._handle_success(tool_name, filtered, chosen_alias, ctx, result, ext_override=".png")
 
-
-
             elif tool_name == "apply_gimbal_shot":
                 filtered['output'] = f"{OUTPUT_DIR}/camera_{chosen_alias or ''}_{ts}.png"
                 result = ApplyGimbalShot(**filtered)
