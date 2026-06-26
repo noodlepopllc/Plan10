@@ -16,6 +16,9 @@ from image_gen import add_metadata_char
 
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
+ANIME = "_anime" if os.environ.get("ANIME","False") == "True" else ""
+
+enhance_path = f'./system/ltx_enhancer{ANIME}.txt'
 
 tool = "ltx2_22B_1_1"
 tool = "ltx2_22B_distilled_1_1"
@@ -32,7 +35,7 @@ async def i2v(prompt='', media='', output='output.mp4',
         args['prompt'] = prompt
         args['image_prompt_type'] =  'S'
         args['image_start'] = media
-        args['prompt_enhancer'] = 'TI'
+        #args['prompt_enhancer'] = 'TI'
         #args['audio_source'] = None
         #args['audio_prompt_type'] = 'A'
 
@@ -104,7 +107,7 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         if not prompt:
             prompt = "The characters stand and act naturally. "
 
-        eprompt = prompt 
+        eprompt = EnhancePrompt(start_image, prompt, enhance_path)
 
         print("CURRENT PROMPT: ",eprompt)
 
