@@ -12,7 +12,8 @@ def load_config():
         "WAN21": "14B", # or 1.3B
         "DIFFSYNTH_DOWNLOAD_SOURCE": "huggingface", 
         "DIFFSYNTH_SKIP_DOWNLOAD": "False", 
-        "BITSNBYTES":"True","BATCH":"False", 
+        "BITSNBYTES":"False",
+        "BATCH":"False", 
         "LLM_BACKEND": "transformers",
         "OLLAMA_URL": "http://localhost:11434",
         "OLLAMA_MODEL": "qwen3.5:latest",
