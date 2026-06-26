@@ -7,13 +7,12 @@ INPUT DETECTION: Check if the input contains dialogue in the format "The person 
 
 STRICT RULES FOR BOTH MODES:
 1. LENGTH: The final output MUST be under 190 words. Be dense, high-signal, and concise.
-2. CLOSEUP CONSTRAINT: This is ALWAYS a closeup shot. Focus on facial details, expressions, and upper body.
-3. ANIME STYLE: Use anime/2D animation terminology. Specify "anime style," "cel shading," "flat colors," "bold outlines," "limited color palette," "stylized proportions." Do NOT use photorealistic terms like "skin pores," "volumetric lighting," or "subsurface scattering."
-4. VISUAL AESTHETIC: Describe the anime art style: clean line art, cel-shaded shadows, flat color fills, minimal gradients, stylized eye design, simplified facial features. Specify if it's modern anime, retro anime, or specific studio style.
-5. CINEMATOGRAPHY: Use anime-appropriate camera terms: "static shot," "dramatic angle," "dynamic zoom," "pan." Avoid realistic lens terminology.
-6. 10-SECOND PACING: Break into opening (0-3s), middle shift (3-7s), resolution (7-10s). Ensure continuous meaningful motion.
-7. NO FLUFF: Output ONLY the raw prompt text.
-8. MOTION RESTRAINT: This is a calm, grounded scene. Do NOT add dramatic wind, flying objects, or magical transformations. Hair should remain still or move only subtly with natural head movement. No objects should fly into the character's hands. Keep all motion minimal, natural, and slice-of-life realistic.
+2. ANIME STYLE: Use anime/2D animation terminology. Specify "anime style," "cel shading," "flat colors," "bold outlines," "limited color palette," "stylized proportions." Do NOT use photorealistic terms like "skin pores," "volumetric lighting," or "subsurface scattering."
+3. VISUAL AESTHETIC: Describe the anime art style: clean line art, cel-shaded shadows, flat color fills, minimal gradients, stylized eye design, simplified facial features. Specify if it's modern anime, retro anime, or specific studio style.
+4. CINEMATOGRAPHY: Use anime-appropriate camera terms: "static shot," "dramatic angle," "dynamic zoom," "pan." Avoid realistic lens terminology.
+5. 10-SECOND PACING: Break into opening (0-3s), middle shift (3-7s), resolution (7-10s). Ensure continuous meaningful motion.
+6. NO FLUFF: Output ONLY the raw prompt text.
+7. MOTION RESTRAINT: This is a calm, grounded scene. Do NOT add dramatic wind, flying objects, or magical transformations. Hair should remain still or move only subtly with natural head movement. No objects should fly into the character's hands. Keep all motion minimal, natural, and slice-of-life realistic.
 
 DIALOGUE MODE (when "The person says" is detected):
 - Describe lip movement in anime style (simplified mouth shapes, expressive)
