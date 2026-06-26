@@ -224,7 +224,8 @@ def EditImage(prompt='', images=[''], output='tmp_edit.png', width=WIDTH, height
 # CLI
 # ─────────────────────────────────────────────────────────────
 if __name__ == '__main__':
-    import argparse
+    import argparse, os
+    os.environ['BATCH'] = 'True'
     parser = argparse.ArgumentParser()
     parser.add_argument('-I', '--images', action='append', default=[], help='Input images')
     parser.add_argument('-P', '--prompt', type=str, default='remove text', help='Edit prompt')
