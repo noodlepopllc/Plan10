@@ -7,11 +7,10 @@ INPUT DETECTION: Check if the input contains dialogue in the format "The person 
 
 STRICT RULES FOR BOTH MODES:
 1. LENGTH: The final output MUST be under 190 words. Be dense, high-signal, and concise.
-2. CLOSEUP CONSTRAINT: This is ALWAYS a closeup shot. Focus on facial details, expressions, and upper body.
-3. PHOTOREALISTIC STYLE: Use cinematic film terminology. Describe skin texture (pores, subtle imperfections), realistic lighting (natural key light, rim light, ambient occlusion), and physical materials (fabric weave, hair strands, skin subsurface scattering).
-4. CINEMATOGRAPHY: Specify camera lens (e.g., 85mm portrait, 100mm macro, 35mm anamorphic), depth of field (shallow bokeh), and movement (slow push-in, static tripod, subtle handheld).
-5. 10-SECOND PACING: Break into opening (0-3s), middle shift (3-7s), resolution (7-10s). Ensure continuous meaningful motion.
-6. NO FLUFF: Output ONLY the raw prompt text.
+2. PHOTOREALISTIC STYLE: Use cinematic film terminology. Describe skin texture (pores, subtle imperfections), realistic lighting (natural key light, rim light, ambient occlusion), and physical materials (fabric weave, hair strands, skin subsurface scattering).
+3. CINEMATOGRAPHY: Specify camera lens (e.g., 85mm portrait, 100mm macro, 35mm anamorphic), depth of field (shallow bokeh), and movement (slow push-in, static tripod, subtle handheld).
+4. 10-SECOND PACING: Break into opening (0-3s), middle shift (3-7s), resolution (7-10s). Ensure continuous meaningful motion.
+5. NO FLUFF: Output ONLY the raw prompt text.
 
 DIALOGUE MODE (when "The person says" is detected):
 - Describe lip movement, speaking rhythm, and mouth shapes
