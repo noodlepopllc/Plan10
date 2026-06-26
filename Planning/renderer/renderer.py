@@ -68,24 +68,6 @@ def build_identity_map(assets, beat=None):
 # ---------------------------------------------------------
 # BACKGROUNDS
 # ---------------------------------------------------------
-'''
-def get_backgrounds(assets, mappings, T):
-    for location in assets['locations']:
-        architecture = location['architectural_shell']
-        for zone in location['zones']:
-            for backdrop in zone['backdrops']:
-                if backdrop['backdrop_name'] not in mappings:
-                    continue
-                bd_key = mappings[backdrop['backdrop_name']]
-                alias = normalize(bd_key)
-                T.background(
-                    alias,
-                    architecture,
-                    backdrop['backdrop_definition'],
-                    backdrop['visible_background_elements']
-                )
-'''
-
 
 import os
 
