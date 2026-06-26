@@ -18,6 +18,9 @@ import random
 
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
+ANIME = "_anime" if os.environ.get("ANIME","False") == "True" else ""
+
+enhance_path = f'./system/ltx_enhancer{ANIME}.txt'
 
 def i2v(prompt='', media='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
@@ -134,7 +137,7 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         if not prompt:
             prompt = "The characters stand and act naturally. "
 
-        eprompt = EnhancePrompt(start_image, prompt, './system/ltx_enhancer.txt')
+        eprompt = EnhancePrompt(start_image, prompt, enhance_path)
 
         print("CURRENT PROMPT: ",eprompt)
 
@@ -266,7 +269,7 @@ def GenerateTalkingVideo(
         desc = add_metadata_char(start_image, '', seed)
 
     eprompt = f'The person can be described as {desc}. The person says "{text}." {prompt}.'
-    eprompt = EnhancePrompt(start_image, eprompt, './system/ltx_enhancer.txt')
+    eprompt = EnhancePrompt(start_image, eprompt, enhance_path)
 
     print("CURRENT PROMPT: ",eprompt)
 
