@@ -380,6 +380,8 @@ if __name__ == '__main__':
     elif args.camera_move == 'gimbal':
         camera = CameraGimbal(args.azimuth, args.elevation, args.distance)
         status = camera.generate(img, args.output, img.width, img.height, args.seed)
+        GenerateVideo(prompt='Camera moves to a new field of view', media=[img, result['output_path']], output=output.replace('png','mp4'), 
+            duration_sec=5, width=img.width, height=img.height, seed=seed)
     else:
         prompt = '''
             Inpaint ONLY the masked region on the {side} edge.
