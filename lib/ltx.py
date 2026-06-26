@@ -266,6 +266,7 @@ def GenerateTalkingVideo(
         desc = add_metadata_char(start_image, '', seed)
 
     eprompt = f'The person can be described as {desc}. The person says "{text}." {prompt}.'
+    eprompt = EnhancePrompt(start_image, eprompt, './system/ltx_enhancer.txt')
 
     print("CURRENT PROMPT: ",eprompt)
 

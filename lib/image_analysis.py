@@ -30,7 +30,7 @@ def EnhancePrompt(image='', prompt='a beautiful woman', enhancer='', output=None
     status = llm_analyze_media(image, prompt, eprompt)
     if output:
         Path(output).write_text(status['analysis'])
-    return status
+    return status['analysis']
 
 if __name__ == '__main__':
     import argparse, sys
