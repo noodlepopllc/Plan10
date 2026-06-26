@@ -135,7 +135,7 @@ def llm_chat(messages, tools=None, max_tokens=8192, temperature=0.7, enable_thin
 # ─────────────────────────────────────────
 # 2) Media analysis
 # ─────────────────────────────────────────
-def llm_analyze_media(media, prompt="Describe this.", system=None, max_tokens=1024):
+def llm_analyze_media(media, prompt="Describe this.", system=None, max_tokens=8192):
     from util import video_to_img
 
     image = None
