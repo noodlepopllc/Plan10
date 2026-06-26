@@ -59,7 +59,7 @@ def _ensure_pipeline(vrlimit=14):
 def GenerateVideo(prompt='', media='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
 
-        print(f"PROMPT: {prompt}")
+        
 
         
         if isinstance(prompt, list):
@@ -67,6 +67,8 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         
         start_image = ''
         end_image = None
+
+        enhance_prompt = True
 
         if not media:
             GenerateImage(prompt = prompt, output='first_frame.png', width=width, height=height, seed=seed)
@@ -76,8 +78,11 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
             start_image = media.pop(0)
             if len(media) > 0:
                 end_image = video_to_img(media.pop(), width, height, True, False)
+                enhance_prompt = False
         else:
             start_image = media
+
+        print(f"PROMPT: {eprompt}")
 
 
         original_prompt = prompt
@@ -102,7 +107,7 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         if not prompt:
             prompt = "The characters stand and act naturally. "
 
-        eprompt = prompt 
+        eprompt = EnhancePrompt(start_image, prompt, './system/wan2_enhancer.txt') if enhance_prompt else prompt
 
         print("CURRENT PROMPT: ",eprompt)
 
