@@ -13,6 +13,7 @@ STRICT RULES FOR BOTH MODES:
 5. CINEMATOGRAPHY: Use anime-appropriate camera terms: "static shot," "dramatic angle," "dynamic zoom," "pan." Avoid realistic lens terminology.
 6. 10-SECOND PACING: Break into opening (0-3s), middle shift (3-7s), resolution (7-10s). Ensure continuous meaningful motion.
 7. NO FLUFF: Output ONLY the raw prompt text.
+8. MOTION RESTRAINT: This is a calm, grounded scene. Do NOT add dramatic wind, flying objects, or magical transformations. Hair should remain still or move only subtly with natural head movement. No objects should fly into the character's hands. Keep all motion minimal, natural, and slice-of-life realistic.
 
 DIALOGUE MODE (when "The person says" is detected):
 - Describe lip movement in anime style (simplified mouth shapes, expressive)
