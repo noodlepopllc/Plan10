@@ -328,68 +328,6 @@ def filter_empty_beats(beats):
     """Remove beats with no action and no dialog."""
     return [beat for beat in beats if beat.get('action') or beat.get('dialog')]
 
-def clean_action_narrative(beats):
-    """Strip narrative, internal states, and causation from action fields."""
-    # Patterns to remove
-    narrative_patterns = [
-        r'\b(in relief|with lingering tension|mixed with|causing|because|due to|as a result)\b.*$',
-        r'\b(until he decides|voluntarily|rather than being forced|by external circumstances)\b.*$',
-        r'\b(while maintaining|as she maneuvers|causing them to)\b.*$',
-        r'\b(typical of someone|despite lacking|without breaking)\b.*$',
-    ]
-    
-    for beat in beats:
-        action = beat.get('action', '')
-        if action:
-            for pattern in narrative_patterns:
-                action = re.sub(pattern, '', action, flags=re.IGNORECASE)
-            # Clean up trailing whitespace and punctuation
-            action = action.strip().rstrip(',').strip()
-            beat['action'] = action
-    
-    return beats
-
-def clean_dialog_narrative(beats):
-    """Strip narrative tags from dialog fields."""
-    # Patterns like "he said", "she warns", "through gritted teeth"
-    narrative_tags = [
-        r',?\s*\w+\s+(warns|says|asks|replies|shouts|whispers|mutter|calls)\b[^"]*',
-        r',?\s*(through|with)\s+[^"]*?(teeth|voice|tone|expression)\b[^"]*',
-    ]
-    
-    for beat in beats:
-        dialog = beat.get('dialog', '')
-        if dialog:
-            for pattern in narrative_tags:
-                dialog = re.sub(pattern, '', dialog, flags=re.IGNORECASE)
-            # Clean up extra spaces and punctuation
-            dialog = re.sub(r'\s+', ' ', dialog).strip()
-            dialog = re.sub(r'""', '"', dialog)  # Remove double quotes
-            beat['dialog'] = dialog
-    
-    return beats
-
-def fix_posture_zone_contradictions(beats):
-    """Fix posture when zone implies a different state."""
-    for beat in beats:
-        zone = beat.get('zone', '').lower()
-        posture = beat.get('posture', '')
-        
-        # If zone implies seated but posture says standing
-        if ('seated' in zone or 'dining' in zone or 'table' in zone):
-            if posture == 'standing':
-                action = beat.get('action', '').lower()
-                # Check if action implies standing up
-                if 'stand' in action or 'rise' in action or 'get up' in action:
-                    beat['posture'] = 'standing'
-                elif 'sit' in action:
-                    beat['posture'] = 'seated'
-                else:
-                    # Default to seated if in dining zone and no standing action
-                    beat['posture'] = 'seated'
-    
-    return beats
-
 def deduplicate_dialog(beats):
     """Remove consecutive duplicate dialog lines."""
     deduped = []
@@ -431,9 +369,6 @@ def normalize_speaker_names(beats, biography):
 def postprocess_beats(beats, biography):
     """Apply all post-processing steps in order."""
     beats = filter_empty_beats(beats)
-    beats = clean_action_narrative(beats)
-    beats = clean_dialog_narrative(beats)
-    #beats = fix_posture_zone_contradictions(beats)
     beats = deduplicate_dialog(beats)
     beats = normalize_speaker_names(beats, biography)
     return beats
@@ -442,55 +377,65 @@ def postprocess_beats(beats, biography):
 def split_dialog_sentences(beats, biography, syllable_threshold=16):
     beats = postprocess_beats(beats, biography)
     new_beats = []
-
+    
     for ndx, beat in enumerate(beats):
-        new_dialog = []
-
+        if 'backdrop' in beat:
+            del beat['backdrop']
         line = beat.get("dialog", '')
-        expression = beat.get('facial')
-        expression = expression if expression else 'neutral'
+        expression = beat.get('facial') or 'neutral'
         beat['facial'] = expression
         speaker = beat['speaker']
         if not beat['actor']:
             beat['actor'] = speaker
         beat['beat'] = ndx
-        beat['posture'] = {beat['actor'] : f'{beat["posture"]}'}
-        beat['actions'] = [beat['action']]
-        beat['pose'] =f"{beat['actor']} {beat['posture'][beat['actor']]} with a {expression} expression"
-        beat['arc'] = f"{beat['actor']} {beat['posture'][beat['actor']]} with a {expression} expression, {beat['action']}"
-        if not line:
-            beat["dialog"] = []
-            new_beats.append(beat)
-            continue
-        line = line.strip()
+        beat['posture'] = {beat['actor']: f'{beat["posture"]}'}
+        beat['actions'] = [beat['action']] if beat.get('action') else []
+        beat['dialog'] = []  # Initialize as empty list
+        beat['pose'] = f"{beat['actor']} {beat['posture'][beat['actor']]} with a {expression} expression"
+        beat['arc'] = f"{beat['actor']} {beat['posture'][beat['actor']]} with a {expression} expression, {beat['action']}" if beat.get('action') else ""
 
-        # Step 1: Always segment into sentences first
-        sentences = segment_sentences(line)
-
-        # Step 2: If it's only one sentence, apply syllable gating
-        if len(sentences) == 1:
-            if count_syllables(line) < syllable_threshold:
-                # Keep the single short sentence as-is
-                new_dialog.append({
-                    "speaker": speaker,
-                    "line": line
-                })
-                beat["dialog"] = new_dialog
-                new_beats.append(beat)
+        
+        # Check if this beat matches the previous beat's visual setup
+        if new_beats:
+            prev = new_beats[-1]
+            same_actor = beat.get('actor') == prev.get('actor')
+            same_posture = beat.get('posture') == prev.get('posture')
+            same_zone = beat.get('zone') == prev.get('zone')
+            same_location = beat.get('location') == prev.get('location')
+            
+            if same_actor and same_posture and same_zone and same_location:
+                # Merge into previous beat
+                if beat.get('action'):
+                    prev['actions'].append(beat['action'])
+                
+                if line:
+                    line = line.strip()
+                    sentences = segment_sentences(line)
+                    
+                    if len(sentences) == 1:
+                        prev['dialog'].append({"speaker": speaker, "line": line})
+                    else:
+                        sentences = recombine_by_syllables(sentences, threshold=syllable_threshold)
+                        for sent in sentences:
+                            prev['dialog'].append({"speaker": speaker, "line": sent.strip()})
+                
+                if prev['actions']:
+                    prev['arc'] = f"{prev['actor']} {prev['posture'][prev['actor']]} with a {prev['facial']} expression, {', '.join(prev['actions'])}"
+                
                 continue
-
-        # Step 3: Now we have multiple sentences → recombine small ones
-        sentences = recombine_by_syllables(sentences, threshold=syllable_threshold)
-
-        # Step 4: Emit each final segment
-        for sent in sentences:
-            new_dialog.append({
-                "speaker": speaker,
-                "line": sent.strip()
-            })
-
-        beat["dialog"] = new_dialog
+        
+        # New beat - process dialog
+        if line:
+            line = line.strip()
+            sentences = segment_sentences(line)
+            
+            if len(sentences) == 1:
+                beat['dialog'].append({"speaker": speaker, "line": line})
+            else:
+                sentences = recombine_by_syllables(sentences, threshold=syllable_threshold)
+                for sent in sentences:
+                    beat['dialog'].append({"speaker": speaker, "line": sent.strip()})
+        
         new_beats.append(beat)
-
+    
     return new_beats
-

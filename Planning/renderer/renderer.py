@@ -363,6 +363,7 @@ def render_beats_dialog(assets, actions, mappings, T):
 def main():
     from pathlib import Path
     import sys
+
     
     basepath = sys.argv[1]
 

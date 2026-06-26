@@ -202,7 +202,8 @@ def GenerateGraphic(prompt='', output='tmp_graphic.png', width=1024, height=1024
 # CLI
 # ─────────────────────────────────────────────────────────────
 if __name__ == '__main__':
-    import argparse
+    import argparse, os
+    os.environ['BATCH'] = 'True'
     parser = argparse.ArgumentParser(description='ERNIE Graphic Generation + Video Frame Padding')
     parser.add_argument('-P', '--prompt', type=str, default='cinematic title card, bold sans-serif text, dark gradient background')
     parser.add_argument('-W', '--width', type=int, default=1376)
