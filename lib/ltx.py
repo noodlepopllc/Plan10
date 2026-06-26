@@ -35,7 +35,7 @@ def i2v(prompt='', media='', output='output.mp4',
         "computation_device": "cuda",
     }
 
-    eprompt = EnhancePrompt(media, prompt, './system/ltx_enhancer.txt')
+    
     pipe = LTX2AudioVideoPipeline.from_pretrained(
         torch_dtype=torch.bfloat16,
         device="cuda",
@@ -67,7 +67,7 @@ def i2v(prompt='', media='', output='output.mp4',
     image = Image.open(media).convert("RGB").resize((width, height))
     # first frame
     video, audio = pipe(
-        prompt=eprompt,
+        prompt=prompt,
         negative_prompt=negative_prompt,
         seed=seed,
         height=height,
@@ -134,7 +134,7 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         if not prompt:
             prompt = "The characters stand and act naturally. "
 
-        eprompt = prompt 
+        eprompt = EnhancePrompt(start_image, prompt, './system/ltx_enhancer.txt')
 
         print("CURRENT PROMPT: ",eprompt)
 
