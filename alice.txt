@@ -43,12 +43,6 @@ create a dialog_to_video Alice_voice asset with Alice_Closeup asset generate a s
 >> ALIAS: Alice_Dialog_Indoor
 create a dialog_to_video Alice_Voice asset with Alice_Closeup_Indoor asset, she is surprised by what she sees and expresses it (12 - 15 words) 
 
->> ALIAS: Alice_Film_Outdoor_2
-create an image to video 5 second duration using Alice_Film_Outdoor asset, the young woman gets on her knees you can clearly see her kneeling on the ground.
-
->> ALIAS: Alice_Film_Outdoor_3
-create an image to video 5 second duration using Alice_Film_Outdoor_2 asset, the young woman places her knees on the ground and looks up as she kneels.
-
 >> ALIAS: Alice_Dialog_INDOOR_2
 create a dialog_to_video Alice_Voice asset using Alice_Closeup_indoor asset to generate a short introduction from Alice in the Vietnamese language, (10 - 12 words) with Alice_Dialog_Indoor asset
 
