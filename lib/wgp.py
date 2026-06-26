@@ -3,9 +3,8 @@ load_environ()
 
 from PIL import Image
 
-import asyncio, logging, os
+import asyncio, logging, os, random, json
 from fastmcp import Client
-import json
 from time import sleep
 
 from pathlib import Path
