@@ -355,6 +355,7 @@ if __name__ == '__main__':
     parser.add_argument('-A', '--azimuth', type=int, default=0, help='45 degree increments 0-315')
     parser.add_argument('-L', '--elevation', type=int, default=0, help='30 degree increments -30 - 60')
     parser.add_argument('-D', '--distance', type=float, default=1.0, help='scale factor for zoom 0.6, 1.0, 1.8')
+    parser.add_argument('-M', '--movement', action='store_true')
     args = parser.parse_args()
     steps = 0.10
     status = {}
@@ -380,8 +381,6 @@ if __name__ == '__main__':
     elif args.camera_move == 'gimbal':
         camera = CameraGimbal(args.azimuth, args.elevation, args.distance)
         status = camera.generate(img, args.output, img.width, img.height, args.seed)
-        GenerateVideo(prompt='Camera moves to a new field of view', media=[img, result['output_path']], output=output.replace('png','mp4'), 
-            duration_sec=5, width=img.width, height=img.height, seed=seed)
     else:
         prompt = '''
             Inpaint ONLY the masked region on the {side} edge.
@@ -403,4 +402,7 @@ if __name__ == '__main__':
         shifted_image.save(f'{args.camera_move}.png')
         edit = ImageEdit()
         status = edit.generate(prompt, [shifted_image], args.output, img.width, img.height, -1)
+    if args.movement:
+        GenerateVideo(prompt='Camera moves to a new field of view', media=[img, args.output], output=output.replace('png','mp4'), 
+            duration_sec=5, width=img.width, height=img.height, seed=seed)
     print(status)
