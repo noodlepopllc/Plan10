@@ -34,6 +34,8 @@ def i2v(prompt='', media='', output='output.mp4',
         "computation_dtype": torch.bfloat16,
         "computation_device": "cuda",
     }
+
+    eprompt = EnhancePrompt(media, prompt, './system/ltx_enhancer.txt')
     pipe = LTX2AudioVideoPipeline.from_pretrained(
         torch_dtype=torch.bfloat16,
         device="cuda",
@@ -65,7 +67,7 @@ def i2v(prompt='', media='', output='output.mp4',
     image = Image.open(media).convert("RGB").resize((width, height))
     # first frame
     video, audio = pipe(
-        prompt=prompt,
+        prompt=eprompt,
         negative_prompt=negative_prompt,
         seed=seed,
         height=height,
