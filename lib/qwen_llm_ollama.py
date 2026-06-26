@@ -86,7 +86,7 @@ def _call_ollama(messages, max_tokens=8192, temperature=0.7, top_p=0.9, tools=No
         "messages": ollama_messages,
         "stream": False,
         "think": thinking,
-        "keep_alive": -1,
+        "keep_alive": 0,
         "options": {
             "num_predict": max_tokens,
             "temperature": temperature,

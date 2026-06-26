@@ -1,19 +1,19 @@
 Characters:
-- Idol Ako: an android with Asian facial features, wearing a glossy pink latex bodysuit; blonde hair in a bobcut; expressive, energetic, and curious about human nightlife.
-- Idol Bko: an android with Asian facial features, wearing a white sailor‑style outfit; black hair in twin pigtails; cheerful, observant, and supportive.
+- Ako: an android with Asian facial features, pink plastic body covering cables, blonde hair in a bobcut.
+- Bko: an android with Asian facial features, white plastic body covering cables, with sailor inspired decoration, black hair in twin pigtails.
 
 Location:
-A futuristic nightclub in a large metropolitan city. The space features neon lighting, holographic projections, a crowded dance floor, a raised DJ platform, and reflective metallic surfaces. Music pulses through the room, and the atmosphere is lively and colorful.
+An industrial wharehouse with large windows across the street from a loud, night club with neon lights shining into the wharehouse. Futuristic year 2096.
 
 Motivations:
-- Idol Ako wants to explore the nightclub environment and enjoy the sensory experience.
-- Idol Bko wants to share the night with Idol A and keep the outing fun and harmonious.
+- Ako wants to explore the nightclub environment and enjoy the sensory experience.
+- Bko wants to make Ako happy.
 
 Spark:
-The two android idols enter the nightclub together, excited by the lights, music, and energy of the crowd.
+The androids awake to the sound of music and neon lights.
 
 Story Goal:
-Both idols want to enjoy a carefree night out together in the futuristic nightclub.
+Ako wants to explore, Bko is cautious but obeys Ako.
 
 Initial Situation:
-The two android idols step into the nightclub side by side, taking in the lights and sound as they move toward the dance floor.
+The two androids (idol entertainment units) wake up in the wharehouse they were stored in, the music from across the street catches their attention.
