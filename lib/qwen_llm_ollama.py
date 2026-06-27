@@ -162,7 +162,7 @@ def llm_analyze_media(media, prompt="Describe this.", system=None, max_tokens=81
 
     messages.append({"role": "user", "content": user_content})
 
-    res = _call_ollama(messages, max_tokens=max_tokens, temperature=0.1, top_p=0.9)
+    res = _call_ollama(messages, max_tokens=max_tokens, temperature=0.1, top_p=0.5)
     output_text = res.get("message", {}).get("content", "").strip()
 
     return {"status": "success", "analysis": output_text}
