@@ -140,7 +140,7 @@ def llm_chat(messages, tools=None, max_tokens=8192, temperature=0.7, enable_thin
 # ─────────────────────────────────────────
 # 2) Media analysis
 # ─────────────────────────────────────────
-def llm_analyze_media(media, prompt="Describe this.", system=None, max_tokens=8192):
+def llm_analyze_media(media, prompt="Describe this.", system=None, max_tokens=8192, temperature=0.1):
     from util import video_to_img
 
     image = None
@@ -162,7 +162,7 @@ def llm_analyze_media(media, prompt="Describe this.", system=None, max_tokens=81
 
     messages.append({"role": "user", "content": user_content})
 
-    res = _call_ollama(messages, max_tokens=max_tokens, temperature=0.1, top_p=0.5)
+    res = _call_ollama(messages, max_tokens=max_tokens, temperature=temperature, top_p=0.9)
     output_text = res.get("message", {}).get("content", "").strip()
 
     return {"status": "success", "analysis": output_text}

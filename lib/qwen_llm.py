@@ -112,7 +112,7 @@ elif BACKEND == "transformers":
     # 2) Media analysis / prompt enhancement
     # ─────────────────────────────────────────
 
-    def llm_analyze_media(media, prompt="Describe this.", system=None, max_tokens=1024):
+    def llm_analyze_media(media, prompt="Describe this.", system=None, max_tokens=1024, temperature=0.1):
         from util import video_to_img
         import torch
 
@@ -150,8 +150,8 @@ elif BACKEND == "transformers":
             generated_ids = model.generate(
                 **inputs, 
                 max_new_tokens=max_tokens, 
-                temperature=0.1, 
-                top_p=0.5, 
+                temperature=temperature, 
+                top_p=0.9, 
                 do_sample=True, 
                 pad_token_id=processor.tokenizer.eos_token_id
             )
