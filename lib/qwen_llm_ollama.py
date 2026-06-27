@@ -5,6 +5,7 @@ import re
 import requests
 from pathlib import Path
 from config import load_environ
+import random
 
 load_environ()
 
@@ -13,6 +14,9 @@ load_environ()
 # ─────────────────────────────────────────
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434")
 OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen3.5:latest")  # Match your pulled model name
+SEED = os.environ.get("SEED","-1")
+
+SEED = random.randint(0,1000000) if SEED == "-1" else int(SEED)  
 
 def _system_prompt(fn="system/bot.txt"):
     prompt = Path(fn).read_text().strip()
@@ -77,7 +81,7 @@ def _normalize_for_ollama(messages):
         normalized.append(msg_dict)
     return normalized
 
-def _call_ollama(messages, max_tokens=8192, temperature=0.7, top_p=0.9, tools=None, thinking=False):
+def _call_ollama(messages, max_tokens=8192, temperature=0.5, top_p=0.9, tools=None, thinking=False):
     # ✅ Convert to Ollama's expected format
     ollama_messages = _normalize_for_ollama(messages)
     
@@ -90,7 +94,8 @@ def _call_ollama(messages, max_tokens=8192, temperature=0.7, top_p=0.9, tools=No
         "options": {
             "num_predict": max_tokens,
             "temperature": temperature,
-            "top_p": top_p
+            "top_p": top_p,
+            "seed": SEED
         }
     }
     if tools:
