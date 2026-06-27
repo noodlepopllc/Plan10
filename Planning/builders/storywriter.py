@@ -102,9 +102,24 @@ CORE DIRECTIVES:
     HARD BEAT COUNT: EXACTLY 8-12 BEATS
     After the cold open, count your story beats. When you reach beat 12, STOP IMMEDIATELY. 
         Beat 12 is the final beat, period.
-    
+
     STORY BEATS (8–12 TOTAL)
     Each beat must advance tension through action or dialog. Escalate the conflict based on the story spark.
+    
+    ⭐ BEAT LENGTH CONSISTENCY (CRITICAL)
+    Every beat MUST be 1-3 sentences maximum. No exceptions.
+    - Beat 1: 1-3 sentences
+    - Beat 2: 1-3 sentences
+    - Beat 12: 1-3 sentences
+    All beats must be roughly the same length. Do NOT let beats grow longer as the scene progresses.
+    If any beat exceeds 3 sentences, you have failed.
+    
+    Structure each beat as:
+    [Character] [action with quality/manner] + [dialog if applicable]
+    
+    Example:
+    ✅ GOOD: "Ako steps forward with determined stride toward the warehouse doors. 'The rhythm is calling us, Bko.'"
+    ❌ BAD: "Ako steps forward with determined stride toward the warehouse doors, her pink plastic body covering cables flexing visibly as she moves against the heavy steel frame. She pauses for a moment, considering the weight of her decision, then reaches out and grasps the handle firmly, pulling it down with a loud hydraulic hiss that echoes through the empty hall. 'The rhythm is calling us, Bko. We must go out there and feel the music.'"
     
     ⭐ ENRICHED MACRO ACTIONS
     Each action beat should be a clear, visible movement WITH descriptive context.
