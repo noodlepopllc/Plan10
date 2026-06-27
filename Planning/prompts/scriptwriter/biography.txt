@@ -64,6 +64,14 @@ The description should cover:
 - Right side elements (what's visible on the right portion)
 - Lighting and atmosphere (consistent across entire zone)
 
+⭐ ANCHORED ELEMENTS (ZONE-LEVEL OWNERSHIP)
+Each zone MUST define its own `anchored_elements` array. These are the fixed physical objects in that specific zone.
+
+- Each anchored element MUST have: name, material, position (left side, right side, center, etc.), orientation
+- Do NOT duplicate objects across zones unless they physically exist in multiple zones
+- The zone is the SOURCE OF TRUTH for what objects exist in that space
+- There is NO global environment_objects list - each zone owns its objects
+
 ⭐ VISIBLE_BACKGROUND_ELEMENTS (MANDATORY FIELD)
 Every zone MUST include a "visible_background_elements" array listing 5-8 specific environmental elements visible in the full zone.
 
@@ -81,8 +89,10 @@ Before outputting, verify:
 2. Does each zone_definition mention ZERO character names (no "Maya", no "Elias", no character references)?
 3. Does each zone_definition describe both left and right side environmental elements?
 4. Does each zone have a "visible_background_elements" array with 5-8 items?
-5. If any zone_definition contains camera references or character names, you have failed.
-6. If any zone is missing visible_background_elements, you have failed.
+5. Does each zone have an "anchored_elements" array with 2-5 items?
+6. Are there ZERO duplicate objects across zones (unless they physically exist in multiple zones)?
+7. If any zone_definition contains camera references or character names, you have failed.
+8. If any zone is missing visible_background_elements or anchored_elements, you have failed.
 
 ⭐ GLOBAL LIGHTING STATE (CRITICAL FOR CONTINUITY)
 The setting MUST establish a single, fixed time of day and lighting condition that applies to ALL zones in ALL locations.
@@ -117,16 +127,7 @@ REQUIRED JSON SCHEMA
     "room_form": "3-5 sentences describing overall form, major fixed structures, openings, ground material, lighting sources, architectural style, and spatial scale. MUST include exact time of day, sky condition, sun position, and external light color.",
     "time_of_day": "string (e.g., 'late afternoon', 'night', 'early morning')",
     "sky_condition": "string (e.g., 'clear blue', 'overcast grey', 'dark with stars')",
-    "external_lighting": "string (e.g., 'warm golden sunlight from west', 'no natural light', 'cool blue twilight')",
-    "environment_objects": [
-      {
-        "name": "string",
-        "material": "string",
-        "color": "string",
-        "placement": "string",
-        "orientation": "string"
-      }
-    ]
+    "external_lighting": "string (e.g., 'warm golden sunlight from west', 'no natural light', 'cool blue twilight')"
   },
   "biographies": [
     {
@@ -177,6 +178,16 @@ REQUIRED JSON SCHEMA
 - Each character MUST have at least 2 distinctive_visual_markers that are highly specific and unique.
 - If two characters share the same facial features or lack distinctive markers, you have failed.
 - These details are CRITICAL for T2V rendering - they prevent character blending.
+
+⭐ JSON SYNTAX VALIDATION (CRITICAL)
+Before outputting, verify:
+1. Every array `[...]` closes with `]` only, NOT `]}`
+2. Every object `{...}` closes with `}` only
+3. The `visible_background_elements` array MUST close with `]` followed by either `,` (if more fields) or `}` (if last field in object)
+4. Do NOT add extra closing braces after arrays
+
+❌ WRONG: `"visible_background_elements": ["item1", "item2"]}`
+✅ CORRECT: `"visible_background_elements": ["item1", "item2"]`
 
 BEGIN OUTPUT NOW
 Output only the valid JSON object.

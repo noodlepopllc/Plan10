@@ -16,4 +16,4 @@ Story Goal:
 Ako wants to explore, Bko is cautious but obeys Ako.
 
 Initial Situation:
-The two androids (idol entertainment units) wake up in the wharehouse they were stored in, the music from across the street catches their attention.
+The two androids (idol entertainment units) wake up in the warehouse they were stored in, the music from across the street catches their attention.

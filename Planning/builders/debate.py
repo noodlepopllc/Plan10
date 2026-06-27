@@ -50,6 +50,12 @@ TOPICAL_TOPICS = [
     'the future of work',
 ]
 
+CHARACTERS = '''
+⭐ CHARACTERS
+Beautiful 20s-30s females only with feminine names, scantily clad with distinct features, race/species, hair color, hair style and clothing to make them easily distinguishable
+Females can be athletic, fit, thin, maximum attractiveness and sex appeal, very feminine
+'''
+
 # ============================================================================
 # ACTION SCENE PROMPTS (original pipeline)
 # ============================================================================
@@ -77,6 +83,8 @@ Selection method: Use (current hour % 10) + 1 to pick from the list. If timestam
 
 **Genre**: [selected genre]
 **Test Focus**: [selected focus]
+
+{CHARACTERS}
 
 **Characters** (2–4 characters):
 - [Name]: [age], [gender], [race/species if relevant], [2–3 sentence physical description including build, face, distinctive features, FULL clothing with material/color/condition, hair style/color/length, footwear, accessories]. [1 sentence personality/behavioral tendency].
@@ -116,66 +124,70 @@ Using the structured seed below, write a single continuous scene consisting of:
 CORE DIRECTIVES:
 
     COLD OPEN (MANDATORY — DOES NOT COUNT TOWARD BEAT TOTAL)
-    Write a rich, detailed establishing sequence BEFORE the story begins. Include:
-        Environment (2-3 sentences): Lighting, textures, sounds, spatial layout, atmosphere.
-        Each Character (2-3 sentences per character): Build, face, distinctive features, complete clothing (head-to-toe), hair, current position, and body state.
-        ❌ FORBIDDEN IN COLD OPEN: Backstory, internal thoughts, future actions, dialog.
-
+    The cold open is a STATIC SNAPSHOT of the initial situation from the seed.
+    
+    ✅ ALLOWED in cold open:
+    - Environment description (lighting, textures, atmosphere)
+    - Character physical descriptions (build, face, clothing, hair, current position)
+    - What each character is doing RIGHT NOW (from the seed's "Initial Situation")
+    
+    ❌ FORBIDDEN in cold open:
+    - Any action that advances the plot
+    - Characters moving toward goals
+    - Conflict escalation
+    - Dialog that isn't just ambient/greeting
+    - Any events beyond what the seed's "Initial Situation" describes
+    
+    Think of it as: "Freeze frame of the starting state" → then the story begins.
+    
     ⭐ SPECIES/ETHNICITY MUST BE EXPLICIT
-    If the seed specifies a species (elf, half-elf, android, werecreature, alien, etc.), you MUST explicitly state it in the cold open.
+    If the seed specifies a species (elf, half-elf, android, etc.), you MUST explicitly state it.
     ❌ FORBIDDEN: "Elara sits perched on a bench..."
     ✅ REQUIRED: "Elara, an elf with pointed ears, sits perched on a bench..."
-
-    CRITICAL MARKER: After the cold open paragraphs, you MUST output this exact marker on its own line:
+    
+    CRITICAL MARKER: After the cold open, you MUST output this exact marker on its own line:
     ******* COLD OPEN END ****
-
-    NO NESTED STORYTELLING (CRITICAL FOR STABILITY)
+    
+    NO NESTED STORYTELLING
     Characters may REFERENCE past events in dialog, but they must NOT tell full stories within the scene.
-    ❌ FORBIDDEN: "Let me tell you about the time I fought bandits. It started when I was walking through the Darkwood Forest..."
-    ✔ ALLOWED: "I fought bandits last week. Nasty business."
-
+        ❌ FORBIDDEN: "Let me tell you about the time I fought bandits. It started when I was walking through the Darkwood Forest..."
+        ✔ ALLOWED: "I fought bandits last week. Nasty business."
+    
     DIALOG IS MANDATORY EVERY 2-3 BEATS
-    You MUST include at least one spoken line every 2-3 action beats.
-    Dialog must advance the story (state goals, create conflict, give commands).
-    Every dialog line must be paired with a physical action.
-
+    You MUST include at least one spoken line every 2-3 action beats. 
+        Dialog must advance the story (state goals, create conflict, give commands).
+        Every dialog line must be paired with a physical action.
+    
     HARD BEAT COUNT: EXACTLY 8-12 BEATS
-    After the cold open, count your story beats. When you reach beat 12, STOP IMMEDIATELY.
-    Do not continue. Do not add resolution paragraphs. Do not add trailing atmosphere.
-    Beat 12 is the final beat, period. If you find yourself writing beat 13, you have failed.
-
+    After the cold open, count your story beats. When you reach beat 12, STOP IMMEDIATELY. 
+        Beat 12 is the final beat, period.
+    
+    STORY BEATS (8–12 TOTAL)
+    Each beat must advance tension through action or dialog. Escalate the conflict based on the story spark.
+    
+    ⭐ ENRICHED MACRO ACTIONS
+    Each action beat should be a clear, visible movement WITH descriptive context.
+    Structure: [verb] + [object] + [quality/manner]
+    Examples:
+    - "grasps cylinder" → "grasps heavy metal cylinder with both hands"
+    - "steps forward" → "steps forward with determined stride"
+    Rules:
+    - Use the full 12-word allowance
+    - Include physical qualities: weight, texture, temperature
+    - Include manner: speed, force, direction
+    - Keep actions macro-level (visible body movements, not subtle gestures)
+    
     RESOLVE THE GOAL
-    Stop immediately when the primary character goal is resolved or definitively failed. Do not add epilogues.
-
+    Stop immediately when the primary character goal is resolved or definitively failed.
+    
     GROUND IN LOCATION & SHOW, DON'T TELL
-    Keep the scene physically anchored. Reference specific objects and spatial relationships.
-    Express internal states strictly through observable physical behavior, posture, and facial expressions.
-
-⭐ ENRICHED MACRO ACTIONS
-Each action beat should be a clear, visible movement WITH descriptive context.
-
-Structure: [verb] + [object] + [quality/manner]
-
-Examples:
-- "grasps cylinder" → "grasps heavy metal cylinder with both hands"
-- "steps forward" → "steps forward with determined stride"
-- "looks at Elias" → "locks eyes with Elias across the alley"
-
-Rules:
-- Use the full 12-word allowance
-- Include physical qualities: weight, texture, temperature
-- Include manner: speed, force, direction
-- Keep actions macro-level (visible body movements, not subtle gestures)
-- No micro-details like "fingers tremble" or "breath catches"
+    Keep the scene physically anchored. Express internal states strictly through observable physical behavior.
 
 OUTPUT FORMAT:
-Write in standard literary prose. Begin with the cold open, insert the ******* COLD OPEN END **** marker, then write exactly 8-12 story beats. Dialog must appear every 2-3 beats. No nested stories.
+Write in standard literary prose. Begin with the cold open (static snapshot only), insert the ******* COLD OPEN END **** marker, then write exactly 8-12 story beats. Dialog must appear every 2-3 beats.
 '''
-CHARACTERS = '''
-⭐ CHARACTERS
-Beautiful 20s-30s females only with feminine names, scantily clad with distinct features, race/species, hair color, hair style and clothing to make them easily distinguishable
-Females can be athletic, fit, thin, maximum attractiveness and sex appeal, very feminine
-'''
+
+
 
 # ============================================================================
 # TOPICAL SCENE PROMPTS (new pipeline)

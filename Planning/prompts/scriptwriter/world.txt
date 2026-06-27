@@ -26,20 +26,22 @@ For each character, provide a bulleted list:
 ❌ FORBIDDEN: Backstory, lore, emotional analysis, story events, internal thoughts.
 ✅ REQUIRED: Specific visual details that distinguish this character from others.
 
-SECTION 3 — LOCATION SUMMARY  
+SECTION 3 — LOCATIONS
+For each distinct location in the story, provide:
 
-    2–3 sentences describing what the location is, what it’s used for, and its sensory elements.  
-    MUST include time-period-appropriate environmental context.  
-    ❌ FORBIDDEN: Interior sub-zones, specific props, architectural specifics beyond broad strokes, story events.
+### [Location Name]
+- 2–3 sentences describing what this location is, what it's used for, and its sensory elements.
+- MUST include time-period-appropriate environmental context.
+- ❌ FORBIDDEN: Interior sub-zones, specific props, architectural specifics beyond broad strokes, story events.
 
 SECTION 4 — STAGING ZONES
-Create 2–4 schematic, filmable patches of space that support the actions implied by the story.
-For each zone, list:  
+For each location identified in Section 3, list 2–4 schematic, filmable zones within that location.
 
-    Zone Name (e.g., "Seated Dining Position")  
-    Functional Purpose (e.g., "Hosts eating and conversation")  
-    Schematic Objects (List 2–5 non-descriptive, functional objects required for this zone, e.g., "table, chair, plate area").  
-    ❌ FORBIDDEN: Inventing unrelated objects, adding new rooms, anachronistic items, story events, or camera angles.
+### [Location Name] Zones
+
+**[Zone Name]**
+- Functional Purpose: [What this zone is used for]
+- Schematic Objects: [2–5 non-descriptive, functional objects]
 
 GLOBAL RULES  
 

@@ -82,7 +82,7 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         else:
             start_image = media
 
-        print(f"PROMPT: {eprompt}")
+        print(f"PROMPT: {prompt}")
 
 
         original_prompt = prompt
