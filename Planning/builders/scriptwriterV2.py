@@ -207,7 +207,7 @@ Paragraph: {paragraph}"""
                 prompt=paragraph_prompt,
                 system=NARRATOR,
                 max_tokens=4096,
-                termperature=0.2
+                temperature=0.2
             )['analysis']
             
             beats = parse_jsonl(result, current_state)
