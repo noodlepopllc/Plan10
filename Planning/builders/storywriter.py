@@ -234,7 +234,7 @@ def run_prompt(prompt, system, pth):
           prompt=prompt,
           system=system,
           max_tokens=8192,
-          temperature=0.5)['analysis']
+          temperature=0.1)['analysis']
       with open(pth, 'w') as out_f:
         out_f.write(result)
       print(f'Wrote {pth}')
