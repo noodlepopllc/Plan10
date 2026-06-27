@@ -18,7 +18,8 @@ def run_prompt(prompt, system, pth):
           media="", 
           prompt=prompt,
           system=system,
-          max_tokens=8192)['analysis']
+          max_tokens=8192,
+          temperature=0.2)['analysis']
       with open(pth, 'w') as out_f:
         out_f.write(result)
       print(f'Wrote {pth}')
@@ -205,7 +206,8 @@ Paragraph: {paragraph}"""
                 media="",
                 prompt=paragraph_prompt,
                 system=NARRATOR,
-                max_tokens=4096
+                max_tokens=4096,
+                termperature=0.2
             )['analysis']
             
             beats = parse_jsonl(result, current_state)

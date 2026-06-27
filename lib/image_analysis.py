@@ -27,7 +27,7 @@ def AnalyzeImage(image='', prompt='Describe this.', output=None):
 def EnhancePrompt(image='', prompt='a beautiful woman', enhancer='', output=None):
     from pathlib import Path
     eprompt = Path(enhancer).read_text()
-    status = llm_analyze_media(image, prompt, eprompt)
+    status = llm_analyze_media(image, prompt, eprompt, temperature=0.5)
     if output:
         Path(output).write_text(status['analysis'])
     return status['analysis']
