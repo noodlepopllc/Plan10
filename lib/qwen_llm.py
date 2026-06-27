@@ -151,7 +151,7 @@ elif BACKEND == "transformers":
                 **inputs, 
                 max_new_tokens=max_tokens, 
                 temperature=0.1, 
-                top_p=0.9, 
+                top_p=0.5, 
                 do_sample=True, 
                 pad_token_id=processor.tokenizer.eos_token_id
             )
