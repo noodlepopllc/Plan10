@@ -94,8 +94,8 @@ def _call_ollama(messages, max_tokens=8192, temperature=0.5, top_p=0.9, tools=No
         "options": {
             "num_predict": max_tokens,
             "temperature": temperature,
-            "top_p": top_p
-            #"seed": SEED
+            "top_p": top_p,
+            "seed": SEED
         }
     }
     if tools:
