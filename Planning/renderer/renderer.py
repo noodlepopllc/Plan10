@@ -478,18 +478,6 @@ def render_beats_dialog(assets, actions, mappings, T):
             # 🎬 Final dialog video still uses the closeup base
             final_alias = f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_VIDEO_{s_idx:02d}"
             T.dialog_final(final_alias, base_alias_closeup, f"{speaker_alias}_VOICE", line)
-
-            # 🖼️ Also emit an OTS image (image-only, no voice)
-            final_alias_ots = f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_OTS_{s_idx:02d}"
-            # If you have a simple "copy/alias image" helper, use it; otherwise append directly:
-            self.buffer.dialog_images.append(f"""
-            >> ALIAS: {final_alias_ots}
-            composite_scene {base_alias_ots} asset,
-            shot_type: "ots",
-            prompt: "{line}",
-            Width: {self.WIDTH}, Height: {self.HEIGHT}, Seed: {self.SEED}
-            """)
-
             s_idx += 1
 
 
