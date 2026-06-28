@@ -471,9 +471,12 @@ if __name__ == '__main__':
         args.seed = random.randint(0,1000000)
         args.height = random.choice(heights)
 
-    import sys
+    import sys, os
     sys.path.append('./lib')
-    from image_gen import ImageGen, CreateCharacterSheet
+    if os.environ.get('ANIME','False') == 'True':
+        from anime_gen import ImageGen, CreateCharacterSheet
+    else:
+        from image_gen import ImageGen, CreateCharacterSheet
     from pathlib import Path
 
     output = f'./tests/{args.name}'
