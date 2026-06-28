@@ -447,6 +447,35 @@ def postprocess_beats(beats, biography):
     return beats
 
 
+def chunk_long_sentence(sentence, syllable_threshold=16):
+    """Chunk a long sentence by syllable count, adding ellipsis as breath pauses."""
+    if count_syllables(sentence) <= syllable_threshold:
+        return [sentence]
+    
+    words = sentence.split()
+    chunks = []
+    current_chunk = []
+    current_syllables = 0
+    
+    for word in words:
+        word_syllables = count_syllables(word)
+        
+        # If adding this word exceeds threshold, flush current chunk
+        if current_chunk and (current_syllables + word_syllables) > syllable_threshold:
+            chunks.append(' '.join(current_chunk) + '...')
+            current_chunk = [word]
+            current_syllables = word_syllables
+        else:
+            current_chunk.append(word)
+            current_syllables += word_syllables
+    
+    # Flush final chunk (no ellipsis on last one)
+    if current_chunk:
+        chunks.append(' '.join(current_chunk))
+    
+    return chunks
+
+
 def split_dialog_sentences(beats, biography, syllable_threshold=16):
     beats = postprocess_beats(beats, biography)
     new_beats = []
@@ -463,12 +492,10 @@ def split_dialog_sentences(beats, biography, syllable_threshold=16):
         beat['beat'] = ndx
         beat['posture'] = {beat['actor']: f'{beat["posture"]}'}
         beat['actions'] = [beat['action']] if beat.get('action') else []
-        beat['dialog'] = []  # Initialize as empty list
+        beat['dialog'] = []
         beat['pose'] = f"{beat['actor']} {beat['posture'][beat['actor']]} with a {expression} expression"
         beat['arc'] = f"{beat['actor']} {beat['posture'][beat['actor']]} with a {expression} expression, {beat['action']}" if beat.get('action') else ""
-
         
-        # Check if this beat matches the previous beat's visual setup
         if new_beats:
             prev = new_beats[-1]
             same_actor = beat.get('actor') == prev.get('actor')
@@ -477,7 +504,6 @@ def split_dialog_sentences(beats, biography, syllable_threshold=16):
             same_location = beat.get('location') == prev.get('location')
             
             if same_actor and same_posture and same_zone and same_location:
-                # Merge into previous beat
                 if beat.get('action'):
                     prev['actions'].append(beat['action'])
                 
@@ -486,7 +512,9 @@ def split_dialog_sentences(beats, biography, syllable_threshold=16):
                     sentences = segment_sentences(line)
                     
                     if len(sentences) == 1:
-                        prev['dialog'].append({"speaker": speaker, "line": line})
+                        chunks = chunk_long_sentence(sentences[0], syllable_threshold)
+                        for chunk in chunks:
+                            prev['dialog'].append({"speaker": speaker, "line": chunk.strip()})
                     else:
                         sentences = recombine_by_syllables(sentences, threshold=syllable_threshold)
                         for sent in sentences:
@@ -497,13 +525,14 @@ def split_dialog_sentences(beats, biography, syllable_threshold=16):
                 
                 continue
         
-        # New beat - process dialog
         if line:
             line = line.strip()
             sentences = segment_sentences(line)
             
             if len(sentences) == 1:
-                beat['dialog'].append({"speaker": speaker, "line": line})
+                chunks = chunk_long_sentence(sentences[0], syllable_threshold)
+                for chunk in chunks:
+                    beat['dialog'].append({"speaker": speaker, "line": chunk.strip()})
             else:
                 sentences = recombine_by_syllables(sentences, threshold=syllable_threshold)
                 for sent in sentences:
