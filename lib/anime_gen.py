@@ -442,7 +442,7 @@ def CreateCharacterSheet(prompt='', output='character_tmp.png', seed=-1, imagege
         f"Character: {prompt}"
     )
     gen = imagegen if imagegen else ImageGen()
-    status = gen.generate(prompt, output, 1024, 1024, seed)
+    status = gen.generate(prompt, output, 1536, 1536, seed)
     if not imagegen:
         del gen
     status['description'] = add_metadata_char(output, prompt, seed)
