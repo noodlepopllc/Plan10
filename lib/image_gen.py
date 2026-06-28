@@ -362,7 +362,7 @@ def CreateCharacterSheet(prompt='', output='character_tmp.png',seed=-1, imagegen
     if isinstance(gen, ImageGenQwen):
         width, height = (1328,1328)
     else:
-        width, height = (2048,2048)
+        width, height = (1536,1536)
     status = gen.generate(prompt, output, width, height, seed)
     if not imagegen:
         del gen
