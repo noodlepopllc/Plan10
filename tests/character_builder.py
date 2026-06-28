@@ -473,6 +473,9 @@ if __name__ == '__main__':
 
     import sys, os
     sys.path.append('./lib')
+    from config import load_environ
+
+    load_environ()
     if os.environ.get('ANIME','False') == 'True':
         from anime_gen import ImageGen, CreateCharacterSheet
     else:
