@@ -306,12 +306,15 @@ if __name__ == '__main__':
     parser.add_argument('-E', '--seed', type=int, default=42, help='seed')
     parser.add_argument('-T', '--text', type=str, default='hello how are you today', help='output text')
     parser.add_argument('-I', '--instruct', type=str, default='female, low pitch, british accent', help='instructions for voice')
-    parser.add_argument('-R', '--ref-audio', type=str, default='', help='audio to be cloned')
+    parser.add_argument('-R', '--ref-audio', type=str, default=None, help='audio to be cloned')
     parser.add_argument('-O', '--output', type=str, default='output.wav', help='output filename')
     parser.add_argument('-W', '--no-whisper', action='store_false', help='turn off whisper transcription')
     parser.add_argument('-D', '--duration', type=float, default=5.0, help='duration of the generated clip')
     args = parser.parse_args()
-    create_audio_and_free_vram(args.text, args.instruct, args.ref_audio, '', args.output, 2, args.duration, 16000, args.seed, args.no_whisper)
+    if not args.ref_audio:
+        DesignVoice(args.instruct, args.output, args.seed)
+    else:
+        create_audio_and_free_vram(args.text, args.instruct, args.ref_audio, '', args.output, 2, args.duration, 16000, args.seed, args.no_whisper)
     #print(design_voice('hello world, greetings from the empire',instruct='female,american accent',output='hello.wav'))
     #print(clone_voice('this is cool if it works', ref_audio='hello.wav', output='cool.wav'))
     #print(transcribe('hello.wav'))

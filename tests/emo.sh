@@ -209,16 +209,12 @@ VOICE2="$OUTDIR/char2.wav"
 if [[ ! -f $VOICE1 ]]; then
 python lib/dialog.py \
   -I "female, moderate pitch, canadian accent" \
-  -T "This is a test of the emergency broadcast system. This is only a test. " \
-  -D 5 \
   -O "$VOICE1"
 fi
 
 if [[ ! -f $VOICE2 ]]; then
 python lib/dialog.py \
   -I "female, high pitch, portuguese accent" \
-  -T "This is a test of the emergency broadcast system. This is only a test. " \
-  -D 5 \
   -O "$VOICE2"
 fi
 
