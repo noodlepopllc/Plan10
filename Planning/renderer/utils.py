@@ -447,7 +447,7 @@ def postprocess_beats(beats, biography):
     return beats
 
 
-def chunk_long_sentence(sentence, syllable_threshold=16):
+def chunk_long_sentence(sentence, syllable_threshold=22):
     """Chunk a long sentence by syllable count, adding ellipsis as breath pauses."""
     if count_syllables(sentence) <= syllable_threshold:
         return [sentence]
