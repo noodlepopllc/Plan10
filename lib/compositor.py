@@ -10,9 +10,6 @@ if os.environ.get('ANIME','False') == 'True':
 else:
     from image_gen import GenerateImage, add_metadata_char, add_metadata_loc
 
-
-
-
 load_environ()
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))

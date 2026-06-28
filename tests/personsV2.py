@@ -2,11 +2,15 @@ import sys, random, re, os
 from pathlib import Path
 from json import load
 sys.path.append('./lib')
-from image_gen import CreateCharacterSheet, CreateBackground
 from config import load_environ
 from locations import  LocationPairGenerator
 
 load_environ()
+
+if os.environ.get('ANIME','False') == 'True':
+    from anime_gen import CreateCharacterSheet, CreateBackground
+else:
+    from image_gen import CreateCharacterSheet, CreateBackground
 
 class CharacterRecord:
     def __init__(self, name, gender, character_description, clothing_description):
