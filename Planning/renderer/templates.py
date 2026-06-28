@@ -111,7 +111,6 @@ prompt: "{prompt}",
 Width: {self.WIDTH}, Height: {self.HEIGHT}, Seed: {self.SEED}
 """)
 
-
     def action_video(self, alias, image_alias, motion, duration=5):
         self.buffer.videos.append(f"""
 >> ALIAS: {alias}
@@ -128,6 +127,15 @@ Width: {self.WIDTH}, Height: {self.HEIGHT}, Duration: {duration}, Seed: {self.SE
 >> ALIAS: {alias}
 composite_scene {zone_alias} asset and {char_alias} asset,
 shot_type: "closeup",
+prompt: "{prompt}",
+Width: {self.WIDTH}, Height: {self.HEIGHT}, Seed: {self.SEED}
+""")
+
+    def dialog_ots(self, alias, zone_alias, char_assets, prompt):
+        self.buffer.dialog_images.append(f"""
+>> ALIAS: {alias}
+composite_scene {zone_alias} asset and {char_assets},
+shot_type: "ots",
 prompt: "{prompt}",
 Width: {self.WIDTH}, Height: {self.HEIGHT}, Seed: {self.SEED}
 """)

@@ -266,6 +266,8 @@ def clean_dialog_line(line):
     # If narration is embedded, remove it
     return re.sub(r'"\s*[^"]*"\s*', lambda m: m.group(0), line).strip()
 
+'''
+
 def render_beats_dialog(assets, actions, mappings, T):
     char_aliases = {
         canonical(c['name']): f"CHAR_{normalize(c['name'])}"
@@ -355,6 +357,141 @@ def render_beats_dialog(assets, actions, mappings, T):
             final_alias = f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_VIDEO_{s_idx:02d}"
             T.dialog_final(final_alias, base_alias, f"{speaker_alias}_VOICE", line)
             s_idx += 1
+
+'''
+
+def render_beats_dialog(assets, actions, mappings, T):
+    char_aliases = {
+        canonical(c['name']): f"CHAR_{normalize(c['name'])}"
+        for c in assets['biographies']
+    }
+    
+    char_index_map = {canonical(bio['name']): i for i, bio in enumerate(assets['biographies'])}
+
+    # 🆕 Build zone index map
+    zone_index_map = {}
+    zone_counter = 0
+    for beat in actions:
+        zone_name = beat['zone']
+        if zone_name and zone_name not in zone_index_map:
+            zone_index_map[zone_name] = zone_counter
+            zone_counter += 1
+
+    dialog_base_cache = {}
+
+for beat in actions:
+    dialog_list = [
+        d for d in (beat.get('dialog') or [])
+        if d.get("line") and d.get("line").strip().lower() not in ("", "none")
+    ]
+    if not dialog_list:
+        continue
+
+    s_idx = 1
+
+    for dlg in dialog_list:
+        speaker = canonical(dlg['speaker'])
+        if speaker not in char_aliases:
+            continue
+
+        zone_name = beat['zone']
+        zone_idx = zone_index_map.get(zone_name, 0)
+        zone_mappings = mappings.get(zone_name, {})
+        
+        char_idx = char_index_map.get(speaker, 0)
+        shot_variant = 'LEFT' if char_idx == 0 else 'RIGHT'
+        zone_alias = zone_mappings.get(shot_variant, 'UNKNOWN')
+
+        speaker_alias = char_aliases[speaker]
+        raw_line = dlg['line']
+        line = clean_dialog_line(raw_line)
+        raw_speaker = dlg['speaker']
+
+        facial_state_map = beat.get('facial_state') or {}
+        head_gesture_map = beat.get('head_gesture') or {}
+        tone_map = beat.get('tone') or {}
+
+        facial = facial_state_map.get(raw_speaker, 'neutral')
+        head = head_gesture_map.get(raw_speaker, 'none')
+        tone = normalize_tone(tone_map.get(raw_speaker, 'neutral'))
+
+        facial = beat.get('facial', 'crazy')
+        if not facial:
+            facial = 'neutral'
+
+        start_desc = beat.get('starting_description', {})
+        posture = start_desc.get(raw_speaker, None)
+        if posture:
+            pose_sentence = f"{dlg['speaker']} is {posture}."
+        else:
+            pose_sentence = ""
+
+        expr_sentence = f"{dlg['speaker']} has a {facial} expression." if facial != "neutral" else ""
+        dialog_prompt = " ".join(s for s in [pose_sentence, expr_sentence] if s)
+
+        # --- Cache keys: separate for closeup and OTS ---
+        dialog_key_closeup = f"{speaker}_{facial}_{zone_alias}_CLOSEUP"
+        dialog_key_ots = f"{speaker}_{facial}_{zone_alias}_OTS"
+
+        # 🎭 Closeup base (unchanged behavior)
+        if dialog_key_closeup not in dialog_base_cache:
+            base_alias_closeup = f"DIALOG_BASE_{normalize(speaker)}_{facial}_{shot_variant}_Z{zone_idx}_CLOSEUP"
+            
+            dialog_pose_prompt_close = (
+                f"{dlg['speaker']} (facial expression {facial})"
+            )
+            T.dialog_closeup(base_alias_closeup, zone_alias, speaker_alias, dialog_pose_prompt_close)
+            dialog_base_cache[dialog_key_closeup] = base_alias_closeup
+        else:
+            base_alias_closeup = dialog_base_cache[dialog_key_closeup]
+
+        # 📸 Over-the-shoulder base (image only)
+        if dialog_key_ots not in dialog_base_cache:
+            base_alias_ots = f"DIALOG_BASE_{normalize(speaker)}_{facial}_{shot_variant}_Z{zone_idx}_OTS"
+            
+            # Identify the non-speaking character (the one whose shoulder we look over)
+            other_char_idx = 1 - char_idx  # Flips 0 to 1, or 1 to 0
+            other_speaker = next((c for c, i in char_index_map.items() if i == other_char_idx), None)
+            other_alias = char_aliases.get(other_speaker) if other_speaker else None
+            
+            # ⚠️ REQUIREMENT: The person speaking MUST be the second character.
+            # 1st asset = Non-speaker (foreground/shoulder)
+            # 2nd asset = Speaker (focused face in background)
+            if other_alias:
+                ots_char_assets = f"{other_alias}, {speaker_alias}"
+                dialog_pose_prompt_ots = (
+                    f"Over-the-shoulder shot from behind {other_alias}'s shoulder, "
+                    f"focusing on {speaker_alias} who has a {facial} expression"
+                )
+            else:
+                # Fallback if there's somehow no second character in the zone
+                ots_char_assets = speaker_alias
+                dialog_pose_prompt_ots = (
+                    f"Over-the-shoulder shot, focusing on {speaker_alias} with a {facial} expression"
+                )
+            
+            T.dialog_ots(base_alias_ots, zone_alias, ots_char_assets, dialog_pose_prompt_ots)
+            dialog_base_cache[dialog_key_ots] = base_alias_ots
+        else:
+            base_alias_ots = dialog_base_cache[dialog_key_ots]
+
+        # 🎬 Final dialog video still uses the closeup base
+        final_alias = f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_VIDEO_{s_idx:02d}"
+        T.dialog_final(final_alias, base_alias_closeup, f"{speaker_alias}_VOICE", line)
+
+        # 🖼️ Also emit an OTS image (image-only, no voice)
+        final_alias_ots = f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_OTS_{s_idx:02d}"
+        # If you have a simple "copy/alias image" helper, use it; otherwise append directly:
+        self.buffer.dialog_images.append(f"""
+        >> ALIAS: {final_alias_ots}
+        composite_scene {base_alias_ots} asset,
+        shot_type: "ots",
+        prompt: "{line}",
+        Width: {self.WIDTH}, Height: {self.HEIGHT}, Seed: {self.SEED}
+        """)
+
+        s_idx += 1
+
 
 # ---------------------------------------------------------
 # MAIN
