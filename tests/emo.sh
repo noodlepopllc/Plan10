@@ -208,13 +208,13 @@ VOICE2="$OUTDIR/char2.wav"
 
 if [[ ! -f $VOICE1 ]]; then
 python lib/dialog.py \
-  -I "female, moderate pitch, canadian accent" \
+  -I "female, young adult, moderate pitch, canadian accent" \
   -O "$VOICE1"
 fi
 
 if [[ ! -f $VOICE2 ]]; then
 python lib/dialog.py \
-  -I "female, high pitch, portuguese accent" \
+  -I "female, young adult, high pitch, portuguese accent" \
   -O "$VOICE2"
 fi
 
