@@ -5,8 +5,8 @@ from pathlib import Path
 
 prompt_path = './Planning/prompts'
 WORLD = Path(f'{prompt_path}/scriptwriter/world.txt').read_text()
-BIOGRAPHY = Path(f'{prompt_path}/scriptwriter/biography.txt').read_text()
-NARRATOR = Path(f'{prompt_path}/scriptwriter/narratorV2.txt').read_text()
+BIOGRAPHY = Path(f'{prompt_path}/scriptwriter/biographyV2.txt').read_text()
+NARRATOR = Path(f'{prompt_path}/scriptwriter/narrator.txt').read_text()
 
 # Updated to include backdrop
 REQUIRED_FIELDS = ['actor', 'speaker', 'action', 'dialog', 'location', 'zone', 'backdrop', 'posture', 'facial']
