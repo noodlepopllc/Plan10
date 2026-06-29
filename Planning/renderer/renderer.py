@@ -86,7 +86,7 @@ def get_backgrounds(assets, mappings, T, output_dir="backdrops_tmp"):
             # Create canonical zone key
             zone_key = f"{location_name}_{zone_name}".replace(' ', '_').replace('/','_').upper()
 
-            elements = elements[:3] if len(elements) > 3 else elements
+            elements = [] #elements[:3] if len(elements) > 3 else elements
             
             # 1. Generate the WIDE SHOT (master reference)
             T.background(
