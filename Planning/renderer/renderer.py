@@ -91,7 +91,7 @@ def get_backgrounds(assets, mappings, T, output_dir="backdrops_tmp"):
                 zone_key,
                 architecture,
                 zone_def,
-                ', '.join(elements)
+                ', '.join(elements[:3])
             )
             
             # 2. Generate MIDDLE variant for Two-Shot (shows both characters)
