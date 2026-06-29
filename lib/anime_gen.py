@@ -219,9 +219,12 @@ def add_metadata_char(imgpath, prompt='', seed=-1):
         Rules:
         - Be accurate to what is VISIBLE in the anime art. Do NOT infer realistic anatomy.
         - If a trait is not visible or does not apply, write 'neutral'.
+        - CRITICAL: Every descriptor MUST include its noun. NEVER output bare adjectives.
+          ❌ WRONG: "dark, cel_shaded, long, black, spiky"
+          ✅ CORRECT: "dark brown skin, cel_shaded skin, long black hair, spiky black hair"
         - Output ONLY the comma-separated string, nothing else.
 
-        === FIELD DEFINITIONS ===
+        === FIELD DEFINITIONS (MUST INCLUDE NOUN IN OUTPUT) ===
 
         subject_type:
             anime_character, anime_anthropomorphic (furry/kemonomimi),
@@ -240,68 +243,74 @@ def add_metadata_char(imgpath, prompt='', seed=-1):
             magical_girl, visual_novel, neutral
 
         face_shape:
-            V_line (most common anime), oval, heart, round, angular,
-            soft_round, sharp_chin, neutral
+            V_line face (most common anime), oval face, heart face, round face, angular face,
+            soft_round face, sharp_chin face, neutral
 
         eye_shape (anime eyes are typically LARGE — do NOT describe as "narrow" unless truly so):
-            large_round, large_almond, tsurime (upturned), tareme (downturned),
-            sharp, droopy, cat_eye, half_lidded, huge_shoujo, narrow, neutral
+            large_round eyes, large_almond eyes, tsurime eyes (upturned), tareme eyes (downturned),
+            sharp eyes, droopy eyes, cat_eye eyes, half_lidded eyes, huge_shoujo eyes, narrow eyes, neutral
 
         eye_color:
-            specific color(s) — e.g. emerald_green, crimson_red, sapphire_blue,
-            amber, violet, heterochromia (specify colors), gradient_iris, neutral
+            specific color(s) + "eyes" — e.g. emerald_green eyes, crimson_red eyes, sapphire_blue eyes,
+            amber eyes, violet eyes, heterochromia eyes (specify colors), gradient_iris eyes, neutral
 
         eye_details:
-            detailed_iris, starry_highlights, glowing, ringed_pupil,
-            cat_slit_pupil, spiral, empty_white, visor_eyes, neutral
+            detailed_iris eyes, starry_highlights eyes, glowing eyes, ringed_pupil eyes,
+            cat_slit_pupil eyes, spiral eyes, empty_white eyes, visor_eyes, neutral
 
         eyebrow_style:
-            thin, thick, arched, straight, angular, minimal_absent
+            thin eyebrows, thick eyebrows, arched eyebrows, straight eyebrows, angular eyebrows, minimal_absent eyebrows
             (many anime characters have barely-visible brows), neutral
 
         nose_style (anime noses are OFTEN minimal — do NOT force "medium/large"):
-            dot, small_line, minimal_shadow, button, small, medium,
-            sharp, hidden, realistic (rare in anime), neutral
+            dot nose, small_line nose, minimal_shadow nose, button nose, small nose, medium nose,
+            sharp nose, hidden nose, realistic nose (rare in anime), neutral
 
         mouth_style:
-            small, medium, full, minimal_line, fang_visible, cat_mouth,
-            open_smile, closed_smile, neutral
+            small mouth, medium mouth, full mouth, minimal_line mouth, fang_visible mouth, cat_mouth,
+            open_smile mouth, closed_smile mouth, neutral
 
         expression:
-            neutral, smiling, serious, angry, sad, embarrassed_blush,
-            determined, playful, tsundere, kuudere, crying, surprised, neutral
+            neutral expression, smiling expression, serious expression, angry expression, sad expression, embarrassed_blush expression,
+            determined expression, playful expression, tsundere expression, kuudere expression, crying expression, surprised expression, neutral
 
         skin_tone:
-            porcelain, fair, light, tan, olive, dark, pale,
-            blue_tinted, green_tinted (non-human), neutral
+            CRITICAL: MUST include "skin" in output. Specify exact depth and undertone.
+            porcelain skin, fair skin, light skin, tan skin, olive skin, dark brown skin, dark skin with warm undertones, 
+            deep mahogany skin, pale skin, blue_tinted skin (non-human), green_tinted skin (non-human), neutral
 
         skin_finish:
-            cel_shaded, soft_shaded, matte, glossy, blush_prominent,
-            freckled, scarred, neutral
+            MUST include "skin" in output.
+            cel_shaded skin, soft_shaded skin, matte skin, glossy skin, blush_prominent skin,
+            freckled skin, scarred skin, neutral
 
         hair_length:
-            very_short, short, medium, shoulder_length, long, very_long,
-            waist_length, floor_length, neutral
+            MUST include "hair" in output.
+            very_short hair, short hair, medium hair, shoulder_length hair, long hair, very_long hair,
+            waist_length hair, floor_length hair, neutral
 
         hair_color:
-            black, brown, blonde, silver, white, pink, blue, red, green,
-            purple, orange, multitone, gradient, streaked, pastel,
-            unnatural_color (specify), neutral
+            MUST include "hair" in output.
+            black hair, brown hair, blonde hair, silver hair, white hair, pink hair, blue hair, red hair, green hair,
+            purple hair, orange hair, multitone hair, gradient hair, streaked hair, pastel hair,
+            unnatural_color hair (specify), neutral
 
         hair_style (use anime-specific terms):
-            twin_tails, ahoge (antenna), drill_curls, hime_cut, bob,
-            long_straight, spiky, messy, high_ponytail, low_ponytail,
-            side_braid, french_braid, bun, half_up, side_swept,
-            undercut, bowl_cut, bedhead, windblown, flowing,
-            cat_ears_hair, wolf_cut, neutral
+            MUST include "hair" in output.
+            twin_tails hair, ahoge hair (antenna), drill_curls hair, hime_cut hair, bob hair,
+            long_straight hair, spiky hair, messy hair, high_ponytail hair, low_ponytail hair,
+            side_braid hair, french_braid hair, bun hair, half_up hair, side_swept hair,
+            undercut hair, bowl_cut hair, bedhead hair, windblown hair, flowing hair,
+            cat_ears_hair, wolf_cut hair, neutral
 
         bangs_style:
-            straight_across, side_parted, blunt, wispy, split,
-            asymmetrical, swept, no_bangs, neutral
+            MUST include "bangs" or "hair" in output.
+            straight_across bangs, side_parted bangs, blunt bangs, wispy bangs, split bangs,
+            asymmetrical bangs, swept bangs, no_bangs, neutral
 
         hair_accessories:
-            ribbon, hairpin, flower, bow, hair_ornament, hair_ties,
-            beads, feathers, crown_tiara, hair_bell, neutral
+            ribbon hair accessory, hairpin, flower hair accessory, bow hair accessory, hair_ornament, hair_ties,
+            beads hair accessory, feathers hair accessory, crown_tiara, hair_bell, neutral
 
         head_accessories:
             cat_ears, animal_ears, horns, halo, headband, hat, helmet,
@@ -312,13 +321,13 @@ def add_metadata_char(imgpath, prompt='', seed=-1):
             colored_contacts, none, neutral
 
         body_type (anime proportions, NOT realistic):
-            slender, petite, athletic, muscular, curvy, chibi_proportions,
-            tall, average, loli_body, bishounen, neutral
+            slender build, petite build, athletic build, muscular build, curvy build, chibi_proportions build,
+            tall build, average build, loli_body, bishounen build, neutral
 
         clothing:
-            describe simply — school_uniform, sailor_uniform, maid_outfit,
-            military_uniform, fantasy_armor, magical_girl_outfit,
-            kimono, yukata, hoodie, tshirt, dress, cloak, tactical_gear,
+            MUST include clothing type noun.
+            school_uniform outfit, sailor_uniform outfit, maid_outfit, military_uniform outfit,
+            fantasy_armor, magical_girl_outfit, kimono, yukata, hoodie, tshirt, dress, cloak, tactical_gear outfit,
             futuristic_suit, neutral
 
         footwear:
@@ -335,57 +344,66 @@ def add_metadata_char(imgpath, prompt='', seed=-1):
         3. Hair in anime is GRAVITY-DEFYING and CHUNKY. Use anime-specific
            terms (ahoge, twin_tails, drill_curls) instead of realistic ones.
         4. Skin in anime is CEL-SHADED with prominent blush. Prefer
-           "cel_shaded" over realistic skin descriptors.
+           "cel_shaded skin" over realistic skin descriptors.
         5. For kemonomimi (animal-ear humans): use anime_anthropomorphic,
            describe animal ears under head_accessories, keep human face traits.
         6. For full furry/anthro anime: use anime_anthropomorphic, map
            muzzle->mouth_style, fur->hair, paws->footwear.
         7. NEVER force realistic defaults. If hair color is clearly pink,
-           write "pink", not "dyed blonde". If eyes are glowing red, write
-           "crimson_red" + "glowing".
-        8. Chibi characters: use chibi for subject_type AND chibi_proportions
+           write "pink hair", not "dyed blonde hair". If eyes are glowing red, write
+           "crimson_red eyes" + "glowing eyes".
+        8. Chibi characters: use chibi for subject_type AND chibi_proportions build
            for body_type.
+        9. SKIN TONE PRESERVATION: For characters with dark skin, ALWAYS specify exact depth and undertone 
+           (e.g., "dark brown skin with warm undertones", "deep mahogany skin"). NEVER output just "dark" 
+           without the noun "skin" and undertone specification.
 
         === EXAMPLES ===
 
         Shoujo heroine:
-        "anime_character, young_teen, female, shoujo, V_line, huge_shoujo,
-        emerald_green, detailed_iris starry_highlights, thin, dot, small,
-        embarrassed_blush, fair, cel_shaded blush_prominent, very_long,
-        blonde, long_straight, side_parted, ribbon, none, none, slender,
-        school_uniform, loafers, neutral"
+        "anime_character, young_teen, female, shoujo, V_line face, huge_shoujo eyes,
+        emerald_green eyes, detailed_iris eyes starry_highlights eyes, thin eyebrows, dot nose, small mouth,
+        embarrassed_blush expression, fair skin, cel_shaded skin blush_prominent skin, very_long hair,
+        blonde hair, long_straight hair, side_parted bangs, ribbon hair accessory, none, none, slender build,
+        school_uniform outfit, loafers, neutral"
 
         Shounen protagonist:
-        "anime_character, teen, male, shounen, sharp_chin, sharp,
-        crimson_red, glowing, thick, small_line, medium, determined,
-        tan, cel_shaded, short, black, spiky, split, none, none, none,
-        athletic, orange_jacket, sneakers, katana"
+        "anime_character, teen, male, shounen, sharp_chin face, sharp eyes,
+        crimson_red eyes, glowing eyes, thick eyebrows, small_line nose, medium mouth, determined expression,
+        tan skin, cel_shaded skin, short hair, black hair, spiky hair, split bangs, none, none, none,
+        athletic build, orange_jacket outfit, sneakers, katana"
+
+        Character with dark skin:
+        "anime_character, young_adult, female, seinen, V_line face, sharp eyes,
+        amber eyes, detailed_iris eyes, thick eyebrows, small nose, medium mouth, serious expression,
+        dark brown skin with warm undertones, cel_shaded skin, short hair, black hair, spiky hair, 
+        split bangs, none, none, none, athletic build, tactical_gear outfit, boots, neutral"
 
         Magical girl:
-        "anime_character, young_teen, female, magical_girl, V_line,
-        large_round, sapphire_blue, starry_highlights, thin, dot, small,
-        playful, porcelain, cel_shaded blush_prominent, very_long, pink,
-        twin_tails drill_curls, wispy, bow, tiara, none, petite,
+        "anime_character, young_teen, female, magical_girl, V_line face,
+        large_round eyes, sapphire_blue eyes, starry_highlights eyes, thin eyebrows, dot nose, small mouth,
+        playful expression, porcelain skin, cel_shaded skin blush_prominent skin, very_long hair, pink hair,
+        twin_tails hair drill_curls hair, wispy bangs, bow hair accessory, tiara head accessory, none, petite build,
         magical_girl_outfit, thigh_high_boots, wand"
 
         Kemonomimi (cat-girl):
         "anime_anthropomorphic, teen, female, modern_slice_of_life,
-        V_line, tsurime, amber, cat_slit_pupil, thin, dot, cat_mouth,
-        playful, fair, cel_shaded blush_prominent, long, silver, messy,
-        side_parted, hair_bell, cat_ears, none, slender, oversized_hoodie,
+        V_line face, tsurime eyes, amber eyes, cat_slit_pupil eyes, thin eyebrows, dot nose, cat_mouth,
+        playful expression, fair skin, cel_shaded skin blush_prominent skin, long hair, silver hair, messy hair,
+        side_parted bangs, hair_bell hair accessory, cat_ears, none, slender build, oversized_hoodie outfit,
         barefoot, plush_toy"
 
         Mecha pilot:
-        "anime_character, young_adult, male, mecha_anime, angular,
-        sharp, ice_blue, ringed_pupil, thick, small, medium, serious,
-        light, cel_shaded, short, silver, undercut, swept, none, helmet,
-        none, athletic, plugsuit, magnetic_boots, neutral"
+        "anime_character, young_adult, male, mecha_anime, angular face,
+        sharp eyes, ice_blue eyes, ringed_pupil eyes, thick eyebrows, small nose, medium mouth, serious expression,
+        light skin, cel_shaded skin, short hair, silver hair, undercut hair, swept bangs, none, helmet,
+        none, athletic build, plugsuit outfit, magnetic_boots, neutral"
 
         Chibi:
-        "chibi, child, female, chibi, round, large_round, brown,
-        simple, minimal_absent, dot, cat_mouth, smiling, fair,
-        cel_shaded blush_prominent, medium, brown, bob, blunt,
-        flower, none, none, chibi_proportions, yellow_sundress,
+        "chibi, child, female, chibi, round face, large_round eyes, brown eyes,
+        simple eyes, minimal_absent eyebrows, dot nose, cat_mouth, smiling expression, fair skin,
+        cel_shaded skin blush_prominent skin, medium hair, brown hair, bob hair, blunt bangs,
+        flower hair accessory, none, none, chibi_proportions build, yellow_sundress outfit,
         red_shoes, neutral"
 
         Respond ONLY with the comma-separated string.
@@ -406,7 +424,7 @@ def add_metadata_char(imgpath, prompt='', seed=-1):
     metadata.add_text("Seed", str(seed))
     target_image.save(imgpath, pnginfo=metadata)
     return clean_string
-
+    
 def add_metadata_loc(imgpath, prompt='', seed=-1, brief=False):
     target_image = Image.open(imgpath)
     metadata = PngInfo()
