@@ -25,7 +25,7 @@ load_environ()
 
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
-ANIME = True #os.environ.get('ANIME', 'False') == 'True'
+ANIME = os.environ.get('ANIME', 'False') == 'True'
 
 # =============================================================================
 # 1. LOAD S2V PIPELINE
@@ -58,7 +58,7 @@ def load_s2v_pipe():
     if ANIME:
         pipe.load_lora(pipe.dit, './loras/wan2.1_i2v_lora_rank64_lightx2v_4step.safetensors', alpha=0.8)
     else:
-        pipe.load_lora(pipe.dit, './loras/wan2.1_i2v_lora_rank64_lightx2v_4step.safetensors', alpha=1.0)
+        pipe.load_lora(pipe.dit, './loras/wan2.1_i2v_lora_rank64_lightx2v_4step.safetensors', alpha=0.8)
     return pipe
 
 # =============================================================================
@@ -229,7 +229,7 @@ def GenerateTalkingVideo(
     if text:
         audio = CloneVoice(text, audio, 'tmp.wav', duration=5.0, seed=-1)['output_path']
     input_audio, sample_rate = librosa.load(audio, sr=16000, mono=True, dtype=np.float32)
-    cfg_scale = 2.0 if ANIME else 1.5 
+    cfg_scale = 2.0 #2.0 if ANIME else 1.5 
     num_inference_steps = 8 if ANIME else 4
     fps = 16
     motion_frames = 73
