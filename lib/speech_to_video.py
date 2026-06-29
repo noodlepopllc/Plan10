@@ -25,7 +25,7 @@ load_environ()
 
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
-ANIME = os.environ.get('ANIME', 'False') == 'True'
+ANIME = True #os.environ.get('ANIME', 'False') == 'True'
 
 # =============================================================================
 # 1. LOAD S2V PIPELINE
