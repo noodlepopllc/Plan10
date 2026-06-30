@@ -60,8 +60,6 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
 
         
-
-        
         if isinstance(prompt, list):
             prompt = prompt.pop()
         

@@ -447,6 +447,42 @@ def postprocess_beats(beats, biography):
     return beats
 
 
+def rebalance_chunks(chunks, min_words=2, min_syllables=5):
+    """Rebalance chunks if the last one is too short."""
+    if len(chunks) < 2:
+        return chunks
+    
+    last_chunk = chunks[-1]
+    last_words = last_chunk.split()
+    last_syllables = count_syllables(last_chunk)
+    
+    # Check if last chunk is too short
+    if len(last_words) < min_words or last_syllables < min_syllables:
+        # Get previous chunk
+        prev_chunk = chunks[-2]
+        prev_words = prev_chunk.split()
+        
+        # Remove ellipsis from previous chunk if present
+        if prev_words[-1].endswith('...'):
+            prev_words[-1] = prev_words[-1][:-3]
+        
+        # Move words from previous to last chunk until balanced
+        # Strategy: move words until last chunk meets minimum, or prev chunk gets too short
+        while (len(last_words) < min_words or count_syllables(' '.join(last_words)) < min_syllables):
+            if len(prev_words) <= min_words:
+                break  # Don't make previous chunk too short
+            
+            # Move last word from prev to front of last
+            word_to_move = prev_words.pop()
+            last_words.insert(0, word_to_move)
+        
+        # Rebuild chunks
+        chunks[-2] = ' '.join(prev_words) + '...'
+        chunks[-1] = ' '.join(last_words)
+    
+    return chunks
+
+
 def chunk_long_sentence(sentence, syllable_threshold=22):
     """Chunk a long sentence by syllable count, adding ellipsis as breath pauses."""
     if count_syllables(sentence) <= syllable_threshold:
@@ -472,6 +508,9 @@ def chunk_long_sentence(sentence, syllable_threshold=22):
     # Flush final chunk (no ellipsis on last one)
     if current_chunk:
         chunks.append(' '.join(current_chunk))
+    
+    # Rebalance if last chunk is too short
+    chunks = rebalance_chunks(chunks, min_words=2, min_syllables=5)
     
     return chunks
 
