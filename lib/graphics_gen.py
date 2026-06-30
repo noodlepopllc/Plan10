@@ -2,7 +2,7 @@ from diffsynth.pipelines.ernie_image import ErnieImagePipeline, ModelConfig
 import torch, os, gc, random
 from typing import Dict, Any, Tuple
 from PIL import Image, ImageFilter
-from image_analysis import AnalyzeImage
+from image_analysis import AnalyzeImage, EnhancePrompt
 from config import load_environ
 
 load_environ()
@@ -100,12 +100,13 @@ class GraphicGen(object):
         )
 
     def generate(self, prompt, output, width, height, seed):
+        eprompt = EnhancePrompt('', prompt, './system/ernie_enhance.txt') if enhance_prompt else prompt
         if seed == -1: 
             seed = random.randint(0, 1000000)
 
         if 'Turbo' in self.model_id:
             image = self.pipe(
-                prompt=prompt,
+                prompt=eprompt,
                 seed=seed,
                 num_inference_steps=8,
                 cfg_scale=1.0,
@@ -115,7 +116,7 @@ class GraphicGen(object):
             )
         else:
             image = self.pipe(
-                prompt=prompt,
+                prompt=eprompt,
                 seed=seed,
                 num_inference_steps=50,
                 cfg_scale=4.0,
