@@ -1,22 +1,27 @@
-#!/usr/bin/env bash
+#!/bin/bash
 
-@echo off
-setlocal
+INPUT_FILE="$1"
 
-:loop
-python bin/bot.py %* -F --max-steps 1
-set EXITCODE=%errorlevel%
+if [ -z "$INPUT_FILE" ]; then
+    echo "Usage: $0 <input_file>"
+    exit 1
+fi
 
-if %EXITCODE% equ 0 (
-    echo Completed successfully.
-    exit /b 0
-)
-
-if %EXITCODE% equ 1 (
-    echo OOM detected. Restarting in 5 seconds...
-    timeout /t 5 /nobreak >nul
-    goto loop
-)
-
-echo Failed with error code %EXITCODE%. Not retrying.
-exit /b %EXITCODE%
+while true; do
+    python bin/bot.py "$INPUT_FILE" -F --max-steps 1
+    EXIT_CODE=$?
+    
+    if [ $EXIT_CODE -eq 0 ]; then
+        echo "Completed successfully."
+        exit 0
+    fi
+    
+    if [ $EXIT_CODE -eq 1 ]; then
+        echo "OOM detected. Restarting in 5 seconds..."
+        sleep 5
+        continue
+    fi
+    
+    echo "Failed with error code $EXIT_CODE. Not retrying."
+    exit $EXIT_CODE
+done
