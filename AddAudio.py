@@ -25,13 +25,19 @@ duration = 5
 from glob import glob
 
 AUDIO_SYSTEM_PROMPT = """
-Convert this visual scene into a comma-separated list of diegetic sound effects only.
+Analyze this visual scene and translate it into a highly descriptive, comma-separated sound effect prompt for an audio diffusion model.
+
 Rules:
-- NO music, score, mood words, or camera directions
-- ONLY physical sounds present in the scene
-- Keep it under 15 words
-- Output format: "sound1, sound2, sound3"
+- Capture the primary actions, materials, textures, and the acoustic environment.
+- Combine nouns with descriptive verbs (e.g., "heavy boots crunching" instead of "boots, crunch").
+- STRICTLY BAN music: No score, melody, hums, background tracks, or mood words.
+- Keep it under 25 words total.
+- Output format: One single line of comma-separated sound descriptions, no preamble.
+
+Example Output: "Deep sports car engine idling, sharp tire screech on asphalt, loose gravel spray, close-up perspective, no music"
 """
+
+
 
 ### Checkout woosh repo, add dependencies and uncomment
 
