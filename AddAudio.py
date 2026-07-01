@@ -45,7 +45,7 @@ from woosh.utils.videoio import extract_video_frames, remux_video
 from transformers import AutoProcessor, AutoModelForImageTextToText
 import torch
 
-def prompt(pth):
+def get_prompt(pth):
     model_path = "HuggingFaceTB/SmolVLM2-2.2B-Instruct" # Or whatever your local path is
 
     processor = AutoProcessor.from_pretrained(model_path)
@@ -75,7 +75,7 @@ def prompt(pth):
         return_tensors="pt",
     ).to(model.device, dtype=torch.bfloat16)
 
-    generated_ids = model.generate(**inputs, do_sample=False, max_new_tokens=64)
+    generated_ids = model.generate(**inputs, do_sample=False, max_new_tokens=512)
 
     generated_texts = processor.batch_decode(
         generated_ids,
@@ -205,7 +205,7 @@ if __name__ == '__main__':
         #img = video_to_img(f,getlast=False)
         #img.save('temp.png')
         #prompt = AnalyzeImage('temp.png')['analysis']
-        prompt = prompt(f)
+        prompt = get_prompt(f)
         print(prompt)
         add_audio(f, prompt)
 
