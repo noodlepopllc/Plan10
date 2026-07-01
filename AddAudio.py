@@ -94,6 +94,7 @@ def add_audio(video_path, prompt):
     description = ''
     if prompt:
         description = translate_to_audio_prompt(prompt)
+    print(description)
 
     fps = 16
 
