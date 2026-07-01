@@ -259,6 +259,10 @@ class ToolHandler(object):
                 return self._handle_success(tool_name, filtered, chosen_alias, ctx, result, ext_override=".png")
 
             return {"status": "error", "message": f"Unknown tool: {tool_name}"}
+
+        except torch.cuda.OutOfMemoryError:
+            print("Out of memory, need restart")
+            sys.exit(1)  # OOM - restart
             
         except Exception as e:
             print(traceback.format_exc())
