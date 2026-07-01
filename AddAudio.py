@@ -28,14 +28,17 @@ AUDIO_SYSTEM_PROMPT = """
 Analyze this visual scene and translate it into a highly descriptive, comma-separated sound effect prompt for an audio diffusion model.
 
 Rules:
-- Capture the primary actions, materials, textures, and the acoustic environment.
+- Capture the primary physical actions, materials, textures, and the acoustic environment.
 - Combine nouns with descriptive verbs (e.g., "heavy boots crunching" instead of "boots, crunch").
+- HUMAN SOUNDS: You MAY include non-verbal human sounds if visible (e.g., breathing, gasping, grunting, heavy panting, sighing, coughing).
+- STRICTLY BAN SPEECH: Absolutely no talking, dialog, whispering, murmuring, speaking, or verbal words of any kind. 
 - STRICTLY BAN music: No score, melody, hums, background tracks, or mood words.
-- Keep it under 25 words total.
+- Keep it under 20 words total.
 - Output format: One single line of comma-separated sound descriptions, no preamble.
 
-Example Output: "Deep sports car engine idling, sharp tire screech on asphalt, loose gravel spray, close-up perspective, no music"
+Example Output: "Heavy ragged breathing, running footsteps on dirt, rustling clothes, windy forest ambience, no speech, no music"
 """
+
 
 
 
