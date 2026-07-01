@@ -11,3 +11,4 @@ librosa
 faster-whisper
 spacy_download
 fastmcp
+num2words

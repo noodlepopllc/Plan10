@@ -42,6 +42,48 @@ from woosh.model.video_kontext import VideoKontext
 from woosh.utils.video import SynchformerProcessor
 from woosh.utils.videoio import extract_video_frames, remux_video
 
+from transformers import AutoProcessor, AutoModelForImageTextToText
+import torch
+
+def prompt(pth):
+    model_path = "HuggingFaceTB/SmolVLM2-2.2B-Instruct" # Or whatever your local path is
+
+    processor = AutoProcessor.from_pretrained(model_path)
+
+    # Just omit the _attn_implementation flag. 
+    # In 5.12, it defaults to "sdpa" (Scaled Dot Product Attention) automatically.
+    model = AutoModelForImageTextToText.from_pretrained(
+        model_path,
+        torch_dtype=torch.bfloat16
+    ).to("cuda")
+
+    messages = [
+        {
+            "role": "user",
+            "content": [
+                {"type": "video", "path": pth},
+                {"type": "text", "text": "Describe this video in detail"}
+            ]
+        },
+    ]
+
+    inputs = processor.apply_chat_template(
+        messages,
+        add_generation_prompt=True,
+        tokenize=True,
+        return_dict=True,
+        return_tensors="pt",
+    ).to(model.device, dtype=torch.bfloat16)
+
+    generated_ids = model.generate(**inputs, do_sample=False, max_new_tokens=64)
+
+    generated_texts = processor.batch_decode(
+        generated_ids,
+        skip_special_tokens=True,
+    )
+
+    return generated_texts[0].split(':')[-1]
+
 
 def translate_to_audio_prompt(visual_prompt):
     if not visual_prompt: return ""
@@ -160,9 +202,10 @@ if __name__ == '__main__':
     files = glob(f'{sys.argv[1]}/i2v*')
     print(files)
     for f in files:
-        img = video_to_img(f,getlast=False)
-        img.save('temp.png')
-        prompt = AnalyzeImage('temp.png')['analysis']
+        #img = video_to_img(f,getlast=False)
+        #img.save('temp.png')
+        #prompt = AnalyzeImage('temp.png')['analysis']
+        prompt = promt(f)
         print(prompt)
         add_audio(f, prompt)
 
