@@ -160,11 +160,11 @@ if __name__ == '__main__':
     files = glob(f'{sys.argv[1]}/i2v*')
     print(files)
     for f in files:
-        img = video_to_img(f,getlast=False)
-        img.save('temp.png')
-        prompt = AnalyzeImage('temp.png')['analysis']
-        print(prompt)
-        add_audio(f, prompt)
+        #img = video_to_img(f,getlast=False)
+        #img.save('temp.png')
+        #prompt = AnalyzeImage('temp.png')['analysis']
+        #print(prompt)
+        add_audio(f, '') #prompt)
 
 '''
 with open('MovieGenVideoBench.txt', 'r') as mov:
