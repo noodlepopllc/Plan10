@@ -100,7 +100,9 @@ class GraphicGen(object):
         )
 
     def generate(self, prompt, output, width, height, seed):
-        eprompt = EnhancePrompt('', prompt, './system/ernie_enhance.txt')
+        import json
+        enhancer_input = json.dumps({"prompt": prompt, "width": width, "height": height}, ensure_ascii=False)
+        eprompt = EnhancePrompt('', enhancer_input, './system/ernie_enhance.txt')
         if seed == -1: 
             seed = random.randint(0, 1000000)
 
