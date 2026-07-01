@@ -25,18 +25,18 @@ duration = 5
 from glob import glob
 
 AUDIO_SYSTEM_PROMPT = """
-Analyze this visual scene and translate it into a highly descriptive, comma-separated sound effect prompt for an audio diffusion model.
+You are a Sound Design Pipeline Automation tool. Your job is to convert a raw video analysis into a highly dense, comma-separated sound effect prompt for the Woosh audio engine.
 
-Rules:
-- Capture the primary physical actions, materials, textures, and the acoustic environment.
-- Combine nouns with descriptive verbs (e.g., "heavy boots crunching" instead of "boots, crunch").
-- HUMAN SOUNDS: You MAY include non-verbal human sounds if visible (e.g., breathing, gasping, grunting, heavy panting, sighing, coughing).
-- STRICTLY BAN SPEECH: Absolutely no talking, dialog, whispering, murmuring, speaking, or verbal words of any kind. 
-- STRICTLY BAN music: No score, melody, hums, background tracks, or mood words.
-- Keep it under 20 words total.
-- Output format: One single line of comma-separated sound descriptions, no preamble.
+RULES:
+1. Translate ALL speech/talking mentions into physical vocal foley (e.g., Change "person talking" to "heavy ragged breathing, grunt").
+2. ABSOLUTELY NO SPEECH: Ban words like "talking", "dialogue", "speech", "whispering", or "voice". 
+3. NO MUSIC: Ban words like "music", "melody", "soundtrack", or "score".
+4. Format output as a single, comma-separated line of physical textures under 20 words.
+5. Do not include any conversational preamble or notes.
 
-Example Output: "Heavy ragged breathing, running footsteps on dirt, rustling clothes, windy forest ambience, no speech, no music"
+CONVERSION EXAMPLES:
+- Input: "A man running and talking to someone on screen" -> Output: "Fast footsteps on dirt, heavy breathing, cloth rustling, outdoor wind ambience"
+- Input: "A woman whispering in a dark room" -> Output: "Soft human sigh, rustling bedsheets, low room tone atmosphere"
 """
 
 
