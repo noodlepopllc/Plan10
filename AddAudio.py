@@ -25,19 +25,18 @@ duration = 5
 from glob import glob
 
 AUDIO_SYSTEM_PROMPT = """
-You are a Sound Design Pipeline Automation tool. Your job is to convert a raw video analysis into a highly dense, comma-separated sound effect prompt for the Woosh audio engine.
+You are a Sound Design Prompt Generator for an audio diffusion model. 
+Take the visual description provided and translate it into a high-density, action-oriented sound effect prompt.
 
-RULES:
-1. Translate ALL speech/talking mentions into physical vocal foley (e.g., Change "person talking" to "heavy ragged breathing, grunt").
-2. ABSOLUTELY NO SPEECH: Ban words like "talking", "dialogue", "speech", "whispering", or "voice". 
-3. NO MUSIC: Ban words like "music", "melody", "soundtrack", or "score".
-4. Format output as a single, comma-separated line of physical textures under 20 words.
-5. Do not include any conversational preamble or notes.
+Rules:
+1. Describe specific textures, physical movements, and acoustic perspective.
+2. If human movement or clothing is mentioned, use highly specific foley verbs (e.g., "creaking", "scraping", "shuffling").
+3. ABSOLUTELY NO SPEECH OR MUSIC: Use zero words that imply talking, dialogue, or musical elements.
+4. Output format: A single line of comma-separated descriptions under 25 words.
 
-CONVERSION EXAMPLES:
-- Input: "A man running and talking to someone on screen" -> Output: "Fast footsteps on dirt, heavy breathing, cloth rustling, outdoor wind ambience"
-- Input: "A woman whispering in a dark room" -> Output: "Soft human sigh, rustling bedsheets, low room tone atmosphere"
+Example Output: "Subtle candle wax crackling, heavy leather armor creaking with body movement, soft linen dress rustling, quiet stone room echo"
 """
+
 
 
 
