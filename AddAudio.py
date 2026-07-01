@@ -93,9 +93,30 @@ def get_prompt(pth):
     return generated_texts[0].split(':')[-1]
 
 
+import re
+
 def translate_to_audio_prompt(visual_prompt):
     if not visual_prompt: return ""
-    return llm_analyze_media('', visual_prompt, AUDIO_SYSTEM_PROMPT)["analysis"]
+    
+    # Get raw prompt from your Qwen wrapper
+    raw_analysis = llm_analyze_media('', visual_prompt, AUDIO_SYSTEM_PROMPT)["analysis"]
+    
+    # Programmatic Hard Scrub (lowercase for perfect safety parsing)
+    cleaned = raw_analysis.lower().strip()
+    
+    # Strip dangerous tokens that trigger Woosh vocal tracts
+    banned_speech_words = r"\b(talking|speech|dialogue|dialog|whispering|murmuring|voice|voices|speaking|words)\b"
+    cleaned = re.sub(banned_speech_words, "", cleaned)
+    
+    # Strip formatting junk (double commas, loose strings)
+    items = [item.strip() for item in cleaned.split(",") if item.strip()]
+    cleaned_string = ", ".join(items)
+    
+    # Force the strict negative constraints to the tail end of the string
+    final_audio_prompt = f"{cleaned_string}, close microphone perspective, non-verbal, purely physical sound effects, no speech, no music"
+    
+    return final_audio_prompt
+
 
 
 def add_audio(video_path, prompt):
@@ -156,13 +177,14 @@ def add_audio(video_path, prompt):
             ldm,
             noise=noise,
             cond=cond,
-            cfg=2.0 if description else 4.5,
+            cfg=3.5 if description else 4.5,  # Increased from 2.0 to force prompt adherence
             atol=1e-3,
             rtol=1e-3,
             return_steps=True,
             device=device,
             dtype=torch.float32 if device == "mps" else torch.float64,
         )
+
         audio_fake = ldm.autoencoder.inverse(x_fake)
         audio_fake = audio_fake.cpu().squeeze()  # Shape: [T]
 
@@ -218,23 +240,3 @@ if __name__ == '__main__':
         print(prompt)
         add_audio(f, prompt)
 
-'''
-with open('MovieGenVideoBench.txt', 'r') as mov:
-    res = [(WIDTH,HEIGHT)]
-    for prompt in [x for x in mov]:
-        if not prompt.strip():
-            continue
-        count += 1
-        p = Path(f'{output}/{count}_prompt.txt')
-        if p.exists():
-            continue
-        Path(f'{output}/{count}_prompt.txt').write_text(prompt)
-        this_prompt = prompt.strip()
-        for w, h in res:
-            t2v = f'{output}/{count}_{w}_{h}_T2V.mp4'
-            i2v = f'{output}/{count}_{w}_{h}_I2V'
-            print(GenerateImage(this_prompt, f'{i2v}.png', w, h, -1))
-            print(GenerateVideo(this_prompt, f'{i2v}.png', f'{i2v}.mp4', duration, w, h, -1))
-            #add_audio(f'{i2v}.mp4', this_prompt)
-            #add_audio(f'{i2v}.mp4', '')
-'''
