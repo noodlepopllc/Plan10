@@ -205,7 +205,7 @@ if __name__ == '__main__':
         #img = video_to_img(f,getlast=False)
         #img.save('temp.png')
         #prompt = AnalyzeImage('temp.png')['analysis']
-        prompt = promt(f)
+        prompt = prompt(f)
         print(prompt)
         add_audio(f, prompt)
 
