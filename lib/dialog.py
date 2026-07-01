@@ -40,10 +40,14 @@ def create_audio_and_free_vram(
     - optional Whisper semantic verification
     """
 
+
     # Optional reference transcription
     if ref_audio and not ref_text:
         segs = transcribe(ref_audio)
         ref_text = " ".join(segs)
+
+    if len(ref_text.split(' ')) < 5:
+        ref_text = 'ERROR!!! Not enough input text!'
 
     start_silence_ms = 300
     end_silence_ms = 500
