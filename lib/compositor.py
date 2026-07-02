@@ -430,12 +430,12 @@ def CompositeSceneSchema():
                     },
                     "width": {
                         "type": "integer",
-                        "default": 832,
+                        "default": WIDTH,
                         "description": "Output image width."
                     },
                     "height": {
                         "type": "integer",
-                        "default": 480,
+                        "default": HEIGHT,
                         "description": "Output image height."
                     }
                 },
