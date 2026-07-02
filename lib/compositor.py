@@ -100,7 +100,7 @@ def CompositeScene(
     width: int = WIDTH,
     height: int = HEIGHT,
 ):
-    style = "anime" if os.environ.get('ANIME', 'False') == 'True' else "realistic"
+    style = "anime" if os.environ.get('ANIME', 'False') != 'False' else "realistic"
     # 1. Validate
     if not os.path.exists(background_path): 
         raise FileNotFoundError(f"Background not found: {background_path}")

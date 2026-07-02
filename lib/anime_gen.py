@@ -1,6 +1,7 @@
 from diffsynth.pipelines.krea2 import Krea2Pipeline, ModelConfig
 from diffsynth.pipelines.z_image import ZImagePipeline, ModelConfig
 from diffsynth.pipelines.anima_image import AnimaImagePipeline, ModelConfig
+from diffsynth.pipelines.qwen_image import QwenImagePipeline, ModelConfig, FlowMatchScheduler
 import gc
 import torch
 import os
@@ -12,6 +13,7 @@ from PIL.PngImagePlugin import PngInfo
 load_environ()
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
+ANIME = os.environ.get('ANIME','KREA2')
 
 class ImageGenKrea2(object):
     def __init__(self,vrlimit=14):
@@ -174,9 +176,71 @@ class ImageGenAnima(object):
         if torch.cuda.is_available():  # ✅ Was `if torch.cuda:` (always truthy)
             torch.cuda.empty_cache()
 
+class ImageGenQwen(object):
+    def __init__(self,vrlimit=14):
+        if "VRAM" in os.environ:
+            vrlimit = int(os.environ["VRAM"])
+        self.vrlimit = vrlimit
+        self.pipe = None
+
+    def __enter__(self):
+        if not self.pipe:
+            vram_config = {
+                "offload_dtype": "disk",
+                "offload_device": "disk",
+                "onload_dtype": torch.float8_e4m3fn,
+                "onload_device": "cpu",
+                "preparing_dtype": torch.float8_e4m3fn,
+                "preparing_device": "cuda",
+                "computation_dtype": torch.bfloat16,
+                "computation_device": "cuda",
+            }
+            self.pipe = QwenImagePipeline.from_pretrained(
+                    torch_dtype=torch.bfloat16,
+                    device="cuda",
+                    model_configs=[
+                        ModelConfig(model_id="Qwen/Qwen-Image-2512", origin_file_pattern="transformer/diffusion_pytorch_model*.safetensors", **vram_config),
+                        ModelConfig(model_id="Qwen/Qwen-Image", origin_file_pattern="text_encoder/model*.safetensors", **vram_config),
+                        ModelConfig(model_id="Qwen/Qwen-Image", origin_file_pattern="vae/diffusion_pytorch_model.safetensors", **vram_config),
+                ],
+                    tokenizer_config=ModelConfig(model_id="Qwen/Qwen-Image", origin_file_pattern="tokenizer/"),
+                    vram_limit=self.vrlimit,
+                )
+            self.pipe.load_lora(self.pipe.dit, "./loras/Qwen-Image-2512-Lightning-8steps-V1.0-bf16.safetensors", alpha=1.0)
+            self.pipe.scheduler = FlowMatchScheduler("Qwen-Image-Lightning")
 
 
-ImageGen = ImageGenKrea2
+    def generate(self, prompt, output, width, height, seed):
+        if not self.pipe:
+            self.__enter__()
+        image = self.pipe(
+                prompt=prompt,
+                seed=seed,
+                num_inference_steps=8,
+                cfg_scale=1.0,
+                height=height,
+                width=width
+            )
+        image.save(output)
+        return {"status":"success", "output_path":output}
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.__del__()
+
+    def __del__(self):
+        gc.collect()
+        if torch.cuda.is_available():  # ✅ Was `if torch.cuda:` (always truthy)
+            torch.cuda.empty_cache()
+
+
+if ANIME == 'ANIMA':
+    ImageGen = ImageGenAnima
+elif ANIME == 'ZIMAGE':
+    ImageGen = ImageGenZImage
+elif ANIME == 'QWEN':
+    ImageGen = ImageGenQwen
+else:
+    ImageGen = ImageGenKrea2
 
 def GenerateImage(prompt='', output='tmp.png', width=WIDTH, height=HEIGHT, seed=42):
     gen = ImageGen()
