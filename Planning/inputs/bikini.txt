@@ -1,1 +1,19 @@
-Two bikini models (Mexican Female Sora and Eastern European Female Lindsy) in swimsuits arguing at the beach about pineapple as a pizza topping.
+Characters:
+- Sora: Mexican female with long black wavy hair weaing a green bikini.
+- Lindsy: Eastern european female with short platinum blonde hair wearing a black bikini.
+
+Location:
+A gazebo on a beach at a beach resort. 
+
+Motivations:
+- Sora is really hungry.
+- Lindsy wants Sora to try her favorite food. 
+
+Spark:
+Lindsy offers to share a pizza with Sora, Sora notices pineapple on the pizza and complains.
+
+Story Goal:
+Lindsy wants Sora to share the pizza with her.
+
+Initial Situation:
+Sora notices pineapple on the pizza in front of her and begins to argue about how pineapple does not belong on pizza.
