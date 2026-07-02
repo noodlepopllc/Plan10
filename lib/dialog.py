@@ -274,6 +274,9 @@ def CloneVoice(text, audio, output, duration=5.0, seed=-1):
     duration=float(duration)
     seed=int(seed)
 
+    if len(text.split(' ')) < 5:
+        text = f"{text} ... Random words added for length."
+
     _audio, sr = create_audio_and_free_vram(
         text=text,
         ref_audio=audio,
