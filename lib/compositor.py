@@ -5,7 +5,7 @@ import os
 
 from config import load_environ
 
-if os.environ.get('ANIME','False') == 'True':
+if os.environ.get('ANIME','False') != 'False':
     from anime_gen import GenerateImage, add_metadata_char, add_metadata_loc
 else:
     from image_gen import GenerateImage, add_metadata_char, add_metadata_loc
