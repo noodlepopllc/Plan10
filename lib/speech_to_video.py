@@ -230,7 +230,7 @@ def GenerateTalkingVideo(
         audio = CloneVoice(text, audio, 'tmp.wav', duration=5.0, seed=-1)['output_path']
     input_audio, sample_rate = librosa.load(audio, sr=16000, mono=True, dtype=np.float32)
     cfg_scale = 2.0 if ANIME else 1.5 
-    num_inference_steps = 4 if ANIME else 4
+    num_inference_steps = 6 if ANIME else 4
     fps = 16
     motion_frames = 73
     chunk_size = 16
