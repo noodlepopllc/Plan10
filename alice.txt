@@ -17,10 +17,10 @@ create_background a scene in the book with a table inside of a mysterious magica
 create_background a scene in the book with large mushrooms, fairy tale, vibrant colors, realistic fantasy outdoor scene from 'Alice in Wonderland'. 
 
 >> ALIAS: Alice_Composite
-composite_scene by combining Alice_Sheet asset black ribbons in her hair with Alice_Background_Indoor asset she examines the table as she stands beside it, only a small portion of the table is visible as the rest extends outside of the view. 
+composite_scene by combining Alice_Sheet asset with Alice_Background_Indoor asset she examines the table as she stands beside it, only a small portion of the table is visible as the rest extends outside of the view. 
 
 >> ALIAS: Alice_Composite_Outside
-composite_scene by combining Alice_Sheet asset black ribbons in her hair with Alice_Background_Outdoor asset her she is looking at a mushroom.
+composite_scene by combining Alice_Sheet asset with Alice_Background_Outdoor asset her she is looking at a mushroom.
 
 >> ALIAS: Alice_Closeup
 composite_scene shot of a closeup of Alice_Sheet asset smiling expression in the Alice_Background_Outdoor asset 
