@@ -23,7 +23,7 @@ ANIME = "_anime" if os.environ.get("ANIME","False") != "False" else ""
 enhance_path = f'./system/ltx_enhancer{ANIME}.txt'
 
 def i2v(prompt='', media='', output='output.mp4', 
-                  duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
+          duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
 
     width, height = (720, 1280) if height > width else (1280, 720)
 
@@ -38,7 +38,6 @@ def i2v(prompt='', media='', output='output.mp4',
         "computation_device": "cuda",
     }
 
-
     pipe = LTX2AudioVideoPipeline.from_pretrained(
         torch_dtype=torch.bfloat16,
         device="cuda",
@@ -49,11 +48,14 @@ def i2v(prompt='', media='', output='output.mp4',
         ],
         tokenizer_config=ModelConfig(model_id="google/gemma-3-12b-it-qat-q4_0-unquantized"),
         stage2_lora_config=ModelConfig(model_id="Lightricks/LTX-2.3", origin_file_pattern="ltx-2.3-22b-distilled-lora-384.safetensors"),
-                vram_limit=int(os.environ["VRAM"]),
+        vram_limit=int(os.environ["VRAM"]),
     )
 
+    # 1. ENHANCE POSITIVE PROMPT FOR SFX ONLY
+    sfx_modifiers = ", sound effects only, SFX, ambient sound, natural audio, no background music, no BGM"
+    final_prompt = f"{prompt}{sfx_modifiers}" if prompt else "ambient sound effects, SFX, no music"
 
-
+    # 2. CLEANED NEGATIVE PROMPT (Removed 'silent or muted audio', added music bans)
     negative_prompt = (
         "blurry, out of focus, overexposed, underexposed, low contrast, washed out colors, excessive noise, "
         "grainy texture, poor lighting, flickering, motion blur, distorted proportions, unnatural skin tones, "
@@ -62,17 +64,20 @@ def i2v(prompt='', media='', output='output.mp4',
         "field, background too sharp, background clutter, distracting reflections, harsh shadows, inconsistent "
         "lighting direction, color banding, cartoonish rendering, 3D CGI look, unrealistic materials, uncanny "
         "valley effect, incorrect ethnicity, wrong gender, exaggerated expressions, wrong gaze direction, "
-        "mismatched lip sync, silent or muted audio, distorted voice, robotic voice, echo, background noise, "
-        "off-sync audio, incorrect dialogue, added dialogue, repetitive speech, jittery movement, awkward "
-        "pauses, incorrect timing, unnatural transitions, inconsistent framing, tilted camera, flat lighting, "
-        "inconsistent tone, cinematic oversaturation, stylized filters, or AI artifacts."
+        "mismatched lip sync, music, background music, BGM, singing, melody, song, soundtrack, musical instruments, "
+        "distorted voice, robotic voice, echo, background noise, off-sync audio, incorrect dialogue, "
+        "added dialogue, repetitive speech, jittery movement, awkward pauses, incorrect timing, "
+        "unnatural transitions, inconsistent framing, tilted camera, flat lighting, inconsistent tone, "
+        "cinematic oversaturation, stylized filters, or AI artifacts."
     )
+    
     num_frames = (duration_sec * 24) + 1
 
     image = Image.open(media).convert("RGB").resize((width, height))
+    
     # first frame
     video, audio = pipe(
-        prompt=prompt,
+        prompt=final_prompt, # Use the modified prompt here
         negative_prompt=negative_prompt,
         seed=seed,
         height=height,
@@ -84,6 +89,7 @@ def i2v(prompt='', media='', output='output.mp4',
         input_images_indexes=[0],
         input_images_strength=1.0,
     )
+    
     write_video_audio_ltx2(
         video=video,
         audio=audio,
@@ -91,6 +97,7 @@ def i2v(prompt='', media='', output='output.mp4',
         fps=24,
         audio_sample_rate=pipe.audio_vocoder.output_sampling_rate,
     )
+
 
 
 def GenerateVideo(prompt='', media='', output='output.mp4', 
