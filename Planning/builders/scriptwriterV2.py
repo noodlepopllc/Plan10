@@ -51,20 +51,34 @@ def split_into_paragraphs(prose):
     paragraphs = [p.strip() for p in paragraphs if p.strip()]
     return paragraphs
 
+import json
+
 def fix_truncated_json(line):
     """Try to fix truncated JSON by closing unclosed strings and braces."""
     quote_count = line.count('"')
     
+    # 1. Fix unclosed strings
     if quote_count % 2 == 1:
         line = line.rstrip() + '"'
     
     open_braces = line.count('{')
     close_braces = line.count('}')
     
+    # 2. Fix mismatched braces
     if open_braces > close_braces:
+        # Missing closing braces: add them to the end
         missing = open_braces - close_braces
         line = line.rstrip() + '}' * missing
+        
+    elif close_braces > open_braces:
+        # Extra closing braces: remove them from the end
+        extra = close_braces - open_braces
+        line = line.rstrip()
+        while extra > 0 and line.endswith('}'):
+            line = line[:-1]
+            extra -= 1
     
+    # 3. Attempt to parse
     try:
         return json.loads(line)
     except json.JSONDecodeError:
