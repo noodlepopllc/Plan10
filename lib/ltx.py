@@ -28,11 +28,11 @@ def i2v(prompt='', media='', output='output.mp4',
     width, height = (720, 1280) if height > width else (1280, 720)
 
     vram_config = {
-        "offload_dtype": torch.float8_e5m2,
-        "offload_device": "cpu",
-        "onload_dtype": torch.float8_e5m2,
-        "onload_device": "cpu",
-        "preparing_dtype": torch.float8_e5m2,
+        "offload_dtype": torch.bfloat16,
+        "offload_device": "cuda", # Keep on CUDA if possible, or "cpu" if system RAM is faster
+        "onload_dtype": torch.bfloat16,
+        "onload_device": "cuda",
+        "preparing_dtype": torch.bfloat16,
         "preparing_device": "cuda",
         "computation_dtype": torch.bfloat16,
         "computation_device": "cuda",
