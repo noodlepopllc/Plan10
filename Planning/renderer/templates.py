@@ -163,7 +163,6 @@ Width: {self.WIDTH}, Height: {self.HEIGHT}, Duration: {duration}, Seed: {self.SE
 """)
 
     def dialog_final(self, alias, base_alias, voice_alias, text, prompt=""):
-        self.buffer.dialog.append(
         final = f"""
 >> ALIAS: {alias}
 dialog_to_video media={base_alias} asset
