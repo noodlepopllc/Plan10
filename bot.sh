@@ -8,7 +8,7 @@ if [ -z "$INPUT_FILE" ]; then
 fi
 
 while true; do
-    python bin/bot.py "$INPUT_FILE" -F --max-steps 1
+    python bin/bot.py "$INPUT_FILE" -F --max-steps 3
     EXIT_CODE=$?
     
     if [ $EXIT_CODE -eq 0 ]; then

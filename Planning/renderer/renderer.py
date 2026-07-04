@@ -408,7 +408,6 @@ def render_beats_dialog(assets, actions, mappings, T):
 def main():
     from pathlib import Path
     import sys
-
     
     basepath = sys.argv[1]
 
@@ -419,8 +418,10 @@ def main():
         with open(f"{basepath}/output/narrative.json") as act:
             for line in act:
                 actions.append(json.loads(line))
+
+        threshold = 32 if os.environ.get('WGP','False') == 'True' or os.environ.get('LTX','False') == 'True' else 16
         
-        actions = split_dialog_sentences(actions, assets)
+        actions = split_dialog_sentences(actions, assets, threshold)
 
         with open(f"{basepath}/output/complete_segmented.json", 'w') as act:
             json.dump(actions,act,indent=4)
