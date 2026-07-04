@@ -174,7 +174,7 @@ Width: {self.WIDTH}, Height: {self.HEIGHT}, Seed: {self.SEED}
         if prompt:
             self.buffer.full.append(final)
         else:
-            self.buffer.diallog.append(final)
+            self.buffer.dialog.append(final)
 
     # ---------------------------------------------------------
     # DIALOG MOTION PROMPT
