@@ -54,7 +54,7 @@ async def i2v(prompt='', media='', output='output.mp4',
 
         args = r.data
         args['output_filename'] = output
-        args['prompt'] = prompt
+        args['prompt'] = final_prompt
         args['image_prompt_type'] =  'S'
         args['image_start'] = media
         args['guidance_scale'] = 3.5
