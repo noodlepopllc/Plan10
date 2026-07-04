@@ -398,6 +398,9 @@ def render_beats_dialog(assets, actions, mappings, T):
             final_alias = f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_VIDEO_{s_idx:02d}"
             T.dialog_final(final_alias, base_alias_closeup, f"{speaker_alias}_VOICE", line, '')
             final_alias = f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_VIDEO_MEDIUM_{s_idx:02d}"
+            all_names = build_identity_map(assets, beat)
+            beat_chars = get_beat_characters(beat, all_names)
+            names = {c: all_names[c] for c in beat_chars}
             arc = beat.get('arc', '')
             final_arc = resolve_character_mentions(arc, names)
             T.dialog_final(final_alias, base_alias_medium, f"{speaker_alias}_VOICE", line, final_arc)
