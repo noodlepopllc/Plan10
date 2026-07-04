@@ -14,6 +14,7 @@ class CommandBuffer:
         self.video_images = []
         self.dialog = []
         self.dialog_images = []
+        self.full = []
 
     def dump(self, mode="all"):
         mode = mode.lower()
@@ -35,6 +36,11 @@ class CommandBuffer:
             for c in self.dialog_images:
                 print(c)
             for c in self.dialog:
+                print(c)
+        if mode in ("full"):
+            for c in self.dialog_images:
+                print(c)
+            for c in self.full:
                 print(c)
 
 
@@ -157,7 +163,8 @@ Width: {self.WIDTH}, Height: {self.HEIGHT}, Duration: {duration}, Seed: {self.SE
 """)
 
     def dialog_final(self, alias, base_alias, voice_alias, text, prompt=""):
-        self.buffer.dialog.append(f"""
+        self.buffer.dialog.append(
+        final = f"""
 >> ALIAS: {alias}
 dialog_to_video media={base_alias} asset
 audio={voice_alias} asset
@@ -165,6 +172,10 @@ text="{text}",
 prompt="{prompt}",
 Width: {self.WIDTH}, Height: {self.HEIGHT}, Seed: {self.SEED}
 """)
+        if prompt:
+            self.buffer.full.append(final)
+        else:
+            self.buffer.diallog.append(final)
 
     # ---------------------------------------------------------
     # DIALOG MOTION PROMPT

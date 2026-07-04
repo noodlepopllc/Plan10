@@ -440,7 +440,7 @@ def main():
     render_beats_actions(assets, actions, mappings, T)
     render_beats_dialog(assets, actions, mappings, T)
 
-    if len(sys.argv) > 2 and sys.argv[2] in ("images", "all", "videos", "identity", "dialog"):
+    if len(sys.argv) > 2 and sys.argv[2] in ("images", "all", "videos", "identity", "dialog", "full"):
         mode = sys.argv[2]
     else:
         mode = os.environ.get("MODE", "all")
