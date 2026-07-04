@@ -170,7 +170,7 @@ audio={voice_alias} asset
 text="{text}",
 prompt="{prompt}",
 Width: {self.WIDTH}, Height: {self.HEIGHT}, Seed: {self.SEED}
-""")
+"""
         if prompt:
             self.buffer.full.append(final)
         else:
