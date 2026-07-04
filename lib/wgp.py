@@ -313,7 +313,7 @@ def GenerateTalkingVideo(
             desc = add_metadata_char(start_image, '', seed)
 
         eprompt = f'The person can be described as {desc}. The person says "{text}." {prompt}.'
-        return GenerateVideo(eprompt, start_media, output, duration_sec, width, height, seed):
+        return GenerateVideo(eprompt, start_media, output, duration_sec, width, height, seed)
 
     if not prompt:
         prompt = "The characters stand and act naturally. "
