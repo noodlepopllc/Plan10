@@ -7,7 +7,7 @@ from modelscope import dataset_snapshot_download
 from config import load_environ
 load_environ()
 
-import logging, os
+import logging, os, gc
 import json
 from time import sleep
 from pathlib import Path
@@ -96,6 +96,11 @@ def i2v(prompt='', media='', output='output.mp4',
         fps=24,
         audio_sample_rate=pipe.audio_vocoder.output_sampling_rate,
     )
+    
+    del pipe
+    gc.collect()
+    if torch.cuda and torch.cuda.is_available():  # ✅ Was `if torch.cuda:` (always truthy)
+        torch.cuda.empty_cache()
 
 def GenerateVideo(prompt='', media='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
