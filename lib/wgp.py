@@ -36,6 +36,8 @@ async def i2v(prompt='', media='', output='output.mp4',
 
         # Purged "silent or muted audio" to allow empty spaces, heavily punished music architecture
         negative_prompt = (
+            "text, subtitles, lyrics, captions, on-screen text, logo, " # Text
+            "music, song, soundtrack, singing, talking, speech, voice, "
             "blurry, out of focus, overexposed, underexposed, low contrast, washed out colors, excessive noise, "
             "grainy texture, poor lighting, flickering, motion blur, distorted proportions, unnatural skin tones, "
             "deformed facial features, asymmetrical face, missing facial features, extra limbs, disfigured hands, "
@@ -55,7 +57,7 @@ async def i2v(prompt='', media='', output='output.mp4',
         args['prompt'] = prompt
         args['image_prompt_type'] =  'S'
         args['image_start'] = media
-        args['guidance_scale'] = 2
+        args['guidance_scale'] = 3.5
         args['sample_solver'] = "euler"
         args['negative_prompt'] = negative_prompt
         args['num_inference_steps'] = 30
