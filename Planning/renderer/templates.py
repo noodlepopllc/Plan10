@@ -156,12 +156,13 @@ image_to_video {base_alias}_medium asset, "{motion_prompt}",
 Width: {self.WIDTH}, Height: {self.HEIGHT}, Duration: {duration}, Seed: {self.SEED}
 """)
 
-    def dialog_final(self, alias, base_alias, voice_alias, text):
+    def dialog_final(self, alias, base_alias, voice_alias, text, prompt=""):
         self.buffer.dialog.append(f"""
 >> ALIAS: {alias}
 dialog_to_video media={base_alias} asset
 audio={voice_alias} asset
-text="{text}"
+text="{text}",
+prompt="{prompt}",
 Width: {self.WIDTH}, Height: {self.HEIGHT}, Seed: {self.SEED}
 """)
 

@@ -169,6 +169,7 @@ def strip_leading_name(action, char):
     pattern = re.compile(rf"^{char}\s+", re.IGNORECASE)
     return pattern.sub("", action).strip()
 
+
 def render_beats_actions(assets, actions, mappings, T):
     char_aliases = {canonical(c['name']): f"CHAR_{normalize(c['name'])}" for c in assets['biographies']}
     char_index_map = {canonical(bio['name']): i for i, bio in enumerate(assets['biographies'])}
@@ -395,9 +396,11 @@ def render_beats_dialog(assets, actions, mappings, T):
 
             # 🎬 Final dialog video still uses the closeup base
             final_alias = f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_VIDEO_{s_idx:02d}"
-            T.dialog_final(final_alias, base_alias_closeup, f"{speaker_alias}_VOICE", line)
+            T.dialog_final(final_alias, base_alias_closeup, f"{speaker_alias}_VOICE", line, '')
             final_alias = f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_VIDEO_MEDIUM_{s_idx:02d}"
-            T.dialog_final(final_alias, base_alias_medium, f"{speaker_alias}_VOICE", line)
+            arc = beat.get('arc', '')
+            final_arc = resolve_character_mentions(arc, names)
+            T.dialog_final(final_alias, base_alias_medium, f"{speaker_alias}_VOICE", line, final_arc)
             s_idx += 1
 
 
