@@ -256,8 +256,97 @@ def estimate_duration(text):
     duration = (total_syllables * 0.37) + 1.0
     return math.ceil(duration)
 
-
 def GenerateTalkingVideo(
+    prompt='',
+    text='',
+    audio='',
+    media='',
+    output='output.mp4',
+    width=WIDTH,
+    height=HEIGHT,
+    seed=-1):
+    print(f"PROMPT: {prompt}")
+    
+    if isinstance(prompt, list):
+        prompt = prompt.pop()
+    
+    start_image = ''
+    end_image = None
+
+    if not media:
+        GenerateImage(prompt = prompt, output='first_frame.png', width=width, height=height, seed=seed)
+        media='first_frame.png'
+
+    if isinstance(media, list):
+        start_image = media.pop(0)
+        if len(media) > 0:
+            end_image = video_to_img(media.pop(), width, height, True, False)
+    else:
+        start_image = f'{os.getcwd()}/{media}'
+
+    ref_audio = f'{os.getcwd()}/{audio}'
+
+    print(f"MEDIA: {start_image}")
+
+    original_prompt = prompt
+
+    width = int(width)
+    height = int(height)
+    seed = int(seed)
+    duration_sec = int(estimate_duration(text)) + 1
+    fps = 24
+
+    if seed == -1:
+        seed = random.randint(0,1000000)
+
+    total_frames = (duration_sec * fps) + 1
+
+    print(f"\n🎬 Generating {total_frames/fps:.1f}s video ({total_frames} frames)")
+    print(f"   Resolution: {width}x{height}")
+
+    current_source = video_to_img(start_image, width, height, True, True)
+    current_source.save('tmp.png')
+
+    if prompt: 
+            desc = Image.open(start_image).info.get('Description')
+        if not desc:
+            desc = add_metadata_char(start_image, '', seed)
+
+        eprompt = f'The person can be described as {desc}. The person says "{text}." {prompt}.'
+        return GenerateVideo(eprompt, start_media, output, duration_sec, width, height, seed):
+
+    if not prompt:
+        prompt = "The characters stand and act naturally. "
+
+    eprompt = prompt 
+
+    print("CURRENT PROMPT: ",eprompt)
+
+    try:
+        asyncio.run(s2v(eprompt, start_image, ref_audio, text, Path(output).name, 
+                duration_sec, width, height, seed))
+        description = ''
+            
+        # Post-processing
+        if os.environ.get('BATCH', 'False') == 'False':
+            tmp_img = video_to_img(f'{os.getcwd()}/{output}', width, height)
+            tmp_img.save('tmp.png')
+            description = AnalyzeImage('tmp.png', "Briefly describe this image, no more than 100 words")['analysis']
+        
+        return {
+            "status": "success",
+            "output_path": output,
+            "frames": (duration_sec * fps) + 1,
+            "description": description,
+            "prompt": eprompt
+        }
+        
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        raise
+
+
+def GenerateTalkingVideo_old(
     prompt='',
     text='',
     audio='',
