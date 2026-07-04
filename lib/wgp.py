@@ -21,7 +21,7 @@ ANIME = "_anime" if os.environ.get("ANIME","False") != "False" else ""
 enhance_path = f'./system/ltx_enhancer{ANIME}.txt'
 
 tool = "ltx2_22B_1_1"
-tool = "ltx2_22B_distilled_1_1"
+#tool = "ltx2_22B_distilled_1_1"
 
 async def i2v(prompt='', media='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
@@ -30,11 +30,35 @@ async def i2v(prompt='', media='', output='output.mp4',
         r = await client.call_tool("wangp_get_default_settings", {"model_type":tool})
         results = json.dumps(r.data, indent=4)
 
+        # Force explicit SFX and ban melody structure in the positive prompt
+        sfx_modifiers = ", realistic sound effects only, crisp SFX, ambient background noise, completely devoid of music, no BGM, no instruments"
+        final_prompt = f"{prompt}{sfx_modifiers}" if prompt else "ambient sound effects, SFX, absolute no music"
+
+        # Purged "silent or muted audio" to allow empty spaces, heavily punished music architecture
+        negative_prompt = (
+            "blurry, out of focus, overexposed, underexposed, low contrast, washed out colors, excessive noise, "
+            "grainy texture, poor lighting, flickering, motion blur, distorted proportions, unnatural skin tones, "
+            "deformed facial features, asymmetrical face, missing facial features, extra limbs, disfigured hands, "
+            "wrong hand count, artifacts around text, inconsistent perspective, camera shake, incorrect depth of "
+            "field, background too sharp, background clutter, distracting reflections, harsh shadows, inconsistent "
+            "lighting direction, color banding, cartoonish rendering, 3D CGI look, unrealistic materials, uncanny "
+            "valley effect, incorrect ethnicity, wrong gender, exaggerated expressions, wrong gaze direction, "
+            "mismatched lip sync, music, background music, BGM, melody, song, soundtrack, musical instruments, synth, "
+            "singing, vocals, rhythm, beats, distorted voice, robotic voice, echo, background noise, off-sync audio, "
+            "incorrect dialogue, added dialogue, repetitive speech, jittery movement, awkward pauses, incorrect timing, "
+            "unnatural transitions, inconsistent framing, tilted camera, flat lighting, inconsistent tone, "
+            "cinematic oversaturation, stylized filters, or AI artifacts."
+        )
+
         args = r.data
         args['output_filename'] = output
         args['prompt'] = prompt
         args['image_prompt_type'] =  'S'
         args['image_start'] = media
+        args['guidance_scale'] = 2
+        args['sample_solver'] = "euler"
+        args['negative_prompt'] = negative_prompt
+        args['num_inference_steps'] = 30
         #args['prompt_enhancer'] = 'TI'
         #args['audio_source'] = None
         #args['audio_prompt_type'] = 'A'
@@ -155,7 +179,7 @@ async def s2v(prompt='', media='', audio='', text='', output='output.mp4',
         args['prompt'] = newprompt
         args['image_prompt_type'] =  'S'
         args['image_start'] = media
-        args['prompt_enhancer'] = 'T'
+        args['prompt_enhancer'] = 'TI'
         args['audio_prompt_type'] = 'A1OF'
         args['audio_guide'] = audio
         args['activated_loras'] = ["id-lora-celebvhq-ltx2.3.safetensors"]
