@@ -308,7 +308,7 @@ def GenerateTalkingVideo(
     current_source.save('tmp.png')
 
     if prompt: 
-            desc = Image.open(start_image).info.get('Description')
+        desc = Image.open(start_image).info.get('Description')
         if not desc:
             desc = add_metadata_char(start_image, '', seed)
 
