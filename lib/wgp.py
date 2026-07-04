@@ -59,7 +59,7 @@ async def i2v(prompt='', media='', output='output.mp4',
         args['image_start'] = media
         #args['guidance_scale'] = 2.0
         #args['sample_solver'] = "euler"
-        #args['negative_prompt'] = negative_prompt
+        args['negative_prompt'] = negative_prompt
         #args['num_inference_steps'] = 30
         #args['prompt_enhancer'] = 'TI'
         #args['audio_source'] = None
