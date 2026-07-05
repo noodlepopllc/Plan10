@@ -344,14 +344,14 @@ def render_beats_dialog(assets, actions, mappings, T):
             dialog_prompt = " ".join(s for s in [pose_sentence, expr_sentence] if s)
 
             # --- Cache keys: separate for closeup and OTS ---
-            dialog_key_closeup = f"{speaker}_{facial}_{zone_alias}_CLOSEUP"
-            dialog_key_medium = f"{speaker}_{facial}_{zone_alias}_MEDIUM"
-            dialog_key_ots = f"{speaker}_{facial}_{zone_alias}_OTS"
+            dialog_key_closeup = f"{speaker}_{normalize(facial)}_{zone_alias}_CLOSEUP"
+            dialog_key_medium = f"{speaker}_{normalize(facial)}_{zone_alias}_MEDIUM"
+            dialog_key_ots = f"{speaker}_{normalize(facial)}_{zone_alias}_OTS"
 
             # 🎭 Closeup base (unchanged behavior)
             if dialog_key_closeup not in dialog_base_cache:
-                base_alias_closeup = f"DIALOG_BASE_{normalize(speaker)}_{facial}_{shot_variant}_Z{zone_idx}_CLOSEUP"
-                base_alias_medium = f"DIALOG_BASE_{normalize(speaker)}_{facial}_{shot_variant}_Z{zone_idx}_MEDIUM"
+                base_alias_closeup = f"DIALOG_BASE_{normalize(speaker)}_{normalize(facial)}_{shot_variant}_Z{zone_idx}_CLOSEUP"
+                base_alias_medium = f"DIALOG_BASE_{normalize(speaker)}_{normalize(facial)}_{shot_variant}_Z{zone_idx}_MEDIUM"
                 
                 dialog_pose_prompt_close = (
                     f"{dlg['speaker']} (facial expression {facial})"
