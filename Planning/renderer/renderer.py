@@ -403,7 +403,7 @@ def render_beats_dialog(assets, actions, mappings, T):
             all_names = build_identity_map(assets, beat)
             beat_chars = get_beat_characters(beat, all_names)
 
-            if os.environ.get('LTX','False') == 'True':
+            if os.environ.get('LTX','False') == 'ARC':
                 arc = beat.get('arc', '')
                 names = {c: all_names[c] for c in beat_chars}
                 final_arc = resolve_character_mentions(arc, names)
@@ -411,7 +411,7 @@ def render_beats_dialog(assets, actions, mappings, T):
                 final_arc = ''
             if len(beat_chars) > 1:
                 ots_alias = f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_VIDEO_OTS_{s_idx:02d}"
-                T.dialog_final(final_alias, base_alias_ots, f"{speaker_alias}_VOICE", line, final_arc)
+                T.dialog_final(ots_alias, base_alias_ots, f"{speaker_alias}_VOICE", line, final_arc)
             else:
                 final_arc = ''
             T.dialog_final(final_alias, loc_alias, f"{speaker_alias}_VOICE", line, final_arc)
