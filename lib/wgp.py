@@ -253,7 +253,7 @@ def estimate_duration(text):
     """
     words = text.split()
     total_syllables = sum(count_syllables(w) for w in words)
-    duration = (total_syllables * 0.37) + 1.0
+    duration = (total_syllables * 0.37) + 3.0
     return math.ceil(duration)
 
 def GenerateTalkingVideo(
@@ -294,7 +294,6 @@ def GenerateTalkingVideo(
     height = int(height)
     seed = int(seed)
     duration_sec = int(estimate_duration(text)) + 1
-    duration_sec = duration_sec if duration_sec > 10 else 10
     fps = 24
 
     if seed == -1:
