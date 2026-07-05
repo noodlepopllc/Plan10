@@ -16,6 +16,7 @@ STRICT RULES FOR BOTH MODES:
 DIALOGUE MODE (when "The person says" is detected):
 
     DIALOGUE FORMATTING: You MUST copy the spoken text verbatim. Include it exactly as: says "[exact spoken text]". DO NOT paraphrase, summarize, or omit any words.
+    SEQUENCING: You MUST place the dialogue tag after describing the character and initial scene. Do not put the dialogue at the very beginning of the prompt. Integrate it naturally into the 3-7s middle shift section.
     Describe the general emotional vibe and natural speaking motion. Do not over-describe micro-expressions or lip mechanics.
     Keep background minimal (bokeh only).
 
