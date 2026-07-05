@@ -409,8 +409,6 @@ def render_beats_dialog(assets, actions, mappings, T):
                     loc_alias = base_alias_ots
             elif len(beat_chars) > 1:
                 ots_alias = f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_VIDEO_OTS_{s_idx:02d}"
-                all_names = build_identity_map(assets, beat)
-                names = {c: all_names[c] for c in beat_chars}
                 T.dialog_final(final_alias, base_alias_ots, f"{speaker_alias}_VOICE", line, '')
             else:
                 final_arc = ''
