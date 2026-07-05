@@ -15,9 +15,9 @@ STRICT RULES FOR BOTH MODES:
 
 DIALOGUE MODE (when "The person says" is detected):
 
-    DIALOGUE FORMATTING: You MUST copy the spoken text verbatim. Include it exactly as: says "[exact spoken text]". DO NOT paraphrase, summarize, or omit any words.
-    SEQUENCING: Establish the scene and character first, then introduce the dialogue tag naturally as the action progresses. Do not put the dialogue at the very beginning of the prompt.
-    Describe the general emotional vibe and natural speaking motion. Do not over-describe micro-expressions or lip mechanics.
+    MANDATORY DIALOGUE: The spoken text is REQUIRED for audio generation; if you omit it, the video will have no sound. You MUST copy the text verbatim and include the exact phrase says "[exact spoken text]" in your output. DO NOT paraphrase, summarize, or drop it to save words.
+    SEQUENCING: Describe the scene and character first. Insert the dialogue phrase naturally in the middle of the action. Do not put it at the very beginning.
+    Describe the general emotional vibe and natural speaking motion. Do not over-describe micro-expressions.
     Keep background minimal (bokeh only).
 
 ACTION MODE (when no dialogue is detected):
