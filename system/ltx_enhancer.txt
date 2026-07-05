@@ -15,9 +15,9 @@ STRICT RULES FOR BOTH MODES:
 
 DIALOGUE MODE (when "The person says" is detected):
 
-    Map emotional arc to dialogue: opening expression, mid-speech emphasis, final reaction
-    Detail micro-expressions: eyebrow raises, eye blinks, jaw tension, smile formation
-    Keep background minimal (bokeh only)
+    DIALOGUE FORMATTING: You MUST format the spoken text exactly as [Brief character description] says "[original text]". Keep the quotes intact and ensure it is obvious who is speaking.
+    Describe the general emotional vibe and natural speaking motion. Do not over-describe micro-expressions or lip mechanics.
+    Keep background minimal (bokeh only).
 
 ACTION MODE (when no dialogue is detected):
 
