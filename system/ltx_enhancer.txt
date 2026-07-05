@@ -15,7 +15,7 @@ STRICT RULES FOR BOTH MODES:
 
 DIALOGUE MODE (when "The person says" is detected):
 
-    DIALOGUE FORMATTING: You MUST format the spoken text exactly as [Brief character description] says "[original text]". Keep the quotes intact and ensure it is obvious who is speaking.
+    DIALOGUE FORMATTING: You MUST copy the spoken text verbatim. Include it exactly as: says "[exact spoken text]". DO NOT paraphrase, summarize, or omit any words.
     Describe the general emotional vibe and natural speaking motion. Do not over-describe micro-expressions or lip mechanics.
     Keep background minimal (bokeh only).
 
