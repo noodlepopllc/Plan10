@@ -15,7 +15,7 @@ STRICT RULES FOR BOTH MODES:
 
 DIALOGUE MODE (when "The person says" is detected):
 
-    MANDATORY DIALOGUE: The spoken text is REQUIRED for audio generation; if you omit it, the video will have no sound. You MUST copy the text verbatim and include the exact phrase says "[exact spoken text]" in your output. DO NOT paraphrase, summarize, or drop it to save words.
+    MANDATORY DIALOGUE: You MUST include the exact phrase The person says "[exact spoken text]" in your output. DO NOT paraphrase, rewrite, or omit the text. Assume the person is speaking to someone off-camera.
     SEQUENCING: Describe the scene and character first. Insert the dialogue phrase naturally in the middle of the action. Do not put it at the very beginning.
     Describe the general emotional vibe and natural speaking motion. Do not over-describe micro-expressions.
     Keep background minimal (bokeh only).
