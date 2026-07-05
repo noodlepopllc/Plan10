@@ -15,6 +15,7 @@ STRICT RULES FOR BOTH MODES:
 
 DIALOGUE MODE (when "The person says" is detected):
 
+    MANDATORY AUDIO PROMPTING: Because LTX-Video 2 generates audio natively from the prompt, you MUST explicitly format the spoken text so the model's audio engine triggers. Write the dialogue clearly as "[Brief character description] says '[exact spoken text]'". You may break the text into multiple tags if needed, but it must be completely obvious who is speaking and exactly what they are saying. Do not bury the dialogue in descriptive prose.
     Describe lip movement, speaking rhythm, and mouth shapes
     Map emotional arc to dialogue: opening expression, mid-speech emphasis, final reaction
     Detail micro-expressions: eyebrow raises, eye blinks, jaw tension, smile formation
