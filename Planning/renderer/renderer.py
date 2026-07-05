@@ -236,7 +236,7 @@ def render_beats_actions(assets, actions, mappings, T):
             video_alias = f"BEAT_{beat['beat']}_ACTION_{counter:02d}"
             video_counters[beat['beat']] += 1
             
-            duration = 10 if os.environ.get('WGP','False') == 'True' or os.environ.get('LTX','False') == 'True' else 5
+            duration = 10 if os.environ.get('WGP','False') == 'True' or os.environ.get('LTX','False') != 'False' else 5
             
             T.action_video(
                 video_alias,
