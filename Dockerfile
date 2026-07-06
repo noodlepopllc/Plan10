@@ -24,8 +24,10 @@ WORKDIR /app
 # Tell Conda to create your custom environment, lock in Python 3.12, 
 # and pull the explicit CUDA toolkit dependencies straight from NVIDIA's channel!
 # We clean the conda cache in the SAME STEP to keep the image footprint optimized.
-RUN conda create -n plan10 python=3.12 "ffmpeg=6.1.1" cuda-toolkit -c nvidia -c conda-forge -y && \
+RUN conda create -n plan10 python=3.12 cuda-toolkit -c nvidia -c conda-forge -y && \
     conda clean --all -f -y
+
+RUN conda activate plan10
 
 # Prepend the newly created environment to the container's master PATH string.
 # This forces the container to permanently use your plan10 conda env by default!
