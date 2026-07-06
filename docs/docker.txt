@@ -8,3 +8,13 @@ docker run --gpus '"device=0"' \
   -v "$(pwd)/alice.txt:/app/alice.txt" \
   -v "$(pwd)/alice:/app/alice" \
   plan10
+
+
+# Can change the config after downloads models, needs to be added like so
+  docker run --gpus '"device=0"' --network=host \
+  -v "$(pwd)/bin:/app/bin" \
+  -v "$(pwd)/lib:/app/lib" \
+  -v "$(pwd)/alice.txt:/app/alice.txt" \
+  -v "$(pwd)/alice:/app/alice" \
+  -v "$(pwd)/config.json:/app/config.json" \
+  plan10
