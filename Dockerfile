@@ -48,19 +48,22 @@ RUN git clone https://github.com/modelscope/DiffSynth-Studio.git && \
     pip3 install -e DiffSynth-Studio
 
 # -----------------------------------------------------------------------------
-# STEP 5: MODEL WEIGHT BAKING LAYER (CLOUD AUTONOMY)
+# STEP 5: CONFIGURATION-MATCHED MODEL DOWNLOADS
 # -----------------------------------------------------------------------------
 RUN mkdir -p /app/models /app/loras
 
-# 1. Download LoRAs straight to your sibling root-level /app/loras directory
+# 1. Download LoRAs straight to your dedicated sibling root-level /app/loras directory
 RUN hf download lightx2v/Qwen-Image-2512-Lightning Qwen-Image-2512-Lightning-8steps-V1.0-bf16.safetensors --local-dir /app/loras && \
     hf download lightx2v/Qwen-Image-Edit-2511-Lightning Qwen-Image-Edit-2511-Lightning-8steps-V1.0-bf16.safetensors --local-dir /app/loras && \
     hf download fal/Qwen-Image-Edit-2511-Multiple-Angles-LoRA qwen-image-edit-2511-multiple-angles-lora.safetensors --local-dir /app/loras && \
     hf download DeepBeepMeep/Wan2.1 loras_accelerators/Wan21_CausVid_bidirect2_T2V_1_3B_lora_rank32.safetensors --local-dir /app/loras && \
     hf download lightx2v/Wan2.1-Distill-Loras wan2.1_i2v_lora_rank64_lightx2v_4step.safetensors --local-dir /app/loras
 
-# 2. Download the base Wan models directly into your sibling root-level /app/models directory
-RUN hf download noodlepop/Wan-Series-Converted-Safetensors --local-dir /app/models
+# 2. FIXED: Explicitly target the model repository structure mapping natively.
+# By forcing the destination into a specific folder block matching your config structure,
+# your DiffSynth-Studio framework maps paths flawlessly.
+RUN hf download noodlepop/Wan-Series-Converted-Safetensors --local-dir /app/models/DiffSynth-Studio/Wan-Series-Converted-Safetensors
+
 
 
 
