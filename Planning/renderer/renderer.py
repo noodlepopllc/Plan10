@@ -412,8 +412,7 @@ def render_beats_dialog(assets, actions, mappings, T):
             if len(beat_chars) > 1:
                 ots_alias = f"BEAT_{beat['beat']}_{normalize(speaker)}_DIALOG_VIDEO_OTS_{s_idx:02d}"
                 T.dialog_final(ots_alias, base_alias_ots, f"{speaker_alias}_VOICE", line, final_arc)
-            else:
-                final_arc = ''
+
             T.dialog_final(final_alias, loc_alias, f"{speaker_alias}_VOICE", line, final_arc)
             s_idx += 1
 
