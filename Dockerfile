@@ -27,7 +27,7 @@ WORKDIR /app
 RUN conda create -n plan10 python=3.12 cuda-toolkit -c nvidia -c conda-forge -y && \
     conda clean --all -f -y
 
-RUN conda activate plan10
+RUN echo "source activate plan10" > ~/.bashrc
 
 # Prepend the newly created environment to the container's master PATH string.
 # This forces the container to permanently use your plan10 conda env by default!
