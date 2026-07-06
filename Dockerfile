@@ -38,8 +38,6 @@ ENV PATH="/opt/conda/envs/plan10/bin:${PATH}"
 # -----------------------------------------------------------------------------
 RUN pip install --upgrade pip && pip install huggingface_hub[cli]
 
-# Explicitly pull down PyTorch binaries matched for Python 3.12 and CUDA 13.x
-RUN pip install --no-cache-dir torch torchvision torchaudio torchcodec
 # -----------------------------------------------------------------------------
 # STEP 4: PROJECT REQUIREMENTS & VERIFIED DIFFSYNTH-STUDIO
 # -----------------------------------------------------------------------------
