@@ -1,0 +1,10 @@
+# Build docker image
+docker build -t plan10 .
+
+# Run sample - Takes a long time for inital run
+docker run --gpus '"device=0"' \
+  -v "$(pwd)/bin:/app/bin" \
+  -v "$(pwd)/lib:/app/lib" \
+  -v "$(pwd)/alice.txt:/app/alice.txt" \
+  -v "$(pwd)/alice:/app/alice" \
+  plan10
