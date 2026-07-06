@@ -75,5 +75,5 @@ RUN python lib/config.py
 ENV HF_HOME=/app/.cache
 
 # Routes the container execution trigger straight to your script engine
-ENTRYPOINT ["python", "bin/bot.py", "-F"]
+ENTRYPOINT ["/opt/conda/envs/plan10/bin/python", "bin/bot.py", "-F"]
 CMD ["alice.txt"]
