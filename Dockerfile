@@ -23,7 +23,7 @@ WORKDIR /app
 # Tell Conda to create your custom environment, lock in Python 3.12, 
 # and pull the explicit CUDA toolkit dependencies straight from NVIDIA's channel!
 # We clean the conda cache in the SAME STEP to keep the image footprint optimized.
-RUN conda create -n plan10 python=3.12 ffmpeg cuda-toolkit -c nvidia -c conda-forge -y && \
+RUN conda create -n plan10 python=3.12 "ffmpeg=6.1.1" cuda-toolkit -c nvidia -c conda-forge -y && \
     conda clean --all -f -y
 
 # Prepend the newly created environment to the container's master PATH string.
@@ -36,7 +36,7 @@ ENV PATH="/opt/conda/envs/plan10/bin:${PATH}"
 RUN pip install --upgrade pip && pip install huggingface_hub[cli]
 
 # Explicitly pull down PyTorch binaries matched for Python 3.12 and CUDA 13.x
-RUN pip install --no-cache-dir torch torchvision torchaudio
+RUN pip install --no-cache-dir torch torchvision torchaudio torchcodec
 # -----------------------------------------------------------------------------
 # STEP 4: PROJECT REQUIREMENTS & VERIFIED DIFFSYNTH-STUDIO
 # -----------------------------------------------------------------------------
@@ -63,9 +63,6 @@ RUN hf download lightx2v/Qwen-Image-2512-Lightning Qwen-Image-2512-Lightning-8st
 # By forcing the destination into a specific folder block matching your config structure,
 # your DiffSynth-Studio framework maps paths flawlessly.
 RUN hf download noodlepop/Wan-Series-Converted-Safetensors --local-dir /app/models/DiffSynth-Studio/Wan-Series-Converted-Safetensors
-
-
-
 
 # -----------------------------------------------------------------------------
 # STEP 6: ENTRYPOINT CONFIGURATION (Bound directly to bin/bot.py)
