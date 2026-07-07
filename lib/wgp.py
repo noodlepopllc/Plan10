@@ -17,6 +17,7 @@ from image_gen import add_metadata_char
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
 ANIME = "_anime" if os.environ.get("ANIME","False") != "False" else ""
+ARC = os.environ.get("LTX","False") == "ARC"
 
 enhance_path = f'./system/ltx_enhancer{ANIME}.txt'
 
@@ -307,7 +308,7 @@ def GenerateTalkingVideo(
     current_source = video_to_img(start_image, width, height, True, True)
     current_source.save('tmp.png')
 
-    if False: # prompt: 
+    if ARC and prompt: 
         desc = Image.open(start_image).info.get('Description')
         if not desc:
             desc = add_metadata_char(start_image, '', seed)
