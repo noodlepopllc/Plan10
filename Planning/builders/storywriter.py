@@ -126,7 +126,7 @@ Beautiful 20s-30s females only with feminine names, scantily clad with distinct 
 Females can be athletic, fit, thin, maximum attractiveness and sex appeal, very feminine
 '''
 
-CHARACTERS = ''
+#CHARACTERS = ''
 
 SEED_GENERATOR = f'''
 🎲 AUTOMATIC SEED STORY GENERATOR (ISOLATION-SAFE)
