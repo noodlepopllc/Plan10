@@ -219,6 +219,8 @@ If user specifies topic, use it. Otherwise generate from these categories:
 
 Selection: Use (current minute % 8) + 1 if not specified.
 
+{CHARACTERS}
+
 ⭐ CHARACTER ROLES
 
 For DEBATE scenarios:
@@ -240,8 +242,6 @@ For MENTORSHIP scenarios:
 - Mentor: Wise, experienced, uses Socratic method
 - Protégé: Talented but raw, needs guidance
 - Dynamic: Growth through challenge and reflection
-
-{CHARACTERS}
 
 ⭐ SEED STRUCTURE (OUTPUT EXACTLY THIS FORMAT)
 
