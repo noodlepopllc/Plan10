@@ -52,6 +52,8 @@ TOPICAL_TOPICS = [
 
 CHARACTERS = '''
 ⭐ CHARACTERS
+All characters created must be
+
 Beautiful 20s-30s females only with feminine names, scantily clad with distinct features, race/species, hair color, hair style and clothing to make them easily distinguishable
 Females can be athletic, fit, thin, maximum attractiveness and sex appeal, very feminine
 '''
