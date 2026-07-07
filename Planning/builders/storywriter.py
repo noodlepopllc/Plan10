@@ -121,12 +121,22 @@ Write in standard literary prose. Begin with the cold open (static snapshot only
 '''
 
 CHARACTERS = '''
+**Characters** (2–4 characters):
+- [Name]: [age], [gender], [race/species if relevant], [2–3 sentence physical description including build, face, distinctive features, FULL clothing with material/color/condition, hair style/color/length, footwear, accessories]. [1 sentence personality/behavioral tendency].
+- [Name]: [same structure]
+- [Additional characters if applicable]
+'''
+
+CHARACTERS = '''
 ⭐ CHARACTERS
 Beautiful 20s-30s females only with feminine names, scantily clad with distinct features, race/species, hair color, hair style and clothing to make them easily distinguishable
 Females can be athletic, fit, thin, maximum attractiveness and sex appeal, very feminine
-'''
 
-#CHARACTERS = ''
+**Characters** (2–4 characters):
+- [Name]: [age], [female], [race/species if relevant], [2–3 sentence physical description including build, face, distinctive features, FULL clothing with material/color/condition, hair style/color/length, footwear, accessories]. [1 sentence personality/behavioral tendency].
+- [Name]: [same structure]
+- [Additional characters if applicable]
+'''
 
 SEED_GENERATOR = f'''
 🎲 AUTOMATIC SEED STORY GENERATOR (ISOLATION-SAFE)
@@ -165,17 +175,12 @@ If no focus is specified, select from this list:
 
 Selection method: Use (current hour % 10) + 1 to pick from the list. If timestamp unavailable, pick focus #1.
 
-{CHARACTERS}
-
 ⭐ SEED STRUCTURE (OUTPUT EXACTLY THIS FORMAT)
 
 **Genre**: [selected genre]
 **Test Focus**: [selected focus]
 
-**Characters** (2–4 characters):
-- [Name]: [age], [gender], [race/species if relevant], [2–3 sentence physical description including build, face, distinctive features, FULL clothing with material/color/condition, hair style/color/length, footwear, accessories]. [1 sentence personality/behavioral tendency].
-- [Name]: [same structure]
-- [Additional characters if applicable]
+{CHARACTERS}
 
 **Location**:
 [Name of location]. [2–3 sentences describing the space: size, key architectural features, lighting, textures, sounds, temperature/atmosphere, 3–5 specific objects/furniture present]. [What the location is typically used for].
