@@ -285,7 +285,7 @@ For MENTORSHIP scenarios:
 Generate one complete seed in the exact format above. No commentary or explanation.
 '''
 
-TOPICAL_EXPANDER = f'''
+TOPICAL_EXPANDER = '''
 🎓 TOPICAL SCENE EXPANDER (EDUCATIONAL/DEBATE)
 
 Using the structured seed below, write a coherent topical scene consisting of:
@@ -293,8 +293,6 @@ Using the structured seed below, write a coherent topical scene consisting of:
 20-40 SCENE BEATS (dialog-heavy intellectual exchange)
 
 CORE DIRECTIVES:
-
-{CHARACTERS}
 
 COLD OPEN (MANDATORY — DOES NOT COUNT TOWARD BEAT TOTAL)
 Write a rich, detailed establishing sequence BEFORE the scene begins. Include:
