@@ -50,12 +50,6 @@ TOPICAL_TOPICS = [
     'the future of work',
 ]
 
-CHARACTERS = '''
-⭐ CHARACTERS
-Beautiful 20s-30s females only with feminine names, scantily clad with distinct features, race/species, hair color, hair style and clothing to make them easily distinguishable
-Females can be athletic, fit, thin, maximum attractiveness and sex appeal, very feminine
-'''
-
 # ============================================================================
 # ACTION SCENE PROMPTS (original pipeline)
 # ============================================================================
@@ -83,8 +77,6 @@ Selection method: Use (current hour % 10) + 1 to pick from the list. If timestam
 
 **Genre**: [selected genre]
 **Test Focus**: [selected focus]
-
-{CHARACTERS}
 
 **Characters** (2–4 characters):
 - [Name]: [age], [gender], [race/species if relevant], [2–3 sentence physical description including build, face, distinctive features, FULL clothing with material/color/condition, hair style/color/length, footwear, accessories]. [1 sentence personality/behavioral tendency].
@@ -193,7 +185,7 @@ Write in standard literary prose. Begin with the cold open (static snapshot only
 # TOPICAL SCENE PROMPTS (new pipeline)
 # ============================================================================
 
-TOPICAL_SEED_GENERATOR = f'''
+TOPICAL_SEED_GENERATOR = '''
 🎓 TOPICAL SCENE SEED GENERATOR (EDUCATIONAL/DEBATE)
 ROLE — Generate structured seeds for educational or debate scenes
 
@@ -218,8 +210,6 @@ If user specifies topic, use it. Otherwise generate from these categories:
 - Professional Skills
 
 Selection: Use (current minute % 8) + 1 if not specified.
-
-{CHARACTERS}
 
 ⭐ CHARACTER ROLES
 
