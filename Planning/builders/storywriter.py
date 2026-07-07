@@ -134,6 +134,10 @@ Females can be athletic, fit, thin, maximum attractiveness and sex appeal, very 
 
 All characters must be female with criteria listed.
 
+If a story requires a male character, reimagine them as a female
+
+NEVER output a male character
+
 **Characters** (2–4 characters):
 - [Name]: [age], [female], [race/species if relevant], [2–3 sentence physical description including build, face, distinctive features, FULL clothing with material/color/condition, hair style/color/length, footwear, accessories]. [1 sentence personality/behavioral tendency].
 - [Name]: [same structure]
