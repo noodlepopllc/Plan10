@@ -132,6 +132,8 @@ CHARACTERS = '''
 Beautiful 20s-30s females only with feminine names, scantily clad with distinct features, race/species, hair color, hair style and clothing to make them easily distinguishable
 Females can be athletic, fit, thin, maximum attractiveness and sex appeal, very feminine
 
+All characters must be female with criteria listed.
+
 **Characters** (2–4 characters):
 - [Name]: [age], [female], [race/species if relevant], [2–3 sentence physical description including build, face, distinctive features, FULL clothing with material/color/condition, hair style/color/length, footwear, accessories]. [1 sentence personality/behavioral tendency].
 - [Name]: [same structure]
