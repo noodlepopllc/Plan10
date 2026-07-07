@@ -213,7 +213,7 @@ def CompositeScene(
         "4. Maintain consistent depth layering: foreground elements > characters > midground objects > background. "
     )
 
-    if shot_type == 'ots':
+    if shot_type == 'ots' and len(descriptions) > 1:
         task = (
             f"REF 1: {bg_desc}. Background source. "
             "ALLOW CROPPING: Background elements may be partially cropped or extend off-frame to maintain composition. DO NOT force-fit entire objects. "
