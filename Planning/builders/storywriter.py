@@ -120,14 +120,14 @@ OUTPUT FORMAT:
 Write in standard literary prose. Begin with the cold open (static snapshot only), insert the ******* COLD OPEN END **** marker, then write exactly 8-12 story beats. Dialog must appear every 2-3 beats.
 '''
 
-CHARACTERS = '''
+CHARACTERS_MIXED = '''
 **Characters** (2–4 characters):
 - [Name]: [age], [gender], [race/species if relevant], [2–3 sentence physical description including build, face, distinctive features, FULL clothing with material/color/condition, hair style/color/length, footwear, accessories]. [1 sentence personality/behavioral tendency].
 - [Name]: [same structure]
 - [Additional characters if applicable]
 '''
 
-CHARACTERS = '''
+CHARACTERS_FEMALE = '''
 ⭐ CHARACTERS
 Beautiful 20s-30s females only with feminine names, scantily clad with distinct features, race/species, hair color, hair style and clothing to make them easily distinguishable
 Females can be athletic, fit, thin, maximum attractiveness and sex appeal, very feminine
@@ -144,76 +144,79 @@ NEVER output a male character
 - [Additional characters if applicable]
 '''
 
-SEED_GENERATOR = f'''
-🎲 AUTOMATIC SEED STORY GENERATOR (ISOLATION-SAFE)
-ROLE — TEST SEED GENERATOR
-Generate a single, self-contained structured seed for testing a Text-to-Video (T2V) / Image-to-Video (I2V) storytelling pipeline.
-⭐ GENRE SELECTION
-If the user specifies a genre, use it.
-If no genre is specified, select from this list using the current timestamp:
+def seed_generator(gender):
+  CHARACTERS = CHARACTERS_MIXED if gender == 'mixed' else CHARACTERS_FEMALE
+  
+  return f'''
+  🎲 AUTOMATIC SEED STORY GENERATOR (ISOLATION-SAFE)
+  ROLE — TEST SEED GENERATOR
+  Generate a single, self-contained structured seed for testing a Text-to-Video (T2V) / Image-to-Video (I2V) storytelling pipeline.
+  ⭐ GENRE SELECTION
+  If the user specifies a genre, use it.
+  If no genre is specified, select from this list using the current timestamp:
 
-    Medieval Fantasy
-    Cyberpunk
-    Post-Apocalyptic
-    Victorian
-    Sci-Fi Space Station
-    1920s Noir
-    Modern Urban
-    Ancient Mythological
-    Steampunk
-    Western
+      Medieval Fantasy
+      Cyberpunk
+      Post-Apocalyptic
+      Victorian
+      Sci-Fi Space Station
+      1920s Noir
+      Modern Urban
+      Ancient Mythological
+      Steampunk
+      Western
 
-Selection method: Use (current minute % 10) + 1 to pick from the list. If timestamp unavailable, pick genre #1.
-⭐ TEST FOCUS SELECTION
-If the user specifies a focus, use it.
-If no focus is specified, select from this list:
+  Selection method: Use (current minute % 10) + 1 to pick from the list. If timestamp unavailable, pick genre #1.
+  ⭐ TEST FOCUS SELECTION
+  If the user specifies a focus, use it.
+  If no focus is specified, select from this list:
 
-    DIALOG-HEAVY: Lots of conversation, actions interspersed
-    ACTION-HEAVY: Minimal dialog, mostly physical movement
-    EMOTIONAL SUBTEXT: Body language reveals what dialog hides
-    MULTI-CHARACTER: 3+ characters with overlapping goals
-    PROP PASSING: Objects being handed, taken, dropped, fought over
-    SPACE EXPLORATION: Characters moving through multiple zones
-    POWER DYNAMIC: Clear status imbalance
-    INTIMACY ESCALATION: Moving from distance to closeness (or reverse)
-    MISUNDERSTANDING: Characters operating on different information
-    TIME PRESSURE: External deadline forcing decisions
+      DIALOG-HEAVY: Lots of conversation, actions interspersed
+      ACTION-HEAVY: Minimal dialog, mostly physical movement
+      EMOTIONAL SUBTEXT: Body language reveals what dialog hides
+      MULTI-CHARACTER: 3+ characters with overlapping goals
+      PROP PASSING: Objects being handed, taken, dropped, fought over
+      SPACE EXPLORATION: Characters moving through multiple zones
+      POWER DYNAMIC: Clear status imbalance
+      INTIMACY ESCALATION: Moving from distance to closeness (or reverse)
+      MISUNDERSTANDING: Characters operating on different information
+      TIME PRESSURE: External deadline forcing decisions
 
-Selection method: Use (current hour % 10) + 1 to pick from the list. If timestamp unavailable, pick focus #1.
+  Selection method: Use (current hour % 10) + 1 to pick from the list. If timestamp unavailable, pick focus #1.
 
-⭐ SEED STRUCTURE (OUTPUT EXACTLY THIS FORMAT)
+  ⭐ SEED STRUCTURE (OUTPUT EXACTLY THIS FORMAT)
 
-**Genre**: [selected genre]
-**Test Focus**: [selected focus]
+  **Genre**: [selected genre]
+  **Test Focus**: [selected focus]
 
-{CHARACTERS}
+  {CHARACTERS}
 
-**Location**:
-[Name of location]. [2–3 sentences describing the space: size, key architectural features, lighting, textures, sounds, temperature/atmosphere, 3–5 specific objects/furniture present]. [What the location is typically used for].
+  **Location**:
+  [Name of location]. [2–3 sentences describing the space: size, key architectural features, lighting, textures, sounds, temperature/atmosphere, 3–5 specific objects/furniture present]. [What the location is typically used for].
 
-**Story Spark**:
-[1–2 sentences describing the inciting incident. Must be concrete and physical.]
+  **Story Spark**:
+  [1–2 sentences describing the inciting incident. Must be concrete and physical.]
 
-**Character Goals**:
-- [Character A]: [Specific, achievable goal — must be actionable and observable]
-- [Character B]: [Specific, achievable goal — ideally in tension with Character A]
-- [Additional characters if applicable]
+  **Character Goals**:
+  - [Character A]: [Specific, achievable goal — must be actionable and observable]
+  - [Character B]: [Specific, achievable goal — ideally in tension with Character A]
+  - [Additional characters if applicable]
 
-**Initial Situation**:
-[2–3 sentences describing exactly where each character is positioned, what their body is doing (posture, hands, gaze), and the immediate physical context. Must be concrete and filmable.]
+  **Initial Situation**:
+  [2–3 sentences describing exactly where each character is positioned, what their body is doing (posture, hands, gaze), and the immediate physical context. Must be concrete and filmable.]
 
-⭐ QUALITY GUARDRAILS
+  ⭐ QUALITY GUARDRAILS
 
-    Every character MUST have complete physical description (build, face, clothing head-to-toe, hair)
-    Goals MUST conflict or create tension
-    Story spark MUST be a specific event, not a mood
-    Initial situation MUST specify exact positions and body states
-    Locations MUST include 3–5 specific physical objects
-    Names must be distinct and pronounceable
+      Every character MUST have complete physical description (build, face, clothing head-to-toe, hair)
+      Goals MUST conflict or create tension
+      Story spark MUST be a specific event, not a mood
+      Initial situation MUST specify exact positions and body states
+      Locations MUST include 3–5 specific physical objects
+      Names must be distinct and pronounceable
 
-⭐ BEGIN OUTPUT NOW
-Generate one complete seed in the exact format above. No commentary or explanation.
-'''
+  ⭐ BEGIN OUTPUT NOW
+  Generate one complete seed in the exact format above. No commentary or explanation.
+  '''
 
 def run_prompt(prompt, system, pth):
     if not Path(pth).exists():
@@ -241,6 +244,7 @@ if __name__ == '__main__':
     parser.add_argument('-O', '--output', type=str, default='story.txt')
     parser.add_argument('-T', '--topic', type=str, default=None)
     parser.add_argument('-G', '--genre', type=str, default=None)
+    parser.add_argument('-D', '--gender', type=str, default='mixed')
     args = parser.parse_args()
     story = Path(args.story).read_text() if args.story else SEED
     if args.topic:
@@ -253,6 +257,7 @@ if __name__ == '__main__':
       else:
         genre = random.choice(GENRES)
       inputs = f'Generate a test seed\nGenre: {genre}\n Focus: {topic}'
+      SEED_GENERATOR = seed_generator(args.gender)
       print(run_prompt(inputs, SEED_GENERATOR, args.output))
     else:
       print(run_prompt(story, ALTERNATIVE, args.output))
