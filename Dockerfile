@@ -11,6 +11,7 @@ ENV PYTHONUNBUFFERED=1 \
 # Install baseline Linux systems utilities needed for your repos.
 # We skip ffmpeg here because Conda will manage it natively!
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    ffmpeg \
     git \
     git-lfs \
     libgl1 \
