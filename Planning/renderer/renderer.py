@@ -403,7 +403,7 @@ def render_beats_dialog(assets, actions, mappings, T):
             all_names = build_identity_map(assets, beat)
             beat_chars = get_beat_characters(beat, all_names)
 
-            if os.environ.get('LTX','False') == 'ARC':
+            if "ARC" in os.environ.get('LTX','False'):
                 arc = beat.get('arc', '')
                 names = {c: all_names[c] for c in beat_chars}
                 final_arc = resolve_character_mentions(arc, names)

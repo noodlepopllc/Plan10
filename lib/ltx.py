@@ -19,7 +19,7 @@ import random
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
 ANIME = "_anime" if os.environ.get("ANIME","False") != "False" else ""
-DISTILLED = os.environ.get("LTX","False") == "DISTILLED"
+DISTILLED = "DISTILLED" in os.environ.get("LTX","False")
 
 enhance_path = f'./system/ltx_enhancer{ANIME}.txt'
 
