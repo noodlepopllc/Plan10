@@ -6,7 +6,7 @@ from pathlib import Path
 
 prompt_path = './Planning/prompts'
 WORLD = Path(f'{prompt_path}/scriptwriter/worldV2.txt').read_text()
-BIOGRAPHY = Path(f'{prompt_path}/scriptwriter/biography.txt').read_text()
+BIOGRAPHY = Path(f'{prompt_path}/scriptwriter/biographyV2.txt').read_text()
 NARRATOR = Path(f'{prompt_path}/scriptwriter/narrator.txt').read_text()
 ENHANCER = Path(f'{prompt_path}/scriptwriter/enhancer.txt').read_text()
 

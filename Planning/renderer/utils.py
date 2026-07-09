@@ -518,18 +518,19 @@ def chunk_long_sentence(sentence, syllable_threshold=22):
 def split_dialog_sentences(beats, biography, syllable_threshold=16):
     beats = postprocess_beats(beats, biography)
     new_beats = []
-    
     for ndx, beat in enumerate(beats):
         if 'backdrop' in beat:
             del beat['backdrop']
         line = beat.get("dialog", '')
         expression = beat.get('facial') or 'neutral'
         beat['facial'] = expression
+        speaker = beat["speaker"]
         if not beat['actor']:
             beat['actor'] = speaker
         if not beat['speaker']:
             beat['speaker'] = beat['actor']
-        speaker = beat['speaker']
+        if not speaker:
+            continue
         beat['beat'] = ndx
         beat['posture'] = {beat['actor']: f'{beat["posture"]}'}
         beat['actions'] = [beat['action']] if beat.get('action') else []
