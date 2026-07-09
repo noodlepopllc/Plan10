@@ -162,6 +162,13 @@ def validate_beat(beat, current_state):
     
     return validated
 
+def clean_embedded_quotes(dialog_value):
+    """Remove literal quote characters from dialog field."""
+    if not dialog_value:
+        return ""
+    # Remove all double quotes from the string
+    return dialog_value.replace('"', '').strip()
+
 def parse_jsonl(text, current_state):
     beats = []
     for line in text.strip().split('\n'):
@@ -171,6 +178,8 @@ def parse_jsonl(text, current_state):
         
         try:
             beat = json.loads(line)
+            if "dialog" in beat and beat["dialog"]:
+                beat["dialog"] = clean_embedded_quotes(beat["dialog"])
             validated_beat = validate_beat(beat, current_state)
             beats.append(validated_beat)
             continue
