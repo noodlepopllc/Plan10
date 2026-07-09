@@ -140,7 +140,7 @@ def validate_beat(beat, current_state):
         else:
             if field in current_state:
                 validated[field] = current_state[field]
-            elif field in ['action', 'dialog']:
+            elif field in ['action', 'dialog', 'actor','speaker']:
                 validated[field] = ""
             else:
                 validated[field] = "unknown"
