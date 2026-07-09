@@ -19,6 +19,7 @@ import random
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
 ANIME = "_anime" if os.environ.get("ANIME","False") != "False" else ""
+DISTILLED = os.environ.get("LTX","False") == "DISTILLED"
 
 enhance_path = f'./system/ltx_enhancer{ANIME}.txt'
 
@@ -44,11 +45,11 @@ def i2v(prompt='', media='', output='output.mp4',
         device="cuda",
         model_configs=[
             ModelConfig(model_id="google/gemma-3-12b-it-qat-q4_0-unquantized", origin_file_pattern="model-*.safetensors", **vram_config),
-            ModelConfig(model_id="Lightricks/LTX-2.3", origin_file_pattern="ltx-2.3-22b-dev.safetensors", **vram_config),
+            ModelConfig(model_id="Lightricks/LTX-2.3", origin_file_pattern="ltx-2.3-22b-distilled.safetensors" if DISTILLED else "ltx-2.3-22b-dev.safetensors", **vram_config),
             ModelConfig(model_id="Lightricks/LTX-2.3", origin_file_pattern="ltx-2.3-spatial-upscaler-x2-1.0.safetensors", **vram_config),
         ],
         tokenizer_config=ModelConfig(model_id="google/gemma-3-12b-it-qat-q4_0-unquantized"),
-        stage2_lora_config=ModelConfig(model_id="Lightricks/LTX-2.3", origin_file_pattern="ltx-2.3-22b-distilled-lora-384.safetensors"),
+        stage2_lora_config=None if DISTILLED else ModelConfig(model_id="Lightricks/LTX-2.3", origin_file_pattern="ltx-2.3-22b-distilled-lora-384.safetensors"),
         vram_limit=int(os.environ["VRAM"]),
     )
 
@@ -84,7 +85,8 @@ def i2v(prompt='', media='', output='output.mp4',
         width=width,
         num_frames=num_frames,
         tiled=True,
-        use_two_stage_pipeline=True,
+        use_two_stage_pipeline=not DISTILLED,
+        use_distilled_pipeline = DISTILLED,
         input_images=[image],
         input_images_indexes=[0],
         input_images_strength=1.0,
