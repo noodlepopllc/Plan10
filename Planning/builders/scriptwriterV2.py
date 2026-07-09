@@ -138,9 +138,15 @@ def validate_beat(beat, current_state):
         if field in beat and beat[field]:
             validated[field] = beat[field]
         else:
-            if field in current_state:
+            # For actor/speaker, fall back to last_actor before using empty string
+            if field in ['actor', 'speaker']:
+                if 'last_actor' in current_state and current_state['last_actor']:
+                    validated[field] = current_state['last_actor']
+                else:
+                    validated[field] = ""
+            elif field in current_state:
                 validated[field] = current_state[field]
-            elif field in ['actor', 'speaker', 'action', 'dialog']:
+            elif field in ['action', 'dialog']:
                 validated[field] = ""
             else:
                 validated[field] = "unknown"
