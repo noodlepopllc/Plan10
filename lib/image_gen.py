@@ -256,58 +256,61 @@ def GenerateImage(prompt='', output='tmp.png', width=WIDTH, height=HEIGHT, seed=
     status['prompt'] = prompt
     return status
 
-def add_metadata_char(imgpath, prompt='', seed=-1):
+def add_metadata_char(imgpath, prompt='', seed=-1, generation_prompt=None):
     target_image = Image.open(imgpath)
     metadata = PngInfo()
 
-    combined_prompt = (
-        '''
-        Analyze the subject and describe ONLY clearly visible traits. Return a single comma-separated string in this exact order: 
-        subject_type, age_stage, ethnicity_origin, skin_surface, face_shape, jawline, cheekbones, eyes, eyebrows, nose, lips, 
-        hair_fur_length_color_texture, hair_style, hairline, facial_hair_features, head_accessories, eyewear, clothing, footwear.
+    base_instructions = '''
+    Analyze the subject and describe ONLY clearly visible traits. Return a single comma-separated string in this exact order: 
+    subject_type, age_stage, ethnicity_origin, skin_surface, face_shape, jawline, cheekbones, eyes, eyebrows, nose, lips, 
+    hair_fur_length_color_texture, hair_style, hairline, facial_hair_features, head_accessories, eyewear, clothing, footwear,
+    distinctive_markers.
+    
+    Rules:
+    - Be accurate. Do NOT guess. If a trait isn't visible or doesn't apply, write 'neutral'.
+    - subject_type: human, anthropomorphic, android, masked, heavily_stylized, neutral
+    - age_stage: child, youth, young adult, adult, elderly, timeless, neutral
+    - ethnicity_origin: east asian, south asian, middle eastern, african, european, latinx, fantasy_race, machine_origin, neutral
+    - skin_surface: fair, light, medium, tan, deep, metallic, synthetic, fur, scales, painted, masked, neutral
+    - face_shape: oval, round, heart, square, long, muzzle, angular, geometric, neutral
+    - jawline: soft, defined, sharp, angular, mechanical, fur-lined, hidden, neutral
+    - cheekbones: low, medium, high, structural, hidden, neutral
+    - eyes: almond, round, narrow, wide-set, glowing, lens, visor, painted, hidden, neutral
+    - eyebrows: straight, arched, thick, thin, painted, mechanical, fur, hidden, neutral
+    - nose: small, medium, large, narrow, wide, snout, vent, painted, hidden, neutral
+    - lips: thin, medium, full, painted, sealed, mechanical, hidden, neutral
+    - hair_fur_length_color_texture: short/medium/long + color + straight/wavy/curly/coarse, OR fur: short/long + color + dense/patchy, OR synthetic: fiber/metallic + color, OR 'neutral'
+    - hair_style: ponytail, bun, braid, tied-back, loose, half-up, bob, pixie, crew cut, buzz cut, fade, undercut, slicked back, messy, short crop, comb over, mane, tufted, helmet-integrated, none, neutral
+    - hairline: straight, widow's peak, rounded, receding, fur-edge, seam-line, masked, neutral
+    - facial_hair_features: clean-shaven, stubble, mustache, beard, goatee, sideburns, fur_muzzle, mechanical_grille, painted, hidden, neutral
+    - head_accessories: ribbons, bandana, hats, helmet, mask_partial, mask_full, crown, none, neutral
+    - eyewear: glasses, sunglasses, visor, goggles, none, neutral
+    - clothing: describe visible items simply: yellow sundress, white tshirt, armored vest, etc.
+    - footwear: white tennis shoes, red heels, mechanical boots, paw-pads, none, neutral
+    - distinctive_markers: List 2-3 highly specific unique visual traits that make this character instantly recognizable (e.g., "prominent scar across left eyebrow", "silver circlet on forehead", "small beauty mark on right cheek"). If no distinctive markers visible, write 'neutral'.
+
+    Critical Rules:
+    1. If subject_type is masked/heavily_stylized: prioritize describing what is VISIBLE through/around the mask or makeup.
+    2. If subject_type is anthropomorphic: map human-equivalent terms (e.g., muzzle for nose, fur for hair, paw-pads for footwear).
+    3. If subject_type is android: use mechanical/synthetic descriptors where applicable; 'neutral' for biological terms that don't apply.
+    4. NEVER force human defaults: if hair isn't visible, write 'none' or 'neutral', NOT 'bob' or 'pixie'.
+    5. For heavy makeup: describe the painted/applied appearance, not the underlying biology.
+
+    Respond ONLY with the string.
+    '''
+
+    # Inject the generation prompt if provided
+    if generation_prompt:
+        base_instructions += f"""
         
-        Rules:
-        - Be accurate. Do NOT guess. If a trait isn't visible or doesn't apply, write 'neutral'.
-        - subject_type: human, anthropomorphic, android, masked, heavily_stylized, neutral
-        - age_stage: child, youth, young adult, adult, elderly, timeless, neutral
-        - ethnicity_origin: east asian, south asian, middle eastern, african, european, latinx, fantasy_race, machine_origin, neutral
-        - skin_surface: fair, light, medium, tan, deep, metallic, synthetic, fur, scales, painted, masked, neutral
-        - face_shape: oval, round, heart, square, long, muzzle, angular, geometric, neutral
-        - jawline: soft, defined, sharp, angular, mechanical, fur-lined, hidden, neutral
-        - cheekbones: low, medium, high, structural, hidden, neutral
-        - eyes: almond, round, narrow, wide-set, glowing, lens, visor, painted, hidden, neutral
-        - eyebrows: straight, arched, thick, thin, painted, mechanical, fur, hidden, neutral
-        - nose: small, medium, large, narrow, wide, snout, vent, painted, hidden, neutral
-        - lips: thin, medium, full, painted, sealed, mechanical, hidden, neutral
-        - hair_fur_length_color_texture: short/medium/long + color + straight/wavy/curly/coarse, OR fur: short/long + color + dense/patchy, OR synthetic: fiber/metallic + color, OR 'neutral'
-        - hair_style: ponytail, bun, braid, tied-back, loose, half-up, bob, pixie, crew cut, buzz cut, fade, undercut, slicked back, messy, short crop, comb over, mane, tufted, helmet-integrated, none, neutral
-        - hairline: straight, widow's peak, rounded, receding, fur-edge, seam-line, masked, neutral
-        - facial_hair_features: clean-shaven, stubble, mustache, beard, goatee, sideburns, fur_muzzle, mechanical_grille, painted, hidden, neutral
-        - head_accessories: ribbons, bandana, hats, helmet, mask_partial, mask_full, crown, none, neutral
-        - eyewear: glasses, sunglasses, visor, goggles, none, neutral
-        - clothing: describe visible items simply: yellow sundress, white tshirt, armored vest, etc.
-        - footwear: white tennis shoes, red heels, mechanical boots, paw-pads, none, neutral
+        ADDITIONAL CONTEXT: 
+        This character was generated using the following prompt. Use this prompt to identify the specific colors, materials, and distinctive features that were intentionally designed, even if they are subtle in the image:
+        "{generation_prompt}"
+        
+        Ensure your description heavily aligns with the specific traits mentioned in this generation prompt.
+        """
 
-        Critical Rules:
-        1. If subject_type is masked/heavily_stylized: prioritize describing what is VISIBLE through/around the mask or makeup.
-        2. If subject_type is anthropomorphic: map human-equivalent terms (e.g., muzzle for nose, fur for hair, paw-pads for footwear).
-        3. If subject_type is android: use mechanical/synthetic descriptors where applicable; 'neutral' for biological terms that don't apply.
-        4. NEVER force human defaults: if hair isn't visible, write 'none' or 'neutral', NOT 'bob' or 'pixie'.
-        5. For heavy makeup: describe the painted/applied appearance, not the underlying biology.
-
-        Examples:
-        Human female: "human, adult, european, light, oval, defined, high, almond, arched, medium, full, long brown wavy hair, low ponytail, straight, clean-shaven, black ribbons, none, navy uniform, black kitten heels"
-        Human male: "human, young adult, east asian, light, square, sharp, medium, narrow, thick straight, medium, thin, short black straight hair, short crop fade, straight, clean-shaven, none, none, gray button-up, black shoes"
-        Anthropomorphic wolf: "anthropomorphic, adult, fantasy_race, gray fur, muzzle, defined, structural, almond glowing, fur brows, snout, hidden, long gray dense fur, loose mane, fur-edge, fur_muzzle, none, none, leather harness, paw-pads"
-        Android: "android, timeless, machine_origin, metallic silver, geometric, angular, structural, lens eyes, mechanical, vent, sealed, none, none, seam-line, mechanical_grille, helmet-integrated, visor, armored plating, magnetic boots"
-        Masked hero: "masked, adult, neutral, masked, neutral, hidden, hidden, almond visible, neutral, hidden, painted, neutral, neutral, masked, hidden, mask_partial, none, none, tactical suit, combat boots"
-        Heavy makeup drag: "heavily_stylized, adult, neutral, painted fair, heart, sharp, high, wide painted, arched thick, small contoured, full painted, long blonde straight wig, high ponytail, straight, painted, crown, dramatic lashes, sequined gown, platform heels"
-
-        Respond ONLY with the string.
-        '''
-    )
-
-    analysis = AnalyzeImage(imgpath, combined_prompt)
+    analysis = AnalyzeImage(imgpath, base_instructions)
     raw = analysis['analysis'].strip().strip('"').strip("'")
     
     # Clean & filter without regex
@@ -315,9 +318,13 @@ def add_metadata_char(imgpath, prompt='', seed=-1):
     # Remove "none"/"no glasses" so diffusion doesn't accidentally render them
     cleaned = [p for p in parts if p.lower() not in ["none", "no glasses"]]
     clean_string = ", ".join(cleaned)
+    
     metadata.add_text("Description", clean_string)
     metadata.add_text("Prompt", prompt)
     metadata.add_text("Seed", str(seed))
+    if generation_prompt:
+        metadata.add_text("GenerationPrompt", generation_prompt)
+        
     target_image.save(imgpath, pnginfo=metadata)
     return clean_string
 
@@ -352,7 +359,7 @@ Keep each field to 1 concise sentence. No characters, no narrative.
 
 def CreateCharacterSheet(prompt='', output='character_tmp.png',seed=-1, imagegen=None):
     seed=int(seed)
-    prompt = (
+    eprompt = (
     "create a character sheet single image with two side by side views "
     "(3/4 front view, back view) with plain white background, studio lighting. "
     "Ensure the clothing and garment structure match exactly "
@@ -363,11 +370,11 @@ def CreateCharacterSheet(prompt='', output='character_tmp.png',seed=-1, imagegen
         width, height = (1328,1328)
     else:
         width, height = (1536,1536)
-    status = gen.generate(prompt, output, width, height, seed)
+    status = gen.generate(eprompt, output, width, height, seed)
     if not imagegen:
         del gen
     status['description'] = add_metadata_char(output, prompt, seed)
-    status['prompt'] = prompt
+    status['prompt'] = eprompt
     return status
 
 def CreateBackground(prompt='', output='location_tmp.png', seed=-1):
