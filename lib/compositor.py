@@ -101,24 +101,18 @@ def CompositeScene(
     height: int = HEIGHT,
 ):
     style = "anime" if os.environ.get('ANIME', 'False') != 'False' else "realistic"
-    # 1. Validate
+    
+    # 1. Validate background
     if not os.path.exists(background_path): 
         raise FileNotFoundError(f"Background not found: {background_path}")
 
     # 2. Extract metadata (source of truth)
     img = Image.open(background_path)
-
-    if shot_type in ['closeup','medium','ots']:
-        desc = img.info.get("Brief")
-    else:
-        desc = img.info.get("Description")
+    desc = img.info.get("Brief") if shot_type in ['closeup','medium','ots'] else img.info.get("Description")
 
     if desc is None:
-        if shot_type in ['closeup','medium','ots']:
-            desc = add_metadata_loc(background_path, '', seed, True)
-        else:
-            desc = add_metadata_loc(background_path, '', seed)
-
+        is_close = shot_type in ['closeup','medium','ots']
+        desc = add_metadata_loc(background_path, '', seed, is_close)
     bg_desc = desc
 
     # 🆕 STYLE-SPECIFIC CONFIGURATION
@@ -160,50 +154,21 @@ def CompositeScene(
             f"Preserve exact rendering style of REF 1 ({style} style). "
             "ALLOW CROPPING of background elements naturally."
         )
+        return _run_generation(task, [background_path], output, width, height, seed, "establishing", style, analysis_style, action)
 
-        print(f'\n📝 PROMPT (establishing shot):\n{task}\n')
-
-        status = EditImage(task, [background_path], output, width, height, seed)
-
-        img = Image.open(output)
-        meta = PngImagePlugin.PngInfo()
-        meta.add_text("Prompt", task)
-        meta.add_text("ShotType", "establishing")
-        meta.add_text("Style", style)
-        img.save(output, pnginfo=meta)
-
-        status.update({"action": action, "prompt": task})
-        if os.environ['BATCH'] == 'False':
-            analysis = AnalyzeImage(
-                output, 
-                f"Briefly describe this {analysis_style}, no more than 100 words"
-            )
-            status['description'] = analysis['analysis']
-        status['prompt'] = task
-        return status
-
-    for c in characters:
-        if not os.path.exists(c): 
-            print(f"Character not found: {c}")
-            raise FileNotFoundError(f"Character not found: {c}")
-    
-    # Build character descriptions
-    descriptions = []
-    for c in characters:
-        if not os.path.exists(c): 
-            raise FileNotFoundError(f"Character not found: {c}")
-    
-    # Build character descriptions with explicit identity markers
+    # Validate characters and build descriptions (CLEANED UP)
     descriptions = []
     for i, c in enumerate(characters):
-        desc = Image.open(c).info.get('Description')
-        if not desc:
-            desc = add_metadata_char(c, '', seed)
-        #descriptions.append(f"Character reference sheet showing one character from multiple angles. Render only ONE instance of this character in the scene. {desc}. {char_preserve}")
-        descriptions.append(f"{desc}. {char_preserve}")
+        if not os.path.exists(c): 
+            raise FileNotFoundError(f"Character not found: {c}")
+        
+        char_desc = Image.open(c).info.get('Description')
+        if not char_desc:
+            char_desc = add_metadata_char(c, '', seed)
+        descriptions.append(f"{char_desc}. {char_preserve}")
 
     if shot_type not in ("two_shot", "ots"):
-        descriptions = [descriptions.pop(0)] 
+        descriptions = [descriptions[0]] 
     
     spatial_rules = (
         "SPATIAL RULES: "
@@ -211,6 +176,13 @@ def CompositeScene(
         "2. Characters must be properly grounded on floor surfaces with visible foot/leg contact. "
         "3. If furniture (tables, desks, counters) is present, characters are either CLEARLY IN FRONT OF it (occluding it) or CLEARLY BEHIND it (partially occluded by it)—NEVER merged through. "
         "4. Maintain consistent depth layering: foreground elements > characters > midground objects > background. "
+    )
+
+    # ANTI-BLENDING DIRECTIVE (Critical for two-shots)
+    anti_blend = (
+        "ANTI-BLENDING RULE: Generate EXACTLY TWO separate, distinct human beings. "
+        "DO NOT blend, merge, average, or combine the faces, features, hair, or clothing of REF 2 and REF 3. "
+        "They are two individual people occupying different physical space, not a single hybrid character."
     )
 
     if shot_type == 'ots' and len(descriptions) > 1:
@@ -230,24 +202,23 @@ def CompositeScene(
         task = (            
             f"REF 1: {bg_desc}. "
             "COMPOSITION RULE: Characters are the focal point. Background elements may be cropped naturally. "
-            #+ spatial_rules +
-            
+            + spatial_rules +
+            + anti_blend + " "
             "TWO-SHOT COMPOSITION: "
-            f"REF 2: {descriptions[0]} "
-            "POSITION: LEFT SIDE OF FRAME ONLY. "
+            f"REF 2: (Left Person) {descriptions[0]} "
+            "POSITION: Confined strictly to the LEFT HALF of the frame. "
             
-            f"REF 3: {descriptions[1]} "
-            "POSITION: RIGHT SIDE OF FRAME ONLY. "
-            
+            f"REF 3: (Right Person) {descriptions[1]} "
+            "POSITION: Confined strictly to the RIGHT HALF of the frame. "
             
             f"Action: {action}. "
-            f"Framing: Tight waist-up framing of two DISTINCT characters. Camera distance: medium close. "
+            f"Framing: Medium close waist-up shot of two distinct people. "
             f"Lighting: {lighting_desc} Both characters are fully lit and sharp. "
             f"Match lighting, color temperature, and atmosphere of REF 1 exactly. "
-            f"Preserve EXACT rendering style from REF 2 and REF 3. "
+            f"Preserve EXACT rendering style from REF 2 for the left character, and REF 3 for the right character."
         )
     else:
-        # Single character shots (same as before)
+        # Single character shots
         chars_desc = f"Character 1: {descriptions[0]}. "
         framing = {
             "closeup": "EXTREME FACE CLOSE-UP. Face fills 80% of frame. Crop at chin. Camera distance: very close.",
@@ -269,29 +240,28 @@ def CompositeScene(
             f"Preserve EXACT rendering style, proportions, and details from REF 2. "
         )
 
+    # Determine reference images
+    ref_paths = [background_path] + characters
 
+    # Refactored execution block
+    return _run_generation(task, ref_paths, output, width, height, seed, shot_type, style, analysis_style, action)
+
+def _run_generation(task, ref_paths, output, width, height, seed, shot_type, style, analysis_style, action):
+    """Helper to handle generation, metadata, and analysis to reduce function size."""
     print(f"\n📝 PROMPT ({len(task.split())} words):\n{task}\n")
-
-    # 5. Generate
-    # 🆕 For two-shot, pass background + all character images as references
-    if shot_type in ["wide", "two_shot"]:
-        ref_paths = [background_path] + characters
-    else:
-        ref_paths = [background_path] + characters
     
     status = EditImage(task, ref_paths, output, width, height, seed)
-
-    # 6. Embed metadata for I2V handoff
+    
     img = Image.open(output)
     meta = PngImagePlugin.PngInfo()
     meta.add_text("Prompt", task)
     meta.add_text("Action", action)
     meta.add_text("ShotType", shot_type)
-    meta.add_text("Style", style)  # 🆕 Track style in metadata
+    meta.add_text("Style", style)
     img.save(output, pnginfo=meta)
 
     status.update({"action": action, "prompt": task})
-    if os.environ['BATCH'] == 'False':
+    if os.environ.get('BATCH', 'False') == 'False':
         analysis = AnalyzeImage(
             output, 
             f"Briefly describe this {analysis_style}, no more than 100 words"
