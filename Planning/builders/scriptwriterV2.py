@@ -10,7 +10,7 @@ BIOGRAPHY = Path(f'{prompt_path}/scriptwriter/biographyV2.txt').read_text()
 NARRATOR = Path(f'{prompt_path}/scriptwriter/narrator.txt').read_text()
 ENHANCER = Path(f'{prompt_path}/scriptwriter/enhancer.txt').read_text()
 
-REQUIRED_FIELDS = ['actor', 'speaker', 'action', 'dialog', 'location', 'zone', 'backdrop', 'posture', 'facial']
+REQUIRED_FIELDS = ['actor', 'speaker', 'action', 'dialog', 'location', 'zone', 'posture', 'facial']
 COLD_OPEN_MARKER = '******* COLD OPEN END ****'
 
 def run_prompt(prompt, system, pth):
@@ -173,19 +173,6 @@ def parse_jsonl(text, current_state):
     
     return beats
 
-def extract_initial_backdrop(biography_data):
-    try:
-        locations = biography_data.get('locations', [])
-        if locations:
-            zones = locations[0].get('zones', [])
-            if zones:
-                backdrops = zones[0].get('backdrops', [])
-                if backdrops:
-                    return backdrops[0].get('backdrop_name', 'Unknown')
-    except:
-        pass
-    return 'Unknown'
-
 def extract_initial_state(biography):
     try:
         bio_data = json.loads(biography)
@@ -194,7 +181,6 @@ def extract_initial_state(biography):
             
             location = "Unknown"
             zone = "Unknown"
-            backdrop = "Unknown"
             
             if 'locations' in bio_data and len(bio_data['locations']) > 0:
                 first_loc = bio_data['locations'][0]
@@ -203,14 +189,12 @@ def extract_initial_state(biography):
                 if 'zones' in first_loc and len(first_loc['zones']) > 0:
                     first_zone = first_loc['zones'][0]
                     zone = first_zone.get('zone_name', 'Unknown')
-                    backdrop = extract_initial_backdrop(bio_data)
             
             return {
                 "posture": "standing",
                 "facial": "neutral",
                 "location": location,
                 "zone": zone,
-                "backdrop": backdrop,
                 "last_actor": first_char
             }
     except Exception as e:
@@ -222,7 +206,6 @@ def extract_initial_state(biography):
         "facial": "neutral",
         "location": "Unknown",
         "zone": "Unknown",
-        "backdrop": "Unknown",
         "last_actor": ""
     }
 
@@ -276,7 +259,6 @@ Paragraph: {enhanced}"""
                     "facial": last_beat.get("facial", current_state["facial"]),
                     "location": last_beat.get("location", current_state["location"]),
                     "zone": last_beat.get("zone", current_state["zone"]),
-                    "backdrop": last_beat.get("backdrop", current_state["backdrop"]),
                     "last_actor": last_beat.get("actor", current_state["last_actor"])
                 }
         
