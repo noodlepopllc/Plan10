@@ -203,7 +203,7 @@ def CompositeScene(
             f"REF 1: {bg_desc}. "
             "COMPOSITION RULE: Characters are the focal point. Background elements may be cropped naturally. "
             + spatial_rules +
-            + anti_blend + " "
+            anti_blend + " "
             "TWO-SHOT COMPOSITION: "
             f"REF 2: (Left Person) {descriptions[0]} "
             "POSITION: Confined strictly to the LEFT HALF of the frame. "
