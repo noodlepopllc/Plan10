@@ -138,18 +138,27 @@ def validate_beat(beat, current_state):
         if field in beat and beat[field]:
             validated[field] = beat[field]
         else:
-            # For actor/speaker, fall back to last_actor before using empty string
-            if field in ['actor', 'speaker']:
-                if 'last_actor' in current_state and current_state['last_actor']:
-                    validated[field] = current_state['last_actor']
-                else:
-                    validated[field] = ""
-            elif field in current_state:
+            if field in current_state:
                 validated[field] = current_state[field]
             elif field in ['action', 'dialog']:
                 validated[field] = ""
             else:
                 validated[field] = "unknown"
+    
+    # Special handling for actor/speaker consistency
+    actor = validated.get('actor', '')
+    speaker = validated.get('speaker', '')
+    
+    # If one is present and other is empty, sync them
+    if actor and not speaker:
+        validated['speaker'] = actor
+    elif speaker and not actor:
+        validated['actor'] = speaker
+    # If both are empty, fall back to last_actor
+    elif not actor and not speaker:
+        if 'last_actor' in current_state and current_state['last_actor']:
+            validated['actor'] = current_state['last_actor']
+            validated['speaker'] = current_state['last_actor']
     
     return validated
 
