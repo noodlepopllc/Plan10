@@ -55,6 +55,13 @@ def i2v(prompt='', media='', output='output.mp4',
         vram_limit=int(os.environ["VRAM"]),
     )
 
+    # ACCELERATED ACTION: Compile specific sub-modules instead of nonexistent pipe.model
+    # "reduce-overhead" is used instead of max-autotune to prevent extreme launch-stalls on the ARM64 side
+    if hasattr(pipe, "dit"):
+        pipe.dit = torch.compile(pipe.dit, mode="reduce-overhead")
+    if hasattr(pipe, "text_encoder"):
+        pipe.text_encoder = torch.compile(pipe.text_encoder, mode="reduce-overhead")
+
     # Force explicit SFX and ban melody structure in the positive prompt
     sfx_modifiers = ", realistic sound effects only, crisp SFX, ambient background noise, completely devoid of music, no BGM, no instruments"
     final_prompt = f"{prompt}{sfx_modifiers}" if prompt else "ambient sound effects, SFX, absolute no music"
