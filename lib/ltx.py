@@ -25,6 +25,9 @@ enhance_path = f'./system/ltx_enhancer{ANIME}.txt'
 
 def i2v(prompt='', media='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
+    
+    torch.backends.cudnn.benchmark = True
+    torch.backends.cuda.matmul.allow_tf32 = True
 
     width, height = (720, 1280) if height > width else (1280, 720)
 
@@ -51,6 +54,7 @@ def i2v(prompt='', media='', output='output.mp4',
         stage2_lora_config=None if DISTILLED else ModelConfig(model_id="Lightricks/LTX-2.3", origin_file_pattern="ltx-2.3-22b-distilled-lora-384.safetensors"),
         vram_limit=int(os.environ["VRAM"]),
     )
+    pipe.model = torch.compile(pipe.model, mode="max-autotune")
 
     # Force explicit SFX and ban melody structure in the positive prompt
     sfx_modifiers = ", realistic sound effects only, crisp SFX, ambient background noise, completely devoid of music, no BGM, no instruments"

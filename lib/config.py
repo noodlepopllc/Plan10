@@ -37,6 +37,17 @@ def load_config():
             json.dump(cfg, c, indent=4)
     return cfg
 
+additional = '''# Force PyTorch to use pinned, un-pageable memory for lightning-fast memory staging
+export TORCH_CUDA_ALLOC_CONF="max_split_size_mb:512,roundup_power2_divisions:1"
+
+# Force Triton / FlashAttention to compile specifically for Blackwell (SM 12.1)
+export TRITON_REBUILD_CACHE=0
+export CUDA_CACHE_DISABLE=0
+
+# Allow asynchronous, non-blocking stream execution across the Grace CPU tasks
+export TORCH_SHOW_CPP_STACKTRACES=1
+'''
+
 def load_environ(replace_env=False):
     from pathlib import Path
     if "LOADED" not in os.environ:
@@ -54,6 +65,7 @@ def load_environ(replace_env=False):
         with Path('.env').open('a') as fp:
             for k, v in cfg.items():
                 fp.write(f'export {k}="{v}"\n')
+                fp.write(additional)
 
 if __name__ == '__main__':
     import argparse
