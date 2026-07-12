@@ -30,16 +30,15 @@ def i2v(prompt='', media='', output='output.mp4',
 
     # UPGRADED: Removed float8 quantization since 128GB unified memory is available
     vram_config = {
-        "offload_dtype": torch.float8_e5m2,
-        "offload_device": "cpu",
-        "onload_dtype": torch.float8_e5m2,
-        "onload_device": "cpu",
-        "preparing_dtype": torch.float8_e5m2,
+        "offload_dtype": torch.float8_e4m3fn,  # Better precision for inference weights
+        "offload_device": "cuda",             # Keep in UMA space to eliminate CPU-to-GPU bus stalls
+        "onload_dtype": torch.float8_e4m3fn,   # Match offload to avoid re-quantization overhead
+        "onload_device": "cuda",              # Keep on device
+        "preparing_dtype": torch.float8_e4m3fn,
         "preparing_device": "cuda",
-        "computation_dtype": torch.bfloat16,
+        "computation_dtype": torch.bfloat16,   # Native format for Blackwell accumulation
         "computation_device": "cuda",
     }
-
     pipe = LTX2AudioVideoPipeline.from_pretrained(
         torch_dtype=torch.bfloat16,
         device="cuda",
