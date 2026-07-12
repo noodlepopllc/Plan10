@@ -37,20 +37,14 @@ def load_config():
             json.dump(cfg, c, indent=4)
     return cfg
 
-additional = '''# Force PyTorch to use pinned, un-pageable memory for lightning-fast memory staging
-#export TORCH_CUDA_ALLOC_CONF="max_split_size_mb:512,roundup_power2_divisions:1"
-
-# Force Triton / FlashAttention to compile specifically for Blackwell (SM 12.1)
-export TRITON_REBUILD_CACHE=0
-export CUDA_CACHE_DISABLE=0
-
-# Allow asynchronous, non-blocking stream execution across the Grace CPU tasks
-export TORCH_SHOW_CPP_STACKTRACES=1
-
-# Prevents duplicate mapping in unified memory
-export SAFETENSORS_DISABLE_MMAP=1
-# Forces immediate release of unused memory caches
+additional = '''# 1. CRITICAL: Prevents PyTorch from hoarding memory and fragmentation crashes
 export TORCH_CUDA_ALLOC_CONF="max_split_size_mb:128,expandable_segments:True"
+
+# 2. CRITICAL: Forces Triton to reuse compiled Blackwell kernels instead of leaking memory on re-compilation
+export TRITON_REBUILD_CACHE=0
+
+# 3. OPTIONAL BUT RECOMMENDED: Keeps CUDA caches active for fast consecutive generations
+export CUDA_CACHE_DISABLE=0
 '''
 
 def load_environ(replace_env=False):
