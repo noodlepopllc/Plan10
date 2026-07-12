@@ -65,7 +65,7 @@ def load_environ(replace_env=False):
         with Path('.env').open('a') as fp:
             for k, v in cfg.items():
                 fp.write(f'export {k}="{v}"\n')
-                fp.write(additional)
+            fp.write(additional)
 
 if __name__ == '__main__':
     import argparse
