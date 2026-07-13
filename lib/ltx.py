@@ -26,14 +26,7 @@ enhance_path = f'./system/ltx_enhancer{ANIME}.txt'
 def i2v(prompt='', media='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
     
-    torch.backends.cudnn.benchmark = True
-    torch.backends.cuda.matmul.allow_tf32 = True
-
     width, height = (720, 1280) if height > width else (1280, 720)
-
-    # UPGRADED: Removed float8 quantization since 128GB unified memory is available
-    # ACCELERATED ZERO-COPY CONFIG FOR UNIFIED RAM
-    # Utilizes compressed float8 in UMA, keeping data in CUDA space to prevent duplication.
 
     vram_config = {
         "offload_dtype": torch.float8_e4m3fn,
