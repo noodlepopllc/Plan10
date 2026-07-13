@@ -39,12 +39,6 @@ def load_config():
 
 additional = '''# 1. CRITICAL: Prevents PyTorch from hoarding memory and fragmentation crashes
 export TORCH_CUDA_ALLOC_CONF="max_split_size_mb:128,expandable_segments:True"
-
-# 2. CRITICAL: Forces Triton to reuse compiled Blackwell kernels instead of leaking memory on re-compilation
-export TRITON_REBUILD_CACHE=0
-
-# 3. OPTIONAL BUT RECOMMENDED: Keeps CUDA caches active for fast consecutive generations
-export CUDA_CACHE_DISABLE=0
 '''
 
 def load_environ(replace_env=False):
