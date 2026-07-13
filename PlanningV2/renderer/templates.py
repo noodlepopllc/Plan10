@@ -39,7 +39,7 @@ class CommandBuffer:
                 print(c)
             for c in self.dialog:
                 print(c)
-        if mode in ("all", "dialog". "closeup"):
+        if mode in ("all", "dialog", "closeup"):
             for c in self.closeup_images:
                 print(c)
             for c in self.closeup:
