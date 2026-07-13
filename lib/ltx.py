@@ -35,11 +35,11 @@ def i2v(prompt='', media='', output='output.mp4',
     # ACCELERATED ZERO-COPY CONFIG FOR UNIFIED RAM
     # Utilizes compressed float8 in UMA, keeping data in CUDA space to prevent duplication.
     vram_config = {
-        "offload_dtype": torch.float8_e4m3fn,
-        "offload_device": "cuda",
+        "offload_dtype": "disk",
+        "offload_device": "disk",
         "onload_dtype": torch.float8_e4m3fn,
-        "onload_device": "cuda",
-        "preparing_dtype": torch.bfloat16,
+        "onload_device": "cpu",
+        "preparing_dtype": torch.float8_e4m3fn,
         "preparing_device": "cuda",
         "computation_dtype": torch.bfloat16,
         "computation_device": "cuda",
