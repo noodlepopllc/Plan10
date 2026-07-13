@@ -9,7 +9,7 @@ cp $1 $output/story.txt
 basepath="PlanningV2"
 
 if [[ ! -f "$output/complete.json" ]]; then
-    python $basepath/builders/scriptwriterV2.py $1 $output
+    python $basepath/builders/scriptwriter.py $1 $output
 fi
 
 python $basepath/renderer/renderer.py $2 $3 > $2/scene.txt
