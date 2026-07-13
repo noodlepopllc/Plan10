@@ -526,11 +526,11 @@ def split_dialog_sentences(beats, biography, syllable_threshold=16):
         beat['facial'] = expression
         beat["speaker"] = beat["speaker"].replace("unknown","")
         beat["actor"] = beat["actor"].replace("unknown","")
-        speaker = beat["speaker"]
+        speaker = beat["speaker"] if beat["speaker"] else beat["actor"]
         if not beat['actor']:
             beat['actor'] = speaker
         if not beat['speaker']:
-            beat['speaker'] = beat['actor']
+            beat['speaker'] = speaker
         if not speaker:
             continue
         beat['beat'] = ndx
