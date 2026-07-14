@@ -141,7 +141,6 @@ def feedback_loop(initial_media, story_context, output_dir="feedback_output", ma
         detailer.enhance(
             image=last_frame,
             output_path=str(enhanced_frame_path),
-            scale=0.4,
             seed=42 + beat
         )
 
