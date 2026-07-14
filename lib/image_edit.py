@@ -14,6 +14,72 @@ load_environ()
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
 
+from diffsynth.diffusion.template import TemplatePipeline
+
+class FrameDetailer:
+    def __init__(self, pipe=None, scale=0.4):
+        """
+        Initialize the detailer.
+        
+        Args:
+            pipe: Existing Flux2ImagePipeline (optional, will create if not provided)
+            scale: Sharpness scale (0.1=subtle, 0.8=strong). Default 0.4 for video restoration.
+        """
+        self.scale = scale
+        
+        if pipe is None:
+            print("Loading FLUX.2 Klein pipeline for detail enhancement...")
+            self.pipe = Flux2ImagePipeline.from_pretrained(
+                torch_dtype=torch.bfloat16,
+                device="cuda",
+                model_configs=[
+                    ModelConfig(model_id="black-forest-labs/FLUX.2-klein-base-4B", origin_file_pattern="transformer/*.safetensors"),
+                    ModelConfig(model_id="black-forest-labs/FLUX.2-klein-4B", origin_file_pattern="text_encoder/*.safetensors"),
+                    ModelConfig(model_id="black-forest-labs/FLUX.2-klein-4B", origin_file_pattern="vae/diffusion_pytorch_model.safetensors"),
+                ],
+                tokenizer_config=ModelConfig(model_id="black-forest-labs/FLUX.2-klein-4B", origin_file_pattern="tokenizer/"),
+            )
+        else:
+            self.pipe = pipe
+        
+        print("Loading sharpness template...")
+        self.template = TemplatePipeline.from_pretrained(
+            torch_dtype=torch.bfloat16,
+            device="cuda",
+            model_configs=[ModelConfig(model_id="DiffSynth-Studio/Template-KleinBase4B-Sharpness")],
+        )
+    
+    def enhance(self, image, prompt="Restore fine details and sharpness", output_path=None, seed=42):
+        """
+        Enhance an image by restoring detail and sharpness.
+        
+        Args:
+            image: PIL Image or path to image
+            prompt: Description for the enhancement (default is generic restoration)
+            output_path: Optional path to save enhanced image
+            seed: Random seed for reproducibility
+            
+        Returns:
+            Enhanced PIL Image
+        """
+        if isinstance(image, str):
+            image = Image.open(image)
+        
+        enhanced = self.template(
+            self.pipe,
+            prompt=prompt,
+            seed=seed,
+            cfg_scale=4,
+            num_inference_steps=50,
+            template_inputs=[{"scale": self.scale}],
+            negative_template_inputs=[{"scale": 0.5}],
+        )
+        
+        if output_path:
+            enhanced.save(output_path)
+        
+        return enhanced
+
 # ─────────────────────────────────────────────────────────────
 # EXPRESSION MAPPING
 # ─────────────────────────────────────────────────────────────
