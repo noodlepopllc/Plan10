@@ -169,10 +169,7 @@ def feedback_loop(initial_media, story_context, output_dir="feedback_output", ma
         )
         
         # Upscale for next iteration
-        detailer = FrameDetailer()
-        current_media = detailer.enhance(str(output_path))['output_path']
-        del detailer
-        cleanup()
+        current_media = str(output_path)
         
         history.append(next_action)
         print(f"✅ Beat {beat + 1} complete")
