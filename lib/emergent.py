@@ -9,6 +9,7 @@ from util import video_to_img
 from config import load_environ
 from image_edit import EditImage
 from image_gen import GenerateImage
+from image_analysis import AnalyzeImage
 from uniface.detection import RetinaFace
 from compositor import CompositeScene
 
@@ -47,6 +48,30 @@ class FeedbackLoop:
         self.seed = seed
         self.history = []
         self.current_media = None
+        
+        # Extract visual ID once from character reference
+        print("\n🔍 Extracting visual ID from character reference...")
+        self.visual_id = self.extract_visual_id(character_ref)
+        print(f"Visual ID: {self.visual_id}")
+    
+    def extract_visual_id(self, character_ref_path):
+        """Extract a short visual identifier from the character reference."""
+        prompt = """Describe this character in 5-10 words focusing ONLY on:
+- Hair color and style
+- Main clothing color/item (TOP HALF only - shirt, sweater, jacket)
+- Face/body type if distinctive
+
+DO NOT include shoes, pants, or accessories.
+
+Examples:
+- "blonde woman in blue dress"
+- "red-haired man in black suit"
+- "brunette woman in purple sweater"
+
+Output ONLY the description (5-10 words), nothing else."""
+        
+        result = AnalyzeImage(character_ref_path, prompt)
+        return result['analysis'].strip()
     
     def get_visual_description(self, media_path):
         """Analyze image/video with SmolVLM2."""
@@ -93,35 +118,76 @@ Be extremely specific about clothing."""
 STORY CONTEXT: {story_context}
 RECENT ACTIONS: {history_text}
 
-Describe what happens next (1-2 sentences). Build naturally on what you see."""
+CRITICAL DIRECTOR RULES:
+1. Character MUST remain clearly visible in the frame.
+2. OBJECT PERMANENCE: Props and objects stay where they are. If the character interacts with an object, they must move to it naturally. Objects do not teleport.
+3. Build naturally on what you see using "yes, and..." improv logic.
+
+Describe what happens next (1-2 sentences)."""
         
         result = llm_analyze_media(
             media="", prompt=prompt,
-            system="Scene director. Be concise.",
-            max_tokens=100, temperature=0.7
+            system="Scene director. Maintain spatial continuity and object permanence.",
+            max_tokens=150, temperature=0.7
         )['analysis']
         
         return result.strip()
     
-    def is_face_visible(self, media_path):
-        """Check if face is visible using RetinaFace."""
-        detector = RetinaFace()
-        
+    def _extract_frame_for_check(self, media_path):
+        """Extract a frame from media for analysis, returns (cv2_image, path_for_analyzeimage)."""
         media_path = Path(media_path)
         ext = media_path.suffix.lower()
         
         if ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm']:
             frame = video_to_img(str(media_path), self.width, self.height, True, True)
             img = cv2.cvtColor(np.array(frame), cv2.COLOR_RGB2BGR)
+            check_path = self.output_dir / f"check_{len(self.history):03d}.png"
+            frame.save(str(check_path))
+            check_path = str(check_path)
         else:
             img = cv2.imread(str(media_path))
+            check_path = str(media_path)
         
+        return img, check_path
+    
+    def is_character_adequately_visible(self, media_path):
+        """Two-tier visibility check:
+        - Tier 1: RetinaFace (fast) - is ANY face visible and facing camera?
+        - Tier 2: AnalyzeImage (slower) - is it the RIGHT character?
+        
+        Returns: (visible: bool, reason: str)
+        """
+        img, check_path = self._extract_frame_for_check(media_path)
+        
+        # TIER 1: RetinaFace - fast pose check
+        detector = RetinaFace()
         faces = detector.detect(img)
-        
         del detector
         cleanup()
         
-        return len(faces) > 0
+        if not faces:
+            print(f"  [DEBUG] RetinaFace: NO faces detected")
+            return False, "no_face"
+        
+        print(f"  [DEBUG] RetinaFace: {len(faces)} face(s) detected")
+        
+        # TIER 2: AnalyzeImage - identity check (only if face exists)
+        prompt = f"""Looking for: {self.visual_id}
+
+Is this specific person clearly visible in the image?
+Focus on: hair color/style, clothing color/style, face/body type.
+
+Answer YES if this person is clearly visible, NO if not."""
+        
+        result = AnalyzeImage(check_path, prompt)
+        response = result['analysis'].strip().upper()
+        
+        print(f"  [DEBUG] AnalyzeImage for '{self.visual_id}': {response}")
+        
+        if "YES" in response:
+            return True, "visible"
+        else:
+            return False, "wrong_character"
     
     def recreate_frame(self, media_path, description):
         """Recreate frame using two-step compositor flow: strip characters → composite back."""
@@ -146,7 +212,7 @@ Describe what happens next (1-2 sentences). Build naturally on what you see."""
         
         CompositeScene(
             background_path=str(last_frame_path),
-            characters=[],  # Empty = establishing shot, no humans
+            characters=[],
             shot_type="establishing",
             action="maintain exact environment, lighting, and props, but ensure no people are present",
             output=str(clean_bg_path),
@@ -182,9 +248,16 @@ Describe what happens next (1-2 sentences). Build naturally on what you see."""
         for beat in range(max_beats):
             print(f"\n{'='*60}\nBEAT {beat + 1}/{max_beats}\n{'='*60}")
             
-            # Check face visibility
-            if not self.is_face_visible(self.current_media):
-                print("⚠️ Face not visible - recreating frame...")
+            # Two-tier visibility check
+            print(f"\n👁️ Checking character visibility (looking for: {self.visual_id})...")
+            visible, reason = self.is_character_adequately_visible(self.current_media)
+            
+            if not visible:
+                if reason == "no_face":
+                    print("⚠️ No face visible (back to camera?) - recreating frame...")
+                else:
+                    print("⚠️ Wrong character detected - recreating frame...")
+                
                 description = self.get_visual_description(self.current_media)
                 self.current_media = self.recreate_frame(self.current_media, description)
             
