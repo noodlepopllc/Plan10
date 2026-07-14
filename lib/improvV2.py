@@ -1,9 +1,9 @@
 import torch
-import os, sys
+import os, sys, gc, random, json
 sys.path.append('./lib')
-import gc
-import random
-import json
+from config import load_environ
+load_environ()
+
 from pathlib import Path
 from PIL import Image
 from transformers import AutoProcessor, AutoModelForImageTextToText
@@ -11,9 +11,7 @@ from qwen_llm import llm_analyze_media
 from image_edit import EditImage
 from util import video_to_img
 from image_analysis import AnalyzeImage
-from config import load_environ
 
-load_environ()
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
 SEED = int(os.environ.get("SEED", "-1"))
@@ -32,13 +30,6 @@ if ANIME:
     from anime_gen import CreateBackground, CreateCharacterSheet
 else:
     from image_gen import CreateBackground, CreateCharacterSheet
-# ============================================================================
-# VISUAL ANALYSIS (SmolVLM2)
-# ============================================================================
-
-# ============================================================================
-# VISUAL ANALYSIS
-# ============================================================================
 
 def extract_visual_id_from_sheet(character_sheet_path):
     """Extract a visual ID by analyzing the actual character sheet image."""
