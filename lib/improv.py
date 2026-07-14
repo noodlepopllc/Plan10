@@ -141,11 +141,7 @@ def feedback_loop(initial_media, story_context, output_dir="feedback_output", ma
     output_dir = Path(output_dir)
     output_dir.mkdir(exist_ok=True)
     
-    # Initial upscale
-    detailer = FrameDetailer()
-    current_media = detailer.enhance(initial_media)['output_path']
-    del detailer
-    cleanup()
+    current_media = initial_media
     
     history = []
     
