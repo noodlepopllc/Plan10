@@ -116,63 +116,59 @@ def feedback_loop(initial_media, story_context, output_dir="feedback_output", ma
     current_media = initial_media
     history = []
     
-    try:
-        for beat in range(max_beats):
-            print(f"\n{'='*60}")
-            print(f"BEAT {beat + 1}/{max_beats}")
-            print(f"{'='*60}")
-            
-            # 1. Analyze current visual
-            print("📊 Analyzing current visual...")
-            description = get_visual_description(current_media)
-            print(f"Description: {description[:100]}...")
-            
-            # 2. Generate next action
-            print("\n🎭 Generating next action...")
-            next_action = generate_next_action(description, story_context, history)
-            print(f"Next action: {next_action}")
-            
-            # 3. Extract and enhance last frame
-            print("\n🔧 Enhancing frame detail...")
-            enhanced_frame_path = output_dir / f"enhanced_frame_{beat+1:03d}.png"
-            
-            # Extract last frame
-            last_frame = video_to_img(current_media, WIDTH, HEIGHT, True, True)
-            
-            # Enhance detail
-            detailer.enhance(
-                image=last_frame,
-                output=str(enhanced_frame_path),
-                scale=0.4,
-                seed=42 + beat
-            )
-            
-            # 4. Build I2V prompt
-            i2v_prompt = f"{description}. {next_action}"
-            print(f"\n🎬 I2V prompt: {i2v_prompt[:100]}...")
-            
-            # 5. Generate video using enhanced frame
-            output_path = output_dir / f"beat_{beat+1:03d}.mp4"
-            print(f"\n🎥 Generating video: {output_path}")
-            
-            result = GenerateVideo(
-                prompt=i2v_prompt,
-                media=str(enhanced_frame_path),
-                output=str(output_path),
-                duration_sec=10 if WGP else 5,
-                seed=42 + beat
-            )
-            
-            # 6. Update state
-            history.append(next_action)
-            current_media = str(output_path)
-            
-            print(f"\n✅ Beat {beat + 1} complete")
-            print(f"Output: {output_path}")
+    for beat in range(max_beats):
+        print(f"\n{'='*60}")
+        print(f"BEAT {beat + 1}/{max_beats}")
+        print(f"{'='*60}")
+        
+        # 1. Analyze current visual
+        print("📊 Analyzing current visual...")
+        description = get_visual_description(current_media)
+        print(f"Description: {description[:100]}...")
+        
+        # 2. Generate next action
+        print("\n🎭 Generating next action...")
+        next_action = generate_next_action(description, story_context, history)
+        print(f"Next action: {next_action}")
+        
+        # 3. Extract and enhance last frame
+        print("\n🔧 Enhancing frame detail...")
+        enhanced_frame_path = output_dir / f"enhanced_frame_{beat+1:03d}.png"
+        
+        # Extract last frame
+        last_frame = video_to_img(current_media, WIDTH, HEIGHT, True, True)
+        
+        # Enhance detail
+        detailer.enhance(
+            image=last_frame,
+            output=str(enhanced_frame_path),
+            scale=0.4,
+            seed=42 + beat
+        )
+        
+        # 4. Build I2V prompt
+        i2v_prompt = f"{description}. {next_action}"
+        print(f"\n🎬 I2V prompt: {i2v_prompt[:100]}...")
+        
+        # 5. Generate video using enhanced frame
+        output_path = output_dir / f"beat_{beat+1:03d}.mp4"
+        print(f"\n🎥 Generating video: {output_path}")
+        
+        result = GenerateVideo(
+            prompt=i2v_prompt,
+            media=str(enhanced_frame_path),
+            output=str(output_path),
+            duration_sec=10 if WGP else 5,
+            seed=42 + beat
+        )
+        
+        # 6. Update state
+        history.append(next_action)
+        current_media = str(output_path)
+        
+        print(f"\n✅ Beat {beat + 1} complete")
+        print(f"Output: {output_path}")
     
-    finally:
-        # Clean up detailer
-        detailer.__exit__(None, None, None)
     
     print(f"\n{'='*60}")
     print(f"FEEDBACK LOOP COMPLETE")
