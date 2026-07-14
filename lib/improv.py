@@ -20,6 +20,8 @@ SEED = int(os.environ.get("SEED", "-1"))
 
 if WGP:
     from wgp import GenerateVideo
+elif LTX:
+    from ltx import GenerateVideo
 else:
     from image_to_video import GenerateVideo
 
@@ -165,7 +167,7 @@ def feedback_loop(initial_media, story_context, output_dir="feedback_output", ma
         
         GenerateVideo(
             prompt=i2v_prompt, media=current_media, output=str(output_path),
-            duration_sec=10 if WGP else 5, seed=42 + beat
+            duration_sec=10 if WGP or LTX else 5, seed=SEED + beat
         )
         
         # Upscale for next iteration
