@@ -6,6 +6,7 @@ from qwen_llm import llm_analyze_media
 from util import video_to_img
 from config import load_environ
 from image_edit import FrameDetailer
+from uniface.detection import RetinaFace
 
 load_environ()
 
@@ -37,10 +38,20 @@ def get_visual_description(media_path):
     
     if ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm']:
         media_type = "video"
-        prompt_text = "Describe this video in detail, focusing on character actions, expressions, and environment."
+        prompt_text = """Describe this video in detail. You MUST include:
+- Character actions and expressions
+- EXACT clothing: top/shirt color and style, pants/bottom color and style, shoes, accessories
+- Hair color and style
+- Environment and props
+Be extremely specific about clothing colors and styles."""
     else:
         media_type = "image"
-        prompt_text = "Describe this image in detail, focusing on character actions, expressions, and environment."
+        prompt_text = """Describe this image in detail. You MUST include:
+- Character actions and expressions
+- EXACT clothing: top/shirt color and style, pants/bottom color and style, shoes, accessories
+- Hair color and style
+- Environment and props
+Be extremely specific about clothing colors and styles."""
     
     messages = [
         {
@@ -107,6 +118,61 @@ def upscale(media):
     del detailer
     return status['output_path']
 
+def is_character_visible(media_path, visual_id):
+    """Check if the character matching the visual ID is visible in the last frame.
+    Uses AnalyzeImage (static image analysis) - NOT SmolVLM2."""
+    
+    media_path = Path(media_path)
+    ext = media_path.suffix.lower()
+    
+    # Extract last frame if it's a video
+    if ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm']:
+        last_frame_path = media_path.with_name(media_path.stem + '_lastframe.png')
+        video_to_img(str(media_path), 1280, 720, True, True).save(str(last_frame_path))
+        check_path = str(last_frame_path)
+    else:
+        check_path = str(media_path)
+    
+    # Use AnalyzeImage for single-frame character detection
+    prompt = f"Looking for: {visual_id}\n\nIs this person visible in the image? Answer YES or NO."
+    result = AnalyzeImage(check_path, prompt)
+    response = result['analysis'].strip().upper()
+    
+    print(f"  [DEBUG] Looking for: '{visual_id}'")
+    print(f"  [DEBUG] AnalyzeImage response: '{response}'")
+    
+    return "YES" in response
+
+def is_face_visible(media_path, visual_id):
+    """Check if character's face is visible (not back to camera)."""
+    
+    media_path = Path(media_path)
+    ext = media_path.suffix.lower()
+    
+    if ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm']:
+        last_frame_path = media_path.with_name(media_path.stem + '_lastframe.png')
+        video_to_img(str(media_path), 1280, 720, True, True).save(str(last_frame_path))
+        check_path = str(last_frame_path)
+    else:
+        check_path = str(media_path)
+    
+    # First check if character is in frame
+    char_visible = is_character_visible(check_path, visual_id)
+    
+    if not char_visible:
+        return False, "not_in_frame"
+    
+    # Now check if face is visible using RetinaFace
+    img = cv2.imread(check_path)
+    detector = RetinaFace()
+    faces = detector.detect(img)
+    
+    if not faces:
+        # Character is in frame but no faces detected = back to camera
+        return False, "back_to_camera"
+    
+    return True, "face_visible"
+
 
 def feedback_loop(initial_media, story_context, output_dir="feedback_output", max_beats=8):
     """Run the feedback loop: analyze → generate next action → render → repeat."""
@@ -125,22 +191,32 @@ def feedback_loop(initial_media, story_context, output_dir="feedback_output", ma
         print(f"BEAT {beat + 1}/{max_beats}")
         print(f"{'='*60}")
         
-        # 1. Analyze current visual
+        # 1. Check face visibility
+        print("👁️ Checking face visibility...")
+        face_visible = is_face_visible(current_media)
+        
+        if not face_visible:
+            print("⚠️ Face not visible - recreating frame...")
+            description = get_visual_description(current_media)
+            recreated_path = output_dir / f"beat_{beat+1:03d}_recreated.png"
+            current_media = recreate_frame_facing_camera(current_media, description, recreated_path)
+            current_media = upscale(current_media)
+        
+        # 2. Analyze current visual
         print("📊 Analyzing current visual...")
         description = get_visual_description(current_media)
         print(f"Description: {description[:100]}...")
         
-        # 2. Generate next action
+        # 3. Generate next action
         print("\n🎭 Generating next action...")
         next_action = generate_next_action(description, story_context, history)
         print(f"Next action: {next_action}")
-    
         
         # 4. Build I2V prompt
         i2v_prompt = f"{description}. {next_action}"
         print(f"\n🎬 I2V prompt: {i2v_prompt[:100]}...")
         
-        # 5. Generate video using enhanced frame
+        # 5. Generate video
         output_path = output_dir / f"beat_{beat+1:03d}.mp4"
         print(f"\n🎥 Generating video: {output_path}")
         
@@ -157,7 +233,6 @@ def feedback_loop(initial_media, story_context, output_dir="feedback_output", ma
         current_media = upscale(str(output_path))
         
         print(f"\n✅ Beat {beat + 1} complete")
-        print(f"Output: {output_path}")
     
     
     print(f"\n{'='*60}")
