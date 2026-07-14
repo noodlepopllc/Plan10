@@ -8,7 +8,6 @@ from qwen_llm import llm_analyze_media
 from util import video_to_img
 from config import load_environ
 from image_edit import EditImage
-from image_gen import GenerateImage
 from image_analysis import AnalyzeImage
 from uniface.detection import RetinaFace
 from compositor import CompositeScene
@@ -17,9 +16,15 @@ load_environ()
 
 WGP = os.environ.get("WGP","False") != "False"
 LTX = os.environ.get("LTX","False") != "False"
+ANIME = os.environ.get("ANIME", "False") != "False"
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
 SEED = int(os.environ.get("SEED", "-1"))
+
+if ANIME:
+    from anime_gen import GenerateImage
+else:
+    from image_gen import GenerateImage
 
 if WGP:
     from wgp import GenerateVideo
