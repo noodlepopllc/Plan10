@@ -18,16 +18,13 @@ from diffsynth.diffusion.template import TemplatePipeline
 from image_analysis import AnalyzeImage
 
 class FrameDetailer:
-    def __init__(self, pipe=None, scale_factor=2):
+    def __init__(self, pipe=None):
         """
         Initialize the frame detailer/upscaler.
         
         Args:
             pipe: Existing Flux2ImagePipeline (optional, will create if not provided)
-            scale_factor: Upscale factor (default 2x)
         """
-        self.scale_factor = scale_factor
-        
         if pipe is None:
             print("Loading FLUX.2 Klein pipeline for frame enhancement...")
             self.pipe = Flux2ImagePipeline.from_pretrained(
@@ -50,7 +47,7 @@ class FrameDetailer:
             model_configs=[ModelConfig(model_id="DiffSynth-Studio/Template-KleinBase4B-Upscaler")],
         )
     
-    def enhance(self, image, description=None, output_path=None, seed=42):
+    def enhance(self, image, description=None, output_path=None, seed=42, width=None, height=None):
         """
         Enhance/upscale an image by restoring details.
         
@@ -59,12 +56,20 @@ class FrameDetailer:
             description: Optional description to guide enhancement
             output_path: Optional path to save enhanced image
             seed: Random seed for reproducibility
+            width: Output width (optional, will use input width if not specified)
+            height: Output height (optional, will use input height if not specified)
             
         Returns:
             Enhanced PIL Image
         """
         if isinstance(image, str):
             image = Image.open(image)
+        
+        # Default to input dimensions if not specified
+        if width is None:
+            width = image.width
+        if height is None:
+            height = image.height
         
         # Generate a brief description if not provided
         if not description:
@@ -77,6 +82,8 @@ class FrameDetailer:
             seed=seed,
             cfg_scale=4,
             num_inference_steps=50,
+            width=width,
+            height=height,
             template_inputs=[{
                 "image": image,
                 "prompt": description,
