@@ -26,10 +26,14 @@ class FrameDetailer:
             pipe: Existing Flux2ImagePipeline (optional, will create if not provided)
         """
         vram_config = {
-            "offload_dtype": "disk", "offload_device": "disk",
-            "onload_dtype": torch.float8_e4m3fn, "onload_device": "cpu",
-            "preparing_dtype": torch.float8_e4m3fn, "preparing_device": "cuda",
-            "computation_dtype": torch.bfloat16, "computation_device": "cuda",
+            "offload_dtype": "disk",
+            "offload_device": "disk",
+            "onload_dtype": torch.float8_e4m3fn,
+            "onload_device": "cpu",
+            "preparing_dtype": torch.float8_e4m3fn,
+            "preparing_device": "cuda",
+            "computation_dtype": torch.bfloat16,
+            "computation_device": "cuda",
         }
         if pipe is None:
             print("Loading FLUX.2 Klein pipeline for frame enhancement...")
@@ -69,17 +73,17 @@ class FrameDetailer:
             Enhanced PIL Image
         """
         if isinstance(image, str):
-            image = Image.open(image)
+            media = Image.open(image)
         
         # Default to input dimensions if not specified
         if width is None:
-            width = image.width
+            width = media.width
         if height is None:
-            height = image.height
+            height = media.height
         
         # Generate a brief description if not provided
         if not description:
-            description = "High quality detailed image"
+            description = AnalyzeImage(output_path, "Briefly describe this image, no more than 100 words")['analysis']
         
         # Use the upscaler template with the input image
         enhanced = self.template(
@@ -91,11 +95,11 @@ class FrameDetailer:
             width=width,
             height=height,
             template_inputs=[{
-                "image": image,
+                "image": media,
                 "prompt": description,
             }],
             negative_template_inputs=[{
-                "image": image,
+                "image": media,
                 "prompt": "",
             }],
         )

@@ -101,6 +101,12 @@ Output ONLY the next action description (1-2 sentences), nothing else.
     
     return result.strip()
 
+def upscale(media):
+    detailer = FrameDetailer()
+    status = detailer.enhance(media, width=1280, height=720)
+    del detailer
+    return status['output_path']
+
 
 def feedback_loop(initial_media, story_context, output_dir="feedback_output", max_beats=8):
     """Run the feedback loop: analyze → generate next action → render → repeat."""
@@ -111,7 +117,7 @@ def feedback_loop(initial_media, story_context, output_dir="feedback_output", ma
     # Initialize frame detailer
     print("🔧 Initializing frame detailer...")
     
-    current_media = initial_media
+    current_media = upscale(initial_media)
     history = []
     
     for beat in range(max_beats):
@@ -148,7 +154,7 @@ def feedback_loop(initial_media, story_context, output_dir="feedback_output", ma
         
         # 6. Update state
         history.append(next_action)
-        current_media = str(output_path)
+        current_media = upscale(str(output_path))
         
         print(f"\n✅ Beat {beat + 1} complete")
         print(f"Output: {output_path}")
