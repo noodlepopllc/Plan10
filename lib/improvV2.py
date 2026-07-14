@@ -343,7 +343,7 @@ def emergent_feedback_loop(
             prompt=next_action,
             media=video_input,
             output=str(video_output),
-            duration_sec=10,
+            duration_sec=10 if WGP or LTX else 5,
             width=width,
             height=height,
             seed=SEED + beat
