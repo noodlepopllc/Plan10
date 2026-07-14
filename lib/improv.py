@@ -14,6 +14,7 @@ from uniface.detection import RetinaFace
 load_environ()
 
 WGP = os.environ.get("WGP","False") != "False"
+LTX = os.environ.get("LTX","False") != "False"
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
 SEED = int(os.environ.get("SEED", "-1"))
