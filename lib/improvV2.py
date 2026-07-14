@@ -11,6 +11,7 @@ from qwen_llm import llm_analyze_media
 from image_edit import EditImage
 from util import video_to_img
 from image_analysis import AnalyzeImage
+from compositor import CompositeScene
 
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
@@ -271,10 +272,21 @@ def emergent_feedback_loop(
     
     initial_action_prompt = f"{visual_id} at {initial_location}. Match the lighting and perspective of the environment perfectly. Maintain exact character appearance from reference."
     
+    def CompositeScene(
+    background_path: str,
+    characters: list[str],
+    shot_type: str = "medium",
+    action: str = "hair swaying gently",
+    output: str = "composite.png",
+    seed: int = -1,
+    width: int = WIDTH,
+    height: int = HEIGHT,
+):
     
-    EditImage(
-        prompt=initial_action_prompt,
-        images=[initial_media, character_ref],
+    CompositeScene(
+        action=initial_action_prompt,
+        background_path=initial_media
+        characters=[character_ref],
         output=str(initial_composite),
         width=width,
         height=height,
