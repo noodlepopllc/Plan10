@@ -100,8 +100,6 @@ def CompositeScene(
     width: int = WIDTH,
     height: int = HEIGHT,
 ):
-    if shot_type not in ("two_shot", "ots"):
-        characters = [characters[0]]
     
     style = "anime" if os.environ.get('ANIME', 'False') != 'False' else "realistic"
     
@@ -158,6 +156,9 @@ def CompositeScene(
             "ALLOW CROPPING of background elements naturally."
         )
         return _run_generation(task, [background_path], output, width, height, seed, "establishing", style, analysis_style, action)
+
+    if shot_type not in ("two_shot", "ots"):
+        characters = [characters[0]]
 
     # Validate characters and build descriptions (CLEANED UP)
     descriptions = []
