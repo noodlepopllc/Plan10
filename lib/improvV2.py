@@ -163,7 +163,8 @@ RECENT ACTIONS:
 CRITICAL DIRECTOR RULES:
 1. The character MUST remain clearly visible in the frame at all times.
 2. The character MUST NOT leave the current location ({current_location}).
-3. ACTION REQUIREMENT: Look at the CURRENT SCENE description. If there are props or objects mentioned (like an ironing board, clothes, a mug, etc.), the character MUST interact with them naturally in this next action. Do not just sit or lay there; give them a purposeful, ambient action involving the environment.
+3. OBJECT PERMANENCE: Props and objects stay exactly where they are in the room. If the character interacts with an object, they must first move to it naturally (walk over, reach for it, etc.). Objects do not teleport or appear in their hands magically.
+4. NATURAL ACTIONS: The character can interact with visible props if it makes sense, but they don't have to. Simple actions like standing, looking around, adjusting clothing, or moving within the room are perfectly fine.
 
 TASK:
 Using "yes, and..." improv logic, describe the next 10-second action. 
@@ -173,7 +174,7 @@ Output ONLY the next action description (2-3 sentences), nothing else.
     result = llm_analyze_media(
         media="",
         prompt=prompt,
-        system="You are a scene director. Enforce strict spatial constraints and FORCE interaction with visible props.",
+        system="You are a scene director. Maintain spatial continuity and object permanence.",
         max_tokens=150,
         temperature=0.7
     )['analysis']
