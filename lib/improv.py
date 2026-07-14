@@ -142,6 +142,8 @@ def feedback_loop(initial_media, story_context, output_dir="feedback_output", ma
             image=last_frame,
             output_path=str(enhanced_frame_path),
             seed=42 + beat
+            width=WIDTH,
+            height=HEIGHT
         )
 
         del detailer
