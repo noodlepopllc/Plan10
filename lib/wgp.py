@@ -78,10 +78,11 @@ async def i2v(prompt='', media='', output='output.mp4',
         while not r.data['done']:
             sleep(5)
             this = '' 
-            for event in r.data['events']:
-                if 'text' in event['data']:
-                    if '%|' in event['data']['text']:
-                        this = event['data']['text']
+            if r.data.get('events',[]):
+                for event in r.data['events']:
+                    if event and 'text' in event.get('data',''):
+                        if '%|' in event['data']['text']:
+                            this = event['data']['text']
             if this != last:
                 last = this
                 print(this)
@@ -129,17 +130,17 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         print(f"   Resolution: {width}x{height}")
 
         current_source = video_to_img(start_image, width, height, True, True)
-        current_source.save('tmp.png')
+        current_source.save(f'{os.getcwd()}/tmp.png')
 
         if not prompt:
             prompt = "The characters stand and act naturally. "
 
-        eprompt = EnhancePrompt(start_image, prompt, enhance_path)
+        eprompt = EnhancePrompt('tmp.png', prompt, enhance_path)
 
         print("CURRENT PROMPT: ",eprompt)
 
         try:
-            asyncio.run(i2v(eprompt, start_image, Path(output).name, 
+            asyncio.run(i2v(eprompt, f'{os.getcwd()}/tmp.png', Path(output).name, 
                     duration_sec, width, height, seed))
             description = ''
                 
