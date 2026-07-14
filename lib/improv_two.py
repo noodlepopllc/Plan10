@@ -315,43 +315,63 @@ def emergent_feedback_loop_two_characters(
         else:  # 'AB'
             characters_to_composite = [character_ref_a, character_ref_b]
         
-        # 4. Composite characters
-        print(f"\n🎨 Compositing {char_selection} into scene...")
-
-        # Check if we need to reintroduce characters
-        need_reintroduction = (char_selection == 'A' and not char_a_visible) or \
-                            (char_selection == 'B' and not char_b_visible) or \
-                            (char_selection == 'AB' and (not char_a_visible or not char_b_visible))
-
-        if need_reintroduction:
-            print("⚠️ Character(s) missing - using last frame as background for reintroduction...")
-            # Use the last frame of current video as the new background
-            # This preserves all accumulated scene state
+        # 4. Determine if we need to composite or can use last frame directly
+        print(f"\n🎨 Checking if compositing is needed...")
+        
+        # Check if current visibility matches what LLM wants
+        current_visible_chars = []
+        if char_a_visible:
+            current_visible_chars.append('A')
+        if char_b_visible:
+            current_visible_chars.append('B')
+        
+        # Determine if we need to composite
+        needs_compositing = False
+        
+        if char_selection == 'AB':
+            # Need both characters - composite if either is missing
+            if not char_a_visible or not char_b_visible:
+                needs_compositing = True
+                print("⚠️ Need to composite: Missing character(s) in current frame")
+        elif char_selection == 'A':
+            # Need only A - composite if A is missing OR B is present (need to remove B)
+            if not char_a_visible or char_b_visible:
+                needs_compositing = True
+                print("⚠️ Need to composite: Character state doesn't match selection")
+        elif char_selection == 'B':
+            # Need only B - composite if B is missing OR A is present (need to remove A)
+            if not char_b_visible or char_a_visible:
+                needs_compositing = True
+                print("⚠️ Need to composite: Character state doesn't match selection")
+        
+        if needs_compositing:
+            # Extract last frame as base for compositing
             base_image_for_edit = output_dir / f"frame_beat_{beat+1:03d}.png"
             video_to_img(current_media, width, height, True, True).save(str(base_image_for_edit))
             base_image_for_edit = str(base_image_for_edit)
+            
+            edit_output = output_dir / f"edit_beat_{beat+1:03d}.png"
+            
+            # Determine shot type based on character selection
+            shot_type = "two_shot" if char_selection == 'AB' else "medium"
+            
+            CompositeScene(
+                background_path=base_image_for_edit,
+                characters=characters_to_composite,
+                shot_type=shot_type,
+                action=next_action,
+                output=str(edit_output),
+                width=width,
+                height=height,
+                seed=SEED + beat
+            )
+            video_input = str(edit_output)
         else:
-            print("✓ Using last frame as base...")
+            # Characters are already in the correct state - use last frame directly
+            print("✓ Characters already in correct state - using last frame directly")
             base_image_for_edit = output_dir / f"frame_beat_{beat+1:03d}.png"
             video_to_img(current_media, width, height, True, True).save(str(base_image_for_edit))
-            base_image_for_edit = str(base_image_for_edit)
-
-        edit_output = output_dir / f"edit_beat_{beat+1:03d}.png"
-
-        # Determine shot type based on character selection
-        shot_type = "two_shot" if char_selection == 'AB' else "medium"
-
-        CompositeScene(
-            background_path=base_image_for_edit,
-            characters=characters_to_composite,
-            shot_type=shot_type,
-            action=next_action,
-            output=str(edit_output),
-            width=width,
-            height=height,
-            seed=SEED + beat
-        )
-        video_input = str(edit_output)
+            video_input = str(base_image_for_edit)
         
         # 5. Generate video
         print("\n🎬 Animating 10-second sequence...")
