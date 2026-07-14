@@ -23,34 +23,35 @@ DISTILLED = "DISTILLED" in os.environ.get("LTX","False")
 
 enhance_path = f'./system/ltx_enhancer{ANIME}.txt'
 
-from diffusers import LTXVideoPipeline
+from diffusers import LTX2Pipeline  # Corrected Class Name
 from diffusers.utils import export_to_video
 
 def i2v_diffusers(prompt='', media='', output='output.mp4', 
         duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
     
-    # 1. Hardware-level acceleration for Blackwell execution cores
+    # 1. Hardware acceleration optimizations for Blackwell cores
     torch.backends.cudnn.benchmark = True
     torch.backends.cuda.matmul.allow_tf32 = True
 
     width, height = (720, 1280) if height > width else (1280, 720)
 
-    # 2. Dynamic check for selecting the Distilled vs Dev checkpoint repo
-    model_id = "Lightricks/LTX-2.3-Distilled" if DISTILLED else "Lightricks/LTX-2.3"
+    # 2. Point to the specific repository tracking the Diffusers-native structure
+    # (Avoids the missing model_index.json crash of the raw Lightricks file repository)
+    model_id = "diffusers/LTX-2.3-Diffusers"
 
-    # 3. Load entire pipeline into the Spark's Unified Memory architecture
-    # No offload configurations are used to avoid page-fault table thrashing.
-    pipe = LTXVideoPipeline.from_pretrained(
+    # 3. Load entire pipeline into Spark's Unified LPDDR5x pool
+    # Uses device_map="cuda" to dynamically cache page tables without hard offloading constraints.
+    pipe = LTX2Pipeline.from_pretrained(
         model_id,
         torch_dtype=torch.bfloat16,
         device_map="cuda"
     )
 
-    # 4. Freeze execution loops directly inside the CUDA Graph
-    # The first run will compile for ~60s, then unlock raw hardware speeds.
+    # 4. Freeze step execution loops inside the CUDA graph
+    # Eliminates slow ARM64 python interpreter micro-sync overhead per step
     pipe.transformer = torch.compile(pipe.transformer, mode="reduce-overhead")
 
-    # 5. Handle prompt filters
+    # 5. Core prompts and modifiers
     sfx_modifiers = ", realistic sound effects only, crisp SFX, ambient background noise, completely devoid of music, no BGM, no instruments"
     final_prompt = f"{prompt}{sfx_modifiers}" if prompt else "ambient sound effects, SFX, absolute no music"
 
@@ -69,18 +70,19 @@ def i2v_diffusers(prompt='', media='', output='output.mp4',
         "cinematic oversaturation, stylized filters, or AI artifacts."
     )
     
-    # Calculate step constraints and frames
+    # Set step constraints based on distilled selection state
     num_frames = (duration_sec * 24) + 1
     steps = 8 if DISTILLED else 30
-    cfg_scale = 1.0 if DISTILLED else 3.5  # Distilled must remain at 1.0 CFG
+    cfg_scale = 1.0 if DISTILLED else 3.5  # Distilled must remain locked at 1.0 CFG
 
-    # Prep the source image
+    # Prep the reference image container
     image = Image.open(media).convert("RGB").resize((width, height))
     
-    # Generate seed tracking
+    # Handle deterministic seeds
     generator = torch.Generator(device="cuda").manual_seed(seed) if seed != -1 else None
 
-    # 6. Run native unified inference wrapper
+    # 6. Execute native single-forward interface
+    # (Diffusers evaluates audio and video streams simultaneously out of the box)
     output_container = pipe(
         prompt=final_prompt,
         negative_prompt=negative_prompt,
@@ -91,12 +93,12 @@ def i2v_diffusers(prompt='', media='', output='output.mp4',
         height=height,
         width=width,
         generator=generator,
-        output_type="pt"  # Return raw tensors for clean conversion
+        output_type="pt"
     )
     
-    # 7. Extract synchronized AV tracks and output
+    # 7. Extract synchronized AV containers
     video_frames = output_container.frames
-    audio_waveform = output_container.audio # LTX-2.3 native audio stream
+    audio_waveform = output_container.audio 
 
     export_to_video(
         video_frames=video_frames, 
@@ -105,11 +107,12 @@ def i2v_diffusers(prompt='', media='', output='output.mp4',
         audio=audio_waveform
     )
     
-    # 8. Clean up memory allocations cleanly
+    # 8. Clean up execution memory cleanly
     del pipe
     gc.collect()
     if torch.cuda.is_available():  
         torch.cuda.empty_cache()
+
 
 
 def i2v_diffsynth(prompt='', media='', output='output.mp4', 
