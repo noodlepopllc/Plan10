@@ -73,7 +73,8 @@ class FrameDetailer:
             Enhanced PIL Image
         """
         if isinstance(image, str):
-            media = Image.open(image)
+            media = video_to_img(image, width, height, True, False)
+            media.save('last_image.png')
         
         # Default to input dimensions if not specified
         if width is None:
@@ -83,7 +84,7 @@ class FrameDetailer:
         
         # Generate a brief description if not provided
         if not description:
-            description = AnalyzeImage(output_path, "Briefly describe this image, no more than 100 words")['analysis']
+            description = AnalyzeImage(last_image.png, "Briefly describe this image, no more than 100 words")['analysis']
         
         # Use the upscaler template with the input image
         enhanced = self.template(
@@ -92,6 +93,8 @@ class FrameDetailer:
             seed=0,
             cfg_scale=4,
             num_inference_steps=50,
+            width=width,
+            height=height,
             template_inputs=[{
                 "image": media,
                 "prompt": description,
