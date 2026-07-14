@@ -15,6 +15,7 @@ WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
 
 from diffsynth.diffusion.template import TemplatePipeline
+from image_analysis import AnalyzeImage
 
 class FrameDetailer:
     def __init__(self, pipe=None, scale=0.4):
@@ -49,13 +50,13 @@ class FrameDetailer:
             model_configs=[ModelConfig(model_id="DiffSynth-Studio/Template-KleinBase4B-Sharpness")],
         )
     
-    def enhance(self, image, prompt="Restore fine details and sharpness", output_path=None, seed=42):
+    def enhance(self, image, description=None, output_path=None, seed=42):
         """
         Enhance an image by restoring detail and sharpness.
         
         Args:
             image: PIL Image or path to image
-            prompt: Description for the enhancement (default is generic restoration)
+            description: Description of what's in the image (optional, will generate if not provided)
             output_path: Optional path to save enhanced image
             seed: Random seed for reproducibility
             
@@ -63,11 +64,38 @@ class FrameDetailer:
             Enhanced PIL Image
         """
         if isinstance(image, str):
+            image_path = image
             image = Image.open(image)
+        else:
+            image_path = None
         
+        # Generate description if not provided
+        if not description:
+            if image_path:
+                desc_path = image_path
+            else:
+                # Save temp image for analysis
+                temp_path = f"temp_enhance_{seed}.png"
+                image.save(temp_path)
+                desc_path = temp_path
+            
+            description = AnalyzeImage(
+                desc_path, 
+                "Briefly describe the main subjects and details in this image in one sentence."
+            )['analysis'].strip()
+            
+            # Clean up temp file if we created one
+            if not image_path:
+                import os
+                os.remove(temp_path)
+            
+            print(f"  [DEBUG] Generated description: {description}")
+        
+        # Use the description as the prompt so the sharpness template
+        # knows what details to enhance
         enhanced = self.template(
             self.pipe,
-            prompt=prompt,
+            prompt=description,
             seed=seed,
             cfg_scale=4,
             num_inference_steps=50,
@@ -78,12 +106,11 @@ class FrameDetailer:
         if output_path:
             enhanced.save(output_path)
         
-        
         return enhanced
 
     def __del__(self):
         gc.collect()
-        if torch.cuda and torch.cuda.is_available():  # ✅ Was `if torch.cuda:` (always truthy)
+        if torch.cuda and torch.cuda.is_available():
             torch.cuda.empty_cache()
 
 # ─────────────────────────────────────────────────────────────
