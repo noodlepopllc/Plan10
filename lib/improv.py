@@ -128,25 +128,7 @@ def feedback_loop(initial_media, story_context, output_dir="feedback_output", ma
         print("\n🎭 Generating next action...")
         next_action = generate_next_action(description, story_context, history)
         print(f"Next action: {next_action}")
-        
-        # 3. Extract and enhance last frame
-        print("\n🔧 Enhancing frame detail...")
-        enhanced_frame_path = output_dir / f"enhanced_frame_{beat+1:03d}.png"
-        
-        # Extract last frame
-        last_frame = video_to_img(current_media, WIDTH, HEIGHT, True, True)
-        
-        detailer = FrameDetailer()
-        # Enhance detail
-        detailer.enhance(
-            image=last_frame,
-            output_path=str(enhanced_frame_path),
-            seed=42 + beat,
-            width=WIDTH,
-            height=HEIGHT
-        )
-
-        del detailer
+    
         
         # 4. Build I2V prompt
         i2v_prompt = f"{description}. {next_action}"
@@ -158,7 +140,7 @@ def feedback_loop(initial_media, story_context, output_dir="feedback_output", ma
         
         result = GenerateVideo(
             prompt=i2v_prompt,
-            media=str(enhanced_frame_path),
+            media=str(current_media),
             output=str(output_path),
             duration_sec=10 if WGP else 5,
             seed=42 + beat

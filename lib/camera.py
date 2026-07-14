@@ -4,7 +4,7 @@ from PIL import Image
 from uniface.detection import RetinaFace
 
 from image_analysis import AnalyzeImage
-from image_edit import ImageEdit
+from image_edit import ImageEdit, FrameDetailer
 from image_gen import add_metadata_char, GenerateImage
 from util import video_to_img, wait_for_file
 import torch, os, sys
@@ -49,9 +49,10 @@ class CameraMoveEngine:
         return Image.fromarray(arr)
 
 class CameraZoomEngine:
-    def __init__(self, step=0.10):
+    def __init__(self, step=0.10, detailer=None):
         self.detector = RetinaFace()
         self.step = step
+        self.detailer = detailer if detailer else FrameDetailer()
 
     # -----------------------------
     # Helpers
@@ -111,40 +112,59 @@ class CameraZoomEngine:
         return cx, cy
 
     # -----------------------------
-    # Zoom step
+    # Zoom step with AI upscaling
     # -----------------------------
-    def zoom_step(self, cv_img, cx, cy):
+    def zoom_step(self, cv_img, cx, cy, description=None):
         h, w = cv_img.shape[:2]
-
-        z = 1.0 + self.step  # always zoom-in
-        new_w = int(w / z)
-        new_h = int(h / z)
-
-        cx_px = cx * w
-        cy_px = cy * h
-
-        x1 = int(cx_px - new_w / 2)
-        y1 = int(cy_px - new_h / 2)
-
-        x1 = max(0, min(x1, w - new_w))
-        y1 = max(0, min(y1, h - new_h))
-
-        crop = cv_img[y1:y1+new_h, x1:x1+new_w]
-        out = cv2.resize(crop, (w, h), interpolation=cv2.INTER_CUBIC)
-        return out
+        
+        # 1. Calculate upscaled dimensions
+        scale = 1.0 + self.step
+        new_w = int(w * scale)
+        new_h = int(h * scale)
+        
+        # 2. Convert to PIL for detailer
+        pil_img = self.cv2_to_pil(cv_img)
+        
+        # 3. AI upscale using detailer
+        upscaled = self.detailer.enhance(
+            image=pil_img,
+            description=description,
+            width=new_w,
+            height=new_h
+        )
+        
+        # 4. Convert back to cv2 for cropping
+        upscaled_cv = self.pil_to_cv2(upscaled)
+        
+        # 5. Crop back to original resolution, centered on face
+        cx_px = cx * new_w
+        cy_px = cy * new_h
+        
+        x1 = int(cx_px - w / 2)
+        y1 = int(cy_px - h / 2)
+        
+        # Clamp to image bounds
+        x1 = max(0, min(x1, new_w - w))
+        y1 = max(0, min(y1, new_h - h))
+        
+        cropped = upscaled_cv[y1:y1+h, x1:x1+w]
+        
+        return cropped
 
     # -----------------------------
     # Public API
     # -----------------------------
-    def zoom_in(self, pil_img, character=None):
+    def zoom_in(self, pil_img, character=None, description=None):
         """
+        AI upscale image, then crop back to original resolution centered on face.
         character: None, "left", "right", "center"
+        description: Optional description to guide AI enhancement
         """
         cv_img = self.pil_to_cv2(pil_img)
-
+        
         cx, cy = self.pick_face_center(cv_img, character=character)
-        zoomed = self.zoom_step(cv_img, cx, cy)
-
+        zoomed = self.zoom_step(cv_img, cx, cy, description=description)
+        
         return self.cv2_to_pil(zoomed)
 
 import torch

@@ -100,6 +100,9 @@ def CompositeScene(
     width: int = WIDTH,
     height: int = HEIGHT,
 ):
+    if shot_type not in ("two_shot", "ots"):
+        characters = [characters[0]]
+    
     style = "anime" if os.environ.get('ANIME', 'False') != 'False' else "realistic"
     
     # 1. Validate background
@@ -167,8 +170,7 @@ def CompositeScene(
             char_desc = add_metadata_char(c, '', seed)
         descriptions.append(f"{char_desc}. {char_preserve}")
 
-    if shot_type not in ("two_shot", "ots"):
-        descriptions = [descriptions[0]] 
+
     
     spatial_rules = (
         "SPATIAL RULES: "
