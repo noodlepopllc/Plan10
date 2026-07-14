@@ -81,13 +81,21 @@ pan() {
 }
 
 # ─── SHOTS ───
-echo "=== MASTER ==="
-shot "$BG" "$A" "$B" "two_shot" "The women greet each other." "master_close" "hair gently swaying, subtle weight shift"
-shot "$BG_REV" "$B" "$A" "two_shot" "The women begin arguing." "master_close_rev" "hair gently swaying, subtle posture tension"
 
 echo "=== CLOSEUPS & REACTIONS ==="
 shot "$BG" "$A" "$A" "closeup" "She smiles happily." "reaction_A" "eyes blinking naturally, subtle head tilt"
 shot "$BG_REV" "$B" "$B" "closeup" "She smiles happily." "reaction_B" "eyes blinking naturally, soft exhale"
+
+echo "=== SINGLES & PROFILES ==="
+shot "$BG" "$A" "$A" "medium" "She poses like a model." "single_A" "subtle stance shift"
+shot "$BG_REV" "$B" "$B" "medium" "She poses like a model." "single_B" "subtle breathing"
+
+zoom "single_A" "reaction_A" "" "zoom_A"
+zoom "single_B" "reaction_B" "" "zoom_B"
+
+echo "=== MASTER ==="
+shot "$BG" "$A" "$B" "two_shot" "The women greet each other." "master_close" "hair gently swaying, subtle weight shift"
+shot "$BG_REV" "$B" "$A" "two_shot" "The women begin arguing." "master_close_rev" "hair gently swaying, subtle posture tension"
 
 pan "master_close" "pan-left" "master_close_pan_left"
 pan "master_close" "pan-right" "master_close_pan_right"
@@ -101,12 +109,5 @@ shot "$BG" "$B" "$A" "ots" "She speaks in a friendly manner" "ots_B_to_A" "hair 
 
 zoom "ots_A_to_B" "reaction_B" "" "zoom_ots_A_to_B"
 zoom "ots_B_to_A" "reaction_A" "" "zoom_ots_B_to_A"
-
-echo "=== SINGLES & PROFILES ==="
-shot "$BG" "$A" "$A" "medium" "She poses like a model." "single_A" "subtle stance shift"
-shot "$BG_REV" "$B" "$B" "medium" "She poses like a model." "single_B" "subtle breathing"
-
-zoom "single_A" "reaction_A" "" "zoom_A"
-zoom "single_B" "reaction_B" "" "zoom_B"
 
 echo "✅ All shots generated into '$OUTDIR/'"

@@ -25,15 +25,21 @@ class FrameDetailer:
         Args:
             pipe: Existing Flux2ImagePipeline (optional, will create if not provided)
         """
+        vram_config = {
+            "offload_dtype": "disk", "offload_device": "disk",
+            "onload_dtype": torch.float8_e4m3fn, "onload_device": "cpu",
+            "preparing_dtype": torch.float8_e4m3fn, "preparing_device": "cuda",
+            "computation_dtype": torch.bfloat16, "computation_device": "cuda",
+        }
         if pipe is None:
             print("Loading FLUX.2 Klein pipeline for frame enhancement...")
             self.pipe = Flux2ImagePipeline.from_pretrained(
                 torch_dtype=torch.bfloat16,
                 device="cuda",
                 model_configs=[
-                    ModelConfig(model_id="black-forest-labs/FLUX.2-klein-base-4B", origin_file_pattern="transformer/*.safetensors"),
-                    ModelConfig(model_id="black-forest-labs/FLUX.2-klein-4B", origin_file_pattern="text_encoder/*.safetensors"),
-                    ModelConfig(model_id="black-forest-labs/FLUX.2-klein-4B", origin_file_pattern="vae/diffusion_pytorch_model.safetensors"),
+                    ModelConfig(model_id="black-forest-labs/FLUX.2-klein-base-4B", origin_file_pattern="transformer/*.safetensors", **vram_config),
+                    ModelConfig(model_id="black-forest-labs/FLUX.2-klein-4B", origin_file_pattern="text_encoder/*.safetensors", **vram_config),
+                    ModelConfig(model_id="black-forest-labs/FLUX.2-klein-4B", origin_file_pattern="vae/diffusion_pytorch_model.safetensors", **vram_config),
                 ],
                 tokenizer_config=ModelConfig(model_id="black-forest-labs/FLUX.2-klein-4B", origin_file_pattern="tokenizer/"),
             )
@@ -47,7 +53,7 @@ class FrameDetailer:
             model_configs=[ModelConfig(model_id="DiffSynth-Studio/Template-KleinBase4B-Upscaler")],
         )
     
-    def enhance(self, image, description=None, output_path=None, seed=42, width=None, height=None):
+    def enhance(self, image, description=None, output_path="enhanced.png", seed=42, width=None, height=None):
         """
         Enhance/upscale an image by restoring details.
         
@@ -94,10 +100,14 @@ class FrameDetailer:
             }],
         )
         
-        if output_path:
-            enhanced.save(output_path)
-        
-        return enhanced
+        enhanced.save(output_path)
+
+        os.utime(output_path, None) 
+        status = {"status": "success", "output_path": output_path, "prompt": description, "description": ''}
+        if os.environ['BATCH'] == 'False':
+            analysis = AnalyzeImage(output_path, "Briefly describe this image, no more than 100 words")
+            status['description'] = analysis['analysis']
+        return status
 
     def __del__(self):
         gc.collect()

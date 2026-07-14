@@ -201,23 +201,17 @@ def CompositeScene(
             f"Match REF 1 color temperature. Preserve EXACT rendering style from REF 2 and REF 3. "
         )
     elif shot_type == 'two_shot' and len(descriptions) > 1:
+        char_1_details = descriptions[0]
+        char_2_details = descriptions[1]
+        
         task = (            
             f"REF 1: {bg_desc}. "
-            "COMPOSITION RULE: Characters are the focal point. Background elements may be cropped naturally. "
-            + spatial_rules +
-            anti_blend + " "
-            "TWO-SHOT COMPOSITION: "
-            f"REF 2: (Left Person) {descriptions[0]} "
-            "POSITION: Confined strictly to the LEFT HALF of the frame. "
-            
-            f"REF 3: (Right Person) {descriptions[1]} "
-            "POSITION: Confined strictly to the RIGHT HALF of the frame. "
-            
+            "A medium two-shot composition of two distinct people standing side-by-side. "
+            f"On the left side of the frame: a person matching the first reference, featuring {char_1_details}. "
+            f"On the right side of the frame: a separate, distinct person matching the second reference, featuring {char_2_details}. "
             f"Action: {action}. "
-            f"Framing: Medium close waist-up shot of two distinct people. "
-            f"Lighting: {lighting_desc} Both characters are fully lit and sharp. "
-            f"Match lighting, color temperature, and atmosphere of REF 1 exactly. "
-            f"Preserve EXACT rendering style from REF 2 for the left character, and REF 3 for the right character."
+            f"Lighting: {lighting_desc} Both characters are clearly separated, fully lit, and sharp. "
+            f"Match the lighting, color temperature, and atmosphere of REF 1 exactly. "
         )
     else:
         # Single character shots
