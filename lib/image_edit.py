@@ -92,8 +92,6 @@ class FrameDetailer:
             seed=seed,
             cfg_scale=4,
             num_inference_steps=50,
-            width=width,
-            height=height,
             template_inputs=[{
                 "image": media,
                 "prompt": description,
