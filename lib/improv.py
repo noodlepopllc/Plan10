@@ -103,7 +103,7 @@ Output ONLY the next action description (1-2 sentences), nothing else.
 
 def upscale(media):
     detailer = FrameDetailer()
-    status = detailer.enhance(media, width=1280, height=720)
+    status = detailer.enhance(media)
     del detailer
     return status['output_path']
 
