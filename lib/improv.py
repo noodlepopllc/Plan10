@@ -1,4 +1,5 @@
-import torch, os
+import torch, os, sys
+sys.path.append('./lib')
 from pathlib import Path
 from transformers import AutoProcessor, AutoModelForImageTextToText
 from qwen_llm import llm_analyze_media

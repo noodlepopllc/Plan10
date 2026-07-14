@@ -1,5 +1,6 @@
 import torch
-import os
+import os, sys
+sys.path.append('./lib')
 import gc
 import random
 import json
