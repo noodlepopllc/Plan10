@@ -89,7 +89,7 @@ class FrameDetailer:
         enhanced = self.template(
             self.pipe,
             prompt=description,
-            seed=seed,
+            seed=0,
             cfg_scale=4,
             num_inference_steps=50,
             template_inputs=[{
