@@ -23,7 +23,96 @@ DISTILLED = "DISTILLED" in os.environ.get("LTX","False")
 
 enhance_path = f'./system/ltx_enhancer{ANIME}.txt'
 
-def i2v(prompt='', media='', output='output.mp4', 
+from diffusers import LTXVideoPipeline
+from diffusers.utils import export_to_video
+
+def i2v_diffusers(prompt='', media='', output='output.mp4', 
+        duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
+    
+    # 1. Hardware-level acceleration for Blackwell execution cores
+    torch.backends.cudnn.benchmark = True
+    torch.backends.cuda.matmul.allow_tf32 = True
+
+    width, height = (720, 1280) if height > width else (1280, 720)
+
+    # 2. Dynamic check for selecting the Distilled vs Dev checkpoint repo
+    model_id = "Lightricks/LTX-2.3-Distilled" if DISTILLED else "Lightricks/LTX-2.3"
+
+    # 3. Load entire pipeline into the Spark's Unified Memory architecture
+    # No offload configurations are used to avoid page-fault table thrashing.
+    pipe = LTXVideoPipeline.from_pretrained(
+        model_id,
+        torch_dtype=torch.bfloat16,
+        device_map="cuda"
+    )
+
+    # 4. Freeze execution loops directly inside the CUDA Graph
+    # The first run will compile for ~60s, then unlock raw hardware speeds.
+    pipe.transformer = torch.compile(pipe.transformer, mode="reduce-overhead")
+
+    # 5. Handle prompt filters
+    sfx_modifiers = ", realistic sound effects only, crisp SFX, ambient background noise, completely devoid of music, no BGM, no instruments"
+    final_prompt = f"{prompt}{sfx_modifiers}" if prompt else "ambient sound effects, SFX, absolute no music"
+
+    negative_prompt = (
+        "blurry, out of focus, overexposed, underexposed, low contrast, washed out colors, excessive noise, "
+        "grainy texture, poor lighting, flickering, motion blur, distorted proportions, unnatural skin tones, "
+        "deformed facial features, asymmetrical face, missing facial features, extra limbs, disfigured hands, "
+        "wrong hand count, artifacts around text, inconsistent perspective, camera shake, incorrect depth of "
+        "field, background too sharp, background clutter, distracting reflections, harsh shadows, inconsistent "
+        "lighting direction, color banding, cartoonish rendering, 3D CGI look, unrealistic materials, uncanny "
+        "valley effect, incorrect ethnicity, wrong gender, exaggerated expressions, wrong gaze direction, "
+        "mismatched lip sync, music, background music, BGM, melody, song, soundtrack, musical instruments, synth, "
+        "singing, vocals, rhythm, beats, distorted voice, robotic voice, echo, background noise, off-sync audio, "
+        "incorrect dialogue, added dialogue, repetitive speech, jittery movement, awkward pauses, incorrect timing, "
+        "unnatural transitions, inconsistent framing, tilted camera, flat lighting, inconsistent tone, "
+        "cinematic oversaturation, stylized filters, or AI artifacts."
+    )
+    
+    # Calculate step constraints and frames
+    num_frames = (duration_sec * 24) + 1
+    steps = 8 if DISTILLED else 30
+    cfg_scale = 1.0 if DISTILLED else 3.5  # Distilled must remain at 1.0 CFG
+
+    # Prep the source image
+    image = Image.open(media).convert("RGB").resize((width, height))
+    
+    # Generate seed tracking
+    generator = torch.Generator(device="cuda").manual_seed(seed) if seed != -1 else None
+
+    # 6. Run native unified inference wrapper
+    output_container = pipe(
+        prompt=final_prompt,
+        negative_prompt=negative_prompt,
+        image=image,
+        num_inference_steps=steps,
+        guidance_scale=cfg_scale,
+        num_frames=num_frames,
+        height=height,
+        width=width,
+        generator=generator,
+        output_type="pt"  # Return raw tensors for clean conversion
+    )
+    
+    # 7. Extract synchronized AV tracks and output
+    video_frames = output_container.frames
+    audio_waveform = output_container.audio # LTX-2.3 native audio stream
+
+    export_to_video(
+        video_frames=video_frames, 
+        output_video_path=output, 
+        fps=24, 
+        audio=audio_waveform
+    )
+    
+    # 8. Clean up memory allocations cleanly
+    del pipe
+    gc.collect()
+    if torch.cuda.is_available():  
+        torch.cuda.empty_cache()
+
+
+def i2v_diffsynth(prompt='', media='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
     
     # Enable fast hardware math handling for Blackwell cores
@@ -56,18 +145,13 @@ def i2v(prompt='', media='', output='output.mp4',
         device="cuda",
         model_configs=[
             ModelConfig(model_id="google/gemma-3-12b-it-qat-q4_0-unquantized", origin_file_pattern="model-*.safetensors", **vram_config),
-            ModelConfig(model_id="Lightricks/LTX-2.3", origin_file_pattern="ltx-2.3-22b-distilled.safetensors" if DISTILLED else "ltx-2.3-22b-dev.safetensors", **vram_config),
+            ModelConfig(model_id="Lightricks/LTX-2.3", origin_file_pattern="ltx-2.3-22b-dev.safetensors", **vram_config),
             ModelConfig(model_id="Lightricks/LTX-2.3", origin_file_pattern="ltx-2.3-spatial-upscaler-x2-1.0.safetensors", **vram_config),
         ],
         tokenizer_config=ModelConfig(model_id="google/gemma-3-12b-it-qat-q4_0-unquantized"),
         stage2_lora_config=ModelConfig(model_id="Lightricks/LTX-2.3", origin_file_pattern="ltx-2.3-22b-distilled-lora-384.safetensors"),
         vram_limit=allocated_vram_limit, 
     )
-
-    # 3. OPTIONAL: Freeze the model loop execution graph to eliminate ARM loop latency.
-    # This step will take roughly 60 seconds on the very first generation, but will run much faster afterward.
-    if "dit" in pipe.models:
-        pipe.models["dit"] = torch.compile(pipe.models["dit"], mode="reduce-overhead")
 
     # Force explicit SFX and ban melody structure in the positive prompt
     sfx_modifiers = ", realistic sound effects only, crisp SFX, ambient background noise, completely devoid of music, no BGM, no instruments"
@@ -102,7 +186,6 @@ def i2v(prompt='', media='', output='output.mp4',
         num_frames=num_frames,
         tiled=True,
         use_two_stage_pipeline=True,
-        use_distilled_pipeline=DISTILLED,
         input_images=[image],
         input_images_indexes=[0],
         input_images_strength=1.0,
