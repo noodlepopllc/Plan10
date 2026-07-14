@@ -244,7 +244,7 @@ def emergent_feedback_loop(
         CreateCharacterSheet(
             prompt=char_prompt,
             output=str(character_ref),
-            seed=42
+            seed=SEED
         )
         character_ref = str(character_ref)
         print(f"✓ Character sheet generated: {character_ref}")
@@ -263,7 +263,7 @@ def emergent_feedback_loop(
         CreateBackground(
             prompt=f"{initial_location}, empty, atmospheric, detailed, wide establishing shot",
             output=str(initial_media),
-            seed=42
+            seed=SEED
         )
         initial_media = str(initial_media)
         print(f"✓ Initial background generated: {initial_media}")
@@ -286,7 +286,7 @@ def emergent_feedback_loop(
         output=str(initial_composite),
         width=width,
         height=height,
-        seed=42
+        seed=SEED
     )
     print(f"✓ Initial composite saved: {initial_composite}")
     
@@ -324,7 +324,7 @@ def emergent_feedback_loop(
                 output=str(edit_output),
                 width=width,
                 height=height,
-                seed=42 + beat
+                seed=SEED + beat
             )
             video_input = str(edit_output)
         else:
@@ -345,7 +345,7 @@ def emergent_feedback_loop(
             duration_sec=10,
             width=width,
             height=height,
-            seed=42 + beat
+            seed=SEED + beat
         )
         print(f"✓ Video saved: {video_output}")
         
@@ -381,8 +381,8 @@ if __name__ == "__main__":
     parser.add_argument('-I', '--initial', type=str, default=None, help="Initial image or video (optional - will generate if not provided)")
     parser.add_argument('-O', '--output', type=str, default="emergent_output", help="Output directory")
     parser.add_argument('-N', '--beats', type=int, default=8, help="Number of beats to generate")
-    parser.add_argument('-W', '--width', type=int, default=1280, help="Video width")
-    parser.add_argument('-H', '--height', type=int, default=720, help="Video height")
+    parser.add_argument('-W', '--width', type=int, default=WIDTH, help="Video width")
+    parser.add_argument('-H', '--height', type=int, default=HEIGHT, help="Video height")
     
     args = parser.parse_args()
     
