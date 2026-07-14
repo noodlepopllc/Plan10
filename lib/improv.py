@@ -1,11 +1,13 @@
-import torch, os, sys
+import torch, os, sys, cv2
 sys.path.append('./lib')
 from pathlib import Path
 from transformers import AutoProcessor, AutoModelForImageTextToText
 from qwen_llm import llm_analyze_media
 from util import video_to_img
 from config import load_environ
-from image_edit import FrameDetailer
+from image_edit import FrameDetailer, EditImage
+from image_analysis import AnalyzeImage
+from image_gen import GenerateImage
 from uniface.detection import RetinaFace
 
 load_environ()
@@ -77,6 +79,11 @@ Be extremely specific about clothing colors and styles."""
         skip_special_tokens=True,
     )
     
+    del model, processor, inputs, generated_ids
+    import gc
+    gc.collect()
+    torch.cuda.empty_cache()
+    
     return generated_texts[0].split(':')[-1].strip()
 
 
@@ -112,66 +119,68 @@ Output ONLY the next action description (1-2 sentences), nothing else.
     
     return result.strip()
 
+
 def upscale(media):
     detailer = FrameDetailer()
     status = detailer.enhance(media)
     del detailer
+    import gc
+    gc.collect()
+    torch.cuda.empty_cache()
     return status['output_path']
 
-def is_character_visible(media_path, visual_id):
-    """Check if the character matching the visual ID is visible in the last frame.
-    Uses AnalyzeImage (static image analysis) - NOT SmolVLM2."""
-    
-    media_path = Path(media_path)
-    ext = media_path.suffix.lower()
-    
-    # Extract last frame if it's a video
-    if ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm']:
-        last_frame_path = media_path.with_name(media_path.stem + '_lastframe.png')
-        video_to_img(str(media_path), 1280, 720, True, True).save(str(last_frame_path))
-        check_path = str(last_frame_path)
-    else:
-        check_path = str(media_path)
-    
-    # Use AnalyzeImage for single-frame character detection
-    prompt = f"Looking for: {visual_id}\n\nIs this person visible in the image? Answer YES or NO."
-    result = AnalyzeImage(check_path, prompt)
-    response = result['analysis'].strip().upper()
-    
-    print(f"  [DEBUG] Looking for: '{visual_id}'")
-    print(f"  [DEBUG] AnalyzeImage response: '{response}'")
-    
-    return "YES" in response
 
-def is_face_visible(media_path, visual_id):
-    """Check if character's face is visible (not back to camera)."""
+def is_face_visible(media_path):
+    """Check if character's face is visible (not back to camera).
+    Simplified version - just checks if ANY face is detected."""
     
     media_path = Path(media_path)
     ext = media_path.suffix.lower()
     
     if ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm']:
         last_frame_path = media_path.with_name(media_path.stem + '_lastframe.png')
-        video_to_img(str(media_path), 1280, 720, True, True).save(str(last_frame_path))
+        video_to_img(str(media_path), WIDTH, HEIGHT, True, True).save(str(last_frame_path))
         check_path = str(last_frame_path)
     else:
         check_path = str(media_path)
     
-    # First check if character is in frame
-    char_visible = is_character_visible(check_path, visual_id)
-    
-    if not char_visible:
-        return False, "not_in_frame"
-    
-    # Now check if face is visible using RetinaFace
+    # Check if face is visible using RetinaFace
     img = cv2.imread(check_path)
     detector = RetinaFace()
     faces = detector.detect(img)
     
     if not faces:
-        # Character is in frame but no faces detected = back to camera
-        return False, "back_to_camera"
+        return False, "no_face_detected"
     
     return True, "face_visible"
+
+
+def recreate_frame_facing_camera(current_media, description, output_path):
+    """Use img2img to recreate frame with character facing camera."""
+    
+    # Extract current frame
+    media_path = Path(current_media)
+    ext = media_path.suffix.lower()
+    
+    if ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm']:
+        frame = video_to_img(current_media, WIDTH, HEIGHT, True, True)
+    else:
+        from PIL import Image
+        frame = Image.open(current_media)
+    
+    # Use img2img with prompt to turn character around
+    prompt = f"{description}. Character is facing the camera, front view, face clearly visible."
+    
+    result = EditImage(
+        prompt=prompt,
+        ref_image=frame,
+        output=str(output_path),
+        width=WIDTH,
+        height=HEIGHT,
+        strength=0.6
+    )
+    
+    return result['output_path']
 
 
 def feedback_loop(initial_media, story_context, output_dir="feedback_output", max_beats=8):
@@ -180,7 +189,6 @@ def feedback_loop(initial_media, story_context, output_dir="feedback_output", ma
     output_dir = Path(output_dir)
     output_dir.mkdir(exist_ok=True)
     
-    # Initialize frame detailer
     print("🔧 Initializing frame detailer...")
     
     current_media = upscale(initial_media)
@@ -193,7 +201,8 @@ def feedback_loop(initial_media, story_context, output_dir="feedback_output", ma
         
         # 1. Check face visibility
         print("👁️ Checking face visibility...")
-        face_visible = is_face_visible(current_media)
+        face_visible, status = is_face_visible(current_media)
+        print(f"Face status: {status}")
         
         if not face_visible:
             print("⚠️ Face not visible - recreating frame...")
@@ -248,14 +257,18 @@ if __name__ == "__main__":
     
     parser = argparse.ArgumentParser(description="Run feedback loop for visual storytelling")
     parser.add_argument('-I', '--initial', type=str, default='', required=False, help="Initial image or video")
+    parser.add_argument('-P', '--prompt', type=str, default='', required=False, help="Prompt for initial image generation")
     parser.add_argument('-C', '--context', type=str, required=True, help="Story context/goals")
     parser.add_argument('-O', '--output', type=str, default="feedback_output", help="Output directory")
     parser.add_argument('-N', '--beats', type=int, default=8, help="Number of beats to generate")
     
     args = parser.parse_args()
     initial = args.initial
-    if not args.initial:
-        GenerateImage(prompt = prompt, output='improv.png', width=WIDTH, height=HEIGHT, seed=SEED)
+    if not initial:
+        if not args.prompt:
+            print("Error: Must provide either --initial or --prompt")
+            sys.exit(1)
+        GenerateImage(prompt=args.prompt, output='improv.png', width=WIDTH, height=HEIGHT, seed=SEED)
         initial = 'improv.png'
     
     feedback_loop(
