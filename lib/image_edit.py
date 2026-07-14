@@ -84,7 +84,7 @@ class FrameDetailer:
         
         # Generate a brief description if not provided
         if not description:
-            description = AnalyzeImage(last_image.png, "Briefly describe this image, no more than 100 words")['analysis']
+            description = AnalyzeImage('last_image.png', "Briefly describe this image, no more than 100 words")['analysis']
         
         # Use the upscaler template with the input image
         enhanced = self.template(
