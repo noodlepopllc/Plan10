@@ -26,21 +26,30 @@ enhance_path = f'./system/ltx_enhancer{ANIME}.txt'
 def i2v(prompt='', media='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
     
-    #torch.backends.cudnn.benchmark = True
-    #torch.backends.cuda.matmul.allow_tf32 = True
+    # Enable fast hardware math handling for Blackwell cores
+    torch.backends.cudnn.benchmark = True
+    torch.backends.cuda.matmul.allow_tf32 = True
 
     width, height = (720, 1280) if height > width else (1280, 720)
 
+    # 1. FIXED VRAM CONFIG: Lock everything directly inside CUDA space.
+    # By removing "cpu" offloading, we stop the ARM-to-GPU step-by-step page fault loops.
     vram_config = {
         "offload_dtype": torch.bfloat16,
-        "offload_device": "cpu",
+        "offload_device": "cuda",
         "onload_dtype": torch.bfloat16,
-        "onload_device": "cpu",
+        "onload_device": "cuda",
         "preparing_dtype": torch.bfloat16,
         "preparing_device": "cuda",
         "computation_dtype": torch.bfloat16,
         "computation_device": "cuda",
     }
+
+    # 2. INCREASE VRAM LIMIT OR REMOVE STRIP BOUNDARY
+    # Your Spark has 128GB. If os.environ["VRAM"] is set to a low value (like 12 or 16),
+    # DiffSynth will manually break up the models even if you set the device to "cuda".
+    # We override it here to leverage your hardware's full capacity.
+    allocated_vram_limit = max(int(os.environ.get("VRAM", 96)), 96) * 1024 * 1024 * 1024
 
     pipe = LTX2AudioVideoPipeline.from_pretrained(
         torch_dtype=torch.bfloat16,
@@ -52,8 +61,13 @@ def i2v(prompt='', media='', output='output.mp4',
         ],
         tokenizer_config=ModelConfig(model_id="google/gemma-3-12b-it-qat-q4_0-unquantized"),
         stage2_lora_config=ModelConfig(model_id="Lightricks/LTX-2.3", origin_file_pattern="ltx-2.3-22b-distilled-lora-384.safetensors"),
-        vram_limit=int(os.environ["VRAM"]),
+        vram_limit=allocated_vram_limit, 
     )
+
+    # 3. OPTIONAL: Freeze the model loop execution graph to eliminate ARM loop latency.
+    # This step will take roughly 60 seconds on the very first generation, but will run much faster afterward.
+    if "dit" in pipe.models:
+        pipe.models["dit"] = torch.compile(pipe.models["dit"], mode="reduce-overhead")
 
     # Force explicit SFX and ban melody structure in the positive prompt
     sfx_modifiers = ", realistic sound effects only, crisp SFX, ambient background noise, completely devoid of music, no BGM, no instruments"
@@ -78,7 +92,7 @@ def i2v(prompt='', media='', output='output.mp4',
 
     image = Image.open(media).convert("RGB").resize((width, height))
     
-    # first frame
+    # Run core inference pipeline
     video, audio = pipe(
         prompt=final_prompt,
         negative_prompt=negative_prompt,
@@ -88,11 +102,12 @@ def i2v(prompt='', media='', output='output.mp4',
         num_frames=num_frames,
         tiled=True,
         use_two_stage_pipeline=True,
-        use_distilled_pipeline = DISTILLED,
+        use_distilled_pipeline=DISTILLED,
         input_images=[image],
         input_images_indexes=[0],
         input_images_strength=1.0,
     )
+    
     write_video_audio_ltx2(
         video=video,
         audio=audio,
@@ -101,10 +116,12 @@ def i2v(prompt='', media='', output='output.mp4',
         audio_sample_rate=pipe.audio_vocoder.output_sampling_rate,
     )
     
+    # Clean up memory cleanly
     del pipe
     gc.collect()
-    if torch.cuda and torch.cuda.is_available():  # ✅ Was `if torch.cuda:` (always truthy)
+    if torch.cuda.is_available():  
         torch.cuda.empty_cache()
+
 
 def GenerateVideo(prompt='', media='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
