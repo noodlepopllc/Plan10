@@ -110,8 +110,6 @@ def feedback_loop(initial_media, story_context, output_dir="feedback_output", ma
     
     # Initialize frame detailer
     print("🔧 Initializing frame detailer...")
-    detailer = FrameDetailer()
-    detailer.__enter__()
     
     current_media = initial_media
     history = []
@@ -138,6 +136,7 @@ def feedback_loop(initial_media, story_context, output_dir="feedback_output", ma
         # Extract last frame
         last_frame = video_to_img(current_media, WIDTH, HEIGHT, True, True)
         
+        detailer = FrameDetailer()
         # Enhance detail
         detailer.enhance(
             image=last_frame,
@@ -145,6 +144,8 @@ def feedback_loop(initial_media, story_context, output_dir="feedback_output", ma
             scale=0.4,
             seed=42 + beat
         )
+
+        del detailer
         
         # 4. Build I2V prompt
         i2v_prompt = f"{description}. {next_action}"

@@ -78,7 +78,13 @@ class FrameDetailer:
         if output_path:
             enhanced.save(output_path)
         
+        
         return enhanced
+
+    def __del__(self):
+        gc.collect()
+        if torch.cuda and torch.cuda.is_available():  # ✅ Was `if torch.cuda:` (always truthy)
+            torch.cuda.empty_cache()
 
 # ─────────────────────────────────────────────────────────────
 # EXPRESSION MAPPING
