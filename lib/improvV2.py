@@ -271,18 +271,7 @@ def emergent_feedback_loop(
     initial_composite = output_dir / "initial_composite.png"
     
     initial_action_prompt = f"{visual_id} at {initial_location}. Match the lighting and perspective of the environment perfectly. Maintain exact character appearance from reference."
-    
-    def CompositeScene(
-    background_path: str,
-    characters: list[str],
-    shot_type: str = "medium",
-    action: str = "hair swaying gently",
-    output: str = "composite.png",
-    seed: int = -1,
-    width: int = WIDTH,
-    height: int = HEIGHT,
-):
-    
+        
     CompositeScene(
         action=initial_action_prompt,
         background_path=initial_media
@@ -320,11 +309,10 @@ def emergent_feedback_loop(
             base_image_for_edit = original_background
             edit_output = output_dir / f"edit_beat_{beat+1:03d}.png"
             
-            edit_prompt = f"{visual_id} {next_action}. Match the lighting and perspective of the environment perfectly. Maintain exact character appearance from reference."
-            
-            EditImage(
-                prompt=edit_prompt,
-                images=[base_image_for_edit, character_ref],
+            CompositeScene(
+                action=next_action,
+                background_path=base_image_for_edit,
+                characters=[character_ref],
                 output=str(edit_output),
                 width=width,
                 height=height,
