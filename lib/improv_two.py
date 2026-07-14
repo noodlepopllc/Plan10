@@ -359,7 +359,7 @@ def emergent_feedback_loop_two_characters(
                 background_path=base_image_for_edit,
                 characters=characters_to_composite,
                 shot_type=shot_type,
-                action=next_action,
+                action="Facing towards viewer",
                 output=str(edit_output),
                 width=width,
                 height=height,

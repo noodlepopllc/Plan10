@@ -18,18 +18,18 @@ from diffsynth.diffusion.template import TemplatePipeline
 from image_analysis import AnalyzeImage
 
 class FrameDetailer:
-    def __init__(self, pipe=None, scale=0.4):
+    def __init__(self, pipe=None, scale_factor=2):
         """
-        Initialize the detailer.
+        Initialize the frame detailer/upscaler.
         
         Args:
             pipe: Existing Flux2ImagePipeline (optional, will create if not provided)
-            scale: Sharpness scale (0.1=subtle, 0.8=strong). Default 0.4 for video restoration.
+            scale_factor: Upscale factor (default 2x)
         """
-        self.scale = scale
+        self.scale_factor = scale_factor
         
         if pipe is None:
-            print("Loading FLUX.2 Klein pipeline for detail enhancement...")
+            print("Loading FLUX.2 Klein pipeline for frame enhancement...")
             self.pipe = Flux2ImagePipeline.from_pretrained(
                 torch_dtype=torch.bfloat16,
                 device="cuda",
@@ -43,20 +43,20 @@ class FrameDetailer:
         else:
             self.pipe = pipe
         
-        print("Loading sharpness template...")
+        print("Loading upscaler template...")
         self.template = TemplatePipeline.from_pretrained(
             torch_dtype=torch.bfloat16,
             device="cuda",
-            model_configs=[ModelConfig(model_id="DiffSynth-Studio/Template-KleinBase4B-Sharpness")],
+            model_configs=[ModelConfig(model_id="DiffSynth-Studio/Template-KleinBase4B-Upscaler")],
         )
     
     def enhance(self, image, description=None, output_path=None, seed=42):
         """
-        Enhance an image by restoring detail and sharpness.
+        Enhance/upscale an image by restoring details.
         
         Args:
             image: PIL Image or path to image
-            description: Description of what's in the image (optional, will generate if not provided)
+            description: Optional description to guide enhancement
             output_path: Optional path to save enhanced image
             seed: Random seed for reproducibility
             
@@ -64,43 +64,27 @@ class FrameDetailer:
             Enhanced PIL Image
         """
         if isinstance(image, str):
-            image_path = image
             image = Image.open(image)
-        else:
-            image_path = None
         
-        # Generate description if not provided
+        # Generate a brief description if not provided
         if not description:
-            if image_path:
-                desc_path = image_path
-            else:
-                # Save temp image for analysis
-                temp_path = f"temp_enhance_{seed}.png"
-                image.save(temp_path)
-                desc_path = temp_path
-            
-            description = AnalyzeImage(
-                desc_path, 
-                "Briefly describe the main subjects and details in this image in one sentence."
-            )['analysis'].strip()
-            
-            # Clean up temp file if we created one
-            if not image_path:
-                import os
-                os.remove(temp_path)
-            
-            print(f"  [DEBUG] Generated description: {description}")
+            description = "High quality detailed image"
         
-        # Use the description as the prompt so the sharpness template
-        # knows what details to enhance
+        # Use the upscaler template with the input image
         enhanced = self.template(
             self.pipe,
             prompt=description,
             seed=seed,
             cfg_scale=4,
             num_inference_steps=50,
-            template_inputs=[{"scale": self.scale}],
-            negative_template_inputs=[{"scale": 0.5}],
+            template_inputs=[{
+                "image": image,
+                "prompt": description,
+            }],
+            negative_template_inputs=[{
+                "image": image,
+                "prompt": "",
+            }],
         )
         
         if output_path:
