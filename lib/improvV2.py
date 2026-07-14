@@ -273,8 +273,7 @@ def emergent_feedback_loop(
     initial_action_prompt = f"{visual_id} at {initial_location}. Match the lighting and perspective of the environment perfectly. Maintain exact character appearance from reference."
         
     CompositeScene(
-        action=initial_action_prompt,
-        background_path=initial_media
+        background_path=initial_media,
         characters=[character_ref],
         output=str(initial_composite),
         width=width,
