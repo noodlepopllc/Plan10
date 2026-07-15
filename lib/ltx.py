@@ -62,12 +62,15 @@ def i2v_diffusers(prompt='', media='', output='output.mp4',
         subfolder="transformer"
     )
 
-    # 2. FORCE EXPLICIT LTX-2.3 ALIGNMENT
-    # Override the hidden legacy properties to expand the table size from 6 to 9 natively!
-    config_dict["has_prompt_adaln"] = True # Automatically expands the num_ada_params internally
-    # If your specific Diffusers fork tracks the variable name directly:
-    if "num_audio_ada_params" in config_dict:
-        config_dict["num_audio_ada_params"] = 9
+    # 2. FORCE NATIVE LTX-2.3 MULTI-MODAL OVERRIDES
+    # These parameters directly allocate the 9-dimensional attention layer tracks
+    config_dict["audio_prompt_adaln"] = True           # Direct trigger for 2.3 multi-modal AdaLN layers
+    config_dict["audio_caption_channels"] = 2048       # Sets the structural alignment boundaries
+    config_dict["use_audio_conditioning"] = True       # Enforces the multimodel step allocation tracking
+
+    # Remove the old temporary 2.0 properties so it doesn't complain about ignored keys
+    config_dict.pop("has_prompt_adaln", None)
+    config_dict.pop("num_audio_ada_params", None)
 
     # 3. Instantiate the transformer model block using our corrected dictionary
     transformer = config_dict = LTX2VideoTransformer3DModel.from_config(config_dict)
