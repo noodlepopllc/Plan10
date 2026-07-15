@@ -22,6 +22,7 @@ ANIME = "_anime" if os.environ.get("ANIME","False") != "False" else ""
 DISTILLED = "DISTILLED" in os.environ.get("LTX","False")
 
 enhance_path = f'./system/ltx_enhancer{ANIME}.txt'
+enhance_path = './system/ltx_enhancer_minimal.txt'
 
 from diffusers import LTX2Pipeline  # Corrected Class Name
 from diffusers.utils import export_to_video
