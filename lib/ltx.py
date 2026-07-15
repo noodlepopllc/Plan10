@@ -35,9 +35,9 @@ def i2v_diffusers(prompt='', media='', output='output.mp4',
 
     width, height = (720, 1280) if height > width else (1280, 720)
 
-    # 2. Point to the specific repository tracking the Diffusers-native structure
-    # (Avoids the missing model_index.json crash of the raw Lightricks file repository)
-    model_id = "diffusers/LTX-2.3-Diffusers"
+    # 2. Match the specific repo target based on distillation setting
+    # Diffusers distributes the distilled variant as an isolated layout.
+    model_id = "diffusers/LTX-2.3-Distilled-Diffusers" if DISTILLED else "diffusers/LTX-2.3-Diffusers"
 
     # 3. Load entire pipeline into Spark's Unified LPDDR5x pool
     # Uses device_map="cuda" to dynamically cache page tables without hard offloading constraints.
@@ -82,11 +82,10 @@ def i2v_diffusers(prompt='', media='', output='output.mp4',
     generator = torch.Generator(device="cuda").manual_seed(seed) if seed != -1 else None
 
     # 6. Execute native single-forward interface
-    # (Diffusers evaluates audio and video streams simultaneously out of the box)
     output_container = pipe(
         prompt=final_prompt,
         negative_prompt=negative_prompt,
-        image=image,
+        image=image,                  # Correct argument key for LTX2Pipeline Image Condition
         num_inference_steps=steps,
         guidance_scale=cfg_scale,
         num_frames=num_frames,
