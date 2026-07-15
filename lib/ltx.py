@@ -8,7 +8,7 @@ from PIL import Image
 from modelscope import dataset_snapshot_download
 
 from diffusers.pipelines.ltx2.utils import DISTILLED_SIGMA_VALUES, STAGE_2_DISTILLED_SIGMA_VALUES
-from diffusers.models.transformers.ltx2_video_transformer3d import LTX2VideoTransformer3DModel
+from diffusers.models.transformers.transformer_ltx2 import LTX2VideoTransformer3DModel
 
 import logging, os, gc
 import json
