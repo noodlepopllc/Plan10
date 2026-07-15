@@ -86,7 +86,7 @@ def i2v_diffusers(prompt='', media='', output='output.mp4',
     output_container = pipe(
         prompt=final_prompt,
         negative_prompt=negative_prompt,
-        image=image,                  # Correct argument key for LTX2Pipeline Image Condition
+        init_image=image,                  # Correct argument key for LTX2Pipeline Image Condition
         num_inference_steps=steps,
         guidance_scale=cfg_scale,
         num_frames=num_frames,
