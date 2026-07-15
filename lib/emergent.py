@@ -95,8 +95,6 @@ Clothing: {self.clothing}"""
 
 
 class FeedbackLoop:
-    """Feedback loop with reality checking."""
-    
     def __init__(self, character_ref, output_dir="feedback_output", width=WIDTH, height=HEIGHT, seed=SEED):
         self.character_ref = character_ref
         self.output_dir = Path(output_dir)
@@ -105,85 +103,72 @@ class FeedbackLoop:
         self.height = height
         self.seed = seed
         
-        # Cached character profile - ground truth
+        # Extract character profile ONCE
         print("\n🔍 Building character profile from reference...")
         self.character_profile = CharacterProfile(character_ref)
-        print(f"Visual ID: {self.character_profile.visual_id}")
+        
+        # Store as simple string - reuse everywhere
+        self.character_desc = self.character_profile.get_full_description()
+        self.visual_id = self.character_profile.visual_id
+        
+        print(f"✓ Character ready: {self.visual_id}")
         
         self.history = []
         self.current_media = None
-    
+
     def analyze_reality(self, media_path, intended_action):
-        """SmolVLM2 analyzes what we ACTUALLY created vs what we intended."""
-        processor = AutoProcessor.from_pretrained("HuggingFaceTB/SmolVLM2-2.2B-Instruct")
-        model = AutoModelForImageTextToText.from_pretrained(
-            "HuggingFaceTB/SmolVLM2-2.2B-Instruct",
-            torch_dtype=torch.bfloat16
-        ).to("cuda")
-        
+        """Analyze what we ACTUALLY created vs what we intended."""
         media_path = Path(media_path)
         ext = media_path.suffix.lower()
-        media_type = "video" if ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm'] else "image"
+        
+        # Extract frame if video
+        if ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm']:
+            check_path = self.output_dir / f"reality_{len(self.history):03d}.png"
+            video_to_img(str(media_path), self.width, self.height, True, True).save(str(check_path))
+            check_path = str(check_path)
+        else:
+            check_path = str(media_path)
         
         prompt = f"""We intended to create this: "{intended_action}"
 
-Analyze what ACTUALLY happened in this {media_type}:
-1. What is the character doing? (actions, expressions)
-2. What props/objects are visible?
-3. Any issues or unexpected elements?
+    Analyze what ACTUALLY happened in this image:
+    1. What is the character doing? (actions, expressions)
+    2. What props/objects are visible?
+    3. Any issues or unexpected elements?
 
-Be factual about what you see, not what was intended."""
+    Be factual about what you see, not what was intended."""
         
-        messages = [{"role": "user", "content": [
-            {"type": media_type, "path": str(media_path)},
-            {"type": "text", "text": prompt}
-        ]}]
-        
-        inputs = processor.apply_chat_template(
-            messages, add_generation_prompt=True, tokenize=True,
-            return_dict=True, return_tensors="pt"
-        ).to(model.device, dtype=torch.bfloat16)
-        
-        generated_ids = model.generate(**inputs, do_sample=False, max_new_tokens=512)
-        result = processor.batch_decode(generated_ids, skip_special_tokens=True)[0]
-        
-        del model, processor, inputs, generated_ids
-        cleanup()
-        
-        return result.split(':')[-1].strip()
-    
+        result = AnalyzeImage(check_path, prompt)
+        return result['analysis'].strip()
+
     def compare_and_decide(self, intended_action, actual_reality):
-        """Compare prompt vs reality, decide next action."""
-        prompt = f"""INTENDED ACTION: {intended_action}
+        """Compare prompt vs reality, and generate the 'Yes, And...' next step."""
+        history_text = "\n".join([f"- {a}" for a in self.history[-3:]]) if self.history else "First beat."
+        
+        prompt = f"""PREVIOUS INTENTION: {intended_action}
+    ACTUAL SCENE STATE: {actual_reality}
+    CHARACTER PROFILE: {self.character_desc}
+    RECENT HISTORY: {history_text}
 
-ACTUAL RESULT: {actual_reality}
+    TASK: Apply "Yes, And..." improv logic.
+    1. YES: Accept the ACTUAL SCENE STATE as the new, absolute canonical truth of the scene, regardless of the previous intention.
+    2. AND: Naturally build upon this new reality with the next logical physical action or transition.
 
-CHARACTER PROFILE:
-{self.character_profile.get_full_description()}
-
-RECENT HISTORY:
-{chr(10).join([f"- {a}" for a in self.history[-3:]]) if self.history else "First beat."}
-
-TASK:
-1. Did the actual result match the intention? (YES/PARTIAL/NO)
-2. Are there any issues to fix? (character drift, wrong action, missing elements)
-3. What should happen next?
-
-Output format:
-MATCH: [YES/PARTIAL/NO]
-ISSUES: [list any problems or "none"]
-NEXT: [what should happen next, 1-2 sentences]"""
+    Output format:
+    MATCH: [YES/PARTIAL/NO - did it fundamentally break the scene?]
+    ISSUES: [List any critical problems like "character vanished" or "none"]
+    NEXT: [The "And" - what happens next, 1-2 sentences, building directly on the ACTUAL SCENE STATE]"""
         
         result = llm_analyze_media(
             media="", prompt=prompt,
-            system="Scene director analyzing feedback and planning next steps.",
+            system="You are an improv scene director. Accept reality and build on it.",
             max_tokens=200, temperature=0.7
         )['analysis']
         
         return result.strip()
-    
+
     def parse_decision(self, decision_text):
-        """Parse the decision output."""
+        """Parse the decision output into components."""
         lines = decision_text.split('\n')
         match = "UNKNOWN"
         issues = "none"
@@ -198,34 +183,7 @@ NEXT: [what should happen next, 1-2 sentences]"""
                 next_action = line.split(":", 1)[1].strip()
         
         return match, issues, next_action
-    
-    def is_character_adequately_visible(self, media_path):
-        """Two-tier visibility check."""
-        img, check_path = self._extract_frame_for_check(media_path)
-        
-        # Tier 1: RetinaFace
-        detector = RetinaFace()
-        faces = detector.detect(img)
-        del detector
-        cleanup()
-        
-        if not faces:
-            return False, "no_face"
-        
-        # Tier 2: AnalyzeImage identity check
-        prompt = f"""Looking for: {self.character_profile.visual_id}
 
-Is this specific person clearly visible in the image?
-Answer YES or NO."""
-        
-        result = AnalyzeImage(check_path, prompt)
-        response = result['analysis'].strip().upper()
-        
-        if "YES" in response:
-            return True, "visible"
-        else:
-            return False, "wrong_character"
-    
     def _extract_frame_for_check(self, media_path):
         """Extract frame for analysis."""
         media_path = Path(media_path)
@@ -241,103 +199,85 @@ Answer YES or NO."""
             check_path = str(media_path)
         
         return img, str(check_path)
-    
-    def recreate_frame(self, media_path, next_action):
-        """Recreate frame using two-step compositor."""
-        beat_num = len(self.history)
+
+    def is_character_adequately_visible(self, media_path):
+        """Two-tier visibility check:
+        - Tier 1: RetinaFace (fast) - is ANY face visible and facing camera?
+        - Tier 2: AnalyzeImage (slower) - is it the RIGHT character?
         
-        # Step 1: Strip characters
-        media_path = Path(media_path)
-        ext = media_path.suffix.lower()
+        Returns: (visible: bool, reason: str)
+        """
+        img, check_path = self._extract_frame_for_check(media_path)
         
-        if ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm']:
-            last_frame = video_to_img(str(media_path), self.width, self.height, True, True)
+        # Tier 1: RetinaFace
+        detector = RetinaFace()
+        faces = detector.detect(img)
+        del detector
+        cleanup()
+        
+        if not faces:
+            return False, "no_face"
+        
+        # Tier 2: AnalyzeImage identity check
+        prompt = f"""Looking for: {self.visual_id}
+
+    Is this specific person clearly visible in the image?
+    Answer YES or NO."""
+        
+        result = AnalyzeImage(check_path, prompt)
+        response = result['analysis'].strip().upper()
+        
+        if "YES" in response:
+            return True, "visible"
         else:
-            last_frame = Image.open(media_path)
-        
-        last_frame_path = self.output_dir / f"last_frame_{beat_num:03d}.png"
-        last_frame.save(str(last_frame_path))
-        
-        clean_bg_path = self.output_dir / f"clean_bg_{beat_num:03d}.png"
-        print("  → Stripping characters...")
-        
-        CompositeScene(
-            background_path=str(last_frame_path),
-            characters=[],
-            shot_type="establishing",
-            action="maintain environment, no people",
-            output=str(clean_bg_path),
-            width=self.width,
-            height=self.height,
-            seed=self.seed + beat_num
-        )
-        
-        # Step 2: Composite character back
-        composite_path = self.output_dir / f"recreated_{beat_num:03d}.png"
-        print("  → Compositing character...")
-        
-        composite_action = f"{self.character_profile.get_full_description()}\n\nAction: {next_action}"
-        
-        CompositeScene(
-            background_path=str(clean_bg_path),
-            characters=[self.character_ref],
-            shot_type="medium",
-            action=composite_action,
-            output=str(composite_path),
-            width=self.width,
-            height=self.height,
-            seed=self.seed + beat_num
-        )
-        
-        return str(composite_path)
+            return False, "wrong_character"
     
     def run(self, initial_media, story_context, max_beats=8):
-        """Run feedback loop with reality checking."""
         self.current_media = initial_media
         self.history = []
         
         for beat in range(max_beats):
             print(f"\n{'='*60}\nBEAT {beat + 1}/{max_beats}\n{'='*60}")
             
-            # Step 1: Check visibility
-            print(f"\n👁️ Checking visibility...")
+            # Check visibility
             visible, reason = self.is_character_adequately_visible(self.current_media)
             
             if not visible:
                 print(f"⚠️ Character not visible ({reason}) - recreating...")
-                next_action = f"{self.character_profile.visual_id} appears in the scene."
+                next_action = f"{self.visual_id} appears in the scene."
                 self.current_media = self.recreate_frame(self.current_media, next_action)
                 self.history.append(next_action)
                 continue
             
-            # Step 2: Get previous action (what we intended)
+            # Get previous intention
             if self.history:
                 intended_action = self.history[-1]
             else:
                 intended_action = "Initial scene setup"
             
-            # Step 3: Analyze reality (what we actually got)
+            # Analyze what ACTUALLY happened
             print(f"\n🔍 Analyzing reality...")
             actual_reality = self.analyze_reality(self.current_media, intended_action)
-            print(f"Reality: {actual_reality[:100]}...")
             
-            # Step 4: Compare and decide
+            # Compare and decide
             print(f"\n🤔 Comparing intention vs reality...")
             decision = self.compare_and_decide(intended_action, actual_reality)
             match, issues, next_action = self.parse_decision(decision)
             
-            print(f"Match: {match}")
-            print(f"Issues: {issues}")
-            print(f"Next: {next_action}")
+            print(f"Match: {match}, Issues: {issues}")
             
-            # Step 5: If issues detected, recreate frame
-            if "NO" in match or "drift" in issues.lower() or "wrong" in issues.lower():
-                print(f"\n⚠️ Issues detected - recreating frame...")
+            # KEY CHANGE: Use actual_reality as the new current state
+            # Instead of just checking match, we build on what actually happened
+            current_state = actual_reality
+            
+            # If major issues, recreate frame
+            if "NO" in match or "drift" in issues.lower():
+                print(f"\n⚠️ Major issues detected - recreating frame...")
                 self.current_media = self.recreate_frame(self.current_media, next_action)
             
-            # Step 6: Generate video
+            # Generate video using ACTUAL state, not intended state
             output_path = self.output_dir / f"beat_{beat+1:03d}.mp4"
-            i2v_prompt = f"{self.character_profile.get_full_description()}\n\nScene: {actual_reality}\n\nNext action: {next_action}"
+            i2v_prompt = f"{self.character_desc}\n\nCurrent scene: {current_state}\n\nNext action: {next_action}"
             
             print(f"\n🎬 Generating video...")
             GenerateVideo(
@@ -348,13 +288,11 @@ Answer YES or NO."""
                 seed=self.seed + beat
             )
             
-            # Update state
             self.current_media = str(output_path)
             self.history.append(next_action)
             
             print(f"\n✅ Beat {beat + 1} complete")
         
-        print(f"\n{'='*60}\nCOMPLETE: {max_beats} beats\n{'='*60}")
         return self.history
 
 if __name__ == "__main__":

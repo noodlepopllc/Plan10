@@ -31,7 +31,7 @@ def i2v_diffsynth_fast(prompt='', media='', output='output.mp4',
     torch.backends.cudnn.benchmark = True
     torch.backends.cuda.matmul.allow_tf32 = True
 
-    width, height = (720, 1280) if height > width else (1280, 720)
+    #width, height = (720, 1280) if height > width else (1280, 720)
     allocated_vram_limit = max(int(os.environ.get("VRAM", 96)), 96)
 
     vram_config = {
@@ -123,7 +123,7 @@ def i2v_diffsynth(prompt='', media='', output='output.mp4',
     torch.backends.cudnn.benchmark = True
     torch.backends.cuda.matmul.allow_tf32 = True
 
-    width, height = (720, 1280) if height > width else (1280, 720)
+    #width, height = (720, 1280) if height > width else (1280, 720)
 
     # 1. FIXED VRAM CONFIG: Lock everything directly inside CUDA space.
     # By removing "cpu" offloading, we stop the ARM-to-GPU step-by-step page fault loops.
