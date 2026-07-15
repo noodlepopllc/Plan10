@@ -37,6 +37,14 @@ def i2v_diffusers(prompt='', media='', output='output.mp4',
     Executes a native First-Frame Last-Frame conditioned 8-step distillation generation pass.
     Guarantees zero identity drift across the 10-second trajectory.
     """
+
+        # 💡 FIX: Force orientation switch AND snap dimensions strictly to a multiple of 32
+    target_w, target_h = (720, 1280) if height > width else (1280, 720)
+    
+    # // 32 * 32 drops any fractional pixel remainders instantly
+    width = int(target_w // 32) * 32   # 1280 stays 1280, 704 stays 704, etc.
+    height = int(target_h // 32) * 32  # 720 snaps down to 704!
+    
     # 1. Acceleration backend optimization
     torch.backends.cudnn.benchmark = True
     torch.backends.cuda.matmul.allow_tf32 = True
