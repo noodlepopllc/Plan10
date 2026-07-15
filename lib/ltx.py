@@ -36,84 +36,100 @@ def i2v_diffusers(prompt='', media='', output='output.mp4',
 
     width, height = (720, 1280) if height > width else (1280, 720)
 
-    # 2. Match the specific repo target based on distillation setting
-    # Diffusers distributes the distilled variant as an isolated layout.
-    model_id = "diffusers/LTX-2.3-Distilled-Diffusers" if DISTILLED else "diffusers/LTX-2.3-Diffusers"
+    # Point to your resolved 19b/22b distilled diffusers weight pool
+    model_path = "rootonchair/LTX-2-19b-distilled" 
 
-    # 3. Load entire pipeline into Spark's Unified LPDDR5x pool
-    # Uses device_map="cuda" to dynamically cache page tables without hard offloading constraints.
+    # 2. Load entire pipeline into Spark's Unified LPDDR5x pool
     pipe = LTX2Pipeline.from_pretrained(
-        model_id,
+        model_path,
         torch_dtype=torch.bfloat16,
-        device_map="cuda"
     )
+    # Map cleanly to CUDA space without forcing strict page-fault limits
+    pipe.to("cuda")
 
-    # 4. Freeze step execution loops inside the CUDA graph
-    # Eliminates slow ARM64 python interpreter micro-sync overhead per step
+    # 3. Freeze step execution loops inside the CUDA graph
     pipe.transformer = torch.compile(pipe.transformer, mode="reduce-overhead")
 
-    # 5. Core prompts and modifiers
+    # 4. Core prompts and modifiers
     sfx_modifiers = ", realistic sound effects only, crisp SFX, ambient background noise, completely devoid of music, no BGM, no instruments"
     final_prompt = f"{prompt}{sfx_modifiers}" if prompt else "ambient sound effects, SFX, absolute no music"
 
     negative_prompt = (
-        "blurry, out of focus, overexposed, underexposed, low contrast, washed out colors, excessive noise, "
-        "grainy texture, poor lighting, flickering, motion blur, distorted proportions, unnatural skin tones, "
-        "deformed facial features, asymmetrical face, missing facial features, extra limbs, disfigured hands, "
-        "wrong hand count, artifacts around text, inconsistent perspective, camera shake, incorrect depth of "
-        "field, background too sharp, background clutter, distracting reflections, harsh shadows, inconsistent "
-        "lighting direction, color banding, cartoonish rendering, 3D CGI look, unrealistic materials, uncanny "
-        "valley effect, incorrect ethnicity, wrong gender, exaggerated expressions, wrong gaze direction, "
-        "mismatched lip sync, music, background music, BGM, melody, song, soundtrack, musical instruments, synth, "
-        "singing, vocals, rhythm, beats, distorted voice, robotic voice, echo, background noise, off-sync audio, "
-        "incorrect dialogue, added dialogue, repetitive speech, jittery movement, awkward pauses, incorrect timing, "
-        "unnatural transitions, inconsistent framing, tilted camera, flat lighting, inconsistent tone, "
-        "cinematic oversaturation, stylized filters, or AI artifacts."
+        "shaky, glitchy, low quality, worst quality, deformed, distorted, disfigured, motion smear, "
+        "motion artifacts, fused fingers, bad anatomy, weird hand, ugly, transition, static."
     )
     
     # Set step constraints based on distilled selection state
     num_frames = (duration_sec * 24) + 1
-    steps = 8 if DISTILLED else 30
-    cfg_scale = 1.0 if DISTILLED else 3.5  # Distilled must remain locked at 1.0 CFG
+    frame_rate = 24.0
+    generator = torch.Generator("cuda").manual_seed(seed) if seed != -1 else None
 
-    # Prep the reference image container
+    # Prep the reference image container 
     image = Image.open(media).convert("RGB").resize((width, height))
     
-    # Handle deterministic seeds
-    generator = torch.Generator(device="cuda").manual_seed(seed) if seed != -1 else None
-
-    # 6. Execute native single-forward interface
-    output_container = pipe(
+    # 5. EXECUTE STAGE 1 NATIVE SINGLE-FORWARD INTERFACE
+    # We pass the image into 'images' as a structured list to resolve the argument error!
+    video_latent, audio_latent = pipe(
         prompt=final_prompt,
         negative_prompt=negative_prompt,
-        init_image=image,                  # Correct argument key for LTX2Pipeline Image Condition
-        num_inference_steps=steps,
-        guidance_scale=cfg_scale,
-        num_frames=num_frames,
-        height=height,
         width=width,
+        height=height,
+        num_frames=num_frames,
+        frame_rate=frame_rate,
+        num_inference_steps=8,
+        sigmas=DISTILLED_SIGMA_VALUES,
+        guidance_scale=1.0,
         generator=generator,
-        output_type="pt"
+        images=[image],                  # 💡 FIXED: Native image conditioning parameter mapping
+        output_type="latent",
+        return_dict=False,
     )
     
-    # 7. Extract synchronized AV containers
-    video_frames = output_container.frames
-    audio_waveform = output_container.audio 
+    # 6. INITIALIZE AND EXECUTE THE STAGE 2 LATENT UPSAMPLING PIPELINE
+    # This matches the true 2-stage resolution refine logic of the repo
+    latent_upsampler = LTX2LatentUpsamplerModel.from_pretrained(
+        model_path,
+        subfolder="latent_upsampler",
+        torch_dtype=torch.bfloat16,
+    ).to("cuda")
+    
+    upsample_pipe = LTX2LatentSamplePipeline(vae=pipe.vae, latent_upsampler=latent_upsampler)
+    
+    upscaled_video_latent = upsample_pipe(
+        latents=video_latent,
+        output_type="latent",
+        return_dict=False,
+    )[0]
 
-    export_to_video(
-        video_frames=video_frames, 
-        output_video_path=output, 
-        fps=24, 
-        audio=audio_waveform
+    # 7. FINAL REFINE STEP PASS
+    video, audio = pipe(
+        latents=upscaled_video_latent,
+        audio_latents=audio_latent,
+        prompt=final_prompt,
+        negative_prompt=negative_prompt,
+        num_inference_steps=3,
+        noise_scale=STAGE_2_DISTILLED_SIGMA_VALUES[0], 
+        sigmas=STAGE_2_DISTILLED_SIGMA_VALUES,
+        generator=generator,
+        guidance_scale=1.0,
+        output_type="np",
+        return_dict=False,
+    )
+
+    # 8. ENCODE AND STORE SYNCHRONIZED FILE
+    encode_video(
+        video[0],
+        fps=frame_rate,
+        audio=audio[0].float().cpu(),
+        audio_sample_rate=pipe.vocoder.config.output_sampling_rate,
+        output_path=output,
     )
     
-    # 8. Clean up execution memory cleanly
-    del pipe
+    # 9. Clear memory structures cleanly
+    del pipe, upsample_pipe, latent_upsampler
     gc.collect()
     if torch.cuda.is_available():  
         torch.cuda.empty_cache()
-
-
 
 def i2v_diffsynth(prompt='', media='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
