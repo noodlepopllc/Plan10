@@ -367,11 +367,8 @@ class FeedbackLoop:
             
             if not visible:
                 print(f"⚠️ Character not visible ({reason}) - recreating...")
-                # Pass current state, not next action
                 current_state = f"{self.visual_id} is now visible in the scene, facing the camera in a frontal or 3/4 view."
                 self.current_media = self.recreate_frame(self.current_media, current_state)
-                # Don't increment beat_count - we'll generate a video this iteration
-                # Don't continue - fall through to generate video
             
             # Get previous intention
             if self.history:
@@ -381,11 +378,13 @@ class FeedbackLoop:
             
             # Analyze what ACTUALLY happened
             print(f"\n🔍 Analyzing reality...")
-            actual_reality = self.analyze_reality(self.current_media, intended_action)
+            raw_reality = self.analyze_reality(self.current_media, intended_action)
+            
+            # Clean up the reality description - extract just the scene part
+            actual_reality = self._extract_scene_description(raw_reality)
             
             # Compare and decide
             print(f"\n🤔 Comparing intention vs reality...")
-            # PASS STORY CONTEXT HERE
             decision = self.compare_and_decide(intended_action, actual_reality, story_context)
             match, issues, next_action = self.parse_decision(decision)
             
@@ -396,11 +395,13 @@ class FeedbackLoop:
                 print(f"\n⚠️ Major issues detected - rebuilding frame to current state...")
                 self.current_media = self.recreate_frame(self.current_media, actual_reality)
             
-            # Generate video
+            # Generate video with PROPERLY FORMATTED prompt
             output_path = self.output_dir / f"beat_{beat_count+1:03d}.mp4"
-            i2v_prompt = f"{self.character_desc}\n\nCurrent scene: {actual_reality}\n\nNext action: {next_action}"
+            i2v_prompt = self._format_video_prompt(actual_reality, next_action)
             
             print(f"\n🎬 Generating video...")
+            print(f"Prompt preview: {i2v_prompt[:200]}...")
+            
             GenerateVideo(
                 prompt=i2v_prompt, 
                 media=self.current_media, 
@@ -416,6 +417,35 @@ class FeedbackLoop:
             print(f"\n✅ Beat {beat_count} complete")
         
         return self.history
+
+    def _extract_scene_description(self, raw_analysis):
+        """Extract clean scene description from analysis output."""
+        # Remove analysis artifacts
+        lines = raw_analysis.split('\n')
+        clean_lines = []
+        
+        skip_keywords = ['analysis', 'discrepancies', 'issues', 'unexpected', 'summary', 'based on image']
+        
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            if any(keyword in line.lower() for keyword in skip_keywords):
+                continue
+            clean_lines.append(line)
+        
+        return ' '.join(clean_lines)
+
+    def _format_video_prompt(self, scene_description, next_action):
+        """Format the video prompt with clear structure."""
+        return f"""STYLE: Anime style, cel shading, flat colors, bold outlines, limited palette
+
+    CHARACTERS:
+    {self.character_desc}
+
+    CURRENT SCENE: {scene_description}
+
+    NEXT ACTION: {next_action}"""
 
 if __name__ == "__main__":
     import argparse

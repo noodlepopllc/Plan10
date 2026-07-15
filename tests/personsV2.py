@@ -7,7 +7,7 @@ from locations import  LocationPairGenerator
 
 load_environ()
 
-if os.environ.get('ANIME','False') == 'True':
+if os.environ.get('ANIME','False') != 'False':
     from anime_gen import CreateCharacterSheet, CreateBackground
 else:
     from image_gen import CreateCharacterSheet, CreateBackground

@@ -476,7 +476,7 @@ if __name__ == '__main__':
     from config import load_environ
 
     load_environ()
-    if os.environ.get('ANIME','False') == 'True':
+    if os.environ.get('ANIME','False') != 'False':
         from anime_gen import ImageGen, CreateCharacterSheet
     else:
         from image_gen import ImageGen, CreateCharacterSheet
