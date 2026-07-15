@@ -54,7 +54,7 @@ def i2v_diffusers(prompt='', media='', output='output.mp4',
     num_frames = int((duration_sec * frame_rate) + 1)
 
     # 💡 UPGRADED: Points straight to the official native LTX-2.3 distilled repo
-    model_path = "diffusers/LTX-2.3-Distilled-Diffusers"
+    model_path = "CalamitousFelicitousness/LTX-2.3-distilled-Diffusers"
 
     # Load 2.3 directly onto your CUDA memory pool
     pipe = LTX2ConditionPipeline.from_pretrained(model_path, torch_dtype=torch.bfloat16).to("cuda")
@@ -95,7 +95,7 @@ def i2v_diffusers(prompt='', media='', output='output.mp4',
     # 💡 SOLUTION: Pull from the byte-identical 2.3 community mapping repository
     # This repo includes the required "latent_upsampler" subfolder structure natively!
     latent_upsampler = LTX2LatentUpsamplerModel.from_pretrained(
-        "CalamitousFelicitousness/LTX-2.3-Spatial-Upsampler-x2-1.0-Diffusers", # or "-x2-1.1-Diffusers"
+        model_path,
         subfolder="latent_upsampler",
         torch_dtype=torch.bfloat16,
     ).to("cuda")
