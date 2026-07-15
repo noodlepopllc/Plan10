@@ -42,9 +42,60 @@ def cleanup():
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
 
+class CharacterProfile:
+    """Cached character profile - ground truth for appearance."""
+    
+    def __init__(self, character_ref_path):
+        self.ref_path = character_ref_path
+        self.visual_id = self._extract_visual_id()
+        self.clothing = self._extract_clothing()
+        self.appearance = self._extract_appearance()
+    
+    def _extract_visual_id(self):
+        """Short identifier for visibility checks."""
+        prompt = """Describe this character in 5-10 words focusing ONLY on:
+- Hair color and style
+- Main clothing color/item (TOP HALF only)
+- Face/body type if distinctive
+
+Output ONLY the description (5-10 words), nothing else."""
+        return AnalyzeImage(self.ref_path, prompt)['analysis'].strip()
+    
+    def _extract_clothing(self):
+        """Detailed clothing description - stable ground truth."""
+        prompt = """Describe this character's clothing in detail:
+- Top/shirt: color, style, fit, pattern
+- Bottom/pants: color, style, fit
+- Shoes: type, color
+- Accessories: jewelry, bags, etc.
+- Hair: color, style, length
+
+Be extremely specific about colors and styles. This description will be used to maintain consistency."""
+        return AnalyzeImage(self.ref_path, prompt)['analysis'].strip()
+    
+    def _extract_appearance(self):
+        """Physical appearance details."""
+        prompt = """Describe this character's physical appearance:
+- Age range
+- Gender
+- Hair color and style
+- Face features
+- Body type/build
+- Any distinctive features
+
+Be specific. This will be used to maintain character consistency."""
+        return AnalyzeImage(self.ref_path, prompt)['analysis'].strip()
+    
+    def get_full_description(self):
+        """Complete character description for prompts."""
+        return f"""CHARACTER PROFILE:
+Visual ID: {self.visual_id}
+Appearance: {self.appearance}
+Clothing: {self.clothing}"""
+
 
 class FeedbackLoop:
-    """Single-character emergent feedback loop for visual storytelling."""
+    """Feedback loop with reality checking."""
     
     def __init__(self, character_ref, output_dir="feedback_output", width=WIDTH, height=HEIGHT, seed=SEED):
         self.character_ref = character_ref
@@ -53,35 +104,17 @@ class FeedbackLoop:
         self.width = width
         self.height = height
         self.seed = seed
+        
+        # Cached character profile - ground truth
+        print("\n🔍 Building character profile from reference...")
+        self.character_profile = CharacterProfile(character_ref)
+        print(f"Visual ID: {self.character_profile.visual_id}")
+        
         self.history = []
         self.current_media = None
-        
-        # Extract visual ID once from character reference
-        print("\n🔍 Extracting visual ID from character reference...")
-        self.visual_id = self.extract_visual_id(character_ref)
-        print(f"Visual ID: {self.visual_id}")
     
-    def extract_visual_id(self, character_ref_path):
-        """Extract a short visual identifier from the character reference."""
-        prompt = """Describe this character in 5-10 words focusing ONLY on:
-- Hair color and style
-- Main clothing color/item (TOP HALF only - shirt, sweater, jacket)
-- Face/body type if distinctive
-
-DO NOT include shoes, pants, or accessories.
-
-Examples:
-- "blonde woman in blue dress"
-- "red-haired man in black suit"
-- "brunette woman in purple sweater"
-
-Output ONLY the description (5-10 words), nothing else."""
-        
-        result = AnalyzeImage(character_ref_path, prompt)
-        return result['analysis'].strip()
-    
-    def get_visual_description(self, media_path):
-        """Analyze image/video with SmolVLM2."""
+    def analyze_reality(self, media_path, intended_action):
+        """SmolVLM2 analyzes what we ACTUALLY created vs what we intended."""
         processor = AutoProcessor.from_pretrained("HuggingFaceTB/SmolVLM2-2.2B-Instruct")
         model = AutoModelForImageTextToText.from_pretrained(
             "HuggingFaceTB/SmolVLM2-2.2B-Instruct",
@@ -92,12 +125,14 @@ Output ONLY the description (5-10 words), nothing else."""
         ext = media_path.suffix.lower()
         media_type = "video" if ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm'] else "image"
         
-        prompt = """Describe this in detail. MUST include:
-- Character actions and expressions
-- EXACT clothing: top color/style, pants/bottom color/style, shoes, accessories
-- Hair color and style
-- Environment and props
-Be extremely specific about clothing."""
+        prompt = f"""We intended to create this: "{intended_action}"
+
+Analyze what ACTUALLY happened in this {media_type}:
+1. What is the character doing? (actions, expressions)
+2. What props/objects are visible?
+3. Any issues or unexpected elements?
+
+Be factual about what you see, not what was intended."""
         
         messages = [{"role": "user", "content": [
             {"type": media_type, "path": str(media_path)},
@@ -117,31 +152,82 @@ Be extremely specific about clothing."""
         
         return result.split(':')[-1].strip()
     
-    def generate_next_action(self, description, story_context):
-        """Generate next action using LLM."""
-        history_text = "\n".join([f"- {a}" for a in self.history[-3:]]) if self.history else "First beat."
-        
-        prompt = f"""CURRENT SCENE: {description}
-STORY CONTEXT: {story_context}
-RECENT ACTIONS: {history_text}
+    def compare_and_decide(self, intended_action, actual_reality):
+        """Compare prompt vs reality, decide next action."""
+        prompt = f"""INTENDED ACTION: {intended_action}
 
-CRITICAL DIRECTOR RULES:
-1. Character MUST remain clearly visible in the frame.
-2. OBJECT PERMANENCE: Props and objects stay where they are. If the character interacts with an object, they must move to it naturally. Objects do not teleport.
-3. Build naturally on what you see using "yes, and..." improv logic.
+ACTUAL RESULT: {actual_reality}
 
-Describe what happens next (1-2 sentences)."""
+CHARACTER PROFILE:
+{self.character_profile.get_full_description()}
+
+RECENT HISTORY:
+{chr(10).join([f"- {a}" for a in self.history[-3:]]) if self.history else "First beat."}
+
+TASK:
+1. Did the actual result match the intention? (YES/PARTIAL/NO)
+2. Are there any issues to fix? (character drift, wrong action, missing elements)
+3. What should happen next?
+
+Output format:
+MATCH: [YES/PARTIAL/NO]
+ISSUES: [list any problems or "none"]
+NEXT: [what should happen next, 1-2 sentences]"""
         
         result = llm_analyze_media(
             media="", prompt=prompt,
-            system="Scene director. Maintain spatial continuity and object permanence.",
-            max_tokens=150, temperature=0.7
+            system="Scene director analyzing feedback and planning next steps.",
+            max_tokens=200, temperature=0.7
         )['analysis']
         
         return result.strip()
     
+    def parse_decision(self, decision_text):
+        """Parse the decision output."""
+        lines = decision_text.split('\n')
+        match = "UNKNOWN"
+        issues = "none"
+        next_action = ""
+        
+        for line in lines:
+            if line.startswith("MATCH:"):
+                match = line.split(":", 1)[1].strip()
+            elif line.startswith("ISSUES:"):
+                issues = line.split(":", 1)[1].strip()
+            elif line.startswith("NEXT:"):
+                next_action = line.split(":", 1)[1].strip()
+        
+        return match, issues, next_action
+    
+    def is_character_adequately_visible(self, media_path):
+        """Two-tier visibility check."""
+        img, check_path = self._extract_frame_for_check(media_path)
+        
+        # Tier 1: RetinaFace
+        detector = RetinaFace()
+        faces = detector.detect(img)
+        del detector
+        cleanup()
+        
+        if not faces:
+            return False, "no_face"
+        
+        # Tier 2: AnalyzeImage identity check
+        prompt = f"""Looking for: {self.character_profile.visual_id}
+
+Is this specific person clearly visible in the image?
+Answer YES or NO."""
+        
+        result = AnalyzeImage(check_path, prompt)
+        response = result['analysis'].strip().upper()
+        
+        if "YES" in response:
+            return True, "visible"
+        else:
+            return False, "wrong_character"
+    
     def _extract_frame_for_check(self, media_path):
-        """Extract a frame from media for analysis, returns (cv2_image, path_for_analyzeimage)."""
+        """Extract frame for analysis."""
         media_path = Path(media_path)
         ext = media_path.suffix.lower()
         
@@ -150,58 +236,17 @@ Describe what happens next (1-2 sentences)."""
             img = cv2.cvtColor(np.array(frame), cv2.COLOR_RGB2BGR)
             check_path = self.output_dir / f"check_{len(self.history):03d}.png"
             frame.save(str(check_path))
-            check_path = str(check_path)
         else:
             img = cv2.imread(str(media_path))
             check_path = str(media_path)
         
-        return img, check_path
+        return img, str(check_path)
     
-    def is_character_adequately_visible(self, media_path):
-        """Two-tier visibility check:
-        - Tier 1: RetinaFace (fast) - is ANY face visible and facing camera?
-        - Tier 2: AnalyzeImage (slower) - is it the RIGHT character?
-        
-        Returns: (visible: bool, reason: str)
-        """
-        img, check_path = self._extract_frame_for_check(media_path)
-        
-        # TIER 1: RetinaFace - fast pose check
-        detector = RetinaFace()
-        faces = detector.detect(img)
-        del detector
-        cleanup()
-        
-        if not faces:
-            print(f"  [DEBUG] RetinaFace: NO faces detected")
-            return False, "no_face"
-        
-        print(f"  [DEBUG] RetinaFace: {len(faces)} face(s) detected")
-        
-        # TIER 2: AnalyzeImage - identity check (only if face exists)
-        prompt = f"""Looking for: {self.visual_id}
-
-Is this specific person clearly visible in the image?
-Focus on: hair color/style, clothing color/style, face/body type.
-
-Answer YES if this person is clearly visible, NO if not."""
-        
-        result = AnalyzeImage(check_path, prompt)
-        response = result['analysis'].strip().upper()
-        
-        print(f"  [DEBUG] AnalyzeImage for '{self.visual_id}': {response}")
-        
-        if "YES" in response:
-            return True, "visible"
-        else:
-            return False, "wrong_character"
-    
-    def recreate_frame(self, media_path, description):
-        """Recreate frame using two-step compositor flow: strip characters → composite back."""
-        
+    def recreate_frame(self, media_path, next_action):
+        """Recreate frame using two-step compositor."""
         beat_num = len(self.history)
         
-        # Step 1: Extract last frame and strip characters to get clean background
+        # Step 1: Strip characters
         media_path = Path(media_path)
         ext = media_path.suffix.lower()
         
@@ -213,26 +258,25 @@ Answer YES if this person is clearly visible, NO if not."""
         last_frame_path = self.output_dir / f"last_frame_{beat_num:03d}.png"
         last_frame.save(str(last_frame_path))
         
-        # Strip characters to get clean background
         clean_bg_path = self.output_dir / f"clean_bg_{beat_num:03d}.png"
-        print("  → Stripping characters to establish clean background...")
+        print("  → Stripping characters...")
         
         CompositeScene(
             background_path=str(last_frame_path),
             characters=[],
             shot_type="establishing",
-            action="maintain exact environment, lighting, and props, but ensure no people are present",
+            action="maintain environment, no people",
             output=str(clean_bg_path),
             width=self.width,
             height=self.height,
             seed=self.seed + beat_num
         )
         
-        # Step 2: Composite character back onto clean background
+        # Step 2: Composite character back
         composite_path = self.output_dir / f"recreated_{beat_num:03d}.png"
-        print(f"  → Compositing character onto clean background...")
+        print("  → Compositing character...")
         
-        composite_action = f"Character facing camera, front view, face clearly visible. {description}"
+        composite_action = f"{self.character_profile.get_full_description()}\n\nAction: {next_action}"
         
         CompositeScene(
             background_path=str(clean_bg_path),
@@ -248,48 +292,70 @@ Answer YES if this person is clearly visible, NO if not."""
         return str(composite_path)
     
     def run(self, initial_media, story_context, max_beats=8):
-        """Run the feedback loop."""
+        """Run feedback loop with reality checking."""
         self.current_media = initial_media
         self.history = []
         
         for beat in range(max_beats):
             print(f"\n{'='*60}\nBEAT {beat + 1}/{max_beats}\n{'='*60}")
             
-            # Two-tier visibility check
-            print(f"\n👁️ Checking character visibility (looking for: {self.visual_id})...")
+            # Step 1: Check visibility
+            print(f"\n👁️ Checking visibility...")
             visible, reason = self.is_character_adequately_visible(self.current_media)
             
             if not visible:
-                if reason == "no_face":
-                    print("⚠️ No face visible (back to camera?) - recreating frame...")
-                else:
-                    print("⚠️ Wrong character detected - recreating frame...")
-                
-                description = self.get_visual_description(self.current_media)
-                self.current_media = self.recreate_frame(self.current_media, description)
+                print(f"⚠️ Character not visible ({reason}) - recreating...")
+                next_action = f"{self.character_profile.visual_id} appears in the scene."
+                self.current_media = self.recreate_frame(self.current_media, next_action)
+                self.history.append(next_action)
+                continue
             
-            # Analyze and direct
-            description = self.get_visual_description(self.current_media)
-            next_action = self.generate_next_action(description, story_context)
+            # Step 2: Get previous action (what we intended)
+            if self.history:
+                intended_action = self.history[-1]
+            else:
+                intended_action = "Initial scene setup"
             
-            # Generate video
+            # Step 3: Analyze reality (what we actually got)
+            print(f"\n🔍 Analyzing reality...")
+            actual_reality = self.analyze_reality(self.current_media, intended_action)
+            print(f"Reality: {actual_reality[:100]}...")
+            
+            # Step 4: Compare and decide
+            print(f"\n🤔 Comparing intention vs reality...")
+            decision = self.compare_and_decide(intended_action, actual_reality)
+            match, issues, next_action = self.parse_decision(decision)
+            
+            print(f"Match: {match}")
+            print(f"Issues: {issues}")
+            print(f"Next: {next_action}")
+            
+            # Step 5: If issues detected, recreate frame
+            if "NO" in match or "drift" in issues.lower() or "wrong" in issues.lower():
+                print(f"\n⚠️ Issues detected - recreating frame...")
+                self.current_media = self.recreate_frame(self.current_media, next_action)
+            
+            # Step 6: Generate video
             output_path = self.output_dir / f"beat_{beat+1:03d}.mp4"
-            i2v_prompt = f"{description}. {next_action}"
+            i2v_prompt = f"{self.character_profile.get_full_description()}\n\nScene: {actual_reality}\n\nNext action: {next_action}"
             
+            print(f"\n🎬 Generating video...")
             GenerateVideo(
-                prompt=i2v_prompt, media=self.current_media, output=str(output_path),
-                duration_sec=10 if WGP or LTX else 5, seed=self.seed + beat
+                prompt=i2v_prompt, 
+                media=self.current_media, 
+                output=str(output_path),
+                duration_sec=10 if WGP or LTX else 5, 
+                seed=self.seed + beat
             )
             
             # Update state
             self.current_media = str(output_path)
             self.history.append(next_action)
             
-            print(f"✅ Beat {beat + 1} complete")
+            print(f"\n✅ Beat {beat + 1} complete")
         
         print(f"\n{'='*60}\nCOMPLETE: {max_beats} beats\n{'='*60}")
         return self.history
-
 
 if __name__ == "__main__":
     import argparse
