@@ -116,6 +116,81 @@ class FeedbackLoop:
         self.history = []
         self.current_media = None
 
+    def generate_next_action(self, description, story_context):
+        """Generate next action using LLM with 'Yes, And...' logic."""
+        history_text = "\n".join([f"- {a}" for a in self.history[-3:]]) if self.history else "First beat."
+        
+        prompt = f"""CURRENT SCENE: {description}
+    STORY CONTEXT: {story_context}
+    RECENT ACTIONS: {history_text}
+
+    CRITICAL DIRECTOR RULES:
+    1. Character MUST remain in a FRONTAL or 3/4 view. STRICTLY AVOID extreme profile views or turning completely away from the camera.
+    2. OBJECT PERMANENCE: Props and objects stay where they are. If the character interacts with an object, they must move to it naturally.
+    3. Build naturally on what you see using "yes, and..." improv logic.
+
+    Describe what happens next (1-2 sentences)."""
+        
+        result = llm_analyze_media(
+            media="", prompt=prompt,
+            system="Scene director. Maintain spatial continuity, object permanence, and FRONTAL/3-4 character framing.",
+            max_tokens=150, temperature=0.7
+        )['analysis']
+        
+        return result.strip()
+
+    def recreate_frame(self, media_path, current_state):
+        """Recreate frame using two-step compositor flow: strip characters → composite back."""
+        
+        beat_num = len(self.history)
+        
+        # Step 1: Extract last frame and strip characters to get clean background
+        media_path = Path(media_path)
+        ext = media_path.suffix.lower()
+        
+        if ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm']:
+            last_frame = video_to_img(str(media_path), self.width, self.height, True, True)
+        else:
+            last_frame = Image.open(media_path)
+        
+        last_frame_path = self.output_dir / f"last_frame_{beat_num:03d}.png"
+        last_frame.save(str(last_frame_path))
+        
+        # Strip characters to get clean background
+        clean_bg_path = self.output_dir / f"clean_bg_{beat_num:03d}.png"
+        print("  → Stripping characters to establish clean background...")
+        
+        CompositeScene(
+            background_path=str(last_frame_path),
+            characters=[],
+            shot_type="establishing",
+            action="maintain exact environment, lighting, and props, but ensure no people are present",
+            output=str(clean_bg_path),
+            width=self.width,
+            height=self.height,
+            seed=self.seed + beat_num
+        )
+        
+        # Step 2: Composite character back onto clean background
+        composite_path = self.output_dir / f"recreated_{beat_num:03d}.png"
+        print(f"  → Compositing character onto clean background...")
+        
+        # ENFORCE SAFE ANGLE: frontal or 3/4 view
+        composite_action = f"Character in clear frontal or 3/4 view, face fully recognizable. {self.character_desc}\n\nCurrent state: {current_state}"
+        
+        CompositeScene(
+            background_path=str(clean_bg_path),
+            characters=[self.character_ref],
+            shot_type="medium",
+            action=composite_action,
+            output=str(composite_path),
+            width=self.width,
+            height=self.height,
+            seed=self.seed + beat_num
+        )
+        
+        return str(composite_path)
+
     def analyze_reality(self, media_path, intended_action):
         """Analyze what we ACTUALLY created vs what we intended."""
         media_path = Path(media_path)
@@ -266,18 +341,14 @@ class FeedbackLoop:
             
             print(f"Match: {match}, Issues: {issues}")
             
-            # KEY CHANGE: Use actual_reality as the new current state
-            # Instead of just checking match, we build on what actually happened
-            current_state = actual_reality
-            
-            # If major issues, recreate frame
+            # If major issues, rebuild frame showing CURRENT state (actual_reality), not next_action
             if "NO" in match or "drift" in issues.lower():
-                print(f"\n⚠️ Major issues detected - recreating frame...")
-                self.current_media = self.recreate_frame(self.current_media, next_action)
+                print(f"\n⚠️ Major issues detected - rebuilding frame to current state...")
+                self.current_media = self.recreate_frame(self.current_media, actual_reality)
             
-            # Generate video using ACTUAL state, not intended state
+            # Generate next video: starts from current state, animates into next_action
             output_path = self.output_dir / f"beat_{beat+1:03d}.mp4"
-            i2v_prompt = f"{self.character_desc}\n\nCurrent scene: {current_state}\n\nNext action: {next_action}"
+            i2v_prompt = f"{self.character_desc}\n\nCurrent scene: {actual_reality}\n\nNext action: {next_action}"
             
             print(f"\n🎬 Generating video...")
             GenerateVideo(
