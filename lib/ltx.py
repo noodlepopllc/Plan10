@@ -208,7 +208,7 @@ def i2v_diffsynth(prompt='', media='', output='output.mp4',
     if torch.cuda.is_available():  
         torch.cuda.empty_cache()
 
-i2v = i2v_diffsynth
+i2v = i2v_diffusers if DISTILLED else i2v_diffsynth
 
 def GenerateVideo(prompt='', media='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
