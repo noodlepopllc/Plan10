@@ -170,9 +170,15 @@ class FeedbackLoop:
         
         # Store as simple string - reuse everywhere
         self.character_desc = self.character_profile.get_full_description()
-        self.visual_id = self.character_profile.visual_id
         
-        print(f"✓ Character ready: {self.visual_id}")
+        # Get first character's visual_id for visibility tracking
+        if self.character_profile.get_character_count() > 0:
+            self.visual_id = self.character_profile.get_character(0)['visual_id']
+        else:
+            self.visual_id = "unknown character"
+        
+        print(f"✓ Found {self.character_profile.get_character_count()} character(s)")
+        print(f"Primary visual ID: {self.visual_id}")
         
         self.history = []
         self.current_media = None
