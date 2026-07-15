@@ -1,7 +1,7 @@
 from PIL import Image
 import os, time
 
-def wait_for_file(path: str, timeout: float = 30.0, min_size: int = 1024, stable_for: float = 1.5):
+def wait_for_file(path: str, timeout: float = 60.0, min_size: int = 1024, stable_for: float = 1.5):
     """Wait until file exists, has reasonable size, AND stops growing."""
     start = time.time()
     last_size = -1

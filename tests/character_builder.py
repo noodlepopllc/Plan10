@@ -465,7 +465,7 @@ if __name__ == '__main__':
 
     if args.randomize:
         args.ethnicity = random.choice(ethnicities)
-        args.name = random.choice(female_names)
+        args.name = random.choice(female_names) if args.name == 'Emily' else args.name.capitalize()
         args.hair_color = random.choice(hair_colors)
         args.hair_style = random.choice(hair_silhouettes)
         args.seed = random.randint(0,1000000)
