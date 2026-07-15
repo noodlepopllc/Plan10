@@ -43,71 +43,116 @@ def cleanup():
         torch.cuda.empty_cache()
 
 class CharacterProfile:
-    """Cached character profile - ground truth for appearance."""
+    """Cached character profile - extracts ONLY prominent foreground characters."""
     
     def __init__(self, character_ref_path):
         self.ref_path = character_ref_path
-        self.visual_id = self._extract_visual_id()
-        self.clothing = self._extract_clothing()
-        self.appearance = self._extract_appearance()
+        self.characters = self._extract_all_characters()
     
-    def _extract_visual_id(self):
-        """Short identifier for visibility checks."""
-        prompt = """Describe this character in 5-10 words focusing ONLY on:
-    - Ethnicity
-    - Age range
-    - Hair color and style
-    - Main clothing color/item (TOP HALF only)
+    def _extract_all_characters(self):
+        """Extract complete profiles for ONLY prominent foreground characters."""
+        prompt = """Analyze this image and extract a complete profile for the 1 to 3 MOST PROMINENT FOREGROUND characters ONLY.
 
-    Output ONLY the description (5-10 words), nothing else."""
-        return AnalyzeImage(self.ref_path, prompt)['analysis'].strip()
+CRITICAL RULES:
+1. IGNORE background people, crowds, blurry figures, or distant subjects.
+2. Focus ONLY on characters who are large, in focus, and clearly the main subjects of the image.
+3. Maximum of 3 characters. If there is only 1 prominent person, output only CHARACTER_1.
 
-    def _extract_appearance(self):
-        """Physical appearance details."""
-        prompt = """Describe this character's physical appearance:
-    - Ethnicity (be specific: East Asian, Southeast Asian, Caucasian, African, Hispanic, South Asian, Middle Eastern, etc.)
-    - Age range
-    - Gender
-    - Face shape (oval, round, square, heart, oblong, etc.)
-    - Eye shape (almond, round, hooded, monolid, downturned, upturned, etc.)
-    - Hair color and style
-    - Body type/build
-    - Any distinctive features
+For EACH prominent character, provide:
+1. VISUAL_ID: 5-10 word description (ethnicity, age range, hair color/style, main top clothing)
+2. APPEARANCE: Physical details (ethnicity, age, gender, face shape, eye shape, hair, body type, distinctive features)
+3. CLOTHING: Detailed clothing (top color/style/fit, bottom color/style/fit, shoes, accessories, hair details)
 
-    Be specific. This will be used to maintain character consistency."""
-        return AnalyzeImage(self.ref_path, prompt)['analysis'].strip()
+Output format (use this EXACT structure):
+CHARACTER_1:
+VISUAL_ID: [description]
+APPEARANCE: [description]
+CLOTHING: [description]
+
+CHARACTER_2: (ONLY if a second prominent foreground character exists)
+VISUAL_ID: [description]
+APPEARANCE: [description]
+CLOTHING: [description]
+
+CHARACTER_3: (ONLY if a third prominent foreground character exists)
+VISUAL_ID: [description]
+APPEARANCE: [description]
+CLOTHING: [description]
+
+Be extremely specific about colors, styles, and physical features. This will be used to maintain consistency."""
+        
+        result = AnalyzeImage(self.ref_path, prompt)['analysis'].strip()
+        return self._parse_character_data(result)
     
-    def _extract_clothing(self):
-        """Detailed clothing description - stable ground truth."""
-        prompt = """Describe this character's clothing in detail:
-- Top/shirt: color, style, fit, pattern
-- Bottom/pants: color, style, fit
-- Shoes: type, color
-- Accessories: jewelry, bags, etc.
-- Hair: color, style, length
-
-Be extremely specific about colors and styles. This description will be used to maintain consistency."""
-        return AnalyzeImage(self.ref_path, prompt)['analysis'].strip()
+    def _parse_character_data(self, text):
+        """Parse the structured output into a list of character dicts."""
+        characters = []
+        current_char = {}
+        current_field = None
+        
+        for line in text.split('\n'):
+            line = line.strip()
+            if not line:
+                continue
+            
+            if line.startswith('CHARACTER_'):
+                if current_char:
+                    characters.append(current_char)
+                current_char = {}
+                current_field = None
+            elif line.startswith('VISUAL_ID:'):
+                current_field = 'visual_id'
+                current_char['visual_id'] = line.split(':', 1)[1].strip()
+            elif line.startswith('APPEARANCE:'):
+                current_field = 'appearance'
+                current_char['appearance'] = line.split(':', 1)[1].strip()
+            elif line.startswith('CLOTHING:'):
+                current_field = 'clothing'
+                current_char['clothing'] = line.split(':', 1)[1].strip()
+            elif current_field and current_char:
+                # Continuation line for multi-sentence descriptions
+                current_char[current_field] += ' ' + line
+        
+        # Don't forget the last character
+        if current_char:
+            characters.append(current_char)
+        
+        return characters
     
-    def _extract_appearance(self):
-        """Physical appearance details."""
-        prompt = """Describe this character's physical appearance:
-- Age range
-- Gender
-- Hair color and style
-- Face features
-- Body type/build
-- Any distinctive features
-
-Be specific. This will be used to maintain character consistency."""
-        return AnalyzeImage(self.ref_path, prompt)['analysis'].strip()
+    def get_character_count(self):
+        """Return number of prominent characters detected."""
+        return len(self.characters)
     
-    def get_full_description(self):
-        """Complete character description for prompts."""
-        return f"""CHARACTER PROFILE:
-Visual ID: {self.visual_id}
-Appearance: {self.appearance}
-Clothing: {self.clothing}"""
+    def get_character(self, index):
+        """Get a specific character by index (0-based)."""
+        if 0 <= index < len(self.characters):
+            return self.characters[index]
+        return None
+    
+    def get_all_visual_ids(self):
+        """Get list of all visual IDs."""
+        return [char['visual_id'] for char in self.characters]
+    
+    def get_full_description(self, character_index=None):
+        """Get formatted description for one or all prominent characters."""
+        if character_index is not None:
+            char = self.get_character(character_index)
+            if not char:
+                return ""
+            return f"""CHARACTER PROFILE:
+Visual ID: {char['visual_id']}
+Appearance: {char['appearance']}
+Clothing: {char['clothing']}"""
+        
+        # Return all prominent characters
+        descriptions = []
+        for i, char in enumerate(self.characters):
+            descriptions.append(f"""CHARACTER {i+1}:
+Visual ID: {char['visual_id']}
+Appearance: {char['appearance']}
+Clothing: {char['clothing']}""")
+        
+        return '\n\n'.join(descriptions)
 
 
 class FeedbackLoop:

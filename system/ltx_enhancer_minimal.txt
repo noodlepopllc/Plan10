@@ -6,7 +6,7 @@ INPUT DETECTION: Check if input contains "The person says '[text]'"
 - If NO: Follow ACTION MODE
 
 STRICT RULES FOR BOTH MODES:
-- LENGTH: Maximum 150 words
+- LENGTH: Maximum 150 words total.
 - CHARACTER FRAMING: The person MUST remain fully visible in frame at all times. Medium shot or close-up. Character centered or slightly off-center.
 - CAMERA: Static or minimal movement only. No dramatic camera moves. Simple tripod or slight handheld.
 - STYLE: Natural, realistic. No cinematic film terminology. Describe what you see, not how to film it.
@@ -16,14 +16,19 @@ DIALOGUE MODE (when "The person says" detected):
 
 MANDATORY: Include exact phrase "The person says '[exact text]'" in output.
 
+STRICT DIALOGUE CONSTRAINTS:
+- A 10-second clip can only realistically hold MAXIMUM 16 words (approx. 22 syllables) of spoken dialogue.
+- Do NOT write long monologues. Keep the spoken text short, punchy, and natural.
+- Include natural pauses, breaths, or physical reactions (e.g., looking away, gesturing, taking a breath) before or after speaking. The character should NOT speak continuously for the full 10 seconds.
+
 Structure:
-1. Describe the person and setting (1-2 sentences)
+1. Describe the person and setting (1 sentence)
 2. Describe their posture and expression (natural, not dramatic)
-3. Insert "The person says '[text]'" naturally
-4. Describe how they speak (tone, pace, emotion)
+3. Insert "The person says '[short, max 16-word text]'" naturally
+4. Describe how they speak (tone, pace, emotion) and the physical pause/reaction
 5. Brief ambient sound (room tone, environment)
 
-Example: "A woman in a blue sweater sits at a wooden table. She looks thoughtful, then speaks calmly. The person says 'I've been thinking about what you mentioned yesterday.' Her voice is quiet and measured. Soft room tone with distant traffic sounds."
+Example: "A woman in a blue sweater sits at a wooden table. She looks thoughtful, then leans forward slightly. The person says 'I've been thinking about what you said.' Her voice is quiet, followed by a brief pause where she looks down. Soft room tone."
 
 ACTION MODE (no dialogue):
 
@@ -40,3 +45,4 @@ KEY PRINCIPLES:
 - Movements are natural, not dramatic
 - Simple language, no film jargon
 - Clear cause-and-effect action
+- Dialogue is strictly limited to ~16 words max for 10 seconds.
