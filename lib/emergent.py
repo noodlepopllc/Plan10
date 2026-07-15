@@ -54,11 +54,27 @@ class CharacterProfile:
     def _extract_visual_id(self):
         """Short identifier for visibility checks."""
         prompt = """Describe this character in 5-10 words focusing ONLY on:
-- Hair color and style
-- Main clothing color/item (TOP HALF only)
-- Face/body type if distinctive
+    - Ethnicity
+    - Age range
+    - Hair color and style
+    - Main clothing color/item (TOP HALF only)
 
-Output ONLY the description (5-10 words), nothing else."""
+    Output ONLY the description (5-10 words), nothing else."""
+        return AnalyzeImage(self.ref_path, prompt)['analysis'].strip()
+
+    def _extract_appearance(self):
+        """Physical appearance details."""
+        prompt = """Describe this character's physical appearance:
+    - Ethnicity (be specific: East Asian, Southeast Asian, Caucasian, African, Hispanic, South Asian, Middle Eastern, etc.)
+    - Age range
+    - Gender
+    - Face shape (oval, round, square, heart, oblong, etc.)
+    - Eye shape (almond, round, hooded, monolid, downturned, upturned, etc.)
+    - Hair color and style
+    - Body type/build
+    - Any distinctive features
+
+    Be specific. This will be used to maintain character consistency."""
         return AnalyzeImage(self.ref_path, prompt)['analysis'].strip()
     
     def _extract_clothing(self):
