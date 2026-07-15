@@ -62,15 +62,25 @@ def i2v_diffusers(prompt='', media='', output='output.mp4',
         subfolder="transformer"
     )
 
+    # =========================================================================
     # 2. FORCE NATIVE LTX-2.3 MULTI-MODAL OVERRIDES
-    # These parameters directly allocate the 9-dimensional attention layer tracks
-    config_dict["audio_prompt_adaln"] = True           # Direct trigger for 2.3 multi-modal AdaLN layers
-    config_dict["audio_caption_channels"] = 2048       # Sets the structural alignment boundaries
-    config_dict["use_audio_conditioning"] = True       # Enforces the multimodel step allocation tracking
-
-    # Remove the old temporary 2.0 properties so it doesn't complain about ignored keys
+    # =========================================================================
+    # Explicitly pop the legacy variables to clear any initialization warnings
     config_dict.pop("has_prompt_adaln", None)
     config_dict.pop("num_audio_ada_params", None)
+
+    # Core multi-modal activation switches
+    config_dict["audio_prompt_adaln"] = True           # Direct trigger for 2.3 multi-modal AdaLN layers
+    config_dict["use_audio_conditioning"] = True       # Enforces the multimodal step allocation tracking
+
+    # 💡 THE ARCHITECTURAL ALIGNMENT KEY CORRECTIONS:
+    # This matches the true parameter naming structure of the native 3D model:
+    config_dict["audio_cross_attention_dim"] = 2048   # Map from 'audio_dim' / 'caption_projection_dim'
+    config_dict["audio_attention_head_dim"] = 64      # Natively handles 'audio_freq_embed_dim' logic
+    config_dict["audio_num_attention_heads"] = 32     # Maps the internal query-modulation layers
+    config_dict["audio_in_channels"] = 128            # Sets structural audio embedding entry widths
+    config_dict["audio_out_channels"] = 128           # Align terminal audio-projection matrix channels
+
 
     # 3. Instantiate the transformer model block using our corrected dictionary
     transformer = LTX2VideoTransformer3DModel.from_config(config_dict)
