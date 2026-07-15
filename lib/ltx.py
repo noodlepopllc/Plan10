@@ -4,6 +4,8 @@ from diffsynth.utils.data.media_io_ltx2 import write_video_audio_ltx2
 from PIL import Image
 from modelscope import dataset_snapshot_download
 
+from diffusers.pipelines.ltx2.utils import DISTILLED_SIGMA_VALUES, STAGE_2_DISTILLED_SIGMA_VALUES
+
 from config import load_environ
 load_environ()
 
