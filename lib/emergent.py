@@ -1,18 +1,20 @@
-import torch, os, sys, cv2, gc, time
-import numpy as np
+
+import sys
 sys.path.append('./lib')
+from config import load_environ
+load_environ()
+import torch, os, cv2, gc, time
+import numpy as np
 from pathlib import Path
 from PIL import Image
 from transformers import AutoProcessor, AutoModelForImageTextToText
 from qwen_llm import llm_analyze_media
 from util import video_to_img
-from config import load_environ
 from image_edit import EditImage
 from image_analysis import AnalyzeImage
 from uniface.detection import RetinaFace
 from compositor import CompositeScene
 
-load_environ()
 
 WGP = os.environ.get("WGP","False") != "False"
 LTX = os.environ.get("LTX","False") != "False"

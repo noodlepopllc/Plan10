@@ -56,8 +56,28 @@ def i2v_diffusers(prompt='', media='', output='output.mp4',
     # 💡 UPGRADED: Points straight to the official native LTX-2.3 distilled repo
     model_path = "CalamitousFelicitousness/LTX-2.3-distilled-Diffusers"
 
+    config_dict = LTX2TransformerModel.load_config(
+        model_path, 
+        subfolder="transformer"
+    )
+
+    # 2. FORCE EXPLICIT LTX-2.3 ALIGNMENT
+    # Override the hidden legacy properties to expand the table size from 6 to 9 natively!
+    config_dict["has_prompt_adaln"] = True # Automatically expands the num_ada_params internally
+    # If your specific Diffusers fork tracks the variable name directly:
+    if "num_audio_ada_params" in config_dict:
+        config_dict["num_audio_ada_params"] = 9
+
+    # 3. Instantiate the transformer model block using our corrected dictionary
+    transformer = LTX2TransformerModel.from_config(config_dict)
+
     # Load 2.3 directly onto your CUDA memory pool
-    pipe = LTX2ConditionPipeline.from_pretrained(model_path, torch_dtype=torch.bfloat16).to("cuda")
+    pipe = LTX2ConditionPipeline.from_pretrained(
+        model_path,
+        transformer=transformer, # Inject our custom 9-parameter skeleton block
+        torch_dtype=torch.bfloat16,
+        low_cpu_mem_usage=False
+    ).to("cuda")
 
     # Freeze the transformer to eliminate the ARM loop synchronization lag on Spark
     pipe.transformer = torch.compile(pipe.transformer, mode="reduce-overhead")
