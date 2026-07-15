@@ -44,12 +44,11 @@ def i2v_diffusers(prompt='', media='', output='output.mp4',
     # // 32 * 32 drops any fractional pixel remainders instantly
     width = int(target_w // 32) * 32   # 1280 stays 1280, 704 stays 704, etc.
     height = int(target_h // 32) * 32  # 720 snaps down to 704!
-    
+
     # 1. Acceleration backend optimization
     torch.backends.cudnn.benchmark = True
     torch.backends.cuda.matmul.allow_tf32 = True
 
-    model_path = "diffusers/LTX-2.3-Distilled-Diffusers"
     generator = torch.Generator("cuda").manual_seed(seed) if seed != -1 else None
     frame_rate = 24.0
     num_frames = int((duration_sec * frame_rate) + 1)
@@ -93,10 +92,13 @@ def i2v_diffusers(prompt='', media='', output='output.mp4',
         return_dict=False,
     )
 
-    # 5. EXECUTE STAGE 2 (2x Spatial Latent Upsampling)
+    # 💡 FIXED: Point the subfolder target to the official Lightricks repo tree
     latent_upsampler = LTX2LatentUpsamplerModel.from_pretrained(
-        model_path, subfolder="latent_upsampler", torch_dtype=torch.bfloat16
+        "Lightricks/LTX-2",          # Changed from model_path to the official repository
+        subfolder="latent_upsampler",
+        torch_dtype=torch.bfloat16,
     ).to("cuda")
+
     
     upsample_pipe = LTX2LatentUpsamplePipeline(vae=pipe.vae, latent_upsampler=latent_upsampler)
     
