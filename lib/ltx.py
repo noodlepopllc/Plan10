@@ -57,7 +57,7 @@ def i2v_diffusers(prompt='', media='', output='output.mp4',
     # 💡 UPGRADED: Points straight to the official native LTX-2.3 distilled repo
     model_path = "CalamitousFelicitousness/LTX-2.3-distilled-Diffusers"
 
-    config_dict = config_dict = LTX2VideoTransformer3DModel.load_config(
+    config_dict = LTX2VideoTransformer3DModel.load_config(
         model_path, 
         subfolder="transformer"
     )
@@ -73,7 +73,7 @@ def i2v_diffusers(prompt='', media='', output='output.mp4',
     config_dict.pop("num_audio_ada_params", None)
 
     # 3. Instantiate the transformer model block using our corrected dictionary
-    transformer = config_dict = LTX2VideoTransformer3DModel.from_config(config_dict)
+    transformer = LTX2VideoTransformer3DModel.from_config(config_dict)
 
     # Load 2.3 directly onto your CUDA memory pool
     pipe = LTX2ConditionPipeline.from_pretrained(
