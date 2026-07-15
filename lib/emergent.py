@@ -209,27 +209,29 @@ class FeedbackLoop:
         result = AnalyzeImage(check_path, prompt)
         return result['analysis'].strip()
 
-    def compare_and_decide(self, intended_action, actual_reality):
+    def compare_and_decide(self, intended_action, actual_reality, story_context):
         """Compare prompt vs reality, and generate the 'Yes, And...' next step."""
         history_text = "\n".join([f"- {a}" for a in self.history[-3:]]) if self.history else "First beat."
         
-        prompt = f"""PREVIOUS INTENTION: {intended_action}
+        prompt = f"""STORY CONTEXT: {story_context}
+
+    PREVIOUS INTENTION: {intended_action}
     ACTUAL SCENE STATE: {actual_reality}
     CHARACTER PROFILE: {self.character_desc}
     RECENT HISTORY: {history_text}
 
     TASK: Apply "Yes, And..." improv logic.
-    1. YES: Accept the ACTUAL SCENE STATE as the new, absolute canonical truth of the scene, regardless of the previous intention.
-    2. AND: Naturally build upon this new reality with the next logical physical action or transition.
+    1. YES: Accept the ACTUAL SCENE STATE as the new, absolute canonical truth of the scene.
+    2. AND: Naturally build upon this new reality with the next logical physical action or transition, keeping the STORY CONTEXT in mind.
 
     Output format:
     MATCH: [YES/PARTIAL/NO - did it fundamentally break the scene?]
     ISSUES: [List any critical problems like "character vanished" or "none"]
-    NEXT: [The "And" - what happens next, 1-2 sentences, building directly on the ACTUAL SCENE STATE]"""
+    NEXT: [The "And" - what happens next, 1-2 sentences, building directly on the ACTUAL SCENE STATE while advancing the STORY CONTEXT]"""
         
         result = llm_analyze_media(
             media="", prompt=prompt,
-            system="You are an improv scene director. Accept reality and build on it.",
+            system="You are an improv scene director. Accept reality, build on it, and advance the story context.",
             max_tokens=200, temperature=0.7
         )['analysis']
         
@@ -331,7 +333,8 @@ class FeedbackLoop:
             
             # Compare and decide
             print(f"\n🤔 Comparing intention vs reality...")
-            decision = self.compare_and_decide(intended_action, actual_reality)
+            # PASS STORY CONTEXT HERE
+            decision = self.compare_and_decide(intended_action, actual_reality, story_context)
             match, issues, next_action = self.parse_decision(decision)
             
             print(f"Match: {match}, Issues: {issues}")
