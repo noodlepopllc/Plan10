@@ -24,8 +24,10 @@ DISTILLED = "DISTILLED" in os.environ.get("LTX","False")
 enhance_path = f'./system/ltx_enhancer{ANIME}.txt'
 enhance_path = './system/ltx_enhancer_minimal.txt'
 
-from diffusers import LTX2Pipeline  # Corrected Class Name
-from diffusers.utils import export_to_video
+from diffusers.pipelines.ltx2 import LTX2Pipeline, LTX2LatentUpsamplePipeline
+from diffusers.pipelines.ltx2.latent_upsampler import LTX2LatentUpsamplerModel
+from diffusers.pipelines.ltx2.utils import DISTILLED_SIGMA_VALUES, STAGE_2_DISTILLED_SIGMA_VALUES
+from diffusers.utils import encode_video
 
 def i2v_diffusers(prompt='', media='', output='output.mp4', 
         duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
