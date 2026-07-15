@@ -7,9 +7,6 @@ from diffsynth.utils.data.media_io_ltx2 import write_video_audio_ltx2
 from PIL import Image
 from modelscope import dataset_snapshot_download
 
-from diffusers.pipelines.ltx2.utils import DISTILLED_SIGMA_VALUES, STAGE_2_DISTILLED_SIGMA_VALUES
-from diffusers.models.transformers.transformer_ltx2 import LTX2VideoTransformer3DModel
-
 import logging, os, gc
 import json
 from time import sleep
@@ -27,151 +24,96 @@ DISTILLED = "DISTILLED" in os.environ.get("LTX","False")
 enhance_path = f'./system/ltx_enhancer{ANIME}.txt'
 enhance_path = './system/ltx_enhancer_minimal.txt'
 
-from diffusers import LTX2ConditionPipeline, LTX2LatentUpsamplePipeline
-from diffusers.pipelines.ltx2.latent_upsampler import LTX2LatentUpsamplerModel
-from diffusers.pipelines.ltx2.pipeline_ltx2_condition import LTX2VideoCondition
-from diffusers.utils import encode_video
-
-def i2v_diffusers(prompt='', media='', output='output.mp4', 
+def i2v_diffsynth_fast(prompt='', media='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
-    """
-    Executes a native First-Frame Last-Frame conditioned 8-step distillation generation pass.
-    Guarantees zero identity drift across the 10-second trajectory.
-    """
 
-        # 💡 FIX: Force orientation switch AND snap dimensions strictly to a multiple of 32
-    target_w, target_h = (720, 1280) if height > width else (1280, 720)
-    
-    # // 32 * 32 drops any fractional pixel remainders instantly
-    width = int(target_w // 32) * 32   # 1280 stays 1280, 704 stays 704, etc.
-    height = int(target_h // 32) * 32  # 720 snaps down to 704!
-
-    # 1. Acceleration backend optimization
+    # Enable fast hardware math handling for Blackwell cores
     torch.backends.cudnn.benchmark = True
     torch.backends.cuda.matmul.allow_tf32 = True
 
-    generator = torch.Generator("cuda").manual_seed(seed) if seed != -1 else None
-    frame_rate = 24.0
-    num_frames = int((duration_sec * frame_rate) + 1)
+    width, height = (720, 1280) if height > width else (1280, 720)
+    allocated_vram_limit = max(int(os.environ.get("VRAM", 96)), 96)
 
-    # 💡 UPGRADED: Points straight to the official native LTX-2.3 distilled repo
-    model_path = "CalamitousFelicitousness/LTX-2.3-distilled-Diffusers"
-
-    config_dict = LTX2VideoTransformer3DModel.load_config(
-        model_path, 
-        subfolder="transformer"
+    vram_config = {
+        "offload_dtype": torch.float8_e5m2,
+        "offload_device": "cpu",
+        "onload_dtype": torch.float8_e5m2,
+        "onload_device": "cpu",
+        "preparing_dtype": torch.float8_e5m2,
+        "preparing_device": "cuda",
+        "computation_dtype": torch.bfloat16,
+        "computation_device": "cuda",
+    }
+    model_path = "locklight/LTX-2-Repackage-local"
+    pipe = LTX2AudioVideoPipeline.from_pretrained(
+        torch_dtype=torch.bfloat16,
+        device="cuda",
+        model_configs=[
+            ModelConfig(model_id="google/gemma-3-12b-it-qat-q4_0-unquantized", origin_file_pattern="model-*.safetensors", **vram_config),
+            ModelConfig(model_id=model_path, origin_file_pattern="transformer_distilled.safetensors", **vram_config),
+            ModelConfig(model_id=model_path, origin_file_pattern="text_encoder_post_modules.safetensors", **vram_config),
+            ModelConfig(model_id=model_path, origin_file_pattern="video_vae_decoder.safetensors", **vram_config),
+            ModelConfig(model_id=model_path, origin_file_pattern="audio_vae_decoder.safetensors", **vram_config),
+            ModelConfig(model_id=model_path, origin_file_pattern="audio_vocoder.safetensors", **vram_config),
+            ModelConfig(model_id=model_path, origin_file_pattern="video_vae_encoder.safetensors", **vram_config),
+            ModelConfig(model_id="Lightricks/LTX-2", origin_file_pattern="ltx-2-spatial-upscaler-x2-1.0.safetensors", **vram_config),
+        ],
+        tokenizer_config=ModelConfig(model_id="google/gemma-3-12b-it-qat-q4_0-unquantized"),
+        vram_limit=allocated_vram_limit,
     )
 
-    # =========================================================================
-    # 2. FORCE NATIVE LTX-2.3 MULTI-MODAL OVERRIDES
-    # =========================================================================
-    # Explicitly pop the legacy variables to clear any initialization warnings
-    config_dict.pop("has_prompt_adaln", None)
-    config_dict.pop("num_audio_ada_params", None)
+    # Force explicit SFX and ban melody structure in the positive prompt
+    sfx_modifiers = ", realistic sound effects only, crisp SFX, ambient background noise, completely devoid of music, no BGM, no instruments"
+    final_prompt = f"{prompt}{sfx_modifiers}" if prompt else "ambient sound effects, SFX, absolute no music"
 
-    # Core multi-modal activation switches
-    config_dict["audio_prompt_adaln"] = True           # Direct trigger for 2.3 multi-modal AdaLN layers
-    config_dict["use_audio_conditioning"] = True       # Enforces the multimodal step allocation tracking
-
-    # 💡 THE ARCHITECTURAL ALIGNMENT KEY CORRECTIONS:
-    # This matches the true parameter naming structure of the native 3D model:
-    config_dict["audio_cross_attention_dim"] = 2048   # Map from 'audio_dim' / 'caption_projection_dim'
-    config_dict["audio_attention_head_dim"] = 64      # Natively handles 'audio_freq_embed_dim' logic
-    config_dict["audio_num_attention_heads"] = 32     # Maps the internal query-modulation layers
-    config_dict["audio_in_channels"] = 128            # Sets structural audio embedding entry widths
-    config_dict["audio_out_channels"] = 128           # Align terminal audio-projection matrix channels
-
-
-    # 3. Instantiate the transformer model block using our corrected dictionary
-    transformer = LTX2VideoTransformer3DModel.from_config(config_dict)
-
-    # Load 2.3 directly onto your CUDA memory pool
-    pipe = LTX2ConditionPipeline.from_pretrained(
-        model_path,
-        transformer=transformer, # Inject our custom 9-parameter skeleton block
-        torch_dtype=torch.bfloat16,
-        low_cpu_mem_usage=False
-    ).to("cuda")
-
-    # Freeze the transformer to eliminate the ARM loop synchronization lag on Spark
-    pipe.transformer = torch.compile(pipe.transformer, mode="reduce-overhead")
-
-
-    # 3. Format and construct your conditional anchors
-    first_img = Image.open(media).convert("RGB").resize((width, height))
-    #last_img = Image.open(last_frame_path).convert("RGB").resize((width, height))
-    
-    first_cond = LTX2VideoCondition(frames=first_img, index=0, strength=1.0)
-    #last_cond = LTX2VideoCondition(frames=last_img, index=-1, strength=1.0)
-    conditions = [first_cond]#, last_cond]
-
+    # Purged "silent or muted audio" to allow empty spaces, heavily punished music architecture
     negative_prompt = (
-        "shaky, glitchy, low quality, worst quality, deformed, distorted, disfigured, motion smear, "
-        "motion artifacts, fused fingers, bad anatomy, weird hand, ugly, transition, static."
+        "blurry, out of focus, overexposed, underexposed, low contrast, washed out colors, excessive noise, "
+        "grainy texture, poor lighting, flickering, motion blur, distorted proportions, unnatural skin tones, "
+        "deformed facial features, asymmetrical face, missing facial features, extra limbs, disfigured hands, "
+        "wrong hand count, artifacts around text, inconsistent perspective, camera shake, incorrect depth of "
+        "field, background too sharp, background clutter, distracting reflections, harsh shadows, inconsistent "
+        "lighting direction, color banding, cartoonish rendering, 3D CGI look, unrealistic materials, uncanny "
+        "valley effect, incorrect ethnicity, wrong gender, exaggerated expressions, wrong gaze direction, "
+        "mismatched lip sync, music, background music, BGM, melody, song, soundtrack, musical instruments, synth, "
+        "singing, vocals, rhythm, beats, distorted voice, robotic voice, echo, background noise, off-sync audio, "
+        "incorrect dialogue, added dialogue, repetitive speech, jittery movement, awkward pauses, incorrect timing, "
+        "unnatural transitions, inconsistent framing, tilted camera, flat lighting, inconsistent tone, "
+        "cinematic oversaturation, stylized filters, or AI artifacts."
     )
+    num_frames = (duration_sec * 24) + 1
 
-    # 4. EXECUTE STAGE 1 (8-Step Base Denoising Latent Generation)
-    video_latent, audio_latent = pipe(
-        conditions=conditions,
-        prompt=prompt,
-        width=width,
-        height=height,
-        num_frames=num_frames,
-        frame_rate=frame_rate,
-        num_inference_steps=8,
-        sigmas=DISTILLED_SIGMA_VALUES,
-        guidance_scale=1.0,
-        generator=generator,
-        output_type="latent",
-        return_dict=False,
-    )
-
-    # 💡 SOLUTION: Pull from the byte-identical 2.3 community mapping repository
-    # This repo includes the required "latent_upsampler" subfolder structure natively!
-    latent_upsampler = LTX2LatentUpsamplerModel.from_pretrained(
-        model_path,
-        subfolder="latent_upsampler",
-        torch_dtype=torch.bfloat16,
-    ).to("cuda")
-
-
-
+    image = Image.open(media).convert("RGB").resize((width, height))
     
-    upsample_pipe = LTX2LatentUpsamplePipeline(vae=pipe.vae, latent_upsampler=latent_upsampler)
-    
-    upscaled_video_latent = upsample_pipe(
-        latents=video_latent,
-        output_type="latent",
-        return_dict=False,
-    )[0]
-
-    # 6. EXECUTE FINAL REFINE PASS (3-Step Detail Denoise)
+    # Run core inference pipeline
     video, audio = pipe(
-        latents=upscaled_video_latent,
-        audio_latents=audio_latent,
-        prompt=prompt,
-        width=width * 2,    # Re-scale matching the 2x upsampler logic
-        height=height * 2,
-        num_inference_steps=3,
-        sigmas=STAGE_2_DISTILLED_SIGMA_VALUES,
-        generator=generator,
-        guidance_scale=1.0,
-        output_type="np",
-        return_dict=False,
+        prompt=final_prompt,
+        negative_prompt=negative_prompt,
+        seed=seed,
+        height=height,
+        width=width,
+        num_frames=num_frames,
+        tiled=True,
+        use_distilled_pipeline=True,
+        input_images=[image],
+        input_images_indexes=[0],
+        input_images_strength=1.0,
     )
-
-    # 7. ENCODE TO RAW MP4
-    encode_video(
-        video[0],
-        fps=frame_rate,
-        audio=audio[0].float().cpu(),
-        audio_sample_rate=pipe.vocoder.config.output_sampling_rate,
+    
+    write_video_audio_ltx2(
+        video=video,
+        audio=audio,
         output_path=output,
+        fps=24,
+        audio_sample_rate=pipe.audio_vocoder.output_sampling_rate,
     )
-
-    # Clean execution memory states cleanly
-    del pipe, upsample_pipe, latent_upsampler
-    torch.cuda.empty_cache()
+    
+    # Clean up memory cleanly
+    del pipe
+    gc.collect()
+    if torch.cuda.is_available():  
+        torch.cuda.empty_cache()
+    
 
 
 def i2v_diffsynth(prompt='', media='', output='output.mp4', 
@@ -200,7 +142,7 @@ def i2v_diffsynth(prompt='', media='', output='output.mp4',
     # Your Spark has 128GB. If os.environ["VRAM"] is set to a low value (like 12 or 16),
     # DiffSynth will manually break up the models even if you set the device to "cuda".
     # We override it here to leverage your hardware's full capacity.
-    allocated_vram_limit = max(int(os.environ.get("VRAM", 96)), 96) * 1024 * 1024 * 1024
+    allocated_vram_limit = max(int(os.environ.get("VRAM", 96)), 96)
 
     pipe = LTX2AudioVideoPipeline.from_pretrained(
         torch_dtype=torch.bfloat16,
@@ -267,7 +209,7 @@ def i2v_diffsynth(prompt='', media='', output='output.mp4',
     if torch.cuda.is_available():  
         torch.cuda.empty_cache()
 
-i2v = i2v_diffusers if DISTILLED else i2v_diffsynth
+i2v = i2v_diffsynth_fast if DISTILLED else i2v_diffsynth
 
 def GenerateVideo(prompt='', media='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
