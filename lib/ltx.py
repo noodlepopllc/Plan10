@@ -156,7 +156,7 @@ def i2v_diffusers(prompt='', media='', output='output.mp4',
         fps=frame_rate,
         audio=audio[0].float().cpu(),
         audio_sample_rate=pipe.vocoder.config.output_sampling_rate,
-        output_path=output_path,
+        output_path=output,
     )
 
     # Clean execution memory states cleanly
