@@ -92,13 +92,14 @@ def i2v_diffusers(prompt='', media='', output='output.mp4',
         return_dict=False,
     )
 
-    # 💡 FIXED: Point the subfolder target to the official Lightricks repo tree
-    # 💡 Load the specific standalone 2.3 upscaler checkpoint directly from Lightricks
-    latent_upsampler = LTX2LatentUpsamplerModel.from_single_file(
-        "Lightricks/LTX-2.3",
-        filename="ltx-2.3-spatial-upscaler-x2-1.0.safetensors", # or "ltx-2.3-spatial-upscaler-x2-1.1.safetensors"
+    # 💡 SOLUTION: Pull from the byte-identical 2.3 community mapping repository
+    # This repo includes the required "latent_upsampler" subfolder structure natively!
+    latent_upsampler = LTX2LatentUpsamplerModel.from_pretrained(
+        "CalamitousFelicitousness/LTX-2.3-Spatial-Upsampler-x2-1.0-Diffusers", # or "-x2-1.1-Diffusers"
+        subfolder="latent_upsampler",
         torch_dtype=torch.bfloat16,
     ).to("cuda")
+
 
 
     
