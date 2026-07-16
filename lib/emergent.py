@@ -450,7 +450,7 @@ class FeedbackLoop:
             
             # Generate video
             output_path = self.output_dir / f"beat_{beat_count+1:03d}.mp4"
-            i2v_prompt = self._format_video_prompt(actual_reality, next_action)
+            i2v_prompt = self._format_video_prompt(location, characters, next_action)
             
             print(f"\n🎬 Generating video...")
             print(f"Prompt preview: {i2v_prompt[:200]}...")
