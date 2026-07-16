@@ -153,7 +153,8 @@ def CompositeScene(
             f"Camera focus instruction: {action}. "
             "No characters, no silhouettes, no human forms. "
             f"Preserve exact rendering style of REF 1 ({style} style). "
-            "ALLOW CROPPING of background elements naturally."
+            "ALLOW CROPPING of background elements naturally. "
+            "NO FOREGROUND BLOCKERS: Never list large, space-dominating furniture (like large tables or islands) in the Schematic Objects. The center and foreground of every zone must remain physically clear for actors to stand and interact. "
         )
         return _run_generation(task, [background_path], output, width, height, seed, "establishing", style, analysis_style, action)
 
