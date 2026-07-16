@@ -483,16 +483,30 @@ class FeedbackLoop:
         
         return ' '.join(clean_lines)
 
-    def _format_video_prompt(self, scene_description, next_action):
-        """Format the video prompt with clear structure."""
-        return f"""STYLE: Anime style, cel shading, flat colors, bold outlines, limited palette
+def _format_video_prompt(self, scene_description, next_action):
+    """Format video prompt in renderer-optimized structure."""
+    
+    # Extract brief character descriptions from full profiles
+    brief_chars = []
+    for i, profile in enumerate(self.character_profiles):
+        if profile.get_character_count() > 0:
+            char = profile.get_character(0)
+            # Use visual_id as the brief description
+            brief_chars.append(char.get('visual_id', f'character {i+1}'))
+    
+    char_text = ", ".join(brief_chars) if brief_chars else "a person"
+    
+    # Parse scene_description to extract location
+    # (or we could have compare_and_decide output location separately)
+    location = self._extract_location(scene_description)
+    
+    return f"""{location}
 
-    CHARACTERS:
-    {self.character_desc}
+{char_text}
 
-    CURRENT SCENE: {scene_description}
+{next_action}
 
-    NEXT ACTION: {next_action}"""
+Style: {'Anime, cel shading, flat colors, bold outlines' if ANIME ''}"""
 
 if __name__ == "__main__":
     import argparse
