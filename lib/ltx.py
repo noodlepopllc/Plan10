@@ -35,11 +35,11 @@ def i2v_diffsynth_fast(prompt='', media='', output='output.mp4',
     allocated_vram_limit = max(int(os.environ.get("VRAM", 96)), 96)
 
     vram_config = {
-        "offload_dtype": torch.bfloat16,
-        "offload_device": "cuda",
-        "onload_dtype": torch.bfloat16,
-        "onload_device": "cuda",
-        "preparing_dtype": torch.bfloat16,
+        "offload_dtype": torch.float8_e5m2,
+        "offload_device": "cpu",
+        "onload_dtype": torch.float8_e5m2,
+        "onload_device": "cpu",
+        "preparing_dtype": torch.float8_e5m2,
         "preparing_device": "cuda",
         "computation_dtype": torch.bfloat16,
         "computation_device": "cuda",

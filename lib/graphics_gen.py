@@ -102,7 +102,7 @@ class GraphicGen(object):
 
     def generate(self, prompt, output, width, height, seed):
         import json
-        prompt = f'Anime Style, {prompt}' if ANIME else prompt
+        prompt = f'Anime Art Style, {prompt}' if ANIME else prompt
         enhancer_input = json.dumps({"prompt": prompt, "width": width, "height": height}, ensure_ascii=False)
         eprompt = EnhancePrompt('', enhancer_input, './system/ernie_enhance.txt')
         if seed == -1: 
