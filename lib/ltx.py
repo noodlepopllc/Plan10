@@ -20,6 +20,7 @@ WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
 ANIME = "_anime" if os.environ.get("ANIME","False") != "False" else ""
 DISTILLED = "DISTILLED" in os.environ.get("LTX","False")
+VRAM = int(os.environ.get("VRAM", 96))
 
 #enhance_path = f'./system/ltx_enhancer{ANIME}.txt'
 enhance_path = f'./system/ltx_enhancer_minimal{ANIME}.txt'
@@ -32,7 +33,7 @@ def i2v_diffsynth_fast(prompt='', media='', output='output.mp4',
     torch.backends.cuda.matmul.allow_tf32 = True
 
     #width, height = (720, 1280) if height > width else (1280, 720)
-    allocated_vram_limit = max(int(os.environ.get("VRAM", 96)), 96)
+    allocated_vram_limit = min(VRAM, 96)
 
     vram_config = {
         "offload_dtype": torch.float8_e5m2,
@@ -142,7 +143,7 @@ def i2v_diffsynth(prompt='', media='', output='output.mp4',
     # Your Spark has 128GB. If os.environ["VRAM"] is set to a low value (like 12 or 16),
     # DiffSynth will manually break up the models even if you set the device to "cuda".
     # We override it here to leverage your hardware's full capacity.
-    allocated_vram_limit = max(int(os.environ.get("VRAM", 96)), 96)
+    allocated_vram_limit = min(VRAM, 96)
 
     pipe = LTX2AudioVideoPipeline.from_pretrained(
         torch_dtype=torch.bfloat16,
@@ -214,75 +215,78 @@ i2v = i2v_diffsynth_fast if DISTILLED else i2v_diffsynth
 def GenerateVideo(prompt='', media='', output='output.mp4', 
                   duration_sec=10, width=WIDTH, height=HEIGHT, seed=-1):
 
-        print(f"PROMPT: {prompt}")
-        
-        if isinstance(prompt, list):
-            prompt = prompt.pop()
-        
-        start_image = ''
-        end_image = None
+    print(f"PROMPT: {prompt}")
 
-        if not media:
-            GenerateImage(prompt = prompt, output='first_frame.png', width=width, height=height, seed=seed)
-            media='first_frame.png'
+    duration_max = 10 if VRAM > 32 else 5
+    duration = min(duration_max, duration_sec)
+    
+    if isinstance(prompt, list):
+        prompt = prompt.pop()
+    
+    start_image = ''
+    end_image = None
 
-        if isinstance(media, list):
-            start_image = media.pop(0)
-            if len(media) > 0:
-                end_image = video_to_img(media.pop(), width, height, True, False)
-        else:
-            start_image = media
+    if not media:
+        GenerateImage(prompt = prompt, output='first_frame.png', width=width, height=height, seed=seed)
+        media='first_frame.png'
 
-        print(f"MEDIA: {start_image}")
+    if isinstance(media, list):
+        start_image = media.pop(0)
+        if len(media) > 0:
+            end_image = video_to_img(media.pop(), width, height, True, False)
+    else:
+        start_image = media
 
-        original_prompt = prompt
+    print(f"MEDIA: {start_image}")
 
-        width = int(width)
-        height = int(height)
-        seed = int(seed)
-        duration_sec = int(duration_sec)
-        fps = 24
+    original_prompt = prompt
 
-        if seed == -1:
-            seed = random.randint(0,1000000)
+    width = int(width)
+    height = int(height)
+    seed = int(seed)
+    duration_sec = duration
+    fps = 24
 
-        total_frames = (duration_sec * fps) + 1
+    if seed == -1:
+        seed = random.randint(0,1000000)
 
-        print(f"\n🎬 Generating {total_frames/fps:.1f}s video ({total_frames} frames)")
-        print(f"   Resolution: {width}x{height}")
+    total_frames = (duration_sec * fps) + 1
 
-        current_source = video_to_img(start_image, width, height, True, True)
-        current_source.save('tmp.png')
+    print(f"\n🎬 Generating {total_frames/fps:.1f}s video ({total_frames} frames)")
+    print(f"   Resolution: {width}x{height}")
 
-        if not prompt:
-            prompt = "The characters stand and act naturally. "
+    current_source = video_to_img(start_image, width, height, True, True)
+    current_source.save('tmp.png')
 
-        eprompt = EnhancePrompt(start_image, prompt, enhance_path)
+    if not prompt:
+        prompt = "The characters stand and act naturally. "
 
-        print("CURRENT PROMPT: ",eprompt)
+    eprompt = EnhancePrompt(start_image, prompt, enhance_path)
 
-        try:
-            i2v(eprompt, 'tmp.png', output, 
-                    duration_sec, width, height, seed)
-            description = ''
-                
-            # Post-processing
-            if os.environ.get('BATCH', 'False') == 'False':
-                tmp_img = video_to_img(f'{output}', width, height)
-                tmp_img.save('tmp.png')
-                description = AnalyzeImage('tmp.png', "Briefly describe this image, no more than 100 words")['analysis']
+    print("CURRENT PROMPT: ",eprompt)
+
+    try:
+        i2v(eprompt, 'tmp.png', output, 
+                duration_sec, width, height, seed)
+        description = ''
             
-            return {
-                "status": "success",
-                "output_path": output,
-                "frames": (duration_sec * fps) + 1,
-                "description": description,
-                "prompt": eprompt
-            }
-            
-        except Exception as e:
-            print(f"❌ Error: {e}")
-            raise
+        # Post-processing
+        if os.environ.get('BATCH', 'False') == 'False':
+            tmp_img = video_to_img(f'{output}', width, height)
+            tmp_img.save('tmp.png')
+            description = AnalyzeImage('tmp.png', "Briefly describe this image, no more than 100 words")['analysis']
+        
+        return {
+            "status": "success",
+            "output_path": output,
+            "frames": (duration_sec * fps) + 1,
+            "description": description,
+            "prompt": eprompt
+        }
+        
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        raise
 
 import math
 
@@ -340,6 +344,9 @@ def GenerateTalkingVideo(
     height=HEIGHT,
     seed=-1):
     print(f"PROMPT: {prompt}")
+
+    duration_max = 10 if VRAM > 32 else 5
+    duration = min(duration_max, duration_sec)
     
     if isinstance(prompt, list):
         prompt = prompt.pop()
@@ -367,7 +374,7 @@ def GenerateTalkingVideo(
     width = int(width)
     height = int(height)
     seed = int(seed)
-    duration_sec = 10 #int(estimate_duration(text))
+    duration_sec = duration 
     fps = 24
 
     if seed == -1:

@@ -15,15 +15,14 @@ HEIGHT = int(os.environ.get("HEIGHT", "480"))
 SEED = int(os.environ.get("SEED", "-1"))
 
 if ANIME:
-    from anime_gen import GenerateImage
+    from anime_gen import CreateCharacterSheet, CreateBackground, ImageGen
 else:
-    from image_gen import GenerateImage
+    from image_gen import CreateCharacterSheet, CreateBackground, ImageGen
 
 import argparse
 import json
 from pathlib import Path
 from image_analysis import AnalyzeImage
-from image_gen import CreateCharacterSheet, CreateBackground, ImageGen
 
 
 def decompose_scene(input_image, output_dir, width=832, height=480, seed=42):
