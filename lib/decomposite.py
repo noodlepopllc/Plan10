@@ -42,7 +42,9 @@ def decompose_scene(input_image, output_dir, width=832, height=480, seed=42):
     print(f"🔍 Analyzing scene: {input_image}")
     
     # Step 1: Analyze scene to identify characters and environment
-    analysis_prompt = """Analyze this image and identify all distinct characters/people present and the environment.
+    analysis_prompt = """Analyze this image and identify up to 2 distinct characters/people present and the environment.
+
+IMPORTANT: If there are more than 2 people, focus only on the 2 most prominent/foreground characters.
 
 For each character, provide:
 1. POSITION: Where they are in the frame (left, center, right)
@@ -81,12 +83,15 @@ TOTAL_CHARACTERS: [number]"""
     analysis = result['analysis']
     print(analysis)
     
-    # Parse character count
+    # Parse character count (cap at 2 for compositor compatibility)
     char_count = 1
     for line in analysis.split('\n'):
         if 'TOTAL_CHARACTERS:' in line:
             try:
-                char_count = int(line.split(':')[1].strip())
+                detected_count = int(line.split(':')[1].strip())
+                char_count = min(detected_count, 2)  # Cap at 2
+                if detected_count > 2:
+                    print(f"⚠️ Detected {detected_count} characters, but compositor only supports 2. Using first 2.")
             except:
                 pass
     
