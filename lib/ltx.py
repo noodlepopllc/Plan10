@@ -212,7 +212,7 @@ def i2v_diffsynth(prompt='', media='', output='output.mp4',
 i2v = i2v_diffsynth_fast if DISTILLED else i2v_diffsynth
 
 def GenerateVideo(prompt='', media='', output='output.mp4', 
-                  duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
+                  duration_sec=10, width=WIDTH, height=HEIGHT, seed=-1):
 
         print(f"PROMPT: {prompt}")
         
