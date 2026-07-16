@@ -97,7 +97,9 @@ Be extremely specific about colors, styles, and physical features. This will be 
             
             if line.startswith('CHARACTER_'):
                 if current_char:
-                    characters.append(current_char)
+                    # Only add if we have at least visual_id
+                    if current_char.get('visual_id'):
+                        characters.append(current_char)
                 current_char = {}
                 current_field = None
             elif line.startswith('VISUAL_ID:'):
@@ -110,11 +112,10 @@ Be extremely specific about colors, styles, and physical features. This will be 
                 current_field = 'clothing'
                 current_char['clothing'] = line.split(':', 1)[1].strip()
             elif current_field and current_char:
-                # Continuation line for multi-sentence descriptions
                 current_char[current_field] += ' ' + line
         
         # Don't forget the last character
-        if current_char:
+        if current_char and current_char.get('visual_id'):
             characters.append(current_char)
         
         return characters
@@ -140,17 +141,17 @@ Be extremely specific about colors, styles, and physical features. This will be 
             if not char:
                 return ""
             return f"""CHARACTER PROFILE:
-Visual ID: {char['visual_id']}
-Appearance: {char['appearance']}
-Clothing: {char['clothing']}"""
+    Visual ID: {char.get('visual_id', 'unknown')}
+    Appearance: {char.get('appearance', 'not specified')}
+    Clothing: {char.get('clothing', 'not specified')}"""
         
         # Return all prominent characters
         descriptions = []
         for i, char in enumerate(self.characters):
             descriptions.append(f"""CHARACTER {i+1}:
-Visual ID: {char['visual_id']}
-Appearance: {char['appearance']}
-Clothing: {char['clothing']}""")
+    Visual ID: {char.get('visual_id', 'unknown')}
+    Appearance: {char.get('appearance', 'not specified')}
+    Clothing: {char.get('clothing', 'not specified')}""")
         
         return '\n\n'.join(descriptions)
 

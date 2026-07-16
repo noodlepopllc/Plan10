@@ -50,10 +50,17 @@ def decompose_scene(input_image, output_dir, width=832, height=480, seed=42):
 
 IMPORTANT: If there are more than 2 people, focus only on the 2 most prominent/foreground characters.
 
+CRITICAL FOR CLOTHING: Describe the COMPLETE outfit for each character, even if parts are not visible in the image. Infer missing clothing items based on context, style, and typical fashion combinations. For example, if you can see a blazer, infer matching pants. If you see a skirt, infer appropriate footwear.
+
 For each character, provide:
 1. POSITION: Where they are in the frame (left, center, right)
 2. APPEARANCE: Detailed physical description (age range, gender presentation, ethnicity, hair color and style, body type)
-3. CLOTHING: Detailed clothing description (top, bottom, shoes, accessories, colors, styles)
+3. CLOTHING: COMPLETE outfit description including:
+   - Top (color, style, fit, material)
+   - Bottom (color, style, fit - INFER if not visible)
+   - Shoes/footwear (INFER if not visible)
+   - Accessories (jewelry, bags, hats, etc.)
+   - Any other visible or inferable clothing items
 4. POSE: Current pose and orientation
 
 For the environment, provide:
@@ -65,16 +72,14 @@ Output format:
 CHARACTER_1:
 POSITION: [location]
 APPEARANCE: [detailed description]
-CLOTHING: [detailed description]
+CLOTHING: [COMPLETE outfit - visible AND inferred items]
 POSE: [description]
 
 CHARACTER_2:
 POSITION: [location]
 APPEARANCE: [detailed description]
-CLOTHING: [detailed description]
+CLOTHING: [COMPLETE outfit - visible AND inferred items]
 POSE: [description]
-
-[Continue for all characters]
 
 ENVIRONMENT:
 LOCATION: [description]
