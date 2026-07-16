@@ -13,7 +13,7 @@ def load_config():
         "DIFFSYNTH_DOWNLOAD_SOURCE": "huggingface", 
         "DIFFSYNTH_SKIP_DOWNLOAD": "False", 
         "BITSNBYTES":"False",
-        "BATCH":"False", 
+        "BATCH":"True", 
         "LLM_BACKEND": "transformers",
         "OLLAMA_URL": "http://localhost:11434",
         "OLLAMA_MODEL": "qwen3.5:latest",
@@ -48,7 +48,8 @@ def load_environ(replace_env=False):
         # os.environ["MODELSCOPE_DOMAIN"] = "www.modelscope.ai"
         cfg = load_config()
         for k, v in cfg.items():
-            os.environ[k] = v
+            if k not in os.environ:
+                os.environ[k] = v
         os.environ["LOADED"] = "True"
     cfg = load_config()
     if replace_env:

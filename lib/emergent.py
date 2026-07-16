@@ -366,72 +366,72 @@ class FeedbackLoop:
         else:
             return False, "wrong_character"
     
-def run(self, initial_media, story_context, max_beats=8):
-    self.current_media = initial_media
-    self.history = []
-    self.pending_setup = None
-    beat_count = 0
-    
-    while beat_count < max_beats:
-        print(f"\n{'='*60}\nBEAT {beat_count + 1}/{max_beats}\n{'='*60}")
+    def run(self, initial_media, story_context, max_beats=8):
+        self.current_media = initial_media
+        self.history = []
+        self.pending_setup = None
+        beat_count = 0
         
-        # Check visibility
-        visible, reason = self.is_character_adequately_visible(self.current_media)
+        while beat_count < max_beats:
+            print(f"\n{'='*60}\nBEAT {beat_count + 1}/{max_beats}\n{'='*60}")
+            
+            # Check visibility
+            visible, reason = self.is_character_adequately_visible(self.current_media)
+            
+            if not visible:
+                print(f"⚠️ Character not visible ({reason}) - recreating...")
+                current_state = f"{self.visual_id} is now visible in the scene, facing the camera in a frontal or 3/4 view."
+                self.current_media = self.recreate_frame(self.current_media, current_state)
+            
+            # Get previous intention
+            if self.history:
+                intended_action = self.history[-1]
+            else:
+                intended_action = "Initial scene setup"
+            
+            # Analyze reality
+            print(f"\n🔍 Analyzing reality...")
+            raw_reality = self.analyze_reality(self.current_media, intended_action)
+            actual_reality = self._extract_scene_description(raw_reality)
+            
+            # Compare and decide
+            print(f"\n🤔 Comparing intention vs reality...")
+            decision = self.compare_and_decide(intended_action, actual_reality, story_context)
+            match, issues, next_action, setup = self.parse_decision(decision)
+            
+            print(f"Match: {match}, Issues: {issues}")
+            print(f"Setup for next beat: {setup}")
+            
+            # Store the setup for the next beat
+            self.pending_setup = setup
+            
+            # If major issues, rebuild frame showing CURRENT state
+            if "NO" in match or "drift" in issues.lower() or "repeating" in issues.lower():
+                print(f"\n⚠️ Major issues detected - rebuilding frame to current state...")
+                self.current_media = self.recreate_frame(self.current_media, actual_reality)
+            
+            # Generate video
+            output_path = self.output_dir / f"beat_{beat_count+1:03d}.mp4"
+            i2v_prompt = self._format_video_prompt(actual_reality, next_action)
+            
+            print(f"\n🎬 Generating video...")
+            print(f"Prompt preview: {i2v_prompt[:200]}...")
+            
+            GenerateVideo(
+                prompt=i2v_prompt, 
+                media=self.current_media, 
+                output=str(output_path),
+                duration_sec=10 if WGP or LTX else 5, 
+                seed=self.seed + beat_count
+            )
+            
+            self.current_media = str(output_path)
+            self.history.append(next_action)
+            beat_count += 1
+            
+            print(f"\n✅ Beat {beat_count} complete")
         
-        if not visible:
-            print(f"⚠️ Character not visible ({reason}) - recreating...")
-            current_state = f"{self.visual_id} is now visible in the scene, facing the camera in a frontal or 3/4 view."
-            self.current_media = self.recreate_frame(self.current_media, current_state)
-        
-        # Get previous intention
-        if self.history:
-            intended_action = self.history[-1]
-        else:
-            intended_action = "Initial scene setup"
-        
-        # Analyze reality
-        print(f"\n🔍 Analyzing reality...")
-        raw_reality = self.analyze_reality(self.current_media, intended_action)
-        actual_reality = self._extract_scene_description(raw_reality)
-        
-        # Compare and decide
-        print(f"\n🤔 Comparing intention vs reality...")
-        decision = self.compare_and_decide(intended_action, actual_reality, story_context)
-        match, issues, next_action, setup = self.parse_decision(decision)
-        
-        print(f"Match: {match}, Issues: {issues}")
-        print(f"Setup for next beat: {setup}")
-        
-        # Store the setup for the next beat
-        self.pending_setup = setup
-        
-        # If major issues, rebuild frame showing CURRENT state
-        if "NO" in match or "drift" in issues.lower() or "repeating" in issues.lower():
-            print(f"\n⚠️ Major issues detected - rebuilding frame to current state...")
-            self.current_media = self.recreate_frame(self.current_media, actual_reality)
-        
-        # Generate video
-        output_path = self.output_dir / f"beat_{beat_count+1:03d}.mp4"
-        i2v_prompt = self._format_video_prompt(actual_reality, next_action)
-        
-        print(f"\n🎬 Generating video...")
-        print(f"Prompt preview: {i2v_prompt[:200]}...")
-        
-        GenerateVideo(
-            prompt=i2v_prompt, 
-            media=self.current_media, 
-            output=str(output_path),
-            duration_sec=10 if WGP or LTX else 5, 
-            seed=self.seed + beat_count
-        )
-        
-        self.current_media = str(output_path)
-        self.history.append(next_action)
-        beat_count += 1
-        
-        print(f"\n✅ Beat {beat_count} complete")
-    
-    return self.history
+        return self.history
 
     def _extract_scene_description(self, raw_analysis):
         """Extract clean scene description from analysis output."""

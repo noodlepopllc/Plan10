@@ -21,8 +21,8 @@ HEIGHT = int(os.environ.get("HEIGHT", "480"))
 ANIME = "_anime" if os.environ.get("ANIME","False") != "False" else ""
 DISTILLED = "DISTILLED" in os.environ.get("LTX","False")
 
-enhance_path = f'./system/ltx_enhancer{ANIME}.txt'
-#enhance_path = './system/ltx_enhancer_minimal.txt'
+#enhance_path = f'./system/ltx_enhancer{ANIME}.txt'
+enhance_path = './system/ltx_enhancer_minimal.txt'
 
 def i2v_diffsynth_fast(prompt='', media='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):

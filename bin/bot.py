@@ -1,11 +1,14 @@
 from pathlib import Path
 import torch, os, sys, gc, json, re, time, argparse
 sys.path.append('./lib')
-from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
-from brain import execute_task
 from config import load_environ
 
 load_environ()
+os.environ['BATCH'] = 'False'
+
+from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
+from brain import execute_task
+
 
 # =============================================================================
 # CONTEXT
