@@ -344,10 +344,11 @@ CRITICAL: The character has walked away or turned their back. You MUST generate 
     Output format (STRICTLY follow this, no extra text):
     MATCH: [YES/PARTIAL/NO]
     ISSUES: [none, or specific problem]
-    LOCATION: [brief location - "dimly lit bar", "office conference room", "parking garage"]
-    CHARACTERS: [brief descriptions - "woman in red dress", "man in grey suit"]
-    NEXT: [1-2 sentences. If transitioning, MUST start with "CUT TO: " and describe new location/angle with character visible]
-    SETUP: [1 sentence describing what this action sets up]"""
+    LOCATION: [brief location]
+    CHARACTERS: [brief descriptions]
+    NEXT_ACTION: [1-2 sentences of pure story action]
+    CAMERA_FRAMING: [1 sentence of strict visual direction: lens, angle, lighting, movement]
+    SETUP: [what this sets up]"""
         
         result = llm_analyze_media(
             media="", prompt=prompt,
@@ -365,6 +366,7 @@ CRITICAL: The character has walked away or turned their back. You MUST generate 
         location = ""
         characters = ""
         next_action = ""
+        camera_framing = ""
         setup = ""
         
         for line in lines:
@@ -377,12 +379,14 @@ CRITICAL: The character has walked away or turned their back. You MUST generate 
                 location = line.split(":", 1)[1].strip()
             elif line.upper().startswith("CHARACTERS:"):
                 characters = line.split(":", 1)[1].strip()
-            elif line.upper().startswith("NEXT:"):
+            elif line.upper().startswith("NEXT_ACTION:"):
                 next_action = line.split(":", 1)[1].strip()
+            elif line.upper().startswith("CAMERA_FRAMING:"):
+                camera_framing = line.split(":", 1)[1].strip()
             elif line.upper().startswith("SETUP:"):
                 setup = line.split(":", 1)[1].strip()
         
-        return match, issues, location, characters, next_action, setup
+        return match, issues, location, characters, next_action, camera_framing, setup
 
     def _extract_frame_for_check(self, media_path):
         """Extract frame for analysis."""
@@ -510,12 +514,13 @@ CRITICAL: The character has walked away or turned their back. You MUST generate 
             # Compare and decide
             print(f"\n🤔 Comparing intention vs reality...")
             decision = self.compare_and_decide(intended_action, actual_reality, story_context, force_transition=needs_transition)
-            match, issues, location, characters, next_action, setup = self.parse_decision(decision)
+            match, issues, location, characters, next_action, camera_framing, setup = self.parse_decision(decision)
 
             print(f"Match: {match}, Issues: {issues}")
             print(f"Location: {location}")
             print(f"Characters: {characters}")
             print(f"Next Action: {next_action}")
+            print(f"Camera Framing: {camera_framing}")
             print(f"Setup for next beat: {setup}")
             
             self.pending_setup = setup
@@ -534,7 +539,7 @@ CRITICAL: The character has walked away or turned their back. You MUST generate 
             
             # Generate video
             output_path = self.output_dir / f"beat_{beat_count+1:03d}.mp4"
-            i2v_prompt = self._format_video_prompt(location, characters, next_action)
+            i2v_prompt = self._format_video_prompt(location, characters, next_action, camera_framing)
             
             print(f"\n🎬 Generating video...")
             print(f"Prompt preview: {i2v_prompt[:200]}...")
@@ -573,7 +578,7 @@ CRITICAL: The character has walked away or turned their back. You MUST generate 
         
         return ' '.join(clean_lines)
 
-    def _format_video_prompt(self, location, characters, next_action):
+    def _format_video_prompt(self, location, characters, next_action, camera_framing):
         """Format video prompt in renderer-optimized structure: location → characters → action."""
         
         # If no characters provided by improv, fall back to brief visual IDs
@@ -593,7 +598,8 @@ CRITICAL: The character has walked away or turned their back. You MUST generate 
 
     {characters}
 
-    {next_action}
+    Action: {next_action}
+    Camera: {camera_framing}
     """
 
 if __name__ == "__main__":
