@@ -7,7 +7,9 @@ Analyzes a scene, extracts character descriptions, and generates clean character
 import sys, os
 sys.path.append('./lib')
 from config import load_environ
+os.environ['BATCH'] = 'False'
 load_environ()
+from PIL import Image
 
 ANIME = os.environ.get("ANIME", "False") != "False"
 WIDTH = int(os.environ.get("WIDTH", "832"))
@@ -121,7 +123,7 @@ TOTAL_CHARACTERS: [number]"""
             characters.append({
                 'id': i,
                 'path': str(char_output),
-                'description': char_desc,
+                'description': status['description'],
                 'prompt_used': status.get('prompt', '')
             })
             
@@ -150,7 +152,7 @@ TOTAL_CHARACTERS: [number]"""
     manifest = {
         'source': input_image,
         'background': str(bg_output),
-        'environment_description': env_desc,
+        'environment_description': status['description'],
         'characters': characters,
         'dimensions': {'width': width, 'height': height},
         'analysis': analysis
