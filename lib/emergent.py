@@ -504,9 +504,7 @@ def _format_video_prompt(self, scene_description, next_action):
 
 {char_text}
 
-{next_action}
-
-{'Style: Anime, cel shading, flat colors, bold outlines' if ANIME ''}"""
+{next_action}"""
 
 if __name__ == "__main__":
     import argparse
