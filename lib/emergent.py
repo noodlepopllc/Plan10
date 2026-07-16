@@ -191,6 +191,42 @@ class FeedbackLoop:
         
         self.history = []
         self.current_media = None
+
+    def generate_transition_frame(self, new_location_prompt, beat_num):
+        """Generate a clean background for a new location and composite characters onto it."""
+        print(f"  → Generating new background for: {new_location_prompt}")
+        
+        # Step 1: Generate clean background for the new location
+        bg_path = self.output_dir / f"trans_bg_{beat_num:03d}.png"
+        
+        # Use CreateBackground to generate fresh background
+        if ANIME:
+            from anime_gen import CreateBackground
+        else:
+            from image_gen import CreateBackground
+        
+        CreateBackground(
+            prompt=new_location_prompt,
+            output=str(bg_path),
+            seed=self.seed + beat_num + 1000
+        )
+        
+        # Step 2: Composite ALL characters onto this new background
+        comp_path = self.output_dir / f"trans_comp_{beat_num:03d}.png"
+        print(f"  → Compositing {len(self.character_refs)} character(s) into new location...")
+        
+        CompositeScene(
+            background_path=str(bg_path),
+            characters=self.character_refs,
+            shot_type="medium" if len(self.character_refs) == 1 else "two_shot",
+            action=f"Characters positioned in {new_location_prompt}. Clear frontal or 3/4 view, faces fully recognizable, ready for action.",
+            output=str(comp_path),
+            width=self.width,
+            height=self.height,
+            seed=self.seed + beat_num + 2000
+        )
+        
+        return str(comp_path)
     
     def _build_combined_description(self):
         """Build a combined description for all characters."""
@@ -279,19 +315,26 @@ class FeedbackLoop:
         result = AnalyzeImage(check_path, prompt)
         return result['analysis'].strip()
 
-    def compare_and_decide(self, intended_action, actual_reality, story_context):
-        """Generate next action with renderer-ready components."""
+
+    def compare_and_decide(self, intended_action, actual_reality, story_context, force_transition=False):
+        """Generate next action with renderer-ready components and cinematic rules."""
         history_text = "\n".join([f"- {a}" for a in self.history[-3:]]) if self.history else "First beat."
         
         setup_context = ""
         if hasattr(self, 'pending_setup') and self.pending_setup:
             setup_context = f"\nPREVIOUS SETUP: {self.pending_setup}\nThis was set up in the last beat and should now pay off or escalate."
         
+        # Force transition if character walked away
+        transition_directive = ""
+        if force_transition:
+            transition_directive = """
+CRITICAL: The character has walked away or turned their back. You MUST generate a "CUT TO:" that transitions to a NEW LOCATION or NEW CAMERA ANGLE where the character is clearly visible from the front or 3/4 view. Do NOT continue the current shot."""
+        
         prompt = f"""STORY CONTEXT: {story_context}
 
     PREVIOUS INTENTION: {intended_action}
     ACTUAL SCENE STATE: {actual_reality}
-    RECENT ACTIONS: {history_text}{setup_context}
+    RECENT ACTIONS: {history_text}{setup_context}{transition_directive}
 
     TASK: Apply "Yes, And..." improv logic with CAUSAL ESCALATION.
     1. YES: Accept the ACTUAL SCENE STATE as absolute truth.
@@ -302,13 +345,13 @@ class FeedbackLoop:
     MATCH: [YES/PARTIAL/NO]
     ISSUES: [none, or specific problem]
     LOCATION: [brief location - "dimly lit bar", "office conference room", "parking garage"]
-    CHARACTERS: [brief descriptions - "woman in red dress", "man in grey suit, holding briefcase"]
-    NEXT: [1-2 sentences describing the immediate next physical action]
+    CHARACTERS: [brief descriptions - "woman in red dress", "man in grey suit"]
+    NEXT: [1-2 sentences. If transitioning, MUST start with "CUT TO: " and describe new location/angle with character visible]
     SETUP: [1 sentence describing what this action sets up]"""
         
         result = llm_analyze_media(
             media="", prompt=prompt,
-            system="You are a screenwriter. Every action must setup the next beat through causal chains.",
+            system="You are a film director and screenwriter. Every action must setup the next beat through causal chains. Use cinematic cuts to solve visibility issues.",
             max_tokens=250, temperature=0.7
         )['analysis']
         
@@ -358,7 +401,7 @@ class FeedbackLoop:
         return img, str(check_path)
 
     def is_character_adequately_visible(self, media_path):
-        """Two-tier visibility check with anime-friendly leniency."""
+        """Two-tier visibility check with anime-friendly leniency and detailed reasoning."""
         img, check_path = self._extract_frame_for_check(media_path)
         
         # Tier 1: RetinaFace (fast) - is ANY face visible?
@@ -368,24 +411,55 @@ class FeedbackLoop:
         cleanup()
         
         if not faces:
-            return False, "no_face"
+            return False, "no_face", "No faces detected in frame"
         
-        # Tier 2: AnalyzeImage identity check (more lenient for anime)
+        # Tier 2: AnalyzeImage identity check with detailed reasoning
         prompt = f"""Looking for a character matching this description: {self.visual_id}
 
-    Is there a character in this image that generally matches this description?
-    Consider: hair color/style, approximate age, general appearance.
-    Small stylistic variations are acceptable.
+    Analyze the image and answer:
 
-    Answer YES or NO."""
+    1. Is there a character visible that generally matches this description? (YES/NO)
+    2. What is their orientation relative to the camera?
+    - "facing_camera" - front or 3/4 view, face clearly visible
+    - "walking_away" - showing back, moving away from camera
+    - "turned_away" - side view or back, not moving
+    - "partially_visible" - partially obscured or at extreme angle
+    3. Brief reason for your assessment (1 sentence)
+
+    Output format (STRICTLY follow this):
+    MATCH: [YES/NO]
+    ORIENTATION: [facing_camera/walking_away/turned_away/partially_visible]
+    REASON: [brief explanation]"""
         
         result = AnalyzeImage(check_path, prompt)
-        response = result['analysis'].strip().upper()
+        response = result['analysis'].strip()
         
-        if "YES" in response:
-            return True, "visible"
+        # Parse structured response
+        match = "NO"
+        orientation = "unknown"
+        reason = "Unknown"
+        
+        for line in response.split('\n'):
+            line = line.strip()
+            if line.upper().startswith("MATCH:"):
+                match = line.split(":", 1)[1].strip().upper()
+            elif line.upper().startswith("ORIENTATION:"):
+                orientation = line.split(":", 1)[1].strip().lower()
+            elif line.upper().startswith("REASON:"):
+                reason = line.split(":", 1)[1].strip()
+        
+        if match == "YES" and orientation == "facing_camera":
+            return True, "visible", reason
+        elif orientation == "walking_away":
+            return False, "walking_away", reason
+        elif orientation == "turned_away":
+            return False, "turned_away", reason
+        elif orientation == "partially_visible":
+            return False, "partially_visible", reason
+        elif match == "NO":
+            return False, "wrong_character", reason
         else:
-            return False, "wrong_character"
+            return False, "unknown", reason
     
     def run(self, initial_media, story_context, max_beats=8):
         # Check if initial media needs characters composited
@@ -405,23 +479,28 @@ class FeedbackLoop:
         self.history = []
         self.pending_setup = None
         beat_count = 0
+        needs_transition = False # Track if we need to build a new scene
         
         while beat_count < max_beats:
             print(f"\n{'='*60}\nBEAT {beat_count + 1}/{max_beats}\n{'='*60}")
             
             # Check visibility
-            visible, reason = self.is_character_adequately_visible(self.current_media)
+            visible, reason_code, reason_text = self.is_character_adequately_visible(self.current_media)
             
             if not visible:
-                print(f"⚠️ Character not visible ({reason}) - recreating...")
-                current_state = f"{self.visual_id} is now visible in the scene, facing the camera in a frontal or 3/4 view."
-                self.current_media = self.recreate_frame(self.current_media, current_state)
+                print(f"⚠️ Character not visible ({reason_code}): {reason_text}")
+                
+                if reason_code in ["walking_away", "turned_away"]:
+                    print("  → Recognized intentional exit/turn. Will force cinematic CUT TO in next beat.")
+                    needs_transition = True
+                else:
+                    print("  → Unintended loss of visibility. Recreating frame...")
+                    current_state = f"{self.visual_id} is now visible in the scene, facing the camera in a frontal or 3/4 view."
+                    self.current_media = self.recreate_frame(self.current_media, current_state)
+                    needs_transition = False
             
             # Get previous intention
-            if self.history:
-                intended_action = self.history[-1]
-            else:
-                intended_action = "Initial scene setup"
+            intended_action = self.history[-1] if self.history else "Initial scene setup"
             
             # Analyze reality
             print(f"\n🔍 Analyzing reality...")
@@ -430,21 +509,28 @@ class FeedbackLoop:
             
             # Compare and decide
             print(f"\n🤔 Comparing intention vs reality...")
-            decision = self.compare_and_decide(intended_action, actual_reality, story_context)
+            decision = self.compare_and_decide(intended_action, actual_reality, story_context, force_transition=needs_transition)
             match, issues, location, characters, next_action, setup = self.parse_decision(decision)
 
             print(f"Match: {match}, Issues: {issues}")
             print(f"Location: {location}")
             print(f"Characters: {characters}")
+            print(f"Next Action: {next_action}")
             print(f"Setup for next beat: {setup}")
             
-            # Store the setup for the next beat
             self.pending_setup = setup
             
-            # If major issues, rebuild frame showing CURRENT state
+            # If major issues (and NOT a planned transition), rebuild frame
             if "NO" in match or "drift" in issues.lower() or "repeating" in issues.lower():
-                print(f"\n⚠️ Major issues detected - rebuilding frame to current state...")
-                self.current_media = self.recreate_frame(self.current_media, actual_reality)
+                if not needs_transition: # Don't rebuild if we are already transitioning
+                    print(f"\n⚠️ Major issues detected - rebuilding frame to current state...")
+                    self.current_media = self.recreate_frame(self.current_media, actual_reality)
+            
+            # *** CRITICAL: Handle the Cinematic Cut ***
+            if needs_transition and "CUT TO" in next_action.upper():
+                print(f"\n🎬 Executing Cinematic Transition to: {location}")
+                self.current_media = self.generate_transition_frame(location, beat_count)
+                needs_transition = False # Reset flag, transition is complete
             
             # Generate video
             output_path = self.output_dir / f"beat_{beat_count+1:03d}.mp4"
@@ -455,7 +541,7 @@ class FeedbackLoop:
             
             GenerateVideo(
                 prompt=i2v_prompt, 
-                media=self.current_media, 
+                media=self.current_media, # This is now the NEW composited frame if a transition occurred!
                 output=str(output_path),
                 duration_sec=10 if WGP or LTX else 5, 
                 seed=self.seed + beat_count
