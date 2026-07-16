@@ -24,9 +24,9 @@ HEIGHT = int(os.environ.get("HEIGHT", "480"))
 SEED = int(os.environ.get("SEED", "-1"))
 
 if ANIME:
-    from anime_gen import GenerateImage
+    from anime_gen import GenerateImage, CreateBackground
 else:
-    from image_gen import GenerateImage
+    from image_gen import GenerateImage, CreateBackground
 
 if WGP:
     from wgp import GenerateVideo
@@ -199,12 +199,6 @@ class FeedbackLoop:
         # Step 1: Generate clean background for the new location
         bg_path = self.output_dir / f"trans_bg_{beat_num:03d}.png"
         
-        # Use CreateBackground to generate fresh background
-        if ANIME:
-            from anime_gen import CreateBackground
-        else:
-            from image_gen import CreateBackground
-        
         CreateBackground(
             prompt=new_location_prompt,
             output=str(bg_path),
@@ -366,7 +360,7 @@ CRITICAL: The character has walked away or turned their back. You MUST generate 
         location = ""
         characters = ""
         next_action = ""
-        camera_framing = ""
+        camera_framing = "static shot, medium framing"
         setup = ""
         
         for line in lines:
@@ -468,7 +462,7 @@ CRITICAL: The character has walked away or turned their back. You MUST generate 
     def run(self, initial_media, story_context, max_beats=8):
         # Check if initial media needs characters composited
         print("\n🔍 Checking initial media...")
-        visible, reason = self.is_character_adequately_visible(initial_media)
+        visible, reason_code, reason_text = self.is_character_adequately_visible(initial_media)
         
         while not visible:
             print(f"⚠️ Initial media has no visible characters ({reason})")
@@ -477,7 +471,7 @@ CRITICAL: The character has walked away or turned their back. You MUST generate 
             # Composite all characters into the initial media
             initial_media = self.recreate_frame(initial_media, story_context)
             print(f"  ✓ Characters composited into initial scene")
-            visible, reason = self.is_character_adequately_visible(initial_media)
+            visible, reason_code, reason_text = self.is_character_adequately_visible(initial_media)
         
         self.current_media = initial_media
         self.history = []
