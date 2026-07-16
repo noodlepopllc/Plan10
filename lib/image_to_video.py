@@ -159,7 +159,7 @@ def GenerateVideoSchema():
         "type": "function",
         "function": {
             "name": "image_to_video",
-            "description": "Create a video from an image and a prompt using Wan 2.1 I2V. Pass a list of prompts for multi-window control (1 prompt per ~5s).",
+            "description": "Create a video from an image and a prompt using Wan 2.1 I2V.).",
             "parameters": {
                 "type": "object",
                 "properties": {
