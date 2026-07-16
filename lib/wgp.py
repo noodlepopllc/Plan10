@@ -20,7 +20,7 @@ ANIME = "_anime" if os.environ.get("ANIME","False") != "False" else ""
 ARC = os.environ.get("LTX","False") == "ARC"
 
 #enhance_path = f'./system/ltx_enhancer{ANIME}.txt'
-enhance_path = './system/ltx_enhancer_minimal.txt'
+enhance_path = f'./system/ltx_enhancer_minimal{ANIME}.txt'
 
 #tool = "ltx2_22B_1_1"
 tool = "ltx2_22B_distilled_1_1"
