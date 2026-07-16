@@ -1,4 +1,5 @@
 from diffsynth.pipelines.krea2 import Krea2Pipeline, ModelConfig
+from diffsynth.pipelines.flux2_image import Flux2ImagePipeline, ModelConfig
 from diffsynth.pipelines.z_image import ZImagePipeline, ModelConfig
 from diffsynth.pipelines.anima_image import AnimaImagePipeline, ModelConfig
 from diffsynth.pipelines.qwen_image import QwenImagePipeline, ModelConfig, FlowMatchScheduler
@@ -58,6 +59,64 @@ class ImageGenKrea2(object):
                 num_inference_steps=8, 
                 cfg_scale=1, 
                 mu=1.15
+            )
+        image.save(output)
+        return {"status":"success", "output_path":output}
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.__del__()
+
+    def __del__(self):
+        gc.collect()
+        if torch.cuda.is_available():  # ✅ Was `if torch.cuda:` (always truthy)
+            torch.cuda.empty_cache()
+
+class ImageGenKlein(object):
+    def __init__(self,vrlimit=14):
+        if "VRAM" in os.environ:
+            vrlimit = int(os.environ["VRAM"])
+        self.vrlimit = vrlimit
+        self.pipe = None
+
+    def __enter__(self):
+        model = "black-forest-labs/FLUX.2-klein-4B"
+        if not self.pipe:
+            vram_config = {
+                "offload_dtype": "disk",
+                "offload_device": "disk",
+                "onload_dtype": torch.float8_e4m3fn,
+                "onload_device": "cpu",
+                "preparing_dtype": torch.float8_e4m3fn,
+                "preparing_device": "cuda",
+                "computation_dtype": torch.bfloat16,
+                "computation_device": "cuda",
+            }
+
+            self.pipe = Flux2ImagePipeline.from_pretrained(
+                torch_dtype=torch.bfloat16,
+                device="cuda",
+                model_configs=[
+                    ModelConfig(model_id=model, origin_file_pattern="text_encoder/*.safetensors", **vram_config),
+                    ModelConfig(model_id=model, origin_file_pattern="transformer/*.safetensors", **vram_config),
+                    ModelConfig(model_id=model, origin_file_pattern="vae/diffusion_pytorch_model.safetensors"),
+                ],
+                tokenizer_config=ModelConfig(model_id=model, origin_file_pattern="tokenizer/"),
+                vram_limit=self.vrlimit,
+            )
+        return self
+
+
+    def generate(self, prompt, output, width, height, seed):
+        if not self.pipe:
+            self.__enter__()
+
+        image = self.pipe(
+                prompt=prompt,
+                seed=seed,
+                num_inference_steps=4,
+                cfg_scale=1.0,
+                height=height,
+                width=width
             )
         image.save(output)
         return {"status":"success", "output_path":output}
@@ -239,6 +298,8 @@ elif ANIME == 'ZIMAGE':
     ImageGen = ImageGenZImage
 elif ANIME == 'QWEN':
     ImageGen = ImageGenQwen
+elif ANIME == 'KLEIN':
+    ImageGen = ImageGenKlein
 else:
     ImageGen = ImageGenKrea2
 
