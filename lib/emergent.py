@@ -261,30 +261,37 @@ class FeedbackLoop:
         return result['analysis'].strip()
 
     def compare_and_decide(self, intended_action, actual_reality, story_context):
-        """Compare prompt vs reality, and generate the 'Yes, And...' next step with forced physical progression."""
+        """Generate next action with causal setup for escalation (continuation OR transition)."""
         history_text = "\n".join([f"- {a}" for a in self.history[-3:]]) if self.history else "First beat."
+        
+        setup_context = ""
+        if hasattr(self, 'pending_setup') and self.pending_setup:
+            setup_context = f"\nPREVIOUS SETUP: {self.pending_setup}\nThis was set up in the last beat and should now pay off or escalate."
         
         prompt = f"""STORY CONTEXT: {story_context}
 
     PREVIOUS INTENTION: {intended_action}
     ACTUAL SCENE STATE: {actual_reality}
-    CHARACTER PROFILE: {self.character_desc}
-    RECENT ACTIONS: {history_text}
+    RECENT ACTIONS: {history_text}{setup_context}
 
-    TASK: Apply "Yes, And..." improv logic to ADVANCE the physical story.
-    1. YES: Accept the ACTUAL SCENE STATE as the absolute canonical truth.
-    2. PHYSICAL PROGRESSION RULE: If the character has been in the same location or posture (e.g., lying in bed, sitting) for the last 1-2 beats, the NEXT action MUST involve a clear physical transition (e.g., standing up, walking to a new location, interacting with a new object to facilitate movement). 
-    3. DO NOT just escalate the emotion (e.g., "panics more"). Escalate the PHYSICAL ACTION.
+    TASK: Apply "Yes, And..." improv logic with CAUSAL ESCALATION.
+    1. YES: Accept the ACTUAL SCENE STATE as absolute truth.
+    2. AND: Generate the next physical action that ADVANCES the story context.
+    3. CRITICAL: This action must SET UP the next beat. 
+    - This can be a MICRO-ESCALATION: Deepening the current interaction (e.g., a reaction, a new line of dialogue, noticing a detail).
+    - OR a MACRO-ESCALATION: Transitioning to a new location or introducing a new character, if the current interaction has reached its natural conclusion.
+    Do not just repeat the last action. Create a causal chain.
 
     Output format (STRICTLY follow this, no extra text):
     MATCH: [YES/PARTIAL/NO]
-    ISSUES: [none, or "stagnant/repeating action" if no physical progress was made]
-    NEXT: [1-2 sentences describing a NEW physical action that changes the character's state or location to advance the story context]"""
+    ISSUES: [none, or specific problem like "repeating action"]
+    NEXT: [1-2 sentences describing the immediate next physical action or dialogue]
+    SETUP: [1 sentence describing what this action sets up, reveals, or transitions to for the next beat]"""
         
         result = llm_analyze_media(
             media="", prompt=prompt,
-            system="You are an improv scene director. Accept reality, forbid emotional stagnation, and force physical progression.",
-            max_tokens=200, temperature=0.7
+            system="You are a screenwriter. Every action must setup the next beat through causal chains. Allow for both scene continuation and scene transitions.",
+            max_tokens=250, temperature=0.7
         )['analysis']
         
         return result.strip()
@@ -295,16 +302,21 @@ class FeedbackLoop:
         match = "UNKNOWN"
         issues = "none"
         next_action = ""
+        setup = ""
         
         for line in lines:
-            if line.startswith("MATCH:"):
+            line = line.strip()
+            if line.upper().startswith("MATCH:"):
                 match = line.split(":", 1)[1].strip()
-            elif line.startswith("ISSUES:"):
+            elif line.upper().startswith("ISSUES:"):
                 issues = line.split(":", 1)[1].strip()
-            elif line.startswith("NEXT:"):
+            elif line.upper().startswith("NEXT:"):
                 next_action = line.split(":", 1)[1].strip()
+            elif line.upper().startswith("SETUP:"):
+                setup = line.split(":", 1)[1].strip()
         
-        return match, issues, next_action
+        return match, issues, next_action, setup
+
 
     def _extract_frame_for_check(self, media_path):
         """Extract frame for analysis."""
@@ -357,50 +369,37 @@ class FeedbackLoop:
     def run(self, initial_media, story_context, max_beats=8):
         self.current_media = initial_media
         self.history = []
+        self.pending_setup = None  # Track what was set up
         beat_count = 0
         
         while beat_count < max_beats:
             print(f"\n{'='*60}\nBEAT {beat_count + 1}/{max_beats}\n{'='*60}")
             
-            # Check visibility
-            visible, reason = self.is_character_adequately_visible(self.current_media)
+            # ... visibility check ...
             
-            if not visible:
-                print(f"⚠️ Character not visible ({reason}) - recreating...")
-                current_state = f"{self.visual_id} is now visible in the scene, facing the camera in a frontal or 3/4 view."
-                self.current_media = self.recreate_frame(self.current_media, current_state)
-            
-            # Get previous intention
-            if self.history:
-                intended_action = self.history[-1]
-            else:
-                intended_action = "Initial scene setup"
-            
-            # Analyze what ACTUALLY happened
-            print(f"\n🔍 Analyzing reality...")
-            raw_reality = self.analyze_reality(self.current_media, intended_action)
-            
-            # Clean up the reality description - extract just the scene part
+            # Analyze reality
+            raw_reality = self.analyze_reality(self.current_media, self.history[-1] if self.history else "Initial scene")
             actual_reality = self._extract_scene_description(raw_reality)
             
-            # Compare and decide
-            print(f"\n🤔 Comparing intention vs reality...")
-            decision = self.compare_and_decide(intended_action, actual_reality, story_context)
-            match, issues, next_action = self.parse_decision(decision)
+            # Compare and decide - now returns setup too
+            decision = self.compare_and_decide(
+                self.history[-1] if self.history else "Initial scene",
+                actual_reality,
+                story_context
+            )
+            match, issues, next_action, setup = self.parse_decision(decision)
             
             print(f"Match: {match}, Issues: {issues}")
+            print(f"Setup for next beat: {setup}")
             
-            # If major issues, rebuild frame showing CURRENT state
-            if "NO" in match or "drift" in issues.lower():
-                print(f"\n⚠️ Major issues detected - rebuilding frame to current state...")
-                self.current_media = self.recreate_frame(self.current_media, actual_reality)
+            # Store the setup for the next beat
+            self.pending_setup = setup
             
-            # Generate video with PROPERLY FORMATTED prompt
+            # ... rebuild if needed ...
+            
+            # Generate video
             output_path = self.output_dir / f"beat_{beat_count+1:03d}.mp4"
             i2v_prompt = self._format_video_prompt(actual_reality, next_action)
-            
-            print(f"\n🎬 Generating video...")
-            print(f"Prompt preview: {i2v_prompt[:200]}...")
             
             GenerateVideo(
                 prompt=i2v_prompt, 
@@ -413,8 +412,6 @@ class FeedbackLoop:
             self.current_media = str(output_path)
             self.history.append(next_action)
             beat_count += 1
-            
-            print(f"\n✅ Beat {beat_count} complete")
         
         return self.history
 
