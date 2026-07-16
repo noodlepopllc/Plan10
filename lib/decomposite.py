@@ -136,6 +136,7 @@ TOTAL_CHARACTERS: [number]"""
     # Use CreateBackground to generate clean plate
     status = CreateBackground(
         prompt=env_desc,
+        shot_type='wide',
         output=str(bg_output),
         seed=seed
     )
