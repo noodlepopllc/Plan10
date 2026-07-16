@@ -20,7 +20,7 @@ WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
 ANIME = "_anime" if os.environ.get("ANIME","False") != "False" else ""
 DISTILLED = "DISTILLED" in os.environ.get("LTX","False")
-VRAM = int(os.environ.get("VRAM", 96))
+VRAM = int(os.environ.get("VRAM", 96)
 
 #enhance_path = f'./system/ltx_enhancer{ANIME}.txt'
 enhance_path = f'./system/ltx_enhancer_minimal{ANIME}.txt'
@@ -215,78 +215,75 @@ i2v = i2v_diffsynth_fast if DISTILLED else i2v_diffsynth
 def GenerateVideo(prompt='', media='', output='output.mp4', 
                   duration_sec=10, width=WIDTH, height=HEIGHT, seed=-1):
 
-    print(f"PROMPT: {prompt}")
+        print(f"PROMPT: {prompt}")
+        
+        if isinstance(prompt, list):
+            prompt = prompt.pop()
+        
+        start_image = ''
+        end_image = None
 
-    duration_max = 10 if VRAM > 32 else 5
-    duration = min(duration_max, duration_sec)
-    
-    if isinstance(prompt, list):
-        prompt = prompt.pop()
-    
-    start_image = ''
-    end_image = None
+        if not media:
+            GenerateImage(prompt = prompt, output='first_frame.png', width=width, height=height, seed=seed)
+            media='first_frame.png'
 
-    if not media:
-        GenerateImage(prompt = prompt, output='first_frame.png', width=width, height=height, seed=seed)
-        media='first_frame.png'
+        if isinstance(media, list):
+            start_image = media.pop(0)
+            if len(media) > 0:
+                end_image = video_to_img(media.pop(), width, height, True, False)
+        else:
+            start_image = media
 
-    if isinstance(media, list):
-        start_image = media.pop(0)
-        if len(media) > 0:
-            end_image = video_to_img(media.pop(), width, height, True, False)
-    else:
-        start_image = media
+        print(f"MEDIA: {start_image}")
 
-    print(f"MEDIA: {start_image}")
+        original_prompt = prompt
 
-    original_prompt = prompt
+        width = int(width)
+        height = int(height)
+        seed = int(seed)
+        duration_sec = int(duration_sec)
+        fps = 24
 
-    width = int(width)
-    height = int(height)
-    seed = int(seed)
-    duration_sec = duration
-    fps = 24
+        if seed == -1:
+            seed = random.randint(0,1000000)
 
-    if seed == -1:
-        seed = random.randint(0,1000000)
+        total_frames = (duration_sec * fps) + 1
 
-    total_frames = (duration_sec * fps) + 1
+        print(f"\n🎬 Generating {total_frames/fps:.1f}s video ({total_frames} frames)")
+        print(f"   Resolution: {width}x{height}")
 
-    print(f"\n🎬 Generating {total_frames/fps:.1f}s video ({total_frames} frames)")
-    print(f"   Resolution: {width}x{height}")
+        current_source = video_to_img(start_image, width, height, True, True)
+        current_source.save('tmp.png')
 
-    current_source = video_to_img(start_image, width, height, True, True)
-    current_source.save('tmp.png')
+        if not prompt:
+            prompt = "The characters stand and act naturally. "
 
-    if not prompt:
-        prompt = "The characters stand and act naturally. "
+        eprompt = EnhancePrompt(start_image, prompt, enhance_path)
 
-    eprompt = EnhancePrompt(start_image, prompt, enhance_path)
+        print("CURRENT PROMPT: ",eprompt)
 
-    print("CURRENT PROMPT: ",eprompt)
-
-    try:
-        i2v(eprompt, 'tmp.png', output, 
-                duration_sec, width, height, seed)
-        description = ''
+        try:
+            i2v(eprompt, 'tmp.png', output, 
+                    duration_sec, width, height, seed)
+            description = ''
+                
+            # Post-processing
+            if os.environ.get('BATCH', 'False') == 'False':
+                tmp_img = video_to_img(f'{output}', width, height)
+                tmp_img.save('tmp.png')
+                description = AnalyzeImage('tmp.png', "Briefly describe this image, no more than 100 words")['analysis']
             
-        # Post-processing
-        if os.environ.get('BATCH', 'False') == 'False':
-            tmp_img = video_to_img(f'{output}', width, height)
-            tmp_img.save('tmp.png')
-            description = AnalyzeImage('tmp.png', "Briefly describe this image, no more than 100 words")['analysis']
-        
-        return {
-            "status": "success",
-            "output_path": output,
-            "frames": (duration_sec * fps) + 1,
-            "description": description,
-            "prompt": eprompt
-        }
-        
-    except Exception as e:
-        print(f"❌ Error: {e}")
-        raise
+            return {
+                "status": "success",
+                "output_path": output,
+                "frames": (duration_sec * fps) + 1,
+                "description": description,
+                "prompt": eprompt
+            }
+            
+        except Exception as e:
+            print(f"❌ Error: {e}")
+            raise
 
 import math
 
@@ -344,9 +341,6 @@ def GenerateTalkingVideo(
     height=HEIGHT,
     seed=-1):
     print(f"PROMPT: {prompt}")
-
-    duration_max = 10 if VRAM > 32 else 5
-    duration = min(duration_max, duration_sec)
     
     if isinstance(prompt, list):
         prompt = prompt.pop()
@@ -374,7 +368,7 @@ def GenerateTalkingVideo(
     width = int(width)
     height = int(height)
     seed = int(seed)
-    duration_sec = duration 
+    duration_sec = 10 #int(estimate_duration(text))
     fps = 24
 
     if seed == -1:

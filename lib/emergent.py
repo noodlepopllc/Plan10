@@ -168,25 +168,38 @@ class FeedbackLoop:
         self.height = height
         self.seed = seed
         
-        # Extract character profile from FIRST ref (or composited scene)
-        print("\n🔍 Building character profile from reference...")
-        self.character_profile = CharacterProfile(character_refs[0])
+        # Build profiles for ALL character references
+        print("\n🔍 Building character profiles from references...")
+        self.character_profiles = []
+        for i, ref in enumerate(character_refs):
+            print(f"  → Analyzing character {i+1}: {ref}")
+            profile = CharacterProfile(ref)
+            self.character_profiles.append(profile)
         
-        # Store as simple string - reuse everywhere
-        self.character_desc = self.character_profile.get_full_description()
+        # Build combined description for all characters
+        self.character_desc = self._build_combined_description()
         
-        # Get first character's visual_id for visibility tracking
-        if self.character_profile.get_character_count() > 0:
-            self.visual_id = self.character_profile.get_character(0)['visual_id']
+        # Get first character's visual_id for primary visibility tracking
+        if self.character_profiles and self.character_profiles[0].get_character_count() > 0:
+            self.visual_id = self.character_profiles[0].get_character(0)['visual_id']
         else:
             self.visual_id = "unknown character"
         
-        print(f"✓ Found {self.character_profile.get_character_count()} character(s)")
+        print(f"✓ Built profiles for {len(self.character_profiles)} character(s)")
         print(f"Primary visual ID: {self.visual_id}")
-        print(f"Using {len(self.character_refs)} character reference(s)")
         
         self.history = []
         self.current_media = None
+    
+    def _build_combined_description(self):
+        """Build a combined description for all characters."""
+        descriptions = []
+        for i, profile in enumerate(self.character_profiles):
+            char_desc = profile.get_full_description()
+            if char_desc:
+                descriptions.append(f"CHARACTER {i+1}:\n{char_desc}")
+        
+        return '\n\n'.join(descriptions) if descriptions else "No character profiles available"
 
     def recreate_frame(self, media_path, current_state):
         """Recreate frame using two-step compositor flow: strip characters → composite back."""
