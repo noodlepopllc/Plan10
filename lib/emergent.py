@@ -243,7 +243,7 @@ class FeedbackLoop:
         CompositeScene(
             background_path=str(clean_bg_path),
             characters=self.character_refs,  # ← Pass ALL character references
-            shot_type="medium" if len(character_refs) == 1 else "two_shot",
+            shot_type="medium" if len(self.character_refs) == 1 else "two_shot",
             action=composite_action,
             output=str(composite_path),
             width=self.width,
