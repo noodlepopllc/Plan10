@@ -4,7 +4,7 @@ Scene Decomposition Tool
 Analyzes a scene, extracts character descriptions, and generates clean character sheets and background.
 """
 
-import sys
+import sys, os
 sys.path.append('./lib')
 from config import load_environ
 load_environ()
