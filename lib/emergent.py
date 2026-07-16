@@ -462,6 +462,7 @@ CRITICAL: The character has walked away or turned their back. You MUST generate 
     def run(self, initial_media, story_context, max_beats=8):
         # Check if initial media needs characters composited
         print("\n🔍 Checking initial media...")
+        initial_media = self.recreate_frame(initial_media, story_context)
         visible, reason_code, reason_text = self.is_character_adequately_visible(initial_media)
         
         while not visible:
