@@ -385,6 +385,18 @@ class FeedbackLoop:
             return False, "wrong_character"
     
     def run(self, initial_media, story_context, max_beats=8):
+        # Check if initial media needs characters composited
+        print("\n🔍 Checking initial media...")
+        visible, reason = self.is_character_adequately_visible(initial_media)
+        
+        if not visible:
+            print(f"⚠️ Initial media has no visible characters ({reason})")
+            print(f"  → Compositing {len(self.character_refs)} character(s) into scene...")
+            
+            # Composite all characters into the initial media
+            initial_media = self.recreate_frame(initial_media, "Characters positioned for scene start")
+            print(f"  ✓ Characters composited into initial scene")
+        
         self.current_media = initial_media
         self.history = []
         self.pending_setup = None
