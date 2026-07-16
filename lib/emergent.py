@@ -615,7 +615,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     initial = args.initial
-    refs = args.refs
+    refs = args.ref
     if not initial:
         if not args.prompt:
             print("Error: --initial or --prompt required")
