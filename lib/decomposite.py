@@ -19,6 +19,8 @@ if ANIME:
 else:
     from image_gen import CreateCharacterSheet, CreateBackground, ImageGen
 
+from compositor import CompositeScene
+
 import argparse
 import json
 from pathlib import Path
@@ -110,7 +112,7 @@ TOTAL_CHARACTERS: [number]"""
             
             # Use CreateCharacterSheet to generate clean reference
             status = CreateCharacterSheet(
-                prompt=char_desc,
+                prompt=input_image,
                 output=str(char_output),
                 seed=seed + i,
                 imagegen=igen
@@ -129,13 +131,13 @@ TOTAL_CHARACTERS: [number]"""
     print(f"\n🏞️ Generating clean background plate...")
     
     # Extract environment description
-    env_desc = extract_environment_description(analysis)
+    #env_desc = extract_environment_description(analysis)
     
     bg_output = output_dir / "background.png"
     
     # Use CreateBackground to generate clean plate
-    status = CreateBackground(
-        prompt=env_desc,
+    status = CompositeScene(
+        background_path=env_desc,
         shot_type='wide',
         output=str(bg_output),
         seed=seed
