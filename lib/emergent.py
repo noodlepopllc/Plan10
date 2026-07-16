@@ -395,7 +395,7 @@ class FeedbackLoop:
             print(f"  → Compositing {len(self.character_refs)} character(s) into scene...")
             
             # Composite all characters into the initial media
-            initial_media = self.recreate_frame(initial_media, "Characters positioned for scene start")
+            initial_media = self.recreate_frame(initial_media, story_context)
             print(f"  ✓ Characters composited into initial scene")
             visible, reason = self.is_character_adequately_visible(initial_media)
         
@@ -413,7 +413,7 @@ class FeedbackLoop:
             if not visible:
                 print(f"⚠️ Character not visible ({reason}) - recreating...")
                 current_state = f"{self.visual_id} is now visible in the scene, facing the camera in a frontal or 3/4 view."
-                self.current_media = self.recreate_frame(self.current_media, story_context)
+                self.current_media = self.recreate_frame(self.current_media, current_state)
             
             # Get previous intention
             if self.history:
@@ -483,28 +483,28 @@ class FeedbackLoop:
         
         return ' '.join(clean_lines)
 
-def _format_video_prompt(self, scene_description, next_action):
-    """Format video prompt in renderer-optimized structure."""
-    
-    # Extract brief character descriptions from full profiles
-    brief_chars = []
-    for i, profile in enumerate(self.character_profiles):
-        if profile.get_character_count() > 0:
-            char = profile.get_character(0)
-            # Use visual_id as the brief description
-            brief_chars.append(char.get('visual_id', f'character {i+1}'))
-    
-    char_text = ", ".join(brief_chars) if brief_chars else "a person"
-    
-    # Parse scene_description to extract location
-    # (or we could have compare_and_decide output location separately)
-    location = self._extract_location(scene_description)
-    
-    return f"""{location}
+    def _format_video_prompt(self, scene_description, next_action):
+        """Format video prompt in renderer-optimized structure."""
+        
+        # Extract brief character descriptions from full profiles
+        brief_chars = []
+        for i, profile in enumerate(self.character_profiles):
+            if profile.get_character_count() > 0:
+                char = profile.get_character(0)
+                # Use visual_id as the brief description
+                brief_chars.append(char.get('visual_id', f'character {i+1}'))
+        
+        char_text = ", ".join(brief_chars) if brief_chars else "a person"
+        
+        # Parse scene_description to extract location
+        # (or we could have compare_and_decide output location separately)
+        location = self._extract_location(scene_description)
+        
+        return f"""{location}
 
-{char_text}
+    {char_text}
 
-{next_action}"""
+    {next_action}"""
 
 if __name__ == "__main__":
     import argparse
