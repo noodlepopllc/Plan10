@@ -516,9 +516,22 @@ if __name__ == "__main__":
             sys.exit(1)
         GenerateImage(prompt=args.prompt, output=f'{args.output}/improv.png', width=args.width, height=args.height, seed=args.seed)
         initial = f'{args.output}/improv.png'
-    
-    # Use provided refs, or fall back to initial image
-    refs = args.ref if args.ref else [initial]
+        from decomposer import decompose_scene
+        from pathlib import Path
+        decompose_scene(
+            input_image=initial,
+            output_dir=args.output,
+            width=args.width,
+            height=args.height,
+            seed=args.seed
+        )
+        refs = []
+        for p in ['character_1.png', 'character_2.png']:
+            if Path(f'{args.output}/{p}').exists():
+                refs.append(f'{args.output}/{p}')
+    else:
+        # Use provided refs, or fall back to initial image
+        refs = args.ref if args.ref else [initial]
     
     loop = FeedbackLoop(
         character_refs=refs,  # ← Pass list of refs
