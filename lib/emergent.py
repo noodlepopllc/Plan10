@@ -358,15 +358,10 @@ class FeedbackLoop:
         return img, str(check_path)
 
     def is_character_adequately_visible(self, media_path):
-        """Two-tier visibility check:
-        - Tier 1: RetinaFace (fast) - is ANY face visible and facing camera?
-        - Tier 2: AnalyzeImage (slower) - is it the RIGHT character?
-        
-        Returns: (visible: bool, reason: str)
-        """
+        """Two-tier visibility check with anime-friendly leniency."""
         img, check_path = self._extract_frame_for_check(media_path)
         
-        # Tier 1: RetinaFace
+        # Tier 1: RetinaFace (fast) - is ANY face visible?
         detector = RetinaFace()
         faces = detector.detect(img)
         del detector
@@ -375,10 +370,13 @@ class FeedbackLoop:
         if not faces:
             return False, "no_face"
         
-        # Tier 2: AnalyzeImage identity check
-        prompt = f"""Looking for: {self.visual_id}
+        # Tier 2: AnalyzeImage identity check (more lenient for anime)
+        prompt = f"""Looking for a character matching this description: {self.visual_id}
 
-    Is this specific person clearly visible in the image?
+    Is there a character in this image that generally matches this description?
+    Consider: hair color/style, approximate age, general appearance.
+    Small stylistic variations are acceptable.
+
     Answer YES or NO."""
         
         result = AnalyzeImage(check_path, prompt)
