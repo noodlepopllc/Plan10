@@ -341,28 +341,6 @@ class FeedbackLoop:
         
         return match, issues, location, characters, next_action, setup
 
-    def parse_decision(self, decision_text):
-        """Parse the decision output into components."""
-        lines = decision_text.split('\n')
-        match = "UNKNOWN"
-        issues = "none"
-        next_action = ""
-        setup = ""
-        
-        for line in lines:
-            line = line.strip()
-            if line.upper().startswith("MATCH:"):
-                match = line.split(":", 1)[1].strip()
-            elif line.upper().startswith("ISSUES:"):
-                issues = line.split(":", 1)[1].strip()
-            elif line.upper().startswith("NEXT:"):
-                next_action = line.split(":", 1)[1].strip()
-            elif line.upper().startswith("SETUP:"):
-                setup = line.split(":", 1)[1].strip()
-        
-        return match, issues, next_action, setup
-
-
     def _extract_frame_for_check(self, media_path):
         """Extract frame for analysis."""
         media_path = Path(media_path)
