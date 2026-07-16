@@ -483,8 +483,8 @@ if __name__ == "__main__":
         if not args.prompt:
             print("Error: --initial or --prompt required")
             sys.exit(1)
-        GenerateImage(prompt=args.prompt, output='improv.png', width=args.width, height=args.height, seed=args.seed)
-        initial = 'improv.png'
+        GenerateImage(prompt=args.prompt, output=f'{args.output}/improv.png', width=args.width, height=args.height, seed=args.seed)
+        initial = f'{args.output}/improv.png'
     ref = args.ref if args.ref else initial
     
     loop = FeedbackLoop(
