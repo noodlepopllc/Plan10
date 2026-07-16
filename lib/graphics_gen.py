@@ -6,6 +6,7 @@ from image_analysis import AnalyzeImage, EnhancePrompt
 from config import load_environ
 
 load_environ()
+ANIME = os.environ.get('ANIME','False') != 'False'
 
 # ─────────────────────────────────────────────────────────────
 # STRICT RESOLUTION CONSTRAINTS (ERNIE-Image-Turbo Native)
@@ -101,6 +102,7 @@ class GraphicGen(object):
 
     def generate(self, prompt, output, width, height, seed):
         import json
+        prompt = f'Anime Style, {prompt}' if ANIME else prompt
         enhancer_input = json.dumps({"prompt": prompt, "width": width, "height": height}, ensure_ascii=False)
         eprompt = EnhancePrompt('', enhancer_input, './system/ernie_enhance.txt')
         if seed == -1: 

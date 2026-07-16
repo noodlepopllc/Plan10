@@ -448,7 +448,7 @@ if __name__ == "__main__":
     import argparse
     
     parser = argparse.ArgumentParser()
-    parser.add_argument('-R', '--ref', type=str, required=True, help="Character reference image")
+    parser.add_argument('-R', '--ref', type=str, default='', help="Character reference image")
     parser.add_argument('-I', '--initial', type=str, default='', help="Initial image/video")
     parser.add_argument('-P', '--prompt', type=str, default='', help="Prompt for initial image")
     parser.add_argument('-C', '--context', type=str, required=True, help="Story context")
@@ -467,9 +467,10 @@ if __name__ == "__main__":
             sys.exit(1)
         GenerateImage(prompt=args.prompt, output='improv.png', width=args.width, height=args.height, seed=args.seed)
         initial = 'improv.png'
+    ref = args.ref if args.ref else initial
     
     loop = FeedbackLoop(
-        character_ref=args.ref,
+        character_ref=ref,
         output_dir=args.output,
         width=args.width,
         height=args.height,
