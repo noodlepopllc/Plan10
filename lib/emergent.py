@@ -598,6 +598,8 @@ CRITICAL: The character has walked away or turned their back. You MUST generate 
 
 if __name__ == "__main__":
     import argparse
+    from decomposer import decompose_scene
+    from pathlib import Path
     
     parser = argparse.ArgumentParser()
     parser.add_argument('-R', '--ref', type=str, action='append', default=[], help="Character reference image (can specify multiple)")
@@ -613,14 +615,13 @@ if __name__ == "__main__":
     args = parser.parse_args()
     
     initial = args.initial
+    refs = args.refs
     if not initial:
         if not args.prompt:
             print("Error: --initial or --prompt required")
             sys.exit(1)
         GenerateImage(prompt=args.prompt, output=f'{args.output}/improv.png', width=args.width, height=args.height, seed=args.seed)
         initial = f'{args.output}/improv.png'
-        from decomposer import decompose_scene
-        from pathlib import Path
         decompose_scene(
             input_image=initial,
             output_dir=args.output,
@@ -628,13 +629,12 @@ if __name__ == "__main__":
             height=args.height,
             seed=args.seed
         )
-        refs = []
+    if not refs:
         for p in ['character_1.png', 'character_2.png']:
             if Path(f'{args.output}/{p}').exists():
                 refs.append(f'{args.output}/{p}')
-    else:
+    print(f"REFERENCES: {refs}")
         # Use provided refs, or fall back to initial image
-        refs = args.ref if args.ref else [initial]
     
     loop = FeedbackLoop(
         character_refs=refs,  # ← Pass list of refs
