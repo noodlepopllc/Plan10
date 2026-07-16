@@ -413,7 +413,7 @@ class FeedbackLoop:
             if not visible:
                 print(f"⚠️ Character not visible ({reason}) - recreating...")
                 current_state = f"{self.visual_id} is now visible in the scene, facing the camera in a frontal or 3/4 view."
-                self.current_media = self.recreate_frame(self.current_media, current_state)
+                self.current_media = self.recreate_frame(self.current_media, story_context)
             
             # Get previous intention
             if self.history:
