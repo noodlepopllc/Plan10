@@ -137,7 +137,7 @@ TOTAL_CHARACTERS: [number]"""
     
     # Use CreateBackground to generate clean plate
     status = CompositeScene(
-        background_path=env_desc,
+        background_path=input_image,
         shot_type='wide',
         output=str(bg_output),
         seed=seed
