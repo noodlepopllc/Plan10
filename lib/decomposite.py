@@ -112,7 +112,7 @@ TOTAL_CHARACTERS: [number]"""
             
             # Use CreateCharacterSheet to generate clean reference
             status = CreateCharacterSheet(
-                prompt=input_image,
+                prompt=char_desc,
                 output=str(char_output),
                 seed=seed + i,
                 imagegen=igen
