@@ -280,7 +280,7 @@ class FeedbackLoop:
         return result['analysis'].strip()
 
     def compare_and_decide(self, intended_action, actual_reality, story_context):
-    """Generate next action with renderer-ready components."""
+        """Generate next action with renderer-ready components."""
         history_text = "\n".join([f"- {a}" for a in self.history[-3:]]) if self.history else "First beat."
         
         setup_context = ""
