@@ -269,7 +269,7 @@ class FeedbackLoop:
         print(f"  → Compositing {len(self.character_refs)} character(s) onto clean background...")
         
         # ENFORCE SAFE ANGLE: frontal or 3/4 view
-        composite_action = f"{current_state}"
+        composite_action = f"All characters are facing towards viewer. 3/4 view. {current_state}"
         
         CompositeScene(
             background_path=str(clean_bg_path),
