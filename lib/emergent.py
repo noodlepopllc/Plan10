@@ -156,17 +156,21 @@ Clothing: {char['clothing']}""")
 
 
 class FeedbackLoop:
-    def __init__(self, character_ref, output_dir="feedback_output", width=WIDTH, height=HEIGHT, seed=SEED):
-        self.character_ref = character_ref
+    def __init__(self, character_refs, output_dir="feedback_output", width=WIDTH, height=HEIGHT, seed=SEED):
+        # Accept list of character references
+        if isinstance(character_refs, str):
+            character_refs = [character_refs]
+        
+        self.character_refs = character_refs
         self.output_dir = Path(output_dir)
         self.output_dir.mkdir(exist_ok=True)
         self.width = width
         self.height = height
         self.seed = seed
         
-        # Extract character profile ONCE
+        # Extract character profile from FIRST ref (or composited scene)
         print("\n🔍 Building character profile from reference...")
-        self.character_profile = CharacterProfile(character_ref)
+        self.character_profile = CharacterProfile(character_refs[0])
         
         # Store as simple string - reuse everywhere
         self.character_desc = self.character_profile.get_full_description()
@@ -179,6 +183,7 @@ class FeedbackLoop:
         
         print(f"✓ Found {self.character_profile.get_character_count()} character(s)")
         print(f"Primary visual ID: {self.visual_id}")
+        print(f"Using {len(self.character_refs)} character reference(s)")
         
         self.history = []
         self.current_media = None
@@ -215,16 +220,16 @@ class FeedbackLoop:
             seed=self.seed + beat_num
         )
         
-        # Step 2: Composite character back onto clean background
+        # Step 2: Composite ALL characters back onto clean background
         composite_path = self.output_dir / f"recreated_{beat_num:03d}.png"
-        print(f"  → Compositing character onto clean background...")
+        print(f"  → Compositing {len(self.character_refs)} character(s) onto clean background...")
         
         # ENFORCE SAFE ANGLE: frontal or 3/4 view
-        composite_action = f"Character in clear frontal or 3/4 view, face fully recognizable. {self.character_desc}\n\nCurrent state: {current_state}"
+        composite_action = f"Characters in clear frontal or 3/4 view, faces fully recognizable. {self.character_desc}\n\nCurrent state: {current_state}"
         
         CompositeScene(
             background_path=str(clean_bg_path),
-            characters=[self.character_ref],
+            characters=self.character_refs,  # ← Pass ALL character references
             shot_type="medium",
             action=composite_action,
             output=str(composite_path),
@@ -466,7 +471,7 @@ if __name__ == "__main__":
     import argparse
     
     parser = argparse.ArgumentParser()
-    parser.add_argument('-R', '--ref', type=str, default='', help="Character reference image")
+    parser.add_argument('-R', '--ref', type=str, action='append', default=[], help="Character reference image (can specify multiple)")
     parser.add_argument('-I', '--initial', type=str, default='', help="Initial image/video")
     parser.add_argument('-P', '--prompt', type=str, default='', help="Prompt for initial image")
     parser.add_argument('-C', '--context', type=str, required=True, help="Story context")
@@ -485,10 +490,12 @@ if __name__ == "__main__":
             sys.exit(1)
         GenerateImage(prompt=args.prompt, output=f'{args.output}/improv.png', width=args.width, height=args.height, seed=args.seed)
         initial = f'{args.output}/improv.png'
-    ref = args.ref if args.ref else initial
+    
+    # Use provided refs, or fall back to initial image
+    refs = args.ref if args.ref else [initial]
     
     loop = FeedbackLoop(
-        character_ref=ref,
+        character_refs=refs,  # ← Pass list of refs
         output_dir=args.output,
         width=args.width,
         height=args.height,
