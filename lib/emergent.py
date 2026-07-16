@@ -280,7 +280,7 @@ class FeedbackLoop:
         return result['analysis'].strip()
 
     def compare_and_decide(self, intended_action, actual_reality, story_context):
-        """Generate next action with causal setup for escalation (continuation OR transition)."""
+    """Generate next action with renderer-ready components."""
         history_text = "\n".join([f"- {a}" for a in self.history[-3:]]) if self.history else "First beat."
         
         setup_context = ""
@@ -296,24 +296,50 @@ class FeedbackLoop:
     TASK: Apply "Yes, And..." improv logic with CAUSAL ESCALATION.
     1. YES: Accept the ACTUAL SCENE STATE as absolute truth.
     2. AND: Generate the next physical action that ADVANCES the story context.
-    3. CRITICAL: This action must SET UP the next beat. 
-    - This can be a MICRO-ESCALATION: Deepening the current interaction (e.g., a reaction, a new line of dialogue, noticing a detail).
-    - OR a MACRO-ESCALATION: Transitioning to a new location or introducing a new character, if the current interaction has reached its natural conclusion.
-    Do not just repeat the last action. Create a causal chain.
+    3. CRITICAL: This action must SET UP the next beat.
 
     Output format (STRICTLY follow this, no extra text):
     MATCH: [YES/PARTIAL/NO]
-    ISSUES: [none, or specific problem like "repeating action"]
-    NEXT: [1-2 sentences describing the immediate next physical action or dialogue]
-    SETUP: [1 sentence describing what this action sets up, reveals, or transitions to for the next beat]"""
+    ISSUES: [none, or specific problem]
+    LOCATION: [brief location - "dimly lit bar", "office conference room", "parking garage"]
+    CHARACTERS: [brief descriptions - "woman in red dress", "man in grey suit, holding briefcase"]
+    NEXT: [1-2 sentences describing the immediate next physical action]
+    SETUP: [1 sentence describing what this action sets up]"""
         
         result = llm_analyze_media(
             media="", prompt=prompt,
-            system="You are a screenwriter. Every action must setup the next beat through causal chains. Allow for both scene continuation and scene transitions.",
+            system="You are a screenwriter. Every action must setup the next beat through causal chains.",
             max_tokens=250, temperature=0.7
         )['analysis']
         
         return result.strip()
+
+    def parse_decision(self, decision_text):
+        """Parse the decision output into components."""
+        lines = decision_text.split('\n')
+        match = "UNKNOWN"
+        issues = "none"
+        location = ""
+        characters = ""
+        next_action = ""
+        setup = ""
+        
+        for line in lines:
+            line = line.strip()
+            if line.upper().startswith("MATCH:"):
+                match = line.split(":", 1)[1].strip()
+            elif line.upper().startswith("ISSUES:"):
+                issues = line.split(":", 1)[1].strip()
+            elif line.upper().startswith("LOCATION:"):
+                location = line.split(":", 1)[1].strip()
+            elif line.upper().startswith("CHARACTERS:"):
+                characters = line.split(":", 1)[1].strip()
+            elif line.upper().startswith("NEXT:"):
+                next_action = line.split(":", 1)[1].strip()
+            elif line.upper().startswith("SETUP:"):
+                setup = line.split(":", 1)[1].strip()
+        
+        return match, issues, location, characters, next_action, setup
 
     def parse_decision(self, decision_text):
         """Parse the decision output into components."""
@@ -429,9 +455,11 @@ class FeedbackLoop:
             # Compare and decide
             print(f"\n🤔 Comparing intention vs reality...")
             decision = self.compare_and_decide(intended_action, actual_reality, story_context)
-            match, issues, next_action, setup = self.parse_decision(decision)
-            
+            match, issues, location, characters, next_action, setup = self.parse_decision(decision)
+
             print(f"Match: {match}, Issues: {issues}")
+            print(f"Location: {location}")
+            print(f"Characters: {characters}")
             print(f"Setup for next beat: {setup}")
             
             # Store the setup for the next beat
@@ -483,28 +511,28 @@ class FeedbackLoop:
         
         return ' '.join(clean_lines)
 
-    def _format_video_prompt(self, scene_description, next_action):
-        """Format video prompt in renderer-optimized structure."""
+    def _format_video_prompt(self, location, characters, next_action):
+        """Format video prompt in renderer-optimized structure: location → characters → action."""
         
-        # Extract brief character descriptions from full profiles
-        brief_chars = []
-        for i, profile in enumerate(self.character_profiles):
-            if profile.get_character_count() > 0:
-                char = profile.get_character(0)
-                # Use visual_id as the brief description
-                brief_chars.append(char.get('visual_id', f'character {i+1}'))
+        # If no characters provided by improv, fall back to brief visual IDs
+        if not characters:
+            brief_chars = []
+            for i, profile in enumerate(self.character_profiles):
+                if profile.get_character_count() > 0:
+                    char = profile.get_character(0)
+                    brief_chars.append(char.get('visual_id', f'character {i+1}'))
+            characters = ", ".join(brief_chars) if brief_chars else "a person"
         
-        char_text = ", ".join(brief_chars) if brief_chars else "a person"
-        
-        # Parse scene_description to extract location
-        # (or we could have compare_and_decide output location separately)
-        location = self._extract_location(scene_description)
+        # If no location provided, use generic
+        if not location:
+            location = "indoor location"
         
         return f"""{location}
 
-    {char_text}
+    {characters}
 
-    {next_action}"""
+    {next_action}
+    """
 
 if __name__ == "__main__":
     import argparse
