@@ -466,7 +466,7 @@ CRITICAL: The character has walked away or turned their back. You MUST generate 
         visible, reason_code, reason_text = self.is_character_adequately_visible(initial_media)
         
         while not visible:
-            print(f"⚠️ Initial media has no visible characters ({reason})")
+            print(f"⚠️ Initial media has no visible characters ({reason_code})")
             print(f"  → Compositing {len(self.character_refs)} character(s) into scene...")
             
             # Composite all characters into the initial media
