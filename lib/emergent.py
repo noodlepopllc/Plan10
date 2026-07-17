@@ -428,9 +428,10 @@ CRITICAL: The character has walked away or turned their back. You MUST generate 
     1. Is there a character visible that generally matches this description? (YES/NO)
     2. What is their orientation relative to the camera?
     - "facing_camera" - front or 3/4 view, face clearly visible
+    - "profile_interaction" - 3/4 or side profile view, but clearly facing and interacting with another character in the scene (THIS IS A VALID, ACCEPTABLE STATE)
     - "walking_away" - showing back, moving away from camera
-    - "turned_away" - side view or back, not moving
-    - "partially_visible" - partially obscured or at extreme angle
+    - "turned_away" - side view or back, NOT interacting with anyone, just facing away
+    - "partially_visible" - heavily obscured or extreme angle where identity is lost
     3. Brief reason for your assessment (1 sentence)
 
     Output format (STRICTLY follow this):
@@ -455,7 +456,8 @@ CRITICAL: The character has walked away or turned their back. You MUST generate 
             elif line.upper().startswith("REASON:"):
                 reason = line.split(":", 1)[1].strip()
         
-        if match == "YES" and orientation == "facing_camera":
+        # Accept BOTH direct camera facing AND valid profile interactions
+        if match == "YES" and orientation in ["facing_camera", "profile_interaction"]:
             return True, "visible", reason
         elif orientation == "walking_away":
             return False, "walking_away", reason

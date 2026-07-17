@@ -109,11 +109,11 @@ def CompositeScene(
 
     # 2. Extract metadata (source of truth)
     img = Image.open(background_path)
-    desc = img.info.get("Brief") if shot_type in ['closeup','medium','ots'] else img.info.get("Description")
+    desc = img.info.get("Brief")
 
     if desc is None:
         is_close = shot_type in ['closeup','medium','ots']
-        desc = add_metadata_loc(background_path, '', seed, is_close)
+        desc = add_metadata_loc(background_path, '', seed, True)
     bg_desc = desc
 
     # 🆕 STYLE-SPECIFIC CONFIGURATION
@@ -211,13 +211,17 @@ def CompositeScene(
         
         task = (            
             f"REF 1: {bg_desc}. "
-            "A medium two-shot composition of two distinct people standing side-by-side. "
-            f"On the left side of the frame: a person matching the first reference, featuring {char_1_details}. "
-            f"On the right side of the frame: a separate, distinct person matching the second reference, featuring {char_2_details}. "
+            f"A medium two-shot composition of two distinct people interacting with each other. "
+            f"Left side of frame: Character 1 matching REF 2, featuring {char_1_details}. "
+            f"Right side of frame: Character 2 matching REF 3, featuring {char_2_details}. "
             f"Action: {action}. "
+            f"CRITICAL: Both characters are facing EACH OTHER, not the camera. They are engaged in direct interaction. "
+            f"Character 1 (left) faces right toward Character 2. Character 2 (right) faces left toward Character 1. "
+            f"Their bodies and faces are oriented toward each other in 3/4 profile view, allowing partial face visibility. "
             f"Lighting: {lighting_desc} Both characters are clearly separated, fully lit, and sharp. "
             f"Match the lighting, color temperature, and atmosphere of REF 1 exactly. "
         )
+
     else:
         # Single character shots
         chars_desc = f"Character 1: {descriptions[0]}. "
