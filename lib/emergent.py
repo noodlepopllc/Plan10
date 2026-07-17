@@ -440,25 +440,29 @@ CRITICAL: The character has walked away or turned their back. You MUST generate 
             return False, "no_face", "No faces detected in frame"
         
         # Tier 2: AnalyzeImage identity check with detailed reasoning
-        prompt = f"""Looking for a character matching this description: {self.visual_id}
+        prompt = f"""You are an expert visual evaluator. Analyze the image to check for a specific character and determine their orientation.
 
-    Analyze the image and answer:
+        Target Character Description: {self.visual_id}
 
-Is there a character visible that generally matches this description? (YES/NO)
-What is their orientation relative to the camera?
+        Step 1: Identity Check
+        Is there a character visible that generally matches the target description?
 
-    "facing_camera" - Front or 3/4 view, face clearly visible.
-    "profile_engaged" - 3/4 or side profile view, clearly engaged in a task (e.g., cooking, looking down at a workspace) OR interacting with another character. (THIS IS A VALID, ACCEPTABLE STATE)
-    "looking_down_task" - Head is pitched downward, focused on an object or task in front of them. Eyes may be partially obscured by angle or natural anatomy (e.g., epicanthic folds), but the posture indicates active attention to the scene. (VALID, ACCEPTABLE STATE)
-    "walking_away" - Showing back, actively moving away from the camera/scene.
-    "turned_away" - Side view or back, facing away from the camera/scene with no clear task or focus (e.g., staring blankly at a wall, disengaged, or walking out of frame).
-    "partially_visible" - Heavily obscured or extreme angle where identity is completely lost.
+        Step 2: Visual Analysis & Orientation
+        Determine the character's orientation based on these definitions:
+        - "facing_camera": Front or 3/4 view, face clearly visible.
+        - "profile_engaged": 3/4 or side profile, clearly engaged in a task (e.g., cooking, looking down) OR interacting with someone. (VALID STATE)
+        - "looking_down_task": Head pitched downward, focused on an object/task. Eyes may be obscured by angle or natural anatomy (e.g., epicanthic folds), but posture shows active attention. (VALID STATE)
+        - "walking_away": Showing back, actively moving away.
+        - "turned_away": Side/back view, facing away with NO clear task or focus (disengaged).
+        - "partially_visible": Heavily obscured or extreme angle where identity is lost.
 
-Brief reason for your assessment (1 sentence). Note: If the character is looking down at a task, classify as "profile_engaged" or "looking_down_task", NOT "turned_away", even if the eyes are partially obscured by angle or anatomy.
-    Output format (STRICTLY follow this):
-    MATCH: [YES/NO]
-    ORIENTATION: [facing_camera/walking_away/turned_away/partially_visible]
-    REASON: [brief explanation]"""
+        CRITICAL RULE: If the character is looking down at a task or in profile but engaged, DO NOT classify them as "turned_away", even if their eyes are hidden by angle or anatomy.
+
+        Output format (STRICTLY follow this exact order and format):
+        MATCH: [YES/NO]
+        ANALYSIS: [1-2 sentences describing their physical action, head pose, and what they are looking at. Explicitly state if eyes are obscured by downward angle/anatomy.]
+        ORIENTATION: [facing_camera / profile_engaged / looking_down_task / walking_away / turned_away / partially_visible]
+        """
         
         result = AnalyzeImage(check_path, prompt)
         response = result['analysis'].strip()
