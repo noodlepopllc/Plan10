@@ -407,13 +407,32 @@ CRITICAL: The character has walked away or turned their back. You MUST generate 
         
         return img, str(check_path)
 
+    def resize_image(self, img, max_dim=640):
+        """Resizes image keeping aspect ratio so the largest side is max_dim."""
+        h, w = img.shape[:2]
+        if max(h, w) <= max_dim:
+            return img, 1.0
+        
+        scale = max_dim / float(max(h, w))
+        new_w, new_h = int(w * scale), int(h * scale)
+        return cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_AREA), scale
+
     def is_character_adequately_visible(self, media_path):
         """Two-tier visibility check with anime-friendly leniency and detailed reasoning."""
         img, check_path = self._extract_frame_for_check(media_path)
         
-        # Tier 1: RetinaFace (fast) - is ANY face visible?
+        # --- Memory-Safe Execution ---
+        MAX_INFERENCE_SIZE = 640 # Dramatically cuts down VRAM usage
+
+        # 1. Resize image BEFORE passing to RetinaFace
+        resized_img, scale = resize_image(img, max_dim=MAX_INFERENCE_SIZE)
+
+        # 2. Run detector on the lightweight image
         detector = RetinaFace()
-        faces = detector.detect(img)
+        with torch.no_grad():
+            # faces is a dict where keys are 'face_1', 'face_2', etc.
+            faces = detector.detect(resized_img) 
+
         del detector
         cleanup()
         
