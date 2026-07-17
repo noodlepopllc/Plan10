@@ -498,10 +498,20 @@ CRITICAL: The character has walked away or turned their back. You MUST generate 
             if not visible:
                 print(f"⚠️ Character not visible ({reason_code}): {reason_text}")
                 
-                if reason_code in ["walking_away", "turned_away"]:
-                    print("  → Recognized intentional exit/turn. Will force cinematic CUT TO in next beat.")
+                if reason_code == "walking_away":
+                    # Character is leaving the scene -> Force a new location/angle
+                    print("  → Character is leaving the scene. Forcing cinematic CUT TO new location/angle.")
                     needs_transition = True
+                    
+                elif reason_code == "turned_away":
+                    # Character is in the right place, just facing the wrong way -> Keep same background
+                    print("  → Character is turned away. Recreating frame to face camera (same location)...")
+                    current_state = f"{self.visual_id} turns around to face the camera in a frontal or 3/4 view, maintaining the exact same environment."
+                    self.current_media = self.recreate_frame(self.current_media, current_state)
+                    needs_transition = False # Keep it in the same scene
+                    
                 else:
+                    # Unintended loss of visibility (no face, wrong character, etc.)
                     print("  → Unintended loss of visibility. Recreating frame...")
                     current_state = f"{self.visual_id} is now visible in the scene, facing the camera in a frontal or 3/4 view."
                     self.current_media = self.recreate_frame(self.current_media, current_state)
