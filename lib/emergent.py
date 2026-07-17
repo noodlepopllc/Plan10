@@ -425,7 +425,7 @@ CRITICAL: The character has walked away or turned their back. You MUST generate 
         MAX_INFERENCE_SIZE = 640 # Dramatically cuts down VRAM usage
 
         # 1. Resize image BEFORE passing to RetinaFace
-        resized_img, scale = resize_image(img, max_dim=MAX_INFERENCE_SIZE)
+        resized_img, scale = self.resize_image(img, max_dim=MAX_INFERENCE_SIZE)
 
         # 2. Run detector on the lightweight image
         detector = RetinaFace()
