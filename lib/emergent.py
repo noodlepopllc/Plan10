@@ -324,16 +324,25 @@ class FeedbackLoop:
             transition_directive = """
 CRITICAL: The character has walked away or turned their back. You MUST generate a "CUT TO:" that transitions to a NEW LOCATION or NEW CAMERA ANGLE where the character is clearly visible from the front or 3/4 view. Do NOT continue the current shot."""
         
+                # Determine task directive based on beat number
+        if not self.history:
+            task_directive = """TASK: This is the FIRST BEAT. 
+    1. The ACTUAL SCENE STATE is the starting visual.
+    2. Your NEXT_ACTION MUST be the specific physical action described in the STORY CONTEXT. 
+    3. Do not just advance the story; EXECUTE the story context as the immediate action."""
+        else:
+            task_directive = """TASK: Apply "Yes, And..." improv logic with CAUSAL ESCALATION.
+    1. YES: Accept the ACTUAL SCENE STATE as absolute truth.
+    2. AND: Generate the next physical action that ADVANCES the story context.
+    3. CRITICAL: This action must SET UP the next beat."""
+
         prompt = f"""STORY CONTEXT: {story_context}
 
     PREVIOUS INTENTION: {intended_action}
     ACTUAL SCENE STATE: {actual_reality}
     RECENT ACTIONS: {history_text}{setup_context}{transition_directive}
 
-    TASK: Apply "Yes, And..." improv logic with CAUSAL ESCALATION.
-    1. YES: Accept the ACTUAL SCENE STATE as absolute truth.
-    2. AND: Generate the next physical action that ADVANCES the story context.
-    3. CRITICAL: This action must SET UP the next beat.
+    {task_directive}
 
     Output format (STRICTLY follow this, no extra text):
     MATCH: [YES/PARTIAL/NO]
@@ -499,7 +508,11 @@ CRITICAL: The character has walked away or turned their back. You MUST generate 
                     needs_transition = False
             
             # Get previous intention
-            intended_action = self.history[-1] if self.history else "Initial scene setup"
+            if not self.history:
+                # Force the first beat to evaluate against the actual story context
+                intended_action = f"Execute story context: {story_context}"
+            else:
+                intended_action = self.history[-1]
             
             # Analyze reality
             print(f"\n🔍 Analyzing reality...")
@@ -527,7 +540,9 @@ CRITICAL: The character has walked away or turned their back. You MUST generate 
                     self.current_media = self.recreate_frame(self.current_media, actual_reality)
             
             # *** CRITICAL: Handle the Cinematic Cut ***
-            if needs_transition and "CUT TO" in next_action.upper():
+            combined_text = f"{next_action} {camera_framing}".upper()
+
+            if needs_transition and "CUT TO" in combined_text:
                 print(f"\n🎬 Executing Cinematic Transition to: {location}")
                 self.current_media = self.generate_transition_frame(location, beat_count)
                 needs_transition = False # Reset flag, transition is complete
