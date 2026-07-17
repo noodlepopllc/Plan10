@@ -550,7 +550,7 @@ def add_metadata_char(imgpath, prompt='', seed=-1):
     target_image.save(imgpath, pnginfo=metadata)
     return clean_string
     
-def add_metadata_loc(imgpath, prompt='', seed=-1, brief=False):
+def add_metadata_loc(imgpath, prompt='', seed=-1, brief=False, update=True):
     target_image = Image.open(imgpath)
     metadata = PngInfo()
 
@@ -568,11 +568,11 @@ def add_metadata_loc(imgpath, prompt='', seed=-1, brief=False):
 
     bg_analysis = AnalyzeImage(imgpath, loc_prompt)
     bg_desc = bg_analysis['analysis'].strip().strip('"').strip("'")
-
-    metadata.add_text("Description", bg_desc)
-    metadata.add_text("Prompt", prompt)
-    metadata.add_text("Seed", str(seed))
-    target_image.save(imgpath, pnginfo=metadata)
+    if update:
+        metadata.add_text("Description", bg_desc)
+        metadata.add_text("Prompt", prompt)
+        metadata.add_text("Seed", str(seed))
+        target_image.save(imgpath, pnginfo=metadata)
     return bg_desc
 
 def CreateCharacterSheet(prompt='', output='character_tmp.png', seed=-1, imagegen=None):
