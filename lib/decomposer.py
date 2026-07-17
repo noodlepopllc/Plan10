@@ -146,7 +146,6 @@ TOTAL_CHARACTERS: [number]"""
     status = CompositeScene(
         background_path=input_image,
         characters=[],
-        shot_type='wide',
         output=str(bg_output),
         seed=seed
     )

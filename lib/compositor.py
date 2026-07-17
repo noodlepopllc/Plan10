@@ -157,7 +157,7 @@ def CompositeScene(
             "NO FOREGROUND BLOCKERS: Never list large, space-dominating furniture (like large tables or islands) in the Schematic Objects. "
             "The center and foreground of every zone must remain physically clear for actors to stand and interact. "
         )
-        return CreateBackground(task, output)
+        return CreateBackground(bg_desc, output)
 
     if shot_type not in ("two_shot", "ots"):
         characters = [characters[0]]
