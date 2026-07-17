@@ -129,11 +129,11 @@ def i2v_diffsynth(prompt='', media='', output='output.mp4',
     # 1. FIXED VRAM CONFIG: Lock everything directly inside CUDA space.
     # By removing "cpu" offloading, we stop the ARM-to-GPU step-by-step page fault loops.
     vram_config = {
-        "offload_dtype": torch.bfloat16,
-        "offload_device": "cuda",
-        "onload_dtype": torch.bfloat16,
-        "onload_device": "cuda",
-        "preparing_dtype": torch.bfloat16,
+        "offload_dtype": torch.float8_e5m2,
+        "offload_device": "cpu",
+        "onload_dtype": torch.float8_e5m2,
+        "onload_device": "cpu",
+        "preparing_dtype": torch.float8_e5m2,
         "preparing_device": "cuda",
         "computation_dtype": torch.bfloat16,
         "computation_device": "cuda",
