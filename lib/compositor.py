@@ -147,6 +147,7 @@ def CompositeScene(
 
     # Establishing shot mode (no characters)
     if len(characters) == 0:
+        desc = add_metadata_loc(background_path, '', seed, True)
         task = (
             f"REF 1: {bg_desc}. "
             f"{shot_type.upper()} SHOT of the environment. "
@@ -157,7 +158,7 @@ def CompositeScene(
             "NO FOREGROUND BLOCKERS: Never list large, space-dominating furniture (like large tables or islands) in the Schematic Objects. "
             "The center and foreground of every zone must remain physically clear for actors to stand and interact. "
         )
-        return CreateBackground(bg_desc, output)
+        return CreateBackground(desc, output)
 
     if shot_type not in ("two_shot", "ots"):
         characters = [characters[0]]
