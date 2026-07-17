@@ -444,15 +444,17 @@ CRITICAL: The character has walked away or turned their back. You MUST generate 
 
     Analyze the image and answer:
 
-    1. Is there a character visible that generally matches this description? (YES/NO)
-    2. What is their orientation relative to the camera?
-    - "facing_camera" - front or 3/4 view, face clearly visible
-    - "profile_interaction" - 3/4 or side profile view, but clearly facing and interacting with another character in the scene (THIS IS A VALID, ACCEPTABLE STATE)
-    - "walking_away" - showing back, moving away from camera
-    - "turned_away" - side view or back, NOT interacting with anyone, just facing away
-    - "partially_visible" - heavily obscured or extreme angle where identity is lost
-    3. Brief reason for your assessment (1 sentence)
+Is there a character visible that generally matches this description? (YES/NO)
+What is their orientation relative to the camera?
 
+    "facing_camera" - Front or 3/4 view, face clearly visible.
+    "profile_engaged" - 3/4 or side profile view, clearly engaged in a task (e.g., cooking, looking down at a workspace) OR interacting with another character. (THIS IS A VALID, ACCEPTABLE STATE)
+    "looking_down_task" - Head is pitched downward, focused on an object or task in front of them. Eyes may be partially obscured by angle or natural anatomy (e.g., epicanthic folds), but the posture indicates active attention to the scene. (VALID, ACCEPTABLE STATE)
+    "walking_away" - Showing back, actively moving away from the camera/scene.
+    "turned_away" - Side view or back, facing away from the camera/scene with no clear task or focus (e.g., staring blankly at a wall, disengaged, or walking out of frame).
+    "partially_visible" - Heavily obscured or extreme angle where identity is completely lost.
+
+Brief reason for your assessment (1 sentence). Note: If the character is looking down at a task, classify as "profile_engaged" or "looking_down_task", NOT "turned_away", even if the eyes are partially obscured by angle or anatomy.
     Output format (STRICTLY follow this):
     MATCH: [YES/NO]
     ORIENTATION: [facing_camera/walking_away/turned_away/partially_visible]
