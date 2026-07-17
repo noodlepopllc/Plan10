@@ -147,7 +147,7 @@ def CompositeScene(
 
     # Establishing shot mode (no characters)
     if len(characters) == 0:
-        desc = add_metadata_loc(background_path, '', seed, True)
+        desc = add_metadata_loc(background_path, '', seed, True, False)
         task = (
             f"REF 1: {bg_desc}. "
             f"{shot_type.upper()} SHOT of the environment. "
