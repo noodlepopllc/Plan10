@@ -466,34 +466,41 @@ CRITICAL: The character has walked away or turned their back. You MUST generate 
         
         result = AnalyzeImage(check_path, prompt)
         response = result['analysis'].strip()
-        
+
         # Parse structured response
         match = "NO"
         orientation = "unknown"
-        reason = "Unknown"
-        
+        analysis = "Unknown" # Changed from 'reason' to match the new prompt
+
         for line in response.split('\n'):
             line = line.strip()
             if line.upper().startswith("MATCH:"):
                 match = line.split(":", 1)[1].strip().upper()
             elif line.upper().startswith("ORIENTATION:"):
-                orientation = line.split(":", 1)[1].strip().lower()
-            elif line.upper().startswith("REASON:"):
-                reason = line.split(":", 1)[1].strip()
-        
-        # Accept BOTH direct camera facing AND valid profile interactions
-        if match == "YES" and orientation in ["facing_camera", "profile_interaction"]:
-            return True, "visible", reason
+                # Clean up the orientation string just in case the model adds punctuation
+                orientation = line.split(":", 1)[1].strip().lower().strip('."\'')
+            elif line.upper().startswith("ANALYSIS:"):
+                analysis = line.split(":", 1)[1].strip()
+
+        # 1. VALID STATES: Character is present and engaged (Fixes the looking down/Asian eye false positive)
+        if match == "YES" and orientation in ["facing_camera", "profile_engaged", "looking_down_task"]:
+            return True, "visible", analysis
+
+        # 2. INVALID STATES: Character is present but disengaged/leaving
         elif orientation == "walking_away":
-            return False, "walking_away", reason
+            return False, "walking_away", analysis
         elif orientation == "turned_away":
-            return False, "turned_away", reason
+            return False, "turned_away", analysis
         elif orientation == "partially_visible":
-            return False, "partially_visible", reason
+            return False, "partially_visible", analysis
+
+        # 3. NO MATCH: Wrong character
         elif match == "NO":
-            return False, "wrong_character", reason
+            return False, "wrong_character", analysis
+
+        # 4. FALLBACK
         else:
-            return False, "unknown", reason
+            return False, "unknown", analysis
     
     def run(self, initial_media, story_context, max_beats=8):
         # Check if initial media needs characters composited
