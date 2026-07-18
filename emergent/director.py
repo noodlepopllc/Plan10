@@ -88,37 +88,37 @@ Be factual about what you see, not what was intended."""
         
         return result.strip()
 
-def parse_decision(self, decision_text):
-    lines = decision_text.split('\n')
-    match = "UNKNOWN"
-    issues = "none"
-    location = ""
-    characters = ""
-    next_action = ""
-    camera_framing = "static shot, medium framing"
-    setup = ""
-    goal_progress = ""
-    
-    for line in lines:
-        line = line.strip()
-        if line.upper().startswith("MATCH:"):
-            match = line.split(":", 1)[1].strip()
-        elif line.upper().startswith("ISSUES:"):
-            issues = line.split(":", 1)[1].strip()
-        elif line.upper().startswith("LOCATION:"):
-            location = line.split(":", 1)[1].strip()
-        elif line.upper().startswith("CHARACTERS:"):
-            characters = line.split(":", 1)[1].strip()
-        elif line.upper().startswith("NEXT_ACTION:"):
-            next_action = line.split(":", 1)[1].strip()
-        elif line.upper().startswith("CAMERA_FRAMING:"):
-            camera_framing = line.split(":", 1)[1].strip()
-        elif line.upper().startswith("SETUP:"):
-            setup = line.split(":", 1)[1].strip()
-        elif line.upper().startswith("GOAL_PROGRESS:"):
-            goal_progress = line.split(":", 1)[1].strip()
-    
-    return match, issues, location, characters, next_action, camera_framing, setup, goal_progress
+    def parse_decision(self, decision_text):
+        lines = decision_text.split('\n')
+        match = "UNKNOWN"
+        issues = "none"
+        location = ""
+        characters = ""
+        next_action = ""
+        camera_framing = "static shot, medium framing"
+        setup = ""
+        goal_progress = ""
+        
+        for line in lines:
+            line = line.strip()
+            if line.upper().startswith("MATCH:"):
+                match = line.split(":", 1)[1].strip()
+            elif line.upper().startswith("ISSUES:"):
+                issues = line.split(":", 1)[1].strip()
+            elif line.upper().startswith("LOCATION:"):
+                location = line.split(":", 1)[1].strip()
+            elif line.upper().startswith("CHARACTERS:"):
+                characters = line.split(":", 1)[1].strip()
+            elif line.upper().startswith("NEXT_ACTION:"):
+                next_action = line.split(":", 1)[1].strip()
+            elif line.upper().startswith("CAMERA_FRAMING:"):
+                camera_framing = line.split(":", 1)[1].strip()
+            elif line.upper().startswith("SETUP:"):
+                setup = line.split(":", 1)[1].strip()
+            elif line.upper().startswith("GOAL_PROGRESS:"):
+                goal_progress = line.split(":", 1)[1].strip()
+        
+        return match, issues, location, characters, next_action, camera_framing, setup, goal_progress
 
     def _clean_analysis(self, raw_analysis):
         lines = raw_analysis.split('\n')
