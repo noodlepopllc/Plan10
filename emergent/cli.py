@@ -105,7 +105,11 @@ def main():
     
     # Initialize Pipeline
     pipeline = Pipeline(refs, args.output, args.width, args.height, args.seed, visual_id)
-    current_media = pipeline.recreate_frame(current_media, context, 0)
+    background = f'{args.output}/background.png'
+    if Path(background).exists():
+        current_media = pipeline.recreate_frame(background, context, 0)
+    else:
+        current_media = pipeline.recreate_frame(current_media, context, 0)
     
     # Execute ONE creative step
     try:
