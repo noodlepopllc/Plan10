@@ -1,4 +1,8 @@
-import torch
+import torch, os
+from config import load_environ
+
+load_environ()
+
 from uniface.detection import RetinaFace
 from image_analysis import AnalyzeImage
 from util import extract_frame, resize_image, cleanup
