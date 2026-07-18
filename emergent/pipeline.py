@@ -14,7 +14,7 @@ from vision import VisibilityChecker
 from director import Director
 
 class Pipeline:
-    def __init__(self, character_refs, output_dir, width, height, seed, visual_id, scene_mode=False):
+    def __init__(self, character_refs, output_dir, width, height, seed, visual_id, scene_mode=False, goal=None):
         self.character_refs = character_refs
         self.output_dir = Path(output_dir)
         self.width = width
@@ -22,7 +22,8 @@ class Pipeline:
         self.seed = seed
         self.visual_id = visual_id
         self.scene_mode = scene_mode
-        self.initial_media = None  # Will be set on first beat
+        self.goal = goal
+        self.initial_media = None
         
     def recreate_frame(self, media_path, current_state, beat_num):
         """Recreate frame by stripping and compositing characters."""
@@ -153,29 +154,30 @@ class Pipeline:
             recreate = self.recreate_frame
         
         # 1. Check visibility (skip in scene_mode)
-        if not self.scene_mode:
-            vcheck = VisibilityChecker(self.visual_id, self.width, self.height)
-            visible, reason_code, reason_text = vcheck.check(current_media, self.output_dir)
+        #if not self.scene_mode:
+        vcheck = VisibilityChecker(self.visual_id, self.width, self.height)
+        visible, reason_code, reason_text = vcheck.check(current_media, self.output_dir)
 
-            if not visible:
-                print(f"⚠️ Character not visible ({reason_code}): {reason_text}")
+        if not visible:
+            print(f"⚠️ Character not visible ({reason_code}): {reason_text}")
+            
+            if reason_code == "walking_away":
+                print("  → Character is leaving the scene. Forcing cinematic CUT TO new location/angle.")
+                needs_transition = True
                 
-                if reason_code == "walking_away":
-                    print("  → Character is leaving the scene. Forcing cinematic CUT TO new location/angle.")
-                    needs_transition = True
-                    
-                elif reason_code == "turned_away":
-                    print("  → Character is turned away. Recreating frame to face camera (same location)...")
-                    current_state = f"{self.visual_id} turns around to face the camera in a frontal or 3/4 view, maintaining the exact same environment."
-                    current_media = recreate(current_media, current_state, beat_count)
-                    needs_transition = False
-                    
-                else:
-                    print("  → Unintended loss of visibility. Recreating frame...")
-                    current_state = f"{self.visual_id} is now visible in the scene, facing the camera in a frontal or 3/4 view."
-                    current_media = recreate(current_media, current_state, beat_count)
-                    needs_transition = False
-        
+            elif reason_code == "turned_away":
+                print("  → Character is turned away. Recreating frame to face camera (same location)...")
+                current_state = f"{self.visual_id} turns around to face the camera in a frontal or 3/4 view, maintaining the exact same environment."
+                current_media = recreate(current_media, current_state, beat_count)
+                needs_transition = False
+                
+            else:
+                print("  → Unintended loss of visibility. Recreating frame...")
+                current_state = f"{self.visual_id} is now visible in the scene, facing the camera in a frontal or 3/4 view."
+                current_media = recreate(current_media, current_state, beat_count)
+                needs_transition = False
+
+
         # 2. Get previous intention
         intended_action = history[-1]
 
@@ -193,12 +195,16 @@ class Pipeline:
         else:
             location_constraint = None
         
+        # When calling compare_and_decide (around line 196)
         decision = direct.compare_and_decide(
             intended_action, actual_reality, story_context, 
-            history, pending_setup, force_transition=needs_transition,
+            history, pending_setup, goal=self.goal, 
+            force_transition=needs_transition,
             location_constraint=location_constraint
         )
-        match, issues, location, characters, next_action, camera_framing, setup = direct.parse_decision(decision)
+        match, issues, location, characters, next_action, camera_framing, setup, goal_progress = direct.parse_decision(decision)
+
+        print(f"Goal Progress: {goal_progress}")
 
         print(f"Match: {match}, Issues: {issues}")
         print(f"Location: {location}")

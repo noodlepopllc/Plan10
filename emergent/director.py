@@ -22,87 +22,103 @@ Be factual about what you see, not what was intended."""
         result = AnalyzeMedia(str(media_path), prompt)
         return self._clean_analysis(result)
 
-    def compare_and_decide(self, intended_action, actual_reality, story_context, history, pending_setup, force_transition=False, location_constraint=None):
-        history_text = "\n".join([f"- {a}" for a in history[-3:]]) if history else "First beat."
-        
-        setup_context = ""
-        if pending_setup:
-            setup_context = f"\nPREVIOUS SETUP: {pending_setup}\nThis was set up in the last beat and should now pay off or escalate."
-        
-        transition_directive = ""
-        if force_transition:
-            transition_directive = """
-    CRITICAL: The character has walked away or turned their back. You MUST generate a "CUT TO:" that transitions to a NEW LOCATION or NEW CAMERA ANGLE where the character is clearly visible from the front or 3/4 view. Do NOT continue the current shot."""
-        
-        constraint_directive = ""
-        if location_constraint:
-            constraint_directive = f"\nCONSTRAINT: {location_constraint}"
-        
-        if not history:
-            task_directive = """TASK: This is the FIRST BEAT. 
-    1. The ACTUAL SCENE STATE is the starting visual.
-    2. Your NEXT_ACTION MUST be the specific physical action described in the STORY CONTEXT. 
-    3. Do not just advance the story; EXECUTE the story context as the immediate action."""
-        else:
-            task_directive = """TASK: Apply "Yes, And..." improv logic with CAUSAL ESCALATION.
-    1. YES: Accept the ACTUAL SCENE STATE as absolute truth.
-    2. AND: Generate the next physical action that ADVANCES the scene.
-    3. CRITICAL: This action must SET UP the next beat."""
+    def compare_and_decide(self, intended_action, actual_reality, story_context, history, pending_setup, goal=None, force_transition=False, location_constraint=None):
+    history_text = "\n".join([f"- {a}" for a in history[-3:]]) if history else "First beat."
+    
+    setup_context = ""
+    if pending_setup:
+        setup_context = f"\nPREVIOUS SETUP: {pending_setup}\nThis was set up in the last beat and should now pay off or escalate."
+    
+    transition_directive = ""
+    if force_transition:
+        transition_directive = """
+CRITICAL: The character has walked away or turned their back. You MUST generate a "CUT TO:" that transitions to a NEW LOCATION or NEW CAMERA ANGLE where the character is clearly visible from the front or 3/4 view. Do NOT continue the current shot."""
+    
+    constraint_directive = ""
+    if location_constraint:
+        constraint_directive = f"\nCONSTRAINT: {location_constraint}"
+    
+    goal_directive = ""
+    if goal:
+        goal_directive = f"""
+NARRATIVE GOAL: {goal}
 
-        prompt = f"""STORY CONTEXT: {story_context}
+CRITICAL: Every action you generate MUST move the character closer to completing this goal. 
+- Evaluate what ACTUALLY happened in the video (ACTUAL SCENE STATE)
+- Choose the next action that logically progresses toward the goal
+- If the character deviated from the intended path, adapt and find a new route to the goal
+- The goal should be completed within 3-5 beats
+"""
+    
+    if not history:
+        task_directive = """TASK: This is the FIRST BEAT. 
+1. The ACTUAL SCENE STATE is the starting visual.
+2. Your NEXT_ACTION MUST be the specific physical action described in the STORY CONTEXT. 
+3. Do not just advance the story; EXECUTE the story context as the immediate action."""
+    else:
+        task_directive = """TASK: Apply "Yes, And..." improv logic with GOAL-DIRECTED PROGRESSION.
+1. YES: Accept the ACTUAL SCENE STATE as absolute truth (what actually happened, not what was intended).
+2. AND: Generate the next physical action that moves toward the NARRATIVE GOAL.
+3. CRITICAL: This action must SET UP the next beat while progressing toward the goal."""
 
-    PREVIOUS INTENTION: {intended_action}
-    ACTUAL SCENE STATE: {actual_reality}
-    RECENT ACTIONS: {history_text}{setup_context}{transition_directive}{constraint_directive}
+    prompt = f"""STORY CONTEXT: {story_context}
+{goal_directive}
+PREVIOUS INTENTION: {intended_action}
+ACTUAL SCENE STATE: {actual_reality}
+RECENT ACTIONS: {history_text}{setup_context}{transition_directive}{constraint_directive}
 
-    {task_directive}
+{task_directive}
 
-    Output format (STRICTLY follow this, no extra text):
-    MATCH: [YES/PARTIAL/NO]
-    ISSUES: [none, or specific problem]
-    LOCATION: [brief location]
-    CHARACTERS: [brief descriptions]
-    NEXT_ACTION: [1-2 sentences of pure story action]
-    CAMERA_FRAMING: [1 sentence of strict visual direction: lens, angle, lighting, movement]
-    SETUP: [what this sets up for the next beat]
-    """
-        
-        result = llm_analyze_media(
-            media="", prompt=prompt,
-            system="You are a film director and screenwriter. Every action must setup the next beat through causal chains. Use cinematic cuts to solve visibility issues.",
-            max_tokens=250, temperature=0.7
-        )['analysis']
-        
-        return result.strip()
+Output format (STRICTLY follow this, no extra text):
+MATCH: [YES/PARTIAL/NO]
+ISSUES: [none, or specific problem]
+LOCATION: [brief location]
+CHARACTERS: [brief descriptions]
+NEXT_ACTION: [1-2 sentences of pure story action that moves toward the goal]
+CAMERA_FRAMING: [1 sentence of strict visual direction: lens, angle, lighting, movement]
+SETUP: [what this sets up for the next beat]
+GOAL_PROGRESS: [how this action moves toward completing the goal]
+"""
+    
+    result = llm_analyze_media(
+        media="", prompt=prompt,
+        system="You are a film director and screenwriter. Every action must move toward the narrative goal while adapting to what actually happened. Use cinematic cuts to solve visibility issues.",
+        max_tokens=300, temperature=0.7
+    )['analysis']
+    
+    return result.strip()
 
-    def parse_decision(self, decision_text):
-        lines = decision_text.split('\n')
-        match = "UNKNOWN"
-        issues = "none"
-        location = ""
-        characters = ""
-        next_action = ""
-        camera_framing = "static shot, medium framing"
-        setup = ""
-        
-        for line in lines:
-            line = line.strip()
-            if line.upper().startswith("MATCH:"):
-                match = line.split(":", 1)[1].strip()
-            elif line.upper().startswith("ISSUES:"):
-                issues = line.split(":", 1)[1].strip()
-            elif line.upper().startswith("LOCATION:"):
-                location = line.split(":", 1)[1].strip()
-            elif line.upper().startswith("CHARACTERS:"):
-                characters = line.split(":", 1)[1].strip()
-            elif line.upper().startswith("NEXT_ACTION:"):
-                next_action = line.split(":", 1)[1].strip()
-            elif line.upper().startswith("CAMERA_FRAMING:"):
-                camera_framing = line.split(":", 1)[1].strip()
-            elif line.upper().startswith("SETUP:"):
-                setup = line.split(":", 1)[1].strip()
-        
-        return match, issues, location, characters, next_action, camera_framing, setup
+def parse_decision(self, decision_text):
+    lines = decision_text.split('\n')
+    match = "UNKNOWN"
+    issues = "none"
+    location = ""
+    characters = ""
+    next_action = ""
+    camera_framing = "static shot, medium framing"
+    setup = ""
+    goal_progress = ""
+    
+    for line in lines:
+        line = line.strip()
+        if line.upper().startswith("MATCH:"):
+            match = line.split(":", 1)[1].strip()
+        elif line.upper().startswith("ISSUES:"):
+            issues = line.split(":", 1)[1].strip()
+        elif line.upper().startswith("LOCATION:"):
+            location = line.split(":", 1)[1].strip()
+        elif line.upper().startswith("CHARACTERS:"):
+            characters = line.split(":", 1)[1].strip()
+        elif line.upper().startswith("NEXT_ACTION:"):
+            next_action = line.split(":", 1)[1].strip()
+        elif line.upper().startswith("CAMERA_FRAMING:"):
+            camera_framing = line.split(":", 1)[1].strip()
+        elif line.upper().startswith("SETUP:"):
+            setup = line.split(":", 1)[1].strip()
+        elif line.upper().startswith("GOAL_PROGRESS:"):
+            goal_progress = line.split(":", 1)[1].strip()
+    
+    return match, issues, location, characters, next_action, camera_framing, setup, goal_progress
 
     def _clean_analysis(self, raw_analysis):
         lines = raw_analysis.split('\n')

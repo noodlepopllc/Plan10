@@ -34,6 +34,8 @@ def main():
     parser.add_argument('-S', '--seed', type=int, default=SEED)
     parser.add_argument('-M', '--scene-mode', action='store_true')
     parser.add_argument('--reset', action='store_true')
+    parser.add_argument('-G', '--goal', type=str, default=None, 
+        help='Narrative goal to work toward (e.g., "woman gets ready for work")')
     
     args = parser.parse_args()
     state_mgr = StateManager(args.output)
@@ -54,9 +56,11 @@ def main():
         video_queue = state.get('video_queue', [])
         scene_mode = state.get('scene_mode', False) 
         initial = state['initial_media']
+        goal = state.get('goal')
     else:
         scene_mode = args.scene_mode
         first_run = True
+        goal = args.goal
             
         print("🆕 Starting new loop...")
         refs = args.ref
@@ -110,7 +114,8 @@ def main():
         context = analyze_scene(current_media)
     
     # Initialize Pipeline
-    pipeline = Pipeline(refs, args.output, args.width, args.height, args.seed, visual_id, scene_mode=scene_mode)
+    pipeline = Pipeline(refs, args.output, args.width, args.height, args.seed, visual_id, 
+        scene_mode=scene_mode, goal=goal)
     pipeline.initial_media = initial
     if first_run and not args.scene_mode:
         background = f'{args.output}/background.png'
@@ -166,6 +171,7 @@ def main():
         "height": args.height,
         "seed": args.seed,
         "initial_media": initial,
+        "goal": goal,
     }
     state_mgr.save(new_state)
     
