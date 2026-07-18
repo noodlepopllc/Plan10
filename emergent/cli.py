@@ -58,6 +58,11 @@ def main():
             from decomposer import decompose_scene
             GenerateImage(prompt=args.prompt, output=f'{args.output}/improv.png', width=args.width, height=args.height, seed=args.seed)
             initial = f'{args.output}/improv.png'
+            current_media = initial
+        else:
+            current_media = args.initial
+
+        if not refs:
             decompose_scene(
                 input_image=initial,
                 output_dir=args.output,
@@ -65,11 +70,6 @@ def main():
                 height=args.height,
                 seed=args.seed
             )
-            current_media = initial
-        else:
-            current_media = args.initial
-            
-        if not refs:
             for p in ['character_1.png', 'character_2.png']:
                 if Path(f'{args.output}/{p}').exists():
                     refs.append(f'{args.output}/{p}')
