@@ -10,6 +10,7 @@ from config import load_environ
 os.environ['BATCH'] = 'False'
 load_environ()
 from PIL import Image
+from image_edit import EditImage
 
 ANIME = os.environ.get("ANIME", "False") != "False"
 WIDTH = int(os.environ.get("WIDTH", "832"))
@@ -140,15 +141,19 @@ TOTAL_CHARACTERS: [number]"""
     # Extract environment description
     #env_desc = extract_environment_description(analysis)
     
-    bg_output = output_dir / "background.png"
+    bg_tmp = output_dir / "tmp_background.png"
     
     # Use CreateBackground to generate clean plate
     status = CompositeScene(
         background_path=input_image,
         characters=[],
-        output=str(bg_output),
+        output=str(bg_tmp),
         seed=seed
     )
+    
+    bg_output = output_dir / "background.png"
+
+    status = EditImage(prompt='remove people from image', images=[bg_tmp], output=bg_output)
     
     print(f"  ✓ Saved: {bg_output}")
     
