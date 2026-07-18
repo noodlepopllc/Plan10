@@ -1,5 +1,6 @@
 from PIL import Image
-import os, time
+import os, time, cv2, gc, torch
+import numpy as np
 
 def wait_for_file(path: str, timeout: float = 60.0, min_size: int = 1024, stable_for: float = 1.5):
     """Wait until file exists, has reasonable size, AND stops growing."""
@@ -46,7 +47,6 @@ def video_to_img(vid, width=832, height=480, resize=False, getlast=True):
         return img
 
     # Handle videos (ALWAYS native resolution)
-    import cv2
     cap = cv2.VideoCapture(vid)
     try:
         # Enforce dimension match when resize is explicitly requested
@@ -80,4 +80,38 @@ def segment_sentences(text: str):
     """Return a clean list of sentences using SpaCy's sentencizer."""
     doc = NLP(text)
     return [s.text.strip() for s in doc.sents if s.text.strip()]
+
+def cleanup():
+    """Clear VRAM after model usage."""
+    gc.collect()
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()
+
+def extract_frame(media_path, width, height, output_path=None):
+    """Extracts a frame from video or loads image, returns PIL Image and path."""
+    media_path = str(media_path)
+    ext = media_path.split('.')[-1].lower()
+    
+    if ext in ['mp4', 'avi', 'mov', 'mkv', 'webm']:
+        frame = video_to_img(media_path, width, height, True, True)
+        if output_path:
+            frame.save(str(output_path))
+            return frame, str(output_path)
+        return frame, media_path
+    else:
+        img = Image.open(media_path)
+        return img, media_path
+
+def resize_image(img, max_dim=640):
+    """Resizes image keeping aspect ratio so the largest side is max_dim."""
+    if isinstance(img, Image.Image):
+        img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+        
+    h, w = img.shape[:2]
+    if max(h, w) <= max_dim:
+        return img, 1.0
+    
+    scale = max_dim / float(max(h, w))
+    new_w, new_h = int(w * scale), int(h * scale)
+    return cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_AREA), scale
 

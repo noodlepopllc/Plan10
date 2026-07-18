@@ -1,0 +1,117 @@
+from image_analysis import AnalyzeMedia
+from qwen_llm import llm_analyze_media
+from pathlib import Path
+
+class Director:
+    def analyze_reality(self, media_path, intended_action, width, height, output_dir):
+        """Analyze what actually happened in the video/image."""
+        media_path = Path(media_path)
+        ext = media_path.suffix.lower()
+        
+        # SmolVLM2 can analyze videos directly
+        prompt = f"""We intended to create this: "{intended_action}"
+
+Analyze what ACTUALLY happened in this {"video" if ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm'] else "image"}:
+1. What is the character doing? (actions, expressions, movement)
+2. What props/objects are visible?
+3. Any issues or unexpected elements?
+
+Be factual about what you see, not what was intended."""
+        
+        # Use AnalyzeMedia which will use SmolVLM2 for video, Qwen for images
+        result = AnalyzeMedia(str(media_path), prompt)
+        return self._clean_analysis(result)
+
+    def compare_and_decide(self, intended_action, actual_reality, story_context, history, pending_setup, force_transition=False):
+        history_text = "\n".join([f"- {a}" for a in history[-3:]]) if history else "First beat."
+        
+        setup_context = ""
+        if pending_setup:
+            setup_context = f"\nPREVIOUS SETUP: {pending_setup}\nThis was set up in the last beat and should now pay off or escalate."
+        
+        transition_directive = ""
+        if force_transition:
+            transition_directive = """
+CRITICAL: The character has walked away or turned their back. You MUST generate a "CUT TO:" that transitions to a NEW LOCATION or NEW CAMERA ANGLE where the character is clearly visible from the front or 3/4 view. Do NOT continue the current shot."""
+        
+        if not history:
+            task_directive = """TASK: This is the FIRST BEAT. 
+1. The ACTUAL SCENE STATE is the starting visual.
+2. Your NEXT_ACTION MUST be the specific physical action described in the STORY CONTEXT. 
+3. Do not just advance the story; EXECUTE the story context as the immediate action."""
+        else:
+            task_directive = """TASK: Apply "Yes, And..." improv logic with CAUSAL ESCALATION.
+1. YES: Accept the ACTUAL SCENE STATE as absolute truth.
+2. AND: Generate the next physical action that ADVANCES the scene.
+3. CRITICAL: This action must SET UP the next beat."""
+
+        prompt = f"""STORY CONTEXT: {story_context}
+
+PREVIOUS INTENTION: {intended_action}
+ACTUAL SCENE STATE: {actual_reality}
+RECENT ACTIONS: {history_text}{setup_context}{transition_directive}
+
+{task_directive}
+
+Output format (STRICTLY follow this, no extra text):
+MATCH: [YES/PARTIAL/NO]
+ISSUES: [none, or specific problem]
+LOCATION: [brief location]
+CHARACTERS: [brief descriptions]
+NEXT_ACTION: [1-2 sentences of pure story action]
+CAMERA_FRAMING: [1 sentence of strict visual direction: lens, angle, lighting, movement]
+SETUP: [what this sets up for the next beat]
+"""
+        
+        result = llm_analyze_media(
+            media="", prompt=prompt,
+            system="You are a film director and screenwriter. Every action must setup the next beat through causal chains. Use cinematic cuts to solve visibility issues.",
+            max_tokens=250, temperature=0.7
+        )['analysis']
+        
+        return result.strip()
+
+    def parse_decision(self, decision_text):
+        lines = decision_text.split('\n')
+        match = "UNKNOWN"
+        issues = "none"
+        location = ""
+        characters = ""
+        next_action = ""
+        camera_framing = "static shot, medium framing"
+        setup = ""
+        
+        for line in lines:
+            line = line.strip()
+            if line.upper().startswith("MATCH:"):
+                match = line.split(":", 1)[1].strip()
+            elif line.upper().startswith("ISSUES:"):
+                issues = line.split(":", 1)[1].strip()
+            elif line.upper().startswith("LOCATION:"):
+                location = line.split(":", 1)[1].strip()
+            elif line.upper().startswith("CHARACTERS:"):
+                characters = line.split(":", 1)[1].strip()
+            elif line.upper().startswith("NEXT_ACTION:"):
+                next_action = line.split(":", 1)[1].strip()
+            elif line.upper().startswith("CAMERA_FRAMING:"):
+                camera_framing = line.split(":", 1)[1].strip()
+            elif line.upper().startswith("SETUP:"):
+                setup = line.split(":", 1)[1].strip()
+        
+        return match, issues, location, characters, next_action, camera_framing, setup
+
+    def _clean_analysis(self, raw_analysis):
+        lines = raw_analysis.split('\n')
+        clean_lines = []
+        
+        skip_keywords = ['analysis', 'discrepancies', 'issues', 'unexpected', 'summary', 'based on image', 'based on video']
+        
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            if any(keyword in line.lower() for keyword in skip_keywords):
+                continue
+            clean_lines.append(line)
+        
+        return ' '.join(clean_lines)
