@@ -23,70 +23,70 @@ Be factual about what you see, not what was intended."""
         return self._clean_analysis(result)
 
     def compare_and_decide(self, intended_action, actual_reality, story_context, history, pending_setup, goal=None, force_transition=False, location_constraint=None):
-    history_text = "\n".join([f"- {a}" for a in history[-3:]]) if history else "First beat."
-    
-    setup_context = ""
-    if pending_setup:
-        setup_context = f"\nPREVIOUS SETUP: {pending_setup}\nThis was set up in the last beat and should now pay off or escalate."
-    
-    transition_directive = ""
-    if force_transition:
-        transition_directive = """
-CRITICAL: The character has walked away or turned their back. You MUST generate a "CUT TO:" that transitions to a NEW LOCATION or NEW CAMERA ANGLE where the character is clearly visible from the front or 3/4 view. Do NOT continue the current shot."""
-    
-    constraint_directive = ""
-    if location_constraint:
-        constraint_directive = f"\nCONSTRAINT: {location_constraint}"
-    
-    goal_directive = ""
-    if goal:
-        goal_directive = f"""
-NARRATIVE GOAL: {goal}
+        history_text = "\n".join([f"- {a}" for a in history[-3:]]) if history else "First beat."
+        
+        setup_context = ""
+        if pending_setup:
+            setup_context = f"\nPREVIOUS SETUP: {pending_setup}\nThis was set up in the last beat and should now pay off or escalate."
+        
+        transition_directive = ""
+        if force_transition:
+            transition_directive = """
+    CRITICAL: The character has walked away or turned their back. You MUST generate a "CUT TO:" that transitions to a NEW LOCATION or NEW CAMERA ANGLE where the character is clearly visible from the front or 3/4 view. Do NOT continue the current shot."""
+        
+        constraint_directive = ""
+        if location_constraint:
+            constraint_directive = f"\nCONSTRAINT: {location_constraint}"
+        
+        goal_directive = ""
+        if goal:
+            goal_directive = f"""
+    NARRATIVE GOAL: {goal}
 
-CRITICAL: Every action you generate MUST move the character closer to completing this goal. 
-- Evaluate what ACTUALLY happened in the video (ACTUAL SCENE STATE)
-- Choose the next action that logically progresses toward the goal
-- If the character deviated from the intended path, adapt and find a new route to the goal
-- The goal should be completed within 3-5 beats
-"""
-    
-    if not history:
-        task_directive = """TASK: This is the FIRST BEAT. 
-1. The ACTUAL SCENE STATE is the starting visual.
-2. Your NEXT_ACTION MUST be the specific physical action described in the STORY CONTEXT. 
-3. Do not just advance the story; EXECUTE the story context as the immediate action."""
-    else:
-        task_directive = """TASK: Apply "Yes, And..." improv logic with GOAL-DIRECTED PROGRESSION.
-1. YES: Accept the ACTUAL SCENE STATE as absolute truth (what actually happened, not what was intended).
-2. AND: Generate the next physical action that moves toward the NARRATIVE GOAL.
-3. CRITICAL: This action must SET UP the next beat while progressing toward the goal."""
+    CRITICAL: Every action you generate MUST move the character closer to completing this goal. 
+    - Evaluate what ACTUALLY happened in the video (ACTUAL SCENE STATE)
+    - Choose the next action that logically progresses toward the goal
+    - If the character deviated from the intended path, adapt and find a new route to the goal
+    - The goal should be completed within 3-5 beats
+    """
+        
+        if not history:
+            task_directive = """TASK: This is the FIRST BEAT. 
+    1. The ACTUAL SCENE STATE is the starting visual.
+    2. Your NEXT_ACTION MUST be the specific physical action described in the STORY CONTEXT. 
+    3. Do not just advance the story; EXECUTE the story context as the immediate action."""
+        else:
+            task_directive = """TASK: Apply "Yes, And..." improv logic with GOAL-DIRECTED PROGRESSION.
+    1. YES: Accept the ACTUAL SCENE STATE as absolute truth (what actually happened, not what was intended).
+    2. AND: Generate the next physical action that moves toward the NARRATIVE GOAL.
+    3. CRITICAL: This action must SET UP the next beat while progressing toward the goal."""
 
-    prompt = f"""STORY CONTEXT: {story_context}
-{goal_directive}
-PREVIOUS INTENTION: {intended_action}
-ACTUAL SCENE STATE: {actual_reality}
-RECENT ACTIONS: {history_text}{setup_context}{transition_directive}{constraint_directive}
+        prompt = f"""STORY CONTEXT: {story_context}
+    {goal_directive}
+    PREVIOUS INTENTION: {intended_action}
+    ACTUAL SCENE STATE: {actual_reality}
+    RECENT ACTIONS: {history_text}{setup_context}{transition_directive}{constraint_directive}
 
-{task_directive}
+    {task_directive}
 
-Output format (STRICTLY follow this, no extra text):
-MATCH: [YES/PARTIAL/NO]
-ISSUES: [none, or specific problem]
-LOCATION: [brief location]
-CHARACTERS: [brief descriptions]
-NEXT_ACTION: [1-2 sentences of pure story action that moves toward the goal]
-CAMERA_FRAMING: [1 sentence of strict visual direction: lens, angle, lighting, movement]
-SETUP: [what this sets up for the next beat]
-GOAL_PROGRESS: [how this action moves toward completing the goal]
-"""
-    
-    result = llm_analyze_media(
-        media="", prompt=prompt,
-        system="You are a film director and screenwriter. Every action must move toward the narrative goal while adapting to what actually happened. Use cinematic cuts to solve visibility issues.",
-        max_tokens=300, temperature=0.7
-    )['analysis']
-    
-    return result.strip()
+    Output format (STRICTLY follow this, no extra text):
+    MATCH: [YES/PARTIAL/NO]
+    ISSUES: [none, or specific problem]
+    LOCATION: [brief location]
+    CHARACTERS: [brief descriptions]
+    NEXT_ACTION: [1-2 sentences of pure story action that moves toward the goal]
+    CAMERA_FRAMING: [1 sentence of strict visual direction: lens, angle, lighting, movement]
+    SETUP: [what this sets up for the next beat]
+    GOAL_PROGRESS: [how this action moves toward completing the goal]
+    """
+        
+        result = llm_analyze_media(
+            media="", prompt=prompt,
+            system="You are a film director and screenwriter. Every action must move toward the narrative goal while adapting to what actually happened. Use cinematic cuts to solve visibility issues.",
+            max_tokens=300, temperature=0.7
+        )['analysis']
+        
+        return result.strip()
 
 def parse_decision(self, decision_text):
     lines = decision_text.split('\n')
