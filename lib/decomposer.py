@@ -153,7 +153,7 @@ TOTAL_CHARACTERS: [number]"""
     
     bg_output = output_dir / "background.png"
 
-    status = EditImage(prompt='remove people from image', images=[bg_tmp], output=str(bg_output))
+    status = EditImage(prompt='remove people from image', images=[str(bg_tmp)], output=str(bg_output))
     
     print(f"  ✓ Saved: {bg_output}")
     
