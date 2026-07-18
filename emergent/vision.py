@@ -18,9 +18,10 @@ class VisibilityChecker:
     def check(self, media_path, output_dir):
         """Returns: (is_visible: bool, reason_code: str, analysis: str)"""
 
+        frame, check_path = extract_frame(media_path, self.width, self.height, 
+                                f"{output_dir}/check_vision.png")
+
         if not ANIME:
-            frame, check_path = extract_frame(media_path, self.width, self.height, 
-                                            f"{output_dir}/check_vision.png")
             
             # Tier 1: Face Detection
             resized_img, _ = resize_image(frame, max_dim=640)
