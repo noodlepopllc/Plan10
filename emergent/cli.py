@@ -9,6 +9,7 @@ load_environ()
 from state_manager import StateManager
 from character import CharacterProfile
 from pipeline import Pipeline
+from scene_analyzer import analyze_scene
 
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
