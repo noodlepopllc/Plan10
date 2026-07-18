@@ -7,19 +7,25 @@ from util import video_to_img
 
 load_environ()
 
+WGP = os.environ.get("WGP","False") != "False"
+LTX = os.environ.get("LTX","False") != "False"
+
 from vision import VisibilityChecker
 from director import Director
 
 class Pipeline:
-    def __init__(self, character_refs, output_dir, width, height, seed, visual_id):
+    def __init__(self, character_refs, output_dir, width, height, seed, visual_id, scene_mode=False):
         self.character_refs = character_refs
         self.output_dir = Path(output_dir)
         self.width = width
         self.height = height
         self.seed = seed
         self.visual_id = visual_id
+        self.scene_mode = scene_mode
+        self.initial_media = None  # Will be set on first beat
         
     def recreate_frame(self, media_path, current_state, beat_num):
+        """Recreate frame by stripping and compositing characters."""
         media_path = Path(media_path)
         ext = media_path.suffix.lower()
         
@@ -61,6 +67,11 @@ class Pipeline:
         
         return str(composite_path)
 
+    def recreate_frame_passthrough(self, media_path, current_state, beat_num):
+        """Scene mode: just return the original image without modification."""
+        print(f"  → Scene mode: returning original image")
+        return str(media_path)
+
     def generate_transition_frame(self, new_location_prompt, beat_num):
         from image_gen import CreateBackground
         
@@ -94,15 +105,15 @@ class Pipeline:
         
         print(f"\n{'='*60}\nBEAT {beat_count + 1}\n{'='*60}")
 
-        # FIRST BEAT: Just animate the initial image directly
+        # FIRST BEAT: Store initial media and animate directly
         if not history:
+            self.initial_media = current_media  # Remember the starting image
             print("🎬 First beat - animating initial scene...")
             
             output_path = self.output_dir / f"beat_{beat_count+1:03d}.mp4"
             
-            # Use the story context as the action for the first video
             video_prompt = self._format_video_prompt(
-                location="",  # Already in the image
+                location="",
                 characters=self.visual_id,
                 next_action=story_context,
                 camera_framing="maintain current framing, natural movement"
@@ -114,7 +125,7 @@ class Pipeline:
             video_job = {
                 "beat": beat_count + 1,
                 "prompt": video_prompt,
-                "input_media": current_media,  # Use the initial image directly
+                "input_media": current_media,
                 "output_path": str(output_path),
                 "seed": self.seed + beat_count,
                 "status": "pending"
@@ -134,29 +145,36 @@ class Pipeline:
                 "video_job": video_job
             }
 
-        # SUBSEQUENT BEATS: Full feedback loop
-        # 1. Check visibility
-        vcheck = VisibilityChecker(self.visual_id, self.width, self.height)
-        visible, reason_code, reason_text = vcheck.check(current_media, self.output_dir)
+        # SUBSEQUENT BEATS
+        # Choose recreate method based on mode
+        if self.scene_mode:
+            recreate = self.recreate_frame_passthrough
+        else:
+            recreate = self.recreate_frame
+        
+        # 1. Check visibility (skip in scene_mode)
+        if not self.scene_mode:
+            vcheck = VisibilityChecker(self.visual_id, self.width, self.height)
+            visible, reason_code, reason_text = vcheck.check(current_media, self.output_dir)
 
-        if not visible:
-            print(f"⚠️ Character not visible ({reason_code}): {reason_text}")
-            
-            if reason_code == "walking_away":
-                print("  → Character is leaving the scene. Forcing cinematic CUT TO new location/angle.")
-                needs_transition = True
+            if not visible:
+                print(f"⚠️ Character not visible ({reason_code}): {reason_text}")
                 
-            elif reason_code == "turned_away":
-                print("  → Character is turned away. Recreating frame to face camera (same location)...")
-                current_state = f"{self.visual_id} turns around to face the camera in a frontal or 3/4 view, maintaining the exact same environment."
-                current_media = self.recreate_frame(current_media, current_state, beat_count)
-                needs_transition = False
-                
-            else:
-                print("  → Unintended loss of visibility. Recreating frame...")
-                current_state = f"{self.visual_id} is now visible in the scene, facing the camera in a frontal or 3/4 view."
-                current_media = self.recreate_frame(current_media, current_state, beat_count)
-                needs_transition = False
+                if reason_code == "walking_away":
+                    print("  → Character is leaving the scene. Forcing cinematic CUT TO new location/angle.")
+                    needs_transition = True
+                    
+                elif reason_code == "turned_away":
+                    print("  → Character is turned away. Recreating frame to face camera (same location)...")
+                    current_state = f"{self.visual_id} turns around to face the camera in a frontal or 3/4 view, maintaining the exact same environment."
+                    current_media = recreate(current_media, current_state, beat_count)
+                    needs_transition = False
+                    
+                else:
+                    print("  → Unintended loss of visibility. Recreating frame...")
+                    current_state = f"{self.visual_id} is now visible in the scene, facing the camera in a frontal or 3/4 view."
+                    current_media = recreate(current_media, current_state, beat_count)
+                    needs_transition = False
         
         # 2. Get previous intention
         intended_action = history[-1]
@@ -167,11 +185,18 @@ class Pipeline:
         raw_reality = direct.analyze_reality(current_media, intended_action, self.width, self.height, self.output_dir)
         actual_reality = direct._clean_analysis(raw_reality)
         
-        # 4. Compare and decide
+        # 4. Compare and decide (with location constraint if scene_mode)
         print(f"\n🤔 Comparing intention vs reality...")
+        
+        if self.scene_mode:
+            location_constraint = "Character must remain in the current room/location. All actions must be physically possible within this space. No transitions or location changes."
+        else:
+            location_constraint = None
+        
         decision = direct.compare_and_decide(
             intended_action, actual_reality, story_context, 
-            history, pending_setup, force_transition=needs_transition
+            history, pending_setup, force_transition=needs_transition,
+            location_constraint=location_constraint
         )
         match, issues, location, characters, next_action, camera_framing, setup = direct.parse_decision(decision)
 
@@ -182,18 +207,20 @@ class Pipeline:
         print(f"Camera Framing: {camera_framing}")
         print(f"Setup for next beat: {setup}")
         
-        # 5. Handle major issues
-        if "NO" in match or "drift" in issues.lower() or "repeating" in issues.lower():
-            if not needs_transition:
-                print(f"\n⚠️ Major issues detected - rebuilding frame to current state...")
-                current_media = self.recreate_frame(current_media, actual_reality, beat_count)
+        # 5. Handle major issues (skip in scene_mode)
+        if not self.scene_mode:
+            if "NO" in match or "drift" in issues.lower() or "repeating" in issues.lower():
+                if not needs_transition:
+                    print(f"\n⚠️ Major issues detected - rebuilding frame to current state...")
+                    current_media = recreate(current_media, actual_reality, beat_count)
         
-        # 6. Handle cinematic transition
-        combined_text = f"{next_action} {camera_framing}".upper()
-        if needs_transition and "CUT TO" in combined_text:
-            print(f"\n🎬 Executing Cinematic Transition to: {location}")
-            current_media = self.generate_transition_frame(location, beat_count)
-            needs_transition = False
+        # 6. Handle cinematic transition (skip in scene_mode)
+        if not self.scene_mode:
+            combined_text = f"{next_action} {camera_framing}".upper()
+            if needs_transition and "CUT TO" in combined_text:
+                print(f"\n🎬 Executing Cinematic Transition to: {location}")
+                current_media = self.generate_transition_frame(location, beat_count)
+                needs_transition = False
         
         # 7. Format video prompt and queue it
         output_path = self.output_dir / f"beat_{beat_count+1:03d}.mp4"
@@ -202,10 +229,13 @@ class Pipeline:
         print(f"\n📝 Queuing video generation...")
         print(f"Prompt preview: {video_prompt[:200]}...")
         
+        # In scene_mode, always use initial media as input
+        input_media = self.initial_media if self.scene_mode else current_media
+        
         video_job = {
             "beat": beat_count + 1,
             "prompt": video_prompt,
-            "input_media": current_media,
+            "input_media": input_media,
             "output_path": str(output_path),
             "seed": self.seed + beat_count,
             "status": "pending"

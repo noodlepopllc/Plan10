@@ -22,7 +22,7 @@ Be factual about what you see, not what was intended."""
         result = AnalyzeMedia(str(media_path), prompt)
         return self._clean_analysis(result)
 
-    def compare_and_decide(self, intended_action, actual_reality, story_context, history, pending_setup, force_transition=False):
+    def compare_and_decide(self, intended_action, actual_reality, story_context, history, pending_setup, force_transition=False, location_constraint=None):
         history_text = "\n".join([f"- {a}" for a in history[-3:]]) if history else "First beat."
         
         setup_context = ""
@@ -32,36 +32,40 @@ Be factual about what you see, not what was intended."""
         transition_directive = ""
         if force_transition:
             transition_directive = """
-CRITICAL: The character has walked away or turned their back. You MUST generate a "CUT TO:" that transitions to a NEW LOCATION or NEW CAMERA ANGLE where the character is clearly visible from the front or 3/4 view. Do NOT continue the current shot."""
+    CRITICAL: The character has walked away or turned their back. You MUST generate a "CUT TO:" that transitions to a NEW LOCATION or NEW CAMERA ANGLE where the character is clearly visible from the front or 3/4 view. Do NOT continue the current shot."""
+        
+        constraint_directive = ""
+        if location_constraint:
+            constraint_directive = f"\nCONSTRAINT: {location_constraint}"
         
         if not history:
             task_directive = """TASK: This is the FIRST BEAT. 
-1. The ACTUAL SCENE STATE is the starting visual.
-2. Your NEXT_ACTION MUST be the specific physical action described in the STORY CONTEXT. 
-3. Do not just advance the story; EXECUTE the story context as the immediate action."""
+    1. The ACTUAL SCENE STATE is the starting visual.
+    2. Your NEXT_ACTION MUST be the specific physical action described in the STORY CONTEXT. 
+    3. Do not just advance the story; EXECUTE the story context as the immediate action."""
         else:
             task_directive = """TASK: Apply "Yes, And..." improv logic with CAUSAL ESCALATION.
-1. YES: Accept the ACTUAL SCENE STATE as absolute truth.
-2. AND: Generate the next physical action that ADVANCES the scene.
-3. CRITICAL: This action must SET UP the next beat."""
+    1. YES: Accept the ACTUAL SCENE STATE as absolute truth.
+    2. AND: Generate the next physical action that ADVANCES the scene.
+    3. CRITICAL: This action must SET UP the next beat."""
 
         prompt = f"""STORY CONTEXT: {story_context}
 
-PREVIOUS INTENTION: {intended_action}
-ACTUAL SCENE STATE: {actual_reality}
-RECENT ACTIONS: {history_text}{setup_context}{transition_directive}
+    PREVIOUS INTENTION: {intended_action}
+    ACTUAL SCENE STATE: {actual_reality}
+    RECENT ACTIONS: {history_text}{setup_context}{transition_directive}{constraint_directive}
 
-{task_directive}
+    {task_directive}
 
-Output format (STRICTLY follow this, no extra text):
-MATCH: [YES/PARTIAL/NO]
-ISSUES: [none, or specific problem]
-LOCATION: [brief location]
-CHARACTERS: [brief descriptions]
-NEXT_ACTION: [1-2 sentences of pure story action]
-CAMERA_FRAMING: [1 sentence of strict visual direction: lens, angle, lighting, movement]
-SETUP: [what this sets up for the next beat]
-"""
+    Output format (STRICTLY follow this, no extra text):
+    MATCH: [YES/PARTIAL/NO]
+    ISSUES: [none, or specific problem]
+    LOCATION: [brief location]
+    CHARACTERS: [brief descriptions]
+    NEXT_ACTION: [1-2 sentences of pure story action]
+    CAMERA_FRAMING: [1 sentence of strict visual direction: lens, angle, lighting, movement]
+    SETUP: [what this sets up for the next beat]
+    """
         
         result = llm_analyze_media(
             media="", prompt=prompt,

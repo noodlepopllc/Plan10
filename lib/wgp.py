@@ -19,6 +19,11 @@ HEIGHT = int(os.environ.get("HEIGHT", "480"))
 ANIME = "_anime" if os.environ.get("ANIME","False") != "False" else ""
 ARC = os.environ.get("LTX","False") == "ARC"
 
+if ANIME:
+    from anime_gen import GenerateImage
+else:
+    from image_gen import GenerateImage
+
 #enhance_path = f'./system/ltx_enhancer{ANIME}.txt'
 enhance_path = f'./system/ltx_enhancer_minimal{ANIME}.txt'
 

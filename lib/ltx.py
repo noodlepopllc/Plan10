@@ -22,6 +22,11 @@ ANIME = "_anime" if os.environ.get("ANIME","False") != "False" else ""
 DISTILLED = "DISTILLED" in os.environ.get("LTX","False")
 VRAM = int(os.environ.get("VRAM", 96))
 
+if ANIME:
+    from anime_gen import GenerateImage
+else:
+    from image_gen import GenerateImage
+
 #enhance_path = f'./system/ltx_enhancer{ANIME}.txt'
 enhance_path = f'./system/ltx_enhancer_minimal{ANIME}.txt'
 

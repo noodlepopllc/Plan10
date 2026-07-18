@@ -11,7 +11,6 @@ from character import CharacterProfile
 from pipeline import Pipeline
 from scene_analyzer import analyze_scene
 
-from image_gen import GenerateImage
 from decomposer import decompose_scene
 
 WIDTH = int(os.environ.get("WIDTH", "832"))
@@ -33,6 +32,7 @@ def main():
     parser.add_argument('-W', '--width', type=int, default=WIDTH)
     parser.add_argument('-H', '--height', type=int, default=HEIGHT)
     parser.add_argument('-S', '--seed', type=int, default=SEED)
+    parser.add_argument('-M', '--scene-mode', action='store_true')
     parser.add_argument('--reset', action='store_true')
     
     args = parser.parse_args()
@@ -52,7 +52,10 @@ def main():
         pending_setup = state['pending_setup']
         needs_transition = state['needs_transition']
         video_queue = state.get('video_queue', [])
+        scene_mode = state.get('scene_mode', False) 
+        initial = state['initial_media']
     else:
+        scene_mode = args.scene_mode
         first_run = True
             
         print("🆕 Starting new loop...")
@@ -106,8 +109,9 @@ def main():
         context = analyze_scene(current_media)
     
     # Initialize Pipeline
-    pipeline = Pipeline(refs, args.output, args.width, args.height, args.seed, visual_id)
-    if first_run:
+    pipeline = Pipeline(refs, args.output, args.width, args.height, args.seed, visual_id, scene_mode=scene_mode)
+    pipeline.initial_media = initial
+    if first_run and not args.scene_mode:
         background = f'{args.output}/background.png'
         if Path(background).exists():
             current_media = pipeline.recreate_frame(background, context, 0)
@@ -155,10 +159,12 @@ def main():
         "character_refs": refs,
         "visual_id": visual_id,
         "video_queue": video_queue,
+        "scene_mode": scene_mode,
         "output_dir": args.output,
         "width": args.width,
         "height": args.height,
-        "seed": args.seed
+        "seed": args.seed,
+        "initial_media": initial,
     }
     state_mgr.save(new_state)
     
