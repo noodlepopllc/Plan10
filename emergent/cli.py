@@ -70,7 +70,7 @@ def main():
 
         if not refs:
             decompose_scene(
-                input_image=initial,
+                input_image=current_media,
                 output_dir=args.output,
                 width=args.width,
                 height=args.height,
