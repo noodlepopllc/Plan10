@@ -37,6 +37,7 @@ def main():
     
     args = parser.parse_args()
     state_mgr = StateManager(args.output)
+    first_run = False
     
     # Load or Initialize State
     if state_mgr.exists() and not args.reset:
@@ -52,6 +53,7 @@ def main():
         needs_transition = state['needs_transition']
         video_queue = state.get('video_queue', [])
     else:
+        first_run = True
             
         print("🆕 Starting new loop...")
         refs = args.ref
@@ -105,11 +107,12 @@ def main():
     
     # Initialize Pipeline
     pipeline = Pipeline(refs, args.output, args.width, args.height, args.seed, visual_id)
-    background = f'{args.output}/background.png'
-    if Path(background).exists():
-        current_media = pipeline.recreate_frame(background, context, 0)
-    else:
-        current_media = pipeline.recreate_frame(current_media, context, 0)
+    if first_run:
+        background = f'{args.output}/background.png'
+        if Path(background).exists():
+            current_media = pipeline.recreate_frame(background, context, 0)
+        else:
+            current_media = pipeline.recreate_frame(current_media, context, 0)
     
     # Execute ONE creative step
     try:

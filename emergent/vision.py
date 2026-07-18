@@ -1,13 +1,8 @@
 import torch, os
 from config import load_environ
 
-load_environ()
-
-from uniface.detection import RetinaFace
 from image_analysis import AnalyzeImage
 from util import extract_frame, resize_image, cleanup
-
-ANIME = os.environ.get("ANIME", "False") != "False"
 
 class VisibilityChecker:
     def __init__(self, visual_id, width, height):
@@ -20,19 +15,6 @@ class VisibilityChecker:
 
         frame, check_path = extract_frame(media_path, self.width, self.height, 
                                 f"{output_dir}/check_vision.png")
-
-        if not ANIME:
-            
-            # Tier 1: Face Detection
-            resized_img, _ = resize_image(frame, max_dim=640)
-            detector = RetinaFace()
-            with torch.no_grad():
-                faces = detector.detect(resized_img) 
-            del detector
-            cleanup()
-            
-            if not faces:
-                return False, "no_face", "No faces detected in frame"
         
         # Tier 2: VLM Orientation Check
         prompt = f"""You are an expert visual evaluator. Analyze the image to check for a specific character and determine their orientation.
