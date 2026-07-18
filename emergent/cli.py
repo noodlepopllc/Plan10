@@ -72,6 +72,7 @@ def main():
             current_media = initial
         else:
             current_media = args.initial
+            initial = args.initial
 
         if not refs:
             decompose_scene(
