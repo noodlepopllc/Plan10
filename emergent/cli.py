@@ -11,9 +11,17 @@ from character import CharacterProfile
 from pipeline import Pipeline
 from scene_analyzer import analyze_scene
 
+from image_gen import GenerateImage
+from decomposer import decompose_scene
+
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
 SEED = int(os.environ.get("SEED", "-1"))
+
+if os.environ.get('ANIME','False') != 'False':
+    from anime_gen import GenerateImage, CreateBackground, CreateCharacterSheet
+else:
+    from image_gen import GenerateImage, CreateBackground, CreateCharacterSheet
 
 def main():
     parser = argparse.ArgumentParser()
@@ -54,8 +62,6 @@ def main():
             sys.exit(-1)
             
         if not args.initial:
-            from image_gen import GenerateImage
-            from decomposer import decompose_scene
             GenerateImage(prompt=args.prompt, output=f'{args.output}/improv.png', width=args.width, height=args.height, seed=args.seed)
             initial = f'{args.output}/improv.png'
             current_media = initial
