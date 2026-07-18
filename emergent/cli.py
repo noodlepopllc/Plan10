@@ -43,9 +43,6 @@ def main():
         needs_transition = state['needs_transition']
         video_queue = state.get('video_queue', [])
     else:
-        if not args.context:
-            print("Error: --context (-C) is required for a new run.")
-            sys.exit(-1)
             
         print("🆕 Starting new loop...")
         refs = args.ref
