@@ -94,21 +94,26 @@ def main():
         print("⏳ Waiting for video renderer to complete pending job...")
         print("   Run: python video_runner.py -O", args.output)
         sys.exit(0)  # Exit gracefully, don't proceed until video is ready
+
+    context = args.context
+    if not context:
+        context = analyze_scene(current_media)
     
     # Initialize Pipeline
     pipeline = Pipeline(refs, args.output, args.width, args.height, args.seed, visual_id)
+    current_media = pipeline.recreate_frame(current_media, context, 0)
     
     # Execute ONE creative step
     try:
         result = pipeline.execute_step(
-            current_media, story_context, beat_count, 
+            current_media, context, beat_count, 
             history, pending_setup, needs_transition
         )
     except KeyboardInterrupt:
         print("\n\n⏹️  Manual stop detected. Saving state...")
         state_mgr.save({
             "beat_count": beat_count, "current_media": current_media,
-            "story_context": story_context, "history": history,
+            "story_context": context, "history": history,
             "pending_setup": pending_setup, "needs_transition": needs_transition,
             "character_refs": refs, "visual_id": visual_id,
             "video_queue": video_queue,
@@ -132,7 +137,7 @@ def main():
     new_state = {
         "beat_count": result['beat_count'],
         "current_media": result['current_media'],
-        "story_context": story_context,
+        "story_context": context,
         "history": result['history'][-3:],
         "pending_setup": result['pending_setup'],
         "needs_transition": result['needs_transition'],
