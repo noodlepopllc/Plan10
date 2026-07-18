@@ -4,7 +4,7 @@ echo "🎬 Starting creative loop. Press Ctrl+C to stop."
 
 while true; do
     # Run creative step
-    python cli.py "$@"
+    python emergent/cli.py "$@"
     CLI_EXIT=$?
     
     if [ $CLI_EXIT -lt 0 ]; then
@@ -12,8 +12,8 @@ while true; do
         break
     fi
     
-    # Run video renderer
-    python video_runner.py -O feedback_output
+    # Run video renderer (pass same args so it uses the right -O directory)
+    python emergent/video_runner.py "$@"
     VIDEO_EXIT=$?
     
     if [ $VIDEO_EXIT -lt 0 ]; then

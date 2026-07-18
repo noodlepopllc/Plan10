@@ -22,7 +22,7 @@ from state_manager import StateManager
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-O', '--output', type=str, default="feedback_output")
-    args = parser.parse_args()
+    args, _ = parser.parse_known_args()
     
     state_mgr = StateManager(args.output)
     
