@@ -1,22 +1,40 @@
 #!/bin/bash
 set -euo pipefail
 #set -x   # debug
+set -euo pipefail
+
+if [ ! -d "tests/$1" ]; then 
+    python tests/character_builder.py -D -N $1
+fi
+
+if [ ! -d "tests/$2" ]; then
+    python tests/character_builder.py -D -N $2
+fi
+
+if [ ! -d "tests/$1_$2" ]; then
+   python tests/personsV2.py $1 $2
+fi
 
 # ────────────────────────────────────────────────
 # Environment / setup
 # ────────────────────────────────────────────────
-source ~/.bashrc
+#source ~/.bashrc
 
-eval "$(conda shell.bash hook)"
-conda activate plan10
+#eval "$(conda shell.bash hook)"
+#conda activate plan10
 
-OUTDIR="tests/$1"
+OUTDIR="tests/$1_$2"
+
 mkdir -p "$OUTDIR"
 
 BG="$OUTDIR/location.png"
 BG_REV="$OUTDIR/location_reverse.png"
 A="$OUTDIR/char1.png"
 B="$OUTDIR/char2.png"
+BG_LEFT="$OUTDIR/location_left.png"
+BG_RIGHT="$OUTDIR/location_right.png"
+
+python lib/config.py -R
 
 source .env
 echo "DEBUG: HEIGHT='$HEIGHT' WIDTH='$WIDTH'"
@@ -43,9 +61,6 @@ shot() {
             -S "$shot_type" \
             -A "$action" \
             -O "$out" \
-            -E "$SEED" \
-            -H "$HEIGHT" \
-            -W "$WIDTH" \
             || { echo "❌ Compositor failed: $out_suffix"; exit 1; }
 
         touch "$out"
@@ -55,10 +70,6 @@ shot() {
             -P "$vid_prompt" \
             -I "$out" \
             -O "$out_vid" \
-            -W "$WIDTH" \
-            -H "$HEIGHT" \
-            -S "$SEED" \
-            -D 5.0 \
             || { echo "❌ I2V failed: $out_suffix"; exit 1; }
 
         echo "✅ $out_suffix | T2I: $action | I2V: $vid_prompt" >> "$OUTDIR/run_manifest.txt"
@@ -83,9 +94,6 @@ dialog() {
             -T "$dialog_text" \
             -A "$voice" \
             -O "$voice_vid" \
-            -W "$WIDTH" \
-            -H "$HEIGHT" \
-            -S "$SEED" \
             || { echo "❌ S2V failed: $voice_vid"; exit 1; }
 
         echo "✅ S2V: $voice_vid" >> "$OUTDIR/run_manifest.txt"
@@ -114,9 +122,6 @@ two_person() {
             -S "medium" \
             -A "$action" \
             -O "$medium" \
-            -E "$SEED" \
-            -H "$HEIGHT" \
-            -W "$WIDTH" \
             || { echo "❌ Compositor failed: $out_suffix (medium)"; exit 1; }
     fi
 
@@ -130,9 +135,6 @@ two_person() {
             -S "$shot_type" \
             -A "$action" \
             -O "$out" \
-            -E "$SEED" \
-            -H "$HEIGHT" \
-            -W "$WIDTH" \
             || { echo "❌ Compositor failed: $out_suffix (ots)"; exit 1; }
 
         touch "$out"
@@ -143,10 +145,6 @@ two_person() {
           -I "$out" \
           -I "$medium" \
           -O "$removed_vid" \
-          -W "$WIDTH" \
-          -H "$HEIGHT" \
-          -S "$SEED" \
-          -D 5
 
         echo "🎬 I2V Closeup: $out_suffix"
         python lib/image_to_video.py \
@@ -154,10 +152,6 @@ two_person() {
             -I "$medium" \
             -I "$closeup" \
             -O "$out_vid" \
-            -W "$WIDTH" \
-            -H "$HEIGHT" \
-            -S "$SEED" \
-            -D 5 \
             || { echo "❌ I2V failed: $out_suffix (closeup)"; exit 1; }
 
         echo "✅ $out_suffix | T2I: $action | I2V: $vid_prompt" >> "$OUTDIR/run_manifest.txt"
@@ -199,6 +193,16 @@ DIALOG_LINES=(
   "Please don’t look at me like that… it’s embarrassing honestly."
 )
 
+# ─── BACKGROUNDS ───
+echo "=== BACKGROUNDS ==="
+if [ ! -f "$BG_LEFT" ]; then 
+    python lib/compositor.py -B $BG -Z "left" -O "$BG_LEFT" -R 
+fi
+
+if [ ! -f "$BG_RIGHT" ]; then 
+    python lib/compositor.py -B $BG -Z "right" -O "$BG_RIGHT" -R
+fi
+
 VOICE1="$OUTDIR/char1.wav"
 VOICE2="$OUTDIR/char2.wav"
 
@@ -232,13 +236,13 @@ for EMO in "${EMOTIONS[@]}"; do
     echo "DIALOG='$DIALOG'"
 
     # closeup still
-    shot "$BG" "$A" "closeup" "$EMO" "char1_emotion_$i" "$VID_MICRO"
+    shot "$BG_RIGHT" "$A" "closeup" "$EMO" "char1_emotion_$i" "$VID_MICRO"
 
     # dialog-driven video from closeup
     dialog "$DIALOG" "$VOICE1" "$EMO" "char1_emotion_${i}"
 
     # two-person OTS + motion
-    two_person "$BG" "$B" "$A" "ots" "$EMO" "char1_emotion_${i}" "$VID_MICRO"
+    two_person "$BG_RIGHT" "$B" "$A" "ots" "$EMO" "char1_emotion_${i}" "$VID_MICRO"
 
     ((++i))
 done
@@ -254,13 +258,13 @@ for EMO in "${EMOTIONS[@]}"; do
     echo "DIALOG='$DIALOG'"
 
     # closeup still
-    shot "$BG_REV" "$B" "closeup" "$EMO" "char2_emotion_$i" "$VID_MICRO"
+    shot "$BG_LEFT" "$B" "closeup" "$EMO" "char2_emotion_$i" "$VID_MICRO"
 
     # dialog-driven video from closeup
     dialog "$DIALOG" "$VOICE2" "$EMO" "char2_emotion_${i}"
 
     # two-person OTS + motion
-    two_person "$BG_REV" "$A" "$B" "ots" "$EMO" "char2_emotion_${i}" "$VID_MICRO"
+    two_person "$BG_LEFT" "$A" "$B" "ots" "$EMO" "char2_emotion_${i}" "$VID_MICRO"
 
     ((++i))
 done
