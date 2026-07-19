@@ -19,27 +19,27 @@ class VisibilityChecker:
         # Tier 2: VLM Orientation Check
         prompt = f"""You are an expert visual evaluator. Analyze the image to check for a specific character and determine their orientation.
 
-Target Character Description: {self.visual_id}
+        Target Character Description: {self.visual_id}
 
-Step 1: Identity Check
-Is there a character visible that generally matches the target description?
+        Step 1: Identity Check
+        Is there a character visible that generally matches the target description?
 
-Step 2: Visual Analysis & Orientation
-Determine the character's orientation based on these definitions:
-- "facing_camera": Front or 3/4 view, face clearly visible.
-- "profile_engaged": 3/4 or side profile, clearly engaged in a task (e.g., cooking, looking down) OR interacting with someone. (VALID STATE)
-- "looking_down_task": Head pitched downward, focused on an object/task. Eyes may be obscured by angle or natural anatomy (e.g., epicanthic folds), but posture shows active attention. (VALID STATE)
-- "walking_away": Showing back, actively moving away.
-- "turned_away": Side/back view, facing away with NO clear task or focus (disengaged).
-- "partially_visible": Heavily obscured or extreme angle where identity is lost.
+        Step 2: Visual Analysis & Orientation
+        Determine the character's orientation based on these definitions:
+        - "facing_camera": Front or 3/4 view, face clearly visible with eyes discernible.
+        - "profile_engaged": 3/4 or side profile, face partially visible (at least one eye visible), clearly engaged in a task.
+        - "looking_down_task": Head pitched downward, but face still partially visible (profile angle), actively working on object directly in front.
+        - "walking_away": Showing back, actively moving away from camera.
+        - "turned_away": Side or back view, face NOT visible, eyes NOT visible.
+        - "partially_visible": Heavily obscured, extreme angle, or face completely turned away.
 
-CRITICAL RULE: If the character is looking down at a task or in profile but engaged, DO NOT classify them as "turned_away", even if their eyes are hidden by angle or anatomy.
+        CRITICAL RULE: If the face is not visible or eyes cannot be discerned (even partially), classify as "turned_away" or "partially_visible". Do NOT accept "looking down" or "engaged in task" as valid if the face is completely obscured.
 
-Output format (STRICTLY follow this exact order and format):
-MATCH: [YES/NO]
-ANALYSIS: [1-2 sentences describing their physical action, head pose, and what they are looking at. Explicitly state if eyes are obscured by downward angle/anatomy.]
-ORIENTATION: [facing_camera / profile_engaged / looking_down_task / walking_away / turned_away / partially_visible]
-"""
+        Output format (STRICTLY follow this exact order and format):
+        MATCH: [YES/NO]
+        ANALYSIS: [1-2 sentences describing their physical action, head pose, and whether face/eyes are visible.]
+        ORIENTATION: [facing_camera / profile_engaged / looking_down_task / walking_away / turned_away / partially_visible]
+        """
         
         result = AnalyzeImage(check_path, prompt)
         response = result['analysis'].strip()
