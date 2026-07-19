@@ -19,6 +19,8 @@ BG="$OUTDIR/location.png"
 A="$OUTDIR/char1.png"
 B="$OUTDIR/char2.png"
 BG_REV="$OUTDIR/location_reverse.png"
+BG_LEFT="$OUTDIR/location_left.png"
+BG_RIGHT="$OUTDIR/location_right.png"
 
 source .env
 HEIGHT=$HEIGHT
@@ -50,6 +52,17 @@ shot() {
         echo "⏭️ Skipping $out_suffix (exists)"
     fi
 }
+
+# ─── BACKGROUNDS ───
+echo "=== BACKGROUNDS ==="
+if [ ! -d $BG_LEFT ]; then 
+    python lib/compositor -B $BG -Z "left" -O "$BG_LEFT"
+fi
+
+echo "=== BACKGROUNDS ==="
+if [ ! -d $BG_RIGHT ]; then 
+    python lib/compositor -B $BG -Z "right" -O "$BG_RIGHT"
+fi
 
 # ─── SHOTS ───
 echo "=== MASTER ==="
