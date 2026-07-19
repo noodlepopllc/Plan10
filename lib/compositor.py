@@ -215,7 +215,7 @@ def CompositeScene(
             f"Left side of frame: Character 1 matching REF 2, featuring {char_1_details}. "
             f"Right side of frame: Character 2 matching REF 3, featuring {char_2_details}. "
             f"Action: {action}. "
-            f"CRITICAL: Both characters are facing EACH OTHER, not the camera. They are engaged in direct interaction. "
+            #f"CRITICAL: Both characters are facing EACH OTHER, not the camera. They are engaged in direct interaction. "
             f"Character 1 (left) faces right toward Character 2. Character 2 (right) faces left toward Character 1. "
             f"Their bodies and faces are oriented toward each other in 3/4 profile view, allowing partial face visibility. "
             f"Lighting: {lighting_desc} Both characters are clearly separated, fully lit, and sharp. "

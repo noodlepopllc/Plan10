@@ -235,9 +235,9 @@ class Pipeline:
         print(f"\n📝 Queuing video generation...")
         print(f"Prompt preview: {video_prompt[:200]}...")
         
-        # In scene_mode, always use initial media as input
-        input_media = self.initial_media if self.scene_mode else current_media
-        
+        # In scene_mode, still use current_media (last frame) but with location constraint
+        input_media = current_media
+
         video_job = {
             "beat": beat_count + 1,
             "prompt": video_prompt,
@@ -245,7 +245,7 @@ class Pipeline:
             "output_path": str(output_path),
             "seed": self.seed + beat_count,
             "status": "pending"
-        }
+}
         
         # 8. Update history
         new_history = history + [next_action]
