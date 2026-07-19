@@ -15,6 +15,7 @@ from image_edit import EditImage
 
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
+SEED = int(os.environ.get("SEED", "-1"))
 
 WAN21 = os.environ.get("WAN21","14B")
 
@@ -198,14 +199,27 @@ def GenerateI2VPromptSchema():
 
 if __name__ == "__main__":
     import argparse, json
+
+    WGP = os.environ.get('WGP','False') == 'True'
+    LTX = os.environ.get('LTX','False') != 'False'
+
+    if WGP:
+        from wgp import GenerateVideo as Video
+    elif LTX:
+        from ltx import GenerateVideo as Video
+    else:
+        Video = GenerateVideo
+
+    DURATION = 10 if LTX or WGP else 5
+
     parser = argparse.ArgumentParser()
     parser.add_argument('-P', '--prompt', type=str, default='', required=False)
     parser.add_argument('-I', '--images', action='append', default=[], help='Input images')
     parser.add_argument('-O', '--output', type=str, default='output.mp4')
-    parser.add_argument('-D', '--duration', type=float, default=5)
+    parser.add_argument('-D', '--duration', type=float, default=DURATION)
     parser.add_argument('-W', '--width', type=int, default=WIDTH)
     parser.add_argument('-H', '--height', type=int, default=HEIGHT)
-    parser.add_argument('-S', '--seed', type=int, default=42)
+    parser.add_argument('-S', '--seed', type=int, default=SEED)
     args = parser.parse_args()
     
     # Allow JSON array prompts from CLI
@@ -214,7 +228,7 @@ if __name__ == "__main__":
     except:
         prompt_input = args.prompt
         
-    result = GenerateVideo(
+    result = Video(
         prompt=prompt_input,
         media=args.images,
         output=args.output,
