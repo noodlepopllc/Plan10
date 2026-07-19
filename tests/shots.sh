@@ -8,7 +8,7 @@ if [ ! -d "tests/$2" ]; then
     python tests/character_builder.py -D -N $2
 fi
 
-if [ ! -d "tests/{$1}_{$2}" ]; then
+if [ ! -d "tests/$1_$2" ]; then
    python tests/personsV2.py $1 $2
 fi
 
