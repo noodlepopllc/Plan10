@@ -178,9 +178,13 @@ async def s2v(prompt='', media='', audio='', text='', output='output.mp4',
         r = await client.call_tool("wangp_get_default_settings", {"model_type":model})
         results = json.dumps(r.data, indent=4)
 
+        '''
         desc = Image.open(media).info.get('Description')
         if not desc:
             desc = add_metadata_char(media, '', seed)
+        '''
+
+        desc = AnalyzeImage(media, "Briefly describe this image, no more than 100 words")['analysis']
 
         newprompt = f"[VISUAL]: {desc}.\n[SPEECH]: {text}.\n[SOUNDS]: {prompt}."
         print(newprompt)
