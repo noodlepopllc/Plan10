@@ -1,7 +1,19 @@
 #!/bin/bash
 set -euo pipefail
+if [ ! -d "tests/$1" ]; then 
+    python tests/character_builder.py -D -N $1
+fi
 
-OUTDIR="tests/$1"
+if [ ! -d "tests/$2" ]; then
+    python tests/character_builder.py -D -N $2
+fi
+
+if [ ! -d "tests/{$1}_{$2}" ]; then
+   python tests/personsV2.py $1 $2
+fi
+
+OUTDIR="tests/$1_$2"
+
 mkdir -p "$OUTDIR"
 BG="$OUTDIR/location.png"
 A="$OUTDIR/char1.png"
