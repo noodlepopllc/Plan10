@@ -50,7 +50,7 @@ echo "🎲 Seed: $SEED | Date: $(date)" > "$OUTDIR/run_manifest.txt"
 # ────────────────────────────────────────────────
 shot() {
     local bg="$1" char="$2" shot_type="$3" action="$4" out_suffix="$5" vid_prompt="$6"
-    local out="$OUTDIR/${WIDTH}_${HEIGHT}_${out_suffix}.png"
+    local out="$OUTDIR/${WIDTH}_${HEIGHT}_${out_suffix}_${shot_type}.png"
     local out_vid="$OUTDIR/${WIDTH}_${HEIGHT}_${out_suffix}.mp4"
 
     if [[ ! -f "$out" ]]; then
@@ -83,9 +83,9 @@ shot() {
 # Dialog → speech-to-video wrapper
 # ────────────────────────────────────────────────
 dialog() {
-    local dialog_text="$1" voice="$2" action="$3" out_suffix="$4"
-    local closeup="$OUTDIR/${WIDTH}_${HEIGHT}_${out_suffix}.png"
-    local voice_vid="$OUTDIR/${WIDTH}_${HEIGHT}_${out_suffix}_voice.mp4"
+    local dialog_text="$1" voice="$2" action="$3" out_suffix="$4" shot_type="$5"
+    local input="$OUTDIR/${WIDTH}_${HEIGHT}_${out_suffix}_${shot_type}.png"
+    local voice_vid="$OUTDIR/${WIDTH}_${HEIGHT}_${out_suffix}_${shot_type}_voice.mp4"
 
     if [[ ! -f "$voice_vid" ]]; then
         echo "🎨 S2V: $voice_vid"
@@ -237,10 +237,12 @@ for EMO in "${EMOTIONS[@]}"; do
     echo "DIALOG='$DIALOG'"
 
     # closeup still
-    shot "$BG_RIGHT" "$A" "closeup" "$EMO" "char1_emotion_$i" "$VID_MICRO"
+    shot "$BG_LEFT" "$A" "closeup" "$EMO" "char1_emotion_$i" "$VID_MICRO"
+    shot "$BG_LEFT "$A" "medium" "$EMO" "char1_emotion_$i" "$VID_MICRO"
 
     # dialog-driven video from closeup
-    dialog "$DIALOG" "$VOICE1" "$EMO" "char1_emotion_${i}"
+    dialog "$DIALOG" "$VOICE1" "$EMO" "char1_emotion_$i" "closeup"
+    dialog "$DIALOG" "$VOICE1" "$EMO" "char1_emotion_$i" "medium"
 
     # two-person OTS + motion
     #two_person "$BG_RIGHT" "$B" "$A" "ots" "$EMO" "char1_emotion_${i}" "$VID_MICRO"
@@ -259,10 +261,12 @@ for EMO in "${EMOTIONS[@]}"; do
     echo "DIALOG='$DIALOG'"
 
     # closeup still
-    shot "$BG_LEFT" "$B" "closeup" "$EMO" "char2_emotion_$i" "$VID_MICRO"
+    shot "$BG_RIGHT" "$B" "closeup" "$EMO" "char2_emotion_$i" "$VID_MICRO"
+    shot "$BG_RIGHT" "$B" "medium" "$EMO" "char2_emotion_$i" "$VID_MICRO"
 
     # dialog-driven video from closeup
     dialog "$DIALOG" "$VOICE2" "$EMO" "char2_emotion_${i}"
+    dialog "$DIALOG" "$VOICE2" "$EMO" "char2_emotion_$i" "medium"
 
     # two-person OTS + motion
     #two_person "$BG_LEFT" "$A" "$B" "ots" "$EMO" "char2_emotion_${i}" "$VID_MICRO"
