@@ -51,7 +51,7 @@ echo "🎲 Seed: $SEED | Date: $(date)" > "$OUTDIR/run_manifest.txt"
 shot() {
     local bg="$1" char="$2" shot_type="$3" action="$4" out_suffix="$5" vid_prompt="$6"
     local out="$OUTDIR/${WIDTH}_${HEIGHT}_${out_suffix}_${shot_type}.png"
-    local out_vid="$OUTDIR/${WIDTH}_${HEIGHT}_${out_suffix}.mp4"
+    #local out_vid="$OUTDIR/${WIDTH}_${HEIGHT}_${out_suffix}.mp4"
 
     if [[ ! -f "$out" ]]; then
         echo "🎨 T2I: $out_suffix"
@@ -73,7 +73,7 @@ shot() {
         #    || { echo "❌ I2V failed: $out_suffix"; exit 1; }
 
         #echo "✅ $out_suffix | T2I: $action | I2V: $vid_prompt" >> "$OUTDIR/run_manifest.txt"
-        echo "✅ $out_suffix | T2I: $action >> "$OUTDIR/run_manifest.txt"
+        echo "✅ $out_suffix | T2I: $action" >> "$OUTDIR/run_manifest.txt"
     else
         echo "⏭️ Skipping $out_suffix (exists)"
     fi
