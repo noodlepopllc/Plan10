@@ -216,7 +216,7 @@ async def s2v(prompt='', media='', audio='', text='', output='output.mp4',
             sleep(5)
             this = '' 
             for event in r.data['events']:
-                if 'text' in event['data']:
+                if event['data'] and 'text' in event['data']:
                     if '%|' in event['data']['text']:
                         this = event['data']['text']
             if this != last:
