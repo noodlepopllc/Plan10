@@ -200,7 +200,7 @@ def GenerateI2VPromptSchema():
 if __name__ == "__main__":
     import argparse, json
 
-    WGP = os.environ.get('WGP','False') == 'True'
+    WGP = os.environ.get('WGP','False') != 'False'
     LTX = os.environ.get('LTX','False') != 'False'
 
     if WGP:

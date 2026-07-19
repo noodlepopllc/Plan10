@@ -22,6 +22,8 @@ BG_REV="$OUTDIR/location_reverse.png"
 BG_LEFT="$OUTDIR/location_left.png"
 BG_RIGHT="$OUTDIR/location_right.png"
 
+python lib/config.py -R
+
 source .env
 HEIGHT=$HEIGHT
 WIDTH=$WIDTH
@@ -40,12 +42,12 @@ shot() {
         # Always pass both chars. Your Python patch handles routing/ignoring.
         python lib/compositor.py -B "$bg" -C "$char1" -C "$char2" \
             -S "$shot_type" -A "$action" \
-            -O "$out" -E "$SEED" -H "$HEIGHT" -W "$WIDTH" || { echo "❌ Compositor failed: $out_suffix"; exit 1; }
+            -O "$out" || { echo "❌ Compositor failed: $out_suffix"; exit 1; }
             
         touch "$out"  # ✅ Refreshes OS thumbnail cache
 
         echo "🎬 Generating I2V: $out_suffix"
-        python lib/image_to_video.py -P "$vid_prompt" -I "$out" -O "$out_vid" -W "$WIDTH" -H "$HEIGHT" -S "$SEED" -D 5.0 || { echo "❌ I2V failed: $out_suffix"; exit 1; }
+        python lib/image_to_video.py -P "$vid_prompt" -I "$out" -O "$out_vid" || { echo "❌ I2V failed: $out_suffix"; exit 1; }
         
         echo "✅ $out_suffix | T2I: $action | I2V: $vid_prompt" >> "$OUTDIR/run_manifest.txt"
     else
@@ -55,12 +57,11 @@ shot() {
 
 # ─── BACKGROUNDS ───
 echo "=== BACKGROUNDS ==="
-if [ ! -d $BG_LEFT ]; then 
+if [ ! -d "$BG_LEFT" ]; then 
     python lib/compositor.py -B $BG -Z "left" -O "$BG_LEFT" -R 
 fi
 
-echo "=== BACKGROUNDS ==="
-if [ ! -d $BG_RIGHT ]; then 
+if [ ! -d "$BG_RIGHT" ]; then 
     python lib/compositor.py -B $BG -Z "right" -O "$BG_RIGHT" -R
 fi
 
