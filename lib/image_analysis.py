@@ -7,6 +7,28 @@ from pathlib import Path
 _smol_model = None
 _smol_processor = None
 
+def translate_to_audio_prompt(visual_prompt):
+    if not visual_prompt: return ""
+    
+    # Get raw prompt from your Qwen wrapper
+    raw_analysis = llm_analyze_media('', visual_prompt, AUDIO_SYSTEM_PROMPT)["analysis"]
+    
+    # Programmatic Hard Scrub (lowercase for perfect safety parsing)
+    cleaned = raw_analysis.lower().strip()
+    
+    # Strip dangerous tokens that trigger Woosh vocal tracts
+    banned_speech_words = r"\b(talking|speech|dialogue|dialog|whispering|murmuring|voice|voices|speaking|words)\b"
+    cleaned = re.sub(banned_speech_words, "", cleaned)
+    
+    # Strip formatting junk (double commas, loose strings)
+    items = [item.strip() for item in cleaned.split(",") if item.strip()]
+    cleaned_string = ", ".join(items)
+    
+    # Force the strict negative constraints to the tail end of the string
+    final_audio_prompt = f"{cleaned_string}, close microphone perspective, non-verbal, purely physical sound effects, no speech, no music"
+    
+    return final_audio_prompt
+
 def load_smol_vlm():
     """Load SmolVLM2 model and processor, caching them globally."""
     global _smol_model, _smol_processor

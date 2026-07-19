@@ -10,7 +10,7 @@ from time import sleep
 from pathlib import Path
 
 from util import video_to_img
-from image_analysis import AnalyzeImage, EnhancePrompt
+from image_analysis import AnalyzeImage, EnhancePrompt, translate_to_audio_prompt
 
 from image_gen import add_metadata_char
 
@@ -185,8 +185,9 @@ async def s2v(prompt='', media='', audio='', text='', output='output.mp4',
         '''
 
         desc = AnalyzeImage(media, "Briefly describe this image, no more than 100 words")['analysis']
+        audio_desc = translate_to_audio_prompt(desc)
 
-        newprompt = f"[VISUAL]: {desc}.\n[SPEECH]: {text}.\n[SOUNDS]: {prompt}."
+        newprompt = f"[VISUAL]: {desc}.\n[SPEECH]: {text}.\n[SOUNDS]: {audio_desc}."
         print(newprompt)
 
         args = r.data
