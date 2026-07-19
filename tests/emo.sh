@@ -65,14 +65,15 @@ shot() {
 
         touch "$out"
 
-        echo "🎬 I2V: $out_suffix"
-        python lib/image_to_video.py \
-            -P "$vid_prompt" \
-            -I "$out" \
-            -O "$out_vid" \
-            || { echo "❌ I2V failed: $out_suffix"; exit 1; }
+        #echo "🎬 I2V: $out_suffix"
+        #python lib/image_to_video.py \
+        #    -P "$vid_prompt" \
+        #    -I "$out" \
+        #    -O "$out_vid" \
+        #    || { echo "❌ I2V failed: $out_suffix"; exit 1; }
 
-        echo "✅ $out_suffix | T2I: $action | I2V: $vid_prompt" >> "$OUTDIR/run_manifest.txt"
+        #echo "✅ $out_suffix | T2I: $action | I2V: $vid_prompt" >> "$OUTDIR/run_manifest.txt"
+        echo "✅ $out_suffix | T2I: $action >> "$OUTDIR/run_manifest.txt"
     else
         echo "⏭️ Skipping $out_suffix (exists)"
     fi
@@ -242,7 +243,7 @@ for EMO in "${EMOTIONS[@]}"; do
     dialog "$DIALOG" "$VOICE1" "$EMO" "char1_emotion_${i}"
 
     # two-person OTS + motion
-    two_person "$BG_RIGHT" "$B" "$A" "ots" "$EMO" "char1_emotion_${i}" "$VID_MICRO"
+    #two_person "$BG_RIGHT" "$B" "$A" "ots" "$EMO" "char1_emotion_${i}" "$VID_MICRO"
 
     ((++i))
 done
@@ -264,7 +265,7 @@ for EMO in "${EMOTIONS[@]}"; do
     dialog "$DIALOG" "$VOICE2" "$EMO" "char2_emotion_${i}"
 
     # two-person OTS + motion
-    two_person "$BG_LEFT" "$A" "$B" "ots" "$EMO" "char2_emotion_${i}" "$VID_MICRO"
+    #two_person "$BG_LEFT" "$A" "$B" "ots" "$EMO" "char2_emotion_${i}" "$VID_MICRO"
 
     ((++i))
 done
