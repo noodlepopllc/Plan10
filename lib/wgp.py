@@ -86,7 +86,7 @@ async def i2v(prompt='', media='', output='output.mp4',
             this = '' 
             if r.data.get('events',[]):
                 for event in r.data['events']:
-                    if event and 'text' in event.get('data',''):
+                    if event and event.get('data') and 'text' in event.get('data',''):
                         if '%|' in event['data']['text']:
                             this = event['data']['text']
             if this != last:

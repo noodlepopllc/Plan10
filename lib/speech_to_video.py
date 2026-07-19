@@ -301,7 +301,17 @@ def GenerateTalkingVideoSchema():
 # ENTRY POINT
 # =============================================================================
 if __name__ == "__main__":
-    import argparse
+    import argparse, os
+    WGP = os.environ.get('WGP','False') != 'False'
+    LTX = os.environ.get('LTX','False') != 'False'
+
+    if WGP:
+        from wgp import GenerateTalkingVideo as Speech
+    elif LTX:
+        from ltx import GenerateTalkingVideo as Speech
+    else:
+        Speech = GenerateTalkingVideo
+
     parser = argparse.ArgumentParser()
     parser.add_argument('-P', '--prompt', type=str, default='')
     parser.add_argument('-T', '--text', type=str, default='')
@@ -310,7 +320,7 @@ if __name__ == "__main__":
     parser.add_argument('-O', '--output', type=str, default='output.mp4')
     parser.add_argument('-W', '--width', type=int, default=WIDTH)
     parser.add_argument('-H', '--height', type=int, default=HEIGHT)
-    parser.add_argument('-S', '--seed', type=int, default=42)
+    parser.add_argument('-S', '--seed', type=int, default=SEED)
     args = parser.parse_args()
-    GenerateTalkingVideo(args.prompt, args.text, args.audio, args.image, args.output, args.width, args.height, args.seed)
+    Speech(args.prompt, args.text, args.audio, args.image, args.output, args.width, args.height, args.seed)
 
