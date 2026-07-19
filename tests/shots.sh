@@ -56,12 +56,12 @@ shot() {
 # ─── BACKGROUNDS ───
 echo "=== BACKGROUNDS ==="
 if [ ! -d $BG_LEFT ]; then 
-    python lib/compositor.py -B $BG -Z "left" -O "$BG_LEFT"
+    python lib/compositor.py -B $BG -Z "left" -O "$BG_LEFT" -R 
 fi
 
 echo "=== BACKGROUNDS ==="
 if [ ! -d $BG_RIGHT ]; then 
-    python lib/compositor.py -B $BG -Z "right" -O "$BG_RIGHT"
+    python lib/compositor.py -B $BG -Z "right" -O "$BG_RIGHT" -R
 fi
 
 # ─── SHOTS ───
