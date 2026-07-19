@@ -184,10 +184,10 @@ async def s2v(prompt='', media='', audio='', text='', output='output.mp4',
             desc = add_metadata_char(media, '', seed)
         '''
 
-        desc = AnalyzeImage(media, "Briefly describe this image, no more than 100 words")['analysis']
+        desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
         audio_desc = translate_to_audio_prompt(desc)
 
-        newprompt = f"[VISUAL]: {desc} Their lips move in perfect sync with the audio.\n[SPEECH]: {text}.\n[SOUNDS]: {audio_desc}."
+        newprompt = f"[VISUAL]: {desc} Lips moving in perfect sync with the audio.\n[SPEECH]: {text}.\n[SOUNDS]: {audio_desc}."
         print(newprompt)
 
         args = r.data

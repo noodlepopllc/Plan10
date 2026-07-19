@@ -20,6 +20,19 @@ Rules:
 Example Output: "Subtle candle wax crackling, heavy leather armor creaking with body movement, soft linen dress rustling, quiet stone room echo"
 """
 
+AUDIO_SYSTEM_PROMPT = """
+You are a Sound Design Prompt Generator for an audio diffusion model. 
+Take the visual description provided and translate it into a high-density, action-oriented sound effect prompt.
+
+Rules:
+1. Describe specific textures, physical movements, and acoustic perspective.
+2. If human movement or clothing is mentioned, use highly specific foley verbs (e.g., "creaking", "scraping", "shuffling").
+3. ABSOLUTELY NO SPEECH OR MUSIC: Use zero words that imply talking, dialogue, or musical elements.
+4. Output format: A single line of dominant background sound under 10 words.
+
+Example Output: "background murmurs"
+"""
+
 def translate_to_audio_prompt(visual_prompt):
     if not visual_prompt: return ""
     
