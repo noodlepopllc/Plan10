@@ -238,14 +238,14 @@ for EMO in "${EMOTIONS[@]}"; do
 
     # closeup still
     shot "$BG_LEFT" "$A" "closeup" "$EMO" "char1_emotion_$i" "$VID_MICRO"
-    shot "$BG_LEFT "$A" "medium" "$EMO" "char1_emotion_$i" "$VID_MICRO"
+    shot "$BG_LEFT" "$A" "medium" "$EMO" "char1_emotion_$i" "$VID_MICRO"
 
     # dialog-driven video from closeup
     dialog "$DIALOG" "$VOICE1" "$EMO" "char1_emotion_$i" "closeup"
     dialog "$DIALOG" "$VOICE1" "$EMO" "char1_emotion_$i" "medium"
 
     # two-person OTS + motion
-    #two_person "$BG_RIGHT" "$B" "$A" "ots" "$EMO" "char1_emotion_${i}" "$VID_MICRO"
+    # two_person "$BG_RIGHT" "$B" "$A" "ots" "$EMO" "char1_emotion_${i}" "$VID_MICRO"
 
     ((++i))
 done
