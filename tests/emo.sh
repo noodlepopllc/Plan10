@@ -91,7 +91,7 @@ dialog() {
         echo "🎨 S2V: $voice_vid"
         python lib/speech_to_video.py \
             -P "$action" \
-            -I "$closeup" \
+            -I "$input" \
             -T "$dialog_text" \
             -A "$voice" \
             -O "$voice_vid" \
@@ -265,7 +265,7 @@ for EMO in "${EMOTIONS[@]}"; do
     shot "$BG_RIGHT" "$B" "medium" "$EMO" "char2_emotion_$i" "$VID_MICRO"
 
     # dialog-driven video from closeup
-    dialog "$DIALOG" "$VOICE2" "$EMO" "char2_emotion_${i}"
+    dialog "$DIALOG" "$VOICE2" "$EMO" "char2_emotion_$i" "closeup"
     dialog "$DIALOG" "$VOICE2" "$EMO" "char2_emotion_$i" "medium"
 
     # two-person OTS + motion
