@@ -14,6 +14,8 @@ class CommandBuffer:
         self.video_images = []
         self.dialog = []
         self.dialog_images = []
+        self.closeup = []
+        self.closeup_images = []
         self.full = []
 
     def dump(self, mode="all"):
@@ -36,6 +38,11 @@ class CommandBuffer:
             for c in self.dialog_images:
                 print(c)
             for c in self.dialog:
+                print(c)
+        if mode in ("all", "dialog", "closeup"):
+            for c in self.closeup_images:
+                print(c)
+            for c in self.closeup:
                 print(c)
         if mode in ("full"):
             for c in self.dialog_images:
@@ -129,7 +136,7 @@ Width: {self.WIDTH}, Height: {self.HEIGHT}, Duration: {duration}, Seed: {self.SE
     # ---------------------------------------------------------
 
     def dialog_closeup(self, alias, zone_alias, char_alias, prompt):
-        self.buffer.dialog_images.append(f"""
+        self.buffer.closeup_images.append(f"""
 >> ALIAS: {alias}
 composite_scene {zone_alias} asset and {char_alias} asset,
 shot_type: "closeup",
@@ -173,6 +180,8 @@ Width: {self.WIDTH}, Height: {self.HEIGHT}, Seed: {self.SEED}
 """
         if prompt:
             self.buffer.full.append(final)
+        elif "CLOSEUP" in base_alias:
+            self.buffer.closeup.append(final)
         else:
             self.buffer.dialog.append(final)
 

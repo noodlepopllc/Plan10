@@ -6,42 +6,38 @@ You will receive a story or story seed. Extract only what is required to build t
 OUTPUT FORMAT
 You MUST output the following sections in this exact Markdown format. Do not skip any section.
 SECTION 1 — WORLD SUMMARY  
-
-    2–3 sentences max.  
-    MUST explicitly state: Time Period, Technology Level.  
-    Include: Tone, atmosphere, sensory palette.  
-    ❌ FORBIDDEN: Story events, character actions, detailed visuals.
-
+2–3 sentences max.
+MUST explicitly state: Time Period, Technology Level.
+Include: Tone, atmosphere, sensory palette.
+❌ FORBIDDEN: Story events, character actions, detailed visuals.
 SECTION 2 — CHARACTER SUMMARIES
 For each character, provide a bulleted list:
 
-- Name, Age, Gender, Race (default "humanoid"), Ethnicity/Species.
-- Face shape and distinctive facial features (e.g., "sharp jawline, prominent nose, high cheekbones, scar above left eye").
-- Build and posture (e.g., "tall and lean, slightly hunched").
-- Clothing details (specific garments, materials, colors, condition).
-- Hair (exact style, color, length, how it's worn).
-- Movement style (broad strokes: e.g., "heavy steps", "quick movements").
-- DISTINCTIVE VISUAL MARKERS: 2-3 highly specific, unique visual traits that make this character instantly recognizable (e.g., "tattoo of serpent on neck", "missing left ear", "always wears red scarf").
+    Name, Age, Gender, Race (default "humanoid"), Ethnicity/Species.
+    Face shape and distinctive facial features (e.g., "sharp jawline, prominent nose, high cheekbones, scar above left eye").
+    Build and posture (e.g., "tall and lean, slightly hunched").
+    Clothing details (specific garments, materials, colors, condition).
+    Hair (exact style, color, length, how it's worn).
+    Movement style (broad strokes: e.g., "heavy steps", "quick movements").
+    DISTINCTIVE VISUAL MARKERS: 2-3 highly specific, unique visual traits that make this character instantly recognizable (e.g., "tattoo of serpent on neck", "missing left ear", "always wears red scarf").
 
 ❌ FORBIDDEN: Backstory, lore, emotional analysis, story events, internal thoughts.
 ✅ REQUIRED: Specific visual details that distinguish this character from others.
-
 SECTION 3 — LOCATIONS
 For each distinct location in the story, provide:
+[Location Name]
 
-### [Location Name]
-- 2–3 sentences describing what this location is, what it's used for, and its sensory elements.
-- MUST include time-period-appropriate environmental context.
-- ❌ FORBIDDEN: Interior sub-zones, specific props, architectural specifics beyond broad strokes, story events.
+    2–3 sentences describing what this location is, what it's used for, and its sensory elements.
+    MUST include time-period-appropriate environmental context.
+    ❌ FORBIDDEN: Interior sub-zones, specific props, architectural specifics beyond broad strokes, story events.
 
 SECTION 4 — STAGING ZONES
 For each location identified in Section 3, list 2–4 schematic, filmable zones within that location.
+[Location Name] Zones
+[Zone Name]
 
-### [Location Name] Zones
-
-**[Zone Name]**
-- Functional Purpose: [What this zone is used for]
-- Schematic Objects: [2–5 non-descriptive, functional objects]
+    Functional Purpose: [What this zone is used for]
+    Schematic Objects: [2–5 non-descriptive, functional objects. CRITICAL: Objects MUST be small, peripheral, or background items (e.g., side tables, wall sconces, small stools, chairs, shelves). DO NOT list large, central, or foreground-blocking objects (e.g., large dining tables, kitchen islands, massive counters) that would dominate the frame and block actors from standing in the center/foreground.]
 
 GLOBAL RULES  
 
@@ -49,3 +45,4 @@ GLOBAL RULES
     Do NOT write detailed locations or biographies.  
     Do NOT invent new characters or locations.  
     Keep everything schematic, non-visual, and non-descriptive.
+    NO FOREGROUND BLOCKERS: Never list large, space-dominating furniture (like large tables or islands) in the Schematic Objects. The center and foreground of every zone must remain physically clear for actors to stand and interact.

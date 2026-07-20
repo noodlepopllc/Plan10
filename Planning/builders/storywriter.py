@@ -1,7 +1,11 @@
-import json, sys
+import json, sys, argparse, random
 sys.path.append('./lib')
 from qwen_llm import llm_analyze_media
 from pathlib import Path
+
+# ============================================================================
+# DEFAULT SEED (used when no seed file provided)
+# ============================================================================
 
 SEED = """
 Characters:
@@ -24,14 +28,105 @@ Initial Situation:
 Lisa is texting on her bed. Maria enters the room.
 """
 
-SYSTEM = """
-Using the structured seed below, write a coherent cinematic scene of 8–12 beats.
-Do not introduce new characters or objects.
-Escalate tension based on the spark.
-Stop when the story goal is resolved.
-Keep the scene grounded in the location.
-Use natural dialog and physical blocking.
-"""
+# ============================================================================
+# TOPICAL SEED GENERATOR (for when topic is provided but no seed file)
+# ============================================================================
+
+TOPICAL_SCENARIOS = ['DEBATE', 'TEACHING', 'DISCUSSION', 'MENTORSHIP']
+
+TOPICAL_SEED_GENERATOR = '''
+🎓 TOPICAL SCENE SEED GENERATOR (EDUCATIONAL/DEBATE)
+ROLE — Generate structured seeds for educational or debate scenes
+
+⭐ SCENARIO TYPE SELECTION
+If user specifies scenario type, use it. Otherwise select from:
+    1. DEBATE: Two characters with opposing viewpoints
+    2. TEACHING: Expert teaching a student/apprentice
+    3. DISCUSSION: Collaborative exploration of a topic
+    4. MENTORSHIP: Experienced guide helping novice through challenge
+
+Selection: Use (current hour % 4) + 1 if not specified.
+
+⭐ TOPIC SELECTION
+If user specifies topic, use it. Otherwise generate from these categories:
+- Philosophy/Ethics
+- Science/Technology
+- History/Politics
+- Art/Culture
+- Personal Development
+- Social Issues
+- Creative Process
+- Professional Skills
+
+Selection: Use (current minute % 8) + 1 if not specified.
+
+⭐ CHARACTER ROLES
+
+For DEBATE scenarios:
+- Character A: Holds position X, uses logic/evidence type Y
+- Character B: Holds opposing position, uses different reasoning style
+- Both must be articulate, passionate, and have distinct argumentation styles
+
+For TEACHING scenarios:
+- Teacher: Expert with deep knowledge, patient but demanding
+- Student: Eager but struggling, asks good questions, makes mistakes
+- Dynamic: Knowledge transfer with friction/learning curve
+
+For DISCUSSION scenarios:
+- Character A: Brings perspective/experience X
+- Character B: Brings different perspective/experience Y
+- Both learn from each other, reach synthesis
+
+For MENTORSHIP scenarios:
+- Mentor: Wise, experienced, uses Socratic method
+- Protégé: Talented but raw, needs guidance
+- Dynamic: Growth through challenge and reflection
+
+⭐ SEED STRUCTURE (OUTPUT EXACTLY THIS FORMAT)
+
+**Scenario Type**: [DEBATE/TEACHING/DISCUSSION/MENTORSHIP]
+**Topic**: [specific topic with clear scope]
+**Core Question**: [the central question being explored/argued]
+
+**Characters** (2 characters):
+- [Name]: [age], [gender], [race/species if relevant], [physical description: build, face, distinctive features, FULL clothing with material/color/condition, hair style/color/length, footwear]. [Role in scenario: their position/expertise]. [Argumentation/teaching style: how they communicate their ideas].
+- [Name]: [same structure]. [Opposing role/learning position]. [Communication style].
+
+**Location**:
+[Name of location]. [2-3 sentences describing space: size, architectural features, lighting, textures, sounds, atmosphere]. [3-5 specific objects relevant to the topic: books, tools, artifacts, technology, etc.]. [What makes this location appropriate for this type of discussion].
+
+**Story Spark**:
+[1-2 sentences describing what initiates the debate/discussion. Must be concrete: a question asked, a challenge issued, a problem presented, a disagreement revealed].
+
+**Character Goals**:
+- [Character A]: [Specific goal: convince the other, teach a concept, solve a problem, reach understanding]. Must be achievable within the scene.
+- [Character B]: [Specific goal: defend position, learn the skill, challenge assumptions, find common ground]. Should create tension with Character A's goal.
+
+**Key Arguments/Teaching Points** (3-5 points that will emerge):
+1. [First major point/argument that will be raised]
+2. [Second point that builds on or challenges the first]
+3. [Third point that escalates the discussion]
+4. [Optional: fourth point if needed for complexity]
+5. [Optional: resolution/synthesis point]
+
+**Initial Situation**:
+[2-3 sentences describing exactly where each character is positioned, what they're doing with their hands/body, and the immediate context. Must be concrete and filmable.]
+
+⭐ QUALITY GUARDRAILS
+- Topic must be specific enough to debate/teach in 20-40 beats
+- Characters must have distinct communication styles (not just different opinions)
+- Location must contain objects relevant to the topic (props for demonstration, reference materials, tools)
+- Goals must be in tension but both achievable
+- Initial situation must show characters in positions that reflect their roles
+- Dialog will drive 70%+ of the scene, so characters must be articulate
+
+⭐ BEGIN OUTPUT NOW
+Generate one complete seed in the exact format above. No commentary or explanation.
+'''
+
+# ============================================================================
+# ACTION SCENE EXPANSION PROMPT
+# ============================================================================
 
 ALTERNATIVE = '''
 🎬 SCENE EXPANSION PROMPT
@@ -79,24 +174,9 @@ CORE DIRECTIVES:
     HARD BEAT COUNT: EXACTLY 8-12 BEATS
     After the cold open, count your story beats. When you reach beat 12, STOP IMMEDIATELY. 
         Beat 12 is the final beat, period.
-
+    
     STORY BEATS (8–12 TOTAL)
     Each beat must advance tension through action or dialog. Escalate the conflict based on the story spark.
-    
-    ⭐ BEAT LENGTH CONSISTENCY (CRITICAL)
-    Every beat MUST be 1-3 sentences maximum. No exceptions.
-    - Beat 1: 1-3 sentences
-    - Beat 2: 1-3 sentences
-    - Beat 12: 1-3 sentences
-    All beats must be roughly the same length. Do NOT let beats grow longer as the scene progresses.
-    If any beat exceeds 3 sentences, you have failed.
-    
-    Structure each beat as:
-    [Character] [action with quality/manner] + [dialog if applicable]
-    
-    Example:
-    ✅ GOOD: "Ako steps forward with determined stride toward the warehouse doors. 'The rhythm is calling us, Bko.'"
-    ❌ BAD: "Ako steps forward with determined stride toward the warehouse doors, her pink plastic body covering cables flexing visibly as she moves against the heavy steel frame. She pauses for a moment, considering the weight of her decision, then reaches out and grasps the handle firmly, pulling it down with a loud hydraulic hiss that echoes through the empty hall. 'The rhythm is calling us, Bko. We must go out there and feel the music.'"
     
     ⭐ ENRICHED MACRO ACTIONS
     Each action beat should be a clear, visible movement WITH descriptive context.
@@ -120,144 +200,187 @@ OUTPUT FORMAT:
 Write in standard literary prose. Begin with the cold open (static snapshot only), insert the ******* COLD OPEN END **** marker, then write exactly 8-12 story beats. Dialog must appear every 2-3 beats.
 '''
 
-CHARACTERS_MIXED = '''
-**Characters** (2–4 characters):
-- [Name]: [age], [gender], [race/species if relevant], [2–3 sentence physical description including build, face, distinctive features, FULL clothing with material/color/condition, hair style/color/length, footwear, accessories]. [1 sentence personality/behavioral tendency].
-- [Name]: [same structure]
-- [Additional characters if applicable]
+# ============================================================================
+# TOPICAL SCENE EXPANSION PROMPT
+# ============================================================================
+
+TOPICAL_EXPANDER = '''
+🎓 TOPICAL SCENE EXPANDER (EDUCATIONAL/DEBATE)
+
+Using the structured seed below, write a coherent topical scene consisting of:
+1 COLD OPEN (establishing moment, not counted as a scene beat)
+20-40 SCENE BEATS (dialog-heavy intellectual exchange)
+
+CORE DIRECTIVES:
+
+COLD OPEN (MANDATORY — DOES NOT COUNT TOWARD BEAT TOTAL)
+Write a rich, detailed establishing sequence BEFORE the scene begins. Include:
+- Environment (2-3 sentences): Lighting, textures, sounds, spatial layout, atmosphere
+- Each Character (2-3 sentences per character): Build, face, distinctive features, complete clothing (head-to-toe), hair, current position, body state, and what they're holding/interacting with (books, tools, props relevant to topic)
+
+❌ FORBIDDEN IN COLD OPEN: Backstory, internal thoughts, future actions, dialog.
+
+⭐ SPECIES/ETHNICITY MUST BE EXPLICIT
+If the seed specifies a species (elf, half-elf, android, werecreature, alien, etc.), you MUST explicitly state it in the cold open.
+
+CRITICAL MARKER: After the cold open paragraphs, you MUST output this exact marker on its own line:
+******* COLD OPEN END ****
+
+⭐ SCENE STRUCTURE FOR TOPICAL CONTENT
+
+For DEBATE scenarios:
+- Beats 1-3: Opening statements, establishing positions
+- Beats 4-15: First round of arguments (3-4 major points with responses)
+- Beats 16-25: Second round (counter-arguments, examples, evidence)
+- Beats 26-35: Final round (escalation, emotional appeals, core values)
+- Beats 36-40: Resolution or acknowledged impasse
+
+For TEACHING scenarios:
+- Beats 1-3: Introduction of concept, initial explanation
+- Beats 4-15: Core teaching (break concept into 3-4 sub-points, each with explanation + student questions)
+- Beats 16-25: Practice/application (student tries, makes mistakes, teacher corrects)
+- Beats 26-35: Advanced concepts or troubleshooting common errors
+- Beats 36-40: Summary, check understanding, next steps
+
+For DISCUSSION scenarios:
+- Beats 1-5: Both perspectives introduced
+- Beats 6-20: Exploration of each perspective with examples
+- Beats 21-30: Finding common ground or identifying irreconcilable differences
+- Beats 31-40: Synthesis or agreed disagreement
+
+For MENTORSHIP scenarios:
+- Beats 1-5: Mentor assesses current state, identifies challenge
+- Beats 6-20: Guided problem-solving (mentor asks questions, protégé attempts solutions)
+- Beats 21-30: Breakthrough moment or realization
+- Beats 31-40: Reflection on learning, application to future
+
+⭐ DIALOG DENSITY (CRITICAL)
+- 70-80% of beats must contain dialog
+- Dialog lines should be 8-20 words (substantive but not monologues)
+- Every dialog beat must include physical action (gesturing, writing, demonstrating, reacting)
+- Characters should reference objects in the environment (pointing to books, picking up tools, writing on surfaces)
+
+⭐ INTELLECTUAL PROGRESSION
+Each beat must advance the intellectual exchange:
+- Introduce a new point/argument
+- Respond to previous point
+- Provide example or evidence
+- Ask clarifying question
+- Show emotional reaction to idea (frustration, excitement, confusion, realization)
+
+❌ FORBIDDEN: Repeating the same argument in different words
+✅ REQUIRED: Each beat adds new information, perspective, or development
+
+⭐ PHYSICAL ANCHORING
+Even in dialog-heavy scenes, characters must:
+- Move through space (pacing, approaching, retreating)
+- Interact with props (picking up books, writing on boards, demonstrating with objects)
+- Show emotional states through body language (leaning forward in excitement, crossing arms in defensiveness, rubbing temples in frustration)
+- Use gestures to emphasize points (pointing, counting on fingers, spreading hands)
+
+⭐ ENRICHED MACRO ACTIONS
+Each action beat should be a clear, visible movement WITH descriptive context.
+
+Structure: [verb] + [object] + [quality/manner]
+
+Examples:
+- "points to equation" → "points to complex equation on whiteboard with marker"
+- "opens book" → "opens leather-bound book to marked page"
+- "gestures emphatically" → "gestures emphatically with both hands, palms up"
+
+Rules:
+- Use 12-15 words for action descriptions
+- Include physical qualities: weight, texture, material
+- Include manner: speed, force, direction
+- Keep actions macro-level (visible body movements, not subtle gestures)
+
+⭐ EMOTIONAL PHYSICALITY
+Show intellectual engagement through body language:
+- Excitement: leaning forward, eyes wide, rapid gestures
+- Frustration: rubbing temples, pacing, slamming hand on table
+- Confusion: tilting head, furrowed brow, hesitant gestures
+- Realization: eyes widening, sudden stillness, pointing emphatically
+- Defensiveness: crossed arms, leaning back, narrowed eyes
+- Agreement: nodding, open palms, relaxed posture
+
+HARD BEAT COUNT: 20-40 BEATS
+After the cold open, write 20-40 beats depending on topic complexity.
+- Simple topic with 2 characters: 20-25 beats
+- Complex topic requiring multiple points: 30-35 beats
+- Topic with demonstration/practice: 35-40 beats
+
+Stop when the intellectual goal is achieved or acknowledged as unachievable.
+
+OUTPUT FORMAT:
+Write in standard literary prose. Begin with the cold open, insert the ******* COLD OPEN END **** marker, then write 20-40 numbered beats. Each beat is ONE paragraph with dialog and/or action. No nested stories.
+
+BEGIN OUTPUT NOW
 '''
 
-CHARACTERS_FEMALE = '''
-⭐ CHARACTERS
-Beautiful 20s-30s females only with feminine names, scantily clad with distinct features, race/species, hair color, hair style and clothing to make them easily distinguishable
-Females can be athletic, fit, thin, maximum attractiveness and sex appeal, very feminine
-
-All characters must be female with criteria listed.
-
-If a story requires a male character, reimagine them as a female
-
-NEVER output a male character
-
-**Characters** (2–4 characters):
-- [Name]: [age], [female], [race/species if relevant], [2–3 sentence physical description including build, face, distinctive features, FULL clothing with material/color/condition, hair style/color/length, footwear, accessories]. [1 sentence personality/behavioral tendency].
-- [Name]: [same structure]
-- [Additional characters if applicable]
-'''
-
-def seed_generator(gender):
-  CHARACTERS = CHARACTERS_MIXED if gender == 'mixed' else CHARACTERS_FEMALE
-  
-  return f'''
-  🎲 AUTOMATIC SEED STORY GENERATOR (ISOLATION-SAFE)
-  ROLE — TEST SEED GENERATOR
-  Generate a single, self-contained structured seed for testing a Text-to-Video (T2V) / Image-to-Video (I2V) storytelling pipeline.
-  ⭐ GENRE SELECTION
-  If the user specifies a genre, use it.
-  If no genre is specified, select from this list using the current timestamp:
-
-      Medieval Fantasy
-      Cyberpunk
-      Post-Apocalyptic
-      Victorian
-      Sci-Fi Space Station
-      1920s Noir
-      Modern Urban
-      Ancient Mythological
-      Steampunk
-      Western
-
-  Selection method: Use (current minute % 10) + 1 to pick from the list. If timestamp unavailable, pick genre #1.
-  ⭐ TEST FOCUS SELECTION
-  If the user specifies a focus, use it.
-  If no focus is specified, select from this list:
-
-      DIALOG-HEAVY: Lots of conversation, actions interspersed
-      ACTION-HEAVY: Minimal dialog, mostly physical movement
-      EMOTIONAL SUBTEXT: Body language reveals what dialog hides
-      MULTI-CHARACTER: 3+ characters with overlapping goals
-      PROP PASSING: Objects being handed, taken, dropped, fought over
-      SPACE EXPLORATION: Characters moving through multiple zones
-      POWER DYNAMIC: Clear status imbalance
-      INTIMACY ESCALATION: Moving from distance to closeness (or reverse)
-      MISUNDERSTANDING: Characters operating on different information
-      TIME PRESSURE: External deadline forcing decisions
-
-  Selection method: Use (current hour % 10) + 1 to pick from the list. If timestamp unavailable, pick focus #1.
-
-  ⭐ SEED STRUCTURE (OUTPUT EXACTLY THIS FORMAT)
-
-  **Genre**: [selected genre]
-  **Test Focus**: [selected focus]
-
-  {CHARACTERS}
-
-  **Location**:
-  [Name of location]. [2–3 sentences describing the space: size, key architectural features, lighting, textures, sounds, temperature/atmosphere, 3–5 specific objects/furniture present]. [What the location is typically used for].
-
-  **Story Spark**:
-  [1–2 sentences describing the inciting incident. Must be concrete and physical.]
-
-  **Character Goals**:
-  - [Character A]: [Specific, achievable goal — must be actionable and observable]
-  - [Character B]: [Specific, achievable goal — ideally in tension with Character A]
-  - [Additional characters if applicable]
-
-  **Initial Situation**:
-  [2–3 sentences describing exactly where each character is positioned, what their body is doing (posture, hands, gaze), and the immediate physical context. Must be concrete and filmable.]
-
-  ⭐ QUALITY GUARDRAILS
-
-      Every character MUST have complete physical description (build, face, clothing head-to-toe, hair)
-      Goals MUST conflict or create tension
-      Story spark MUST be a specific event, not a mood
-      Initial situation MUST specify exact positions and body states
-      Locations MUST include 3–5 specific physical objects
-      Names must be distinct and pronounceable
-
-  ⭐ BEGIN OUTPUT NOW
-  Generate one complete seed in the exact format above. No commentary or explanation.
-  '''
+# ============================================================================
+# CORE FUNCTIONS
+# ============================================================================
 
 def run_prompt(prompt, system, pth):
     if not Path(pth).exists():
-      result = llm_analyze_media(
-          media="", 
-          prompt=prompt,
-          system=system,
-          max_tokens=8192,
-          temperature=0.1)['analysis']
-      with open(pth, 'w') as out_f:
-        out_f.write(result)
-      print(f'Wrote {pth}')
-      return result
+        result = llm_analyze_media(
+            media="",
+            prompt=prompt,
+            system=system,
+            max_tokens=8192)['analysis']
+        with open(pth, 'w') as out_f:
+            out_f.write(result)
+        print(f'Wrote {pth}')
+        return result
     else:
-      print(f'{pth} Exists')
-      return Path(pth).read_text()
+        print(f'{pth} Exists')
+        return Path(pth).read_text()
 
-TOPICS = 'DIALOG-HEAVY,ACTION-HEAVY,EMOTIONAL SUBTEXT,MULTI-CHARACTER,PROP PASSING,SPACE EXPLORATION,POWER DYNAMIC,INTIMACY ESCALATION,MISUNDERSTANDING,TIME PRESSURE'.split(',')
-GENRES = 'Medieval Fantasy,Cyberpunk,Post-Apocalyptic,Victorian,Sci-Fi Space Station,1920s Noir,Modern Urban,Ancient Mythological,Steampunk,Western'.split(',')
+# ============================================================================
+# MAIN
+# ============================================================================
+
 if __name__ == '__main__':
-    import argparse
-    import random
-    parser = argparse.ArgumentParser()
-    parser.add_argument('-S', '--story', type=str, default='')
-    parser.add_argument('-O', '--output', type=str, default='story.txt')
-    parser.add_argument('-T', '--topic', type=str, default=None)
-    parser.add_argument('-G', '--genre', type=str, default=None)
-    parser.add_argument('-D', '--gender', type=str, default='mixed')
+    parser = argparse.ArgumentParser(description='Expand a seed into a full scene')
+    parser.add_argument('-S', '--seed', type=str, default=None,
+                        help='Path to seed file (uses default seed if not provided)')
+    parser.add_argument('-O', '--output', type=str, default='story.txt',
+                        help='Output file path')
+    parser.add_argument('-T', '--topic', type=str, default=None,
+                        help='Topic for topical scenes (e.g., "AI ethics", "healthcare")')
+    parser.add_argument('--scenario', type=str, default=None,
+                        help='Scenario type for topical: DEBATE/TEACHING/DISCUSSION/MENTORSHIP')
+    parser.add_argument('--topical', action='store_true',
+                        help='Use topical/educational expander (debate/teaching)')
     args = parser.parse_args()
-    story = Path(args.story).read_text() if args.story else SEED
-    if args.topic:
-      if args.topic.upper() in TOPICS:
-        topic = args.topic.upper()
-      else:
-        topic = random.choice(TOPICS)
-      if args.genre:
-        genre = args.genre
-      else:
-        genre = random.choice(GENRES)
-      inputs = f'Generate a test seed\nGenre: {genre}\n Focus: {topic}'
-      SEED_GENERATOR = seed_generator(args.gender)
-      print(run_prompt(inputs, SEED_GENERATOR, args.output))
+
+    output_path = Path(args.output)
+
+    # Determine seed source
+    if args.seed:
+        # Use provided seed file
+        seed_text = Path(args.seed).read_text()
+        print(f'Using seed from {args.seed}')
+    elif args.topical and args.topic:
+        # Generate topical seed from topic
+        seed_path = output_path.with_name(output_path.stem + '_seed.txt')
+        inputs = f'Generate a topical seed\nTopic: {args.topic}\n'
+        if args.scenario:
+            if args.scenario.upper() in TOPICAL_SCENARIOS:
+                inputs += f'Scenario Type: {args.scenario.upper()}\n'
+            else:
+                print(f'Warning: Unknown scenario "{args.scenario}", using random')
+        seed_text = run_prompt(inputs, TOPICAL_SEED_GENERATOR, str(seed_path))
+        print(f'Generated topical seed for topic: {args.topic}')
     else:
-      print(run_prompt(story, ALTERNATIVE, args.output))
+        # Use default seed
+        seed_text = SEED
+        print('Using default seed')
+
+    # Select expander
+    expander = TOPICAL_EXPANDER if args.topical else ALTERNATIVE
+    expander_type = 'topical' if args.topical else 'action'
+    print(f'Expanding with {expander_type} expander')
+
+    # Generate story
+    print(run_prompt(seed_text, expander, str(output_path)))
