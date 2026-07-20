@@ -38,7 +38,7 @@ def load_s2v_pipe():
                 "onload_dtype": torch.float8_e4m3fn,
                 "onload_device": "cpu",
                 "preparing_dtype": torch.float8_e4m3fn,
-                "preparing_device": "cuda",
+                "preparing_device": "cpu",
                 "computation_dtype": torch.bfloat16,
                 "computation_device": "cuda",
     }

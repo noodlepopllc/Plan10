@@ -21,6 +21,7 @@ HEIGHT = int(os.environ.get("HEIGHT", "480"))
 ANIME = "_anime" if os.environ.get("ANIME","False") != "False" else ""
 DISTILLED = "DISTILLED" in os.environ.get("LTX","False")
 VRAM = int(os.environ.get("VRAM", 96))
+DURATION = 10 #5 if VRAM < 24 else 10
 
 if ANIME:
     from anime_gen import GenerateImage
@@ -46,7 +47,7 @@ def i2v_diffsynth_fast(prompt='', media='', output='output.mp4',
         "onload_dtype": torch.float8_e5m2,
         "onload_device": "cpu",
         "preparing_dtype": torch.float8_e5m2,
-        "preparing_device": "cuda",
+        "preparing_device": "cpu",
         "computation_dtype": torch.bfloat16,
         "computation_device": "cuda",
     }
@@ -218,7 +219,7 @@ def i2v_diffsynth(prompt='', media='', output='output.mp4',
 i2v = i2v_diffsynth_fast if DISTILLED else i2v_diffsynth
 
 def GenerateVideo(prompt='', media='', output='output.mp4', 
-                  duration_sec=10, width=WIDTH, height=HEIGHT, seed=-1):
+                  duration_sec=DURATION, width=WIDTH, height=HEIGHT, seed=-1):
 
         print(f"PROMPT: {prompt}")
         
@@ -373,7 +374,7 @@ def GenerateTalkingVideo(
     width = int(width)
     height = int(height)
     seed = int(seed)
-    duration_sec = 10 #int(estimate_duration(text))
+    duration_sec = int(estimate_duration(text))
     fps = 24
 
     if seed == -1:

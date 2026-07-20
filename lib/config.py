@@ -19,12 +19,12 @@ def load_config():
         "OLLAMA_MODEL": "qwen3.5:latest",
         "IMAGE_GEN": "KLEIN",
         "IMAGE_EDIT": "KLEIN",
-        "WIDTH": "832",
-        "HEIGHT": "480",
+        "WIDTH": "768",
+        "HEIGHT": "448",
         "SEED": "122333",
         "TRANSFORMERS_CACHE":"$HF_HOME",
         "WGP": "False",
-        "LTX": "False",
+        "LTX": "DISTILLED",
         "ANIME": "False"
 
     }
@@ -59,7 +59,7 @@ def load_environ(replace_env=False):
         with Path('.env').open('a') as fp:
             for k, v in cfg.items():
                 fp.write(f'export {k}="{v}"\n')
-            fp.write(additional)
+            #fp.write(additional)
 
 if __name__ == '__main__':
     import argparse
