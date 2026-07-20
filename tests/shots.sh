@@ -9,7 +9,7 @@ if [ ! -d "tests/$2" ]; then
 fi
 
 if [ ! -d "tests/$1_$2" ]; then
-   python tests/personsV2.py $1 $2
+   python tests/persons.py $1 $2
 fi
 
 OUTDIR="tests/$1_$2"
