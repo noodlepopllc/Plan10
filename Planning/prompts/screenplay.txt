@@ -1,0 +1,128 @@
+ROLE: Convert prose narrative into screenplay format with strict zone tracking.
+
+═══════════════════════════════════════════════════════════════
+WORLD MODEL CONTEXT (CONSTRAINED VOCABULARY)
+═══════════════════════════════════════════════════════════════
+
+LOCATION: {location_name}
+
+AVAILABLE ZONES (use EXACT names only - no variations):
+{zone_list}
+
+CHARACTERS (use EXACT names only):
+{character_names}
+
+═══════════════════════════════════════════════════════════════
+CONVERSION RULES
+═══════════════════════════════════════════════════════════════
+
+1. TAG LINE (First Line)
+   - Extract or generate a one-sentence hook from the prose
+   - Format: >> Tag line text here
+
+2. SCENE HEADING
+   - Format: INT./EXT. LOCATION - TIME
+   - Use EXACT location name from world model
+   - Time: DAY/NIGHT/CONTINUOUS (infer from context)
+
+3. CHARACTER INTRODUCTION
+   - First appearance: CHARACTER NAME (key visual traits from world model)
+   - All caps for character names
+   - Use ONLY details from world model - no hallucination
+   - Follow with a brief action establishing their position
+
+4. SCENE DESCRIPTION
+   - 1-2 lines describing atmosphere/sensory details
+   - Present tense, visual only
+
+5. COLD OPEN END MARKER
+   - Place after character intros and scene description
+   - Format: COLD OPEN END
+
+6. BEAT FORMAT (CRITICAL)
+   
+   Every beat is separated by blank lines. Use exactly these three formats:
+   
+   ─── ACTION-ONLY (no dialog) ───
+   [ZONE: Zone Name]
+   
+   CHARACTER NAME action description ending with period.
+   
+   ─── DIALOG-ONLY (no action) ───
+   [ZONE: Zone Name]
+   
+   CHARACTER NAME
+   Dialog text without quotes.
+   
+   ─── ACTION + DIALOG (combined) ───
+   [ZONE: Zone Name]
+   
+   CHARACTER NAME (action description in parentheses)
+   Dialog text without quotes.
+   
+   RULES:
+   - Blank line after every [ZONE: marker]
+   - Blank line after every beat (before next [ZONE: marker])
+   - Character name in ALL CAPS
+   - Action-only: full sentence ending with period
+   - Action+dialog: action in parentheses on SAME LINE as character name
+   - Dialog-only: name on its own line, dialog on next line
+   - Dialog: NO quotes, NO "he said/she said" tags
+   - Present tense only
+   - Visual/observable actions only (no internal thoughts)
+
+7. ZONE TRACKING (CRITICAL)
+   - Add [ZONE: Exact Zone Name] before EVERY beat
+   - Use ONLY zone names from AVAILABLE ZONES list above
+   - Repeat marker for every beat, even if zone doesn't change
+   - This is required for parsing
+
+═══════════════════════════════════════════════════════════════
+EXAMPLE
+═══════════════════════════════════════════════════════════════
+
+INPUT:
+Elara, a lean elf with platinum blonde hair and light leather armor, leans forward aggressively across the tavern table. "You're hiding something," she demands. Nadia, a half-elf with a red ponytail and tattered blue dress, shifts nervously and looks away. "I don't know what you mean." Elara stands abruptly and walks to the bar. "Bartender, another ale."
+
+WORLD MODEL:
+Location: The Tavern
+Zones: Central Table Area, Bar Counter Perimeter, Kitchen Doorway Threshold, Patron Seating Cluster
+
+OUTPUT:
+>> Secrets fester in the tavern's dim light.
+
+INT. THE TAVERN - NIGHT
+
+ELARA (lean elf, platinum blonde hair, light leather armor over green tunic) stands at the table.
+
+NADIA (half-elf, red ponytail, tattered light blue dress, apron) sits across from her.
+
+The air is thick with stale beer and wood smoke.
+
+COLD OPEN END
+
+[ZONE: Central Table Area]
+
+ELARA (leans forward aggressively)
+You're hiding something.
+
+[ZONE: Central Table Area]
+
+NADIA shifts nervously and looks away.
+
+[ZONE: Central Table Area]
+
+NADIA
+I don't know what you mean.
+
+[ZONE: Bar Counter Perimeter]
+
+ELARA (stands and walks to bar)
+Bartender, another ale.
+
+═══════════════════════════════════════════════════════════════
+BEGIN CONVERSION
+═══════════════════════════════════════════════════════════════
+
+PROSE STORY:
+{prose_story}
