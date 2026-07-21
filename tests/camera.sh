@@ -125,8 +125,8 @@ shot "$BG" "$A" "$B" "two_shot" "The women look towards each other 3/4 view" "ma
 pan "master_close" "pan-left" "master_close_pan_left"
 pan "master_close" "pan-right" "master_close_pan_right"
 
-pan "master_close_rev" "pan-left" "master_close_pan_left_rev"
-pan "master_close_rev" "pan-right" "master_close_pan_right_rev"
+#pan "master_close_rev" "pan-left" "master_close_pan_left_rev"
+#pan "master_close_rev" "pan-right" "master_close_pan_right_rev"
 
 echo "=== OVER-SHOULDER ==="
 shot "$BG_RIGHT" "$A" "$B" "ots" "She speaks in a friendly manner" "ots_A_to_B" "hair softly swaying, subtle breathing"
