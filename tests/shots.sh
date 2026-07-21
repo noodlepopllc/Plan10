@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 if [ ! -d "tests/$1" ]; then 
-    python tests/character_builder.py -D -N $1 -R "latinx_mestizo" -C "red" -T "tan" -H "random" -S "straight shoulder-length (pinned)"
+    python tests/character_builder.py -D -N $1 -R "latinx_mestizo" -C "red" -T "tan" -H "random" -S "long waves"
 fi
 
 if [ ! -d "tests/$2" ]; then

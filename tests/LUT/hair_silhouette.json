@@ -1,18 +1,38 @@
 {
-  "HAIR_SILHOUETTE": {
-    "default": "straight shoulder-length (pinned)",
-    "allowed": [
-      "blunt bob",
-      "bobcut",
-      "pixie cut",
-      "tight bun",
-      "low bun",
-      "high bun",
-      "short crop",
-      "straight shoulder-length (pinned)",
-      "tight single ponytail"
-    ]
-  },
+    "HAIR_SILHOUETTE": {
+        "default": "straight shoulder-length (pinned)",
+        "allowed": [
+        "blunt bob",
+        "soft bob",
+        "bobcut",
+        "pixie cut",
+        "tight bun",
+        "low bun",
+        "high bun",
+        "short crop",
+        "straight shoulder-length (pinned)",
+        "tight single ponytail",
+        "high ponytail",
+        "low ponytail",
+        "braided ponytail",
+        "messy bun",
+        "short coils",
+        "medium coils",
+        "afro",
+        "braided bun",
+        "box braids",
+        "long straight",
+        "long wavy",
+        "mid-length layered",
+        "shoulder-length waves",
+        "long waves",
+        "deep waves",
+        "tapered",
+        "short",
+        "buzzed",
+        "undercut"
+        ]
+    },
   "GENDER_HAIR": {
       "feminine": {
           "silhouetteBias": [

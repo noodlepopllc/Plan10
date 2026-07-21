@@ -431,7 +431,18 @@ skin_tones = ["fair","light","medium","tan","deep"]
 heights = ["short","average","tall"]
 body_types = ["thin","fit","athletic","soft"]
 ages = ["youthful","young adult","adult","mature"]
-hair_silhouettes = ["blunt bob", "bobcut", "pixie cut", "tight bun", "low bun", "high bun", "short crop", "straight shoulder-length (pinned)", "tight single ponytail"]
+hair_silhouettes = [
+    "blunt bob", "soft bob", "bobcut", "pixie cut",
+    "tight bun", "low bun", "high bun", "messy bun",
+    "braided bun", "short crop",
+    "straight shoulder-length (pinned)",
+    "tight single ponytail", "high ponytail", "low ponytail",
+    "braided ponytail",
+    "short coils", "medium coils", "afro", "box braids",
+    "long straight", "long wavy", "long waves", "deep waves",
+    "mid-length layered", "shoulder-length waves",
+    "tapered", "short", "buzzed", "undercut"
+]
 
 def reroll_clothing(name):
     with open(f'./tests/{name}/{name}.json', 'r') as char:
@@ -526,7 +537,7 @@ if __name__ == '__main__':
         name=args.name,
         character_identity=char,
         clothing_description=outfit,
-        seed=args.seed
+        seed=seed
     )
     reg = registry.export()
     with open(f'{output}/{args.name}.json', 'w') as js:
