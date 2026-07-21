@@ -20,7 +20,7 @@ HEIGHT = int(os.environ.get("WIDTH", "480"))
 WGP = os.environ.get("WGP", "False") != "False"
 
 if WGP:
-    from WGP import GenerateVideo
+    from wgp import GenerateVideo
 else:
     from image_to_video import GenerateVideo
 
