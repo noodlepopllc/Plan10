@@ -485,9 +485,13 @@ if __name__ == '__main__':
     parser.add_argument('-O', '--output', type=str, default='output.png')
     parser.add_argument('-C', '--character-sheet', action='store_true')
     parser.add_argument('-L', '--location', action='store_true')
+    parser.add_argument('-R', '--reset-meta', action='store_true')
     args = parser.parse_args()
     if args.character_sheet:
-        print(CreateCharacterSheet(args.prompt, args.output, args.seed))
+        if args.reset_meta:
+            print(add_metadata_char(args.output))
+        else:
+            print(CreateCharacterSheet(args.prompt, args.output, args.seed))
     elif args.location:
         print(CreateBackground(args.prompt, args.output,args.seed))
     else:
