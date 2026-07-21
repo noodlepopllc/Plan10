@@ -492,7 +492,7 @@ if __name__ == '__main__':
         if args.reset_meta:
             print(add_metadata_char(args.output))
         elif args.info:
-            print(Image.open(args.output).get('Description'))
+            print(Image.open(args.output).info.get('Description'))
         else:
             print(CreateCharacterSheet(args.prompt, args.output, args.seed))
     elif args.location:
