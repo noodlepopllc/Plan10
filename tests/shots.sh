@@ -68,7 +68,7 @@ fi
 # ─── SHOTS ───
 echo "=== MASTER ==="
 shot "$BG" "$A" "$B" "two_shot" "The women greet each other." "master_close" "hair gently swaying, subtle weight shift"
-#shot "$BG_REV" "$B" "$A" "two_shot" "The women begin arguing." "master_close_rev" "hair gently swaying, subtle posture tension"
+shot "$BG_REV" "$B" "$A" "two_shot" "The women are facing forward, waving and smiling happily" "master_close_rev" "hair gently swaying, subtle posture tension"
 
 echo "=== OVER-SHOULDER ==="
 shot "$BG_RIGHT" "$A" "$B" "ots" "She speaks angrily" "ots_A_to_B" "hair softly swaying, subtle breathing"
