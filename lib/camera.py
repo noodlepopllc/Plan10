@@ -16,7 +16,7 @@ from config import load_environ
 
 load_environ()
 WIDTH = int(os.environ.get("WIDTH", "832"))
-HEIGHT = int(os.environ.get("WIDTH", "480"))
+HEIGHT = int(os.environ.get("HEIGHT", "480"))
 WGP = os.environ.get("WGP", "False") != "False"
 
 if WGP:
@@ -32,7 +32,7 @@ class CameraMoveEngine:
         w, h = img.size
         shift = int(self.step * w)
 
-        canvas = Image.new("RGB", (w, h), (255, 255, 255))
+        canvas = Image.new("RGB", (w, h), (128, 128, 128))
         arr = np.array(canvas)
         src = np.array(img)
 
@@ -45,7 +45,7 @@ class CameraMoveEngine:
         w, h = img.size
         shift = int(self.step * w)
 
-        canvas = Image.new("RGB", (w, h), (255, 255, 255))
+        canvas = Image.new("RGB", (w, h), (128, 128, 128))
         arr = np.array(canvas)
         src = np.array(img)
 
