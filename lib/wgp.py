@@ -63,7 +63,7 @@ async def i2v(prompt='', media='', end='', output='output.mp4',
         args = r.data
         args['output_filename'] = output
         args['prompt'] = final_prompt
-        args['image_prompt_type'] =  'S' if end 'SE'
+        args['image_prompt_type'] =  'S' if end else 'SE'
         args['image_start'] = media
         if end:
             args['image_end'] = end
