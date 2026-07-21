@@ -486,10 +486,13 @@ if __name__ == '__main__':
     parser.add_argument('-C', '--character-sheet', action='store_true')
     parser.add_argument('-L', '--location', action='store_true')
     parser.add_argument('-R', '--reset-meta', action='store_true')
+    parser.add_arguemtn('-I', '--info', action='action_store')
     args = parser.parse_args()
     if args.character_sheet:
         if args.reset_meta:
             print(add_metadata_char(args.output))
+        elif args.info:
+            print(Image.open(args.output).get('Description'))
         else:
             print(CreateCharacterSheet(args.prompt, args.output, args.seed))
     elif args.location:
