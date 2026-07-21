@@ -5,7 +5,7 @@ if [ ! -d "tests/$1" ]; then
 fi
 
 if [ ! -d "tests/$2" ]; then
-    python tests/character_builder.py -D -N $2 -R "east_asian" -C "blonde" -T "fair" -H "random" -S "bobcut"
+    python tests/character_builder.py -D -N $2 -R "east_asian" -C "blonde" -T "fair" -H "random" -S "soft bob"
 fi
 
 if [ ! -d "tests/$1_$2" ]; then
