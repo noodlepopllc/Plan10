@@ -443,6 +443,7 @@ female_names = [
     'Rebecca'
 ]
 
+lut = CharacterLUT('./tests/LUT')
 genders = ["masculine","feminine","androgynous"]
 contrast = ["LOW","MEDIUM","HIGH"]
 ethnicities = ["east_asian", "south_asian", "sub_saharan_african", "middle_eastern", "northern_european", "southern_european","latinx_mestizo"]
@@ -468,7 +469,7 @@ if __name__ == '__main__':
     import argparse, json
     import random
 
-    lut = CharacterLUT('./tests/LUT')
+    
     parser = argparse.ArgumentParser()
     parser.add_argument('-G', '--gender', type=str, default='feminine', help=f"Gender must be one of {', '.join(genders)}")
     parser.add_argument('-D', '--randomize', action='store_true', help='random person')
