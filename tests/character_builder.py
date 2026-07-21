@@ -16,6 +16,17 @@ AGE_MORPHOLOGY_VISUAL = {
     "mature": "visible skin texture, deeper nasolabial folds, low soft‑tissue volume"
 }
 
+class CharacterLUT:
+    def __init__(self, lut_path="LUT"):
+        self.body_lut = self._load_json(Path(lut_path) / "body.json")
+        self.gender_ethnicity_lut = self._load_json(Path(lut_path) / "gender_ethnicity.json")
+        self.skin_hair_lut = self._load_json(Path(lut_path) / "skin_hair.json")
+        self.hair_silhouette_lut = self._load_json(Path(lut_path) / "hair_silhouette.json")
+        self.contrast_lut = self._load_json(Path(lut_path) / "contrast.json")
+    
+    def _load_json(self, path):
+        with open(path, "r") as f:
+            return json.load(f)
 
 class CharacterIdentity:
     def __init__(
@@ -33,7 +44,8 @@ class CharacterIdentity:
         overrides=None,
         lut_path="LUT",
         mode='default',
-        seed=None
+        seed=None,
+        lut=None
     ):
 
         self.height = height
@@ -49,15 +61,23 @@ class CharacterIdentity:
         self.contrast = contrast.upper() if contrast.upper() in ['LOW','MEDIUM','HIGH'] else 'MEDIUM'
         self.overrides = overrides or {}
 
-        # load LUTs
-        self.body_lut = self._load_json(Path(lut_path) / "body.json")
-        self.gender_ethnicity_lut = self._load_json(Path(lut_path) / "gender_ethnicity.json")
-        self.skin_hair_lut = self._load_json(Path(lut_path) / "skin_hair.json")
-        self.hair_silhouette_lut = self._load_json(Path(lut_path) / "hair_silhouette.json")
+        if lut:
+            self.body_lut = lut.body_lut
+            self.gender_ethnicity_lut = lut.gender_ethnicity_lut
+            self.skin_hair_lut = lut.skin_hair_lut
+            self.hair_silhouette_lut = lut.hair_silhouette_lut
+            self.contrast_lut = lut.contrast_lut
+
+        else:
+            # load LUTs
+            self.body_lut = self._load_json(Path(lut_path) / "body.json")
+            self.gender_ethnicity_lut = self._load_json(Path(lut_path) / "gender_ethnicity.json")
+            self.skin_hair_lut = self._load_json(Path(lut_path) / "skin_hair.json")
+            self.hair_silhouette_lut = self._load_json(Path(lut_path) / "hair_silhouette.json")
+            self.contrast_lut = self._load_json(Path(lut_path) / "contrast.json")
+
         self.gender_hair = self.hair_silhouette_lut['GENDER_HAIR'][self.gender]
         self.hair_description = self.hair_silhouette_lut["HAIR_DESCRIPTION"]
-
-        self.contrast_lut = self._load_json(Path(lut_path) / "contrast.json")
 
         # unpack modules
         self.height_data = self.body_lut["HEIGHT"]
@@ -458,6 +478,8 @@ def reroll_clothing(name):
 if __name__ == '__main__':
     import argparse, json
     import random
+
+    lut = CharacterLUT('./tests/LUT')
     parser = argparse.ArgumentParser()
     parser.add_argument('-G', '--gender', type=str, default='feminine', help=f"Gender must be one of {', '.join(genders)}")
     parser.add_argument('-D', '--randomize', action='store_true', help='random person')
@@ -524,7 +546,8 @@ if __name__ == '__main__':
             contrast="LOW",
             mode='random',
             seed=seed,
-            lut_path='./tests/LUT'
+            lut_path='./tests/LUT',
+            lut=lut
         )
         CreateCharacterSheet(
             prompt=f'{char.describe()} wearing {outfit}', 
