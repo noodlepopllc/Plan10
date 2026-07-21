@@ -418,5 +418,5 @@ Do not track or follow the subject. The subject does not move.'''
         status = edit.generate(prompt, [shifted_image], args.output, img.width, img.height, -1)
     if args.movement:
         GenerateVideo(prompt='Camera moves to a new field of view', media=[img, args.output], output=args.output.replace('png','mp4'), 
-            duration_sec=5, width=img.width, height=img.height, seed=args.seed, False)
+            duration_sec=5, width=img.width, height=img.height, seed=args.seed, enhance=False)
     print(status)
