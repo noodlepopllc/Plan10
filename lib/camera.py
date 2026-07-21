@@ -366,6 +366,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     steps = 0.10
     status = {}
+    video_prompt = 'Camera moves to a new field of view'
     if args.steps > 9 and args.steps < 51:
         steps = args.steps / 100.0
     wait_for_file(args.images[0])
@@ -401,9 +402,15 @@ if __name__ == '__main__':
         if 'left' in args.camera_move:
             print('pan left')
             shifted_image = camera.pan_left(img)
+            video_prompt = '''Camera pans left. The subjects remains completely stationary in world space. 
+The frame edge passes over the subject, cropping them naturally. 
+Do not track or follow the subject. The subject does not move.'''
         else:
             print('pan right')
             shifted_image = camera.pan_right(img)
+            video_prompt = '''Camera pans right. The subjects remains completely stationary in world space. 
+The frame edge passes over the subject, cropping them naturally. 
+Do not track or follow the subject. The subject does not move.'''
     
     if shifted_image:
         shifted_image.save(f'{args.camera_move}.png')
