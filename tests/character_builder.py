@@ -509,6 +509,7 @@ if __name__ == '__main__':
             body_type=args.body_type,
             skin_tone=args.skin_tone,
             hair_color=args.hair_color,
+            hair_silhouette=args.hair_silhouette,
             contrast="LOW",
             mode='random',
             seed=seed,
