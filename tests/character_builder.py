@@ -396,9 +396,9 @@ class Outfit:
             random.seed(seed)
         colors = self.color_schemes.get()
         
-        return ( f" wearing {self.textures.get()} {self.outfits.get().format(color=colors['char1'])}"
-                  f"{self.footwear.get()}."
-                  "Realistic skin with pores, 8K, studio lighting")
+        return ( f" wearing {self.textures.get()} {self.outfits.get().format(color=colors['char1'])} "
+                 f"{self.footwear.get()}. "
+                  "Realistic skin with pores, 8K, studio lighting ")
 
 female_names = [
     'Mary',
@@ -464,12 +464,12 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if args.randomize:
-        args.ethnicity = random.choice(ethnicities)
-        args.name = random.choice(female_names) if args.name == 'Emily' else args.name.capitalize()
-        args.hair_color = random.choice(hair_colors)
-        args.hair_style = random.choice(hair_silhouettes)
+        args.ethnicity = random.choice(ethnicities) if args.ethnicity == 'random' else args.ethnicity
+        args.name = random.choice(female_names) if args.name == 'random' else args.name.capitalize()
+        args.hair_color = random.choice(hair_colors) if args.hair_color == 'random' else args.hair_color
+        args.hair_style = random.choice(hair_silhouettes) if args.hair_style == 'random' else args.hair_style
         args.seed = random.randint(0,1000000)
-        args.height = random.choice(heights)
+        args.height = random.choice(heights) if args.height == 'random' else args.height
 
     import sys, os
     sys.path.append('./lib')
@@ -498,6 +498,8 @@ if __name__ == '__main__':
 
     char = None
 
+    seed = random.randint(0,1000000) if args.seed == -1 else args.seed
+
     with ImageGen() as igen:
         char = CharacterIdentity(
             height=args.height,
@@ -509,13 +511,13 @@ if __name__ == '__main__':
             hair_color=args.hair_color,
             contrast="LOW",
             mode='random',
-            seed=args.seed,
+            seed=seed,
             lut_path='./tests/LUT'
         )
         CreateCharacterSheet(
             prompt=f'{char.describe()} wearing {outfit}', 
             output=f'{output}/{args.name}.png', 
-            seed=args.seed, 
+            seed=seed, 
             imagegen=igen)
 
     registry = CharacterRegistry()
