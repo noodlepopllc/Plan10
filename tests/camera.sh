@@ -119,8 +119,8 @@ zoom "single_A" "reaction_A" "" "zoom_A"
 zoom "single_B" "reaction_B" "" "zoom_B"
 
 echo "=== MASTER ==="
-shot "$BG" "$A" "$B" "two_shot" "The women greet each other." "master_close" "hair gently swaying, subtle weight shift"
-shot "$BG_REV" "$B" "$A" "two_shot" "The women begin arguing." "master_close_rev" "hair gently swaying, subtle posture tension"
+shot "$BG" "$A" "$B" "two_shot" "The women look towards each other 3/4 view" "master_close" "hair gently swaying, subtle weight shift"
+shot "$BG_REV" "$B" "$A" "two_shot" "The women are facing towards the viewer waving with neutral expressions"  "master_close_rev" "hair gently swaying, subtle posture tension"
 
 pan "master_close" "pan-left" "master_close_pan_left"
 pan "master_close" "pan-right" "master_close_pan_right"
