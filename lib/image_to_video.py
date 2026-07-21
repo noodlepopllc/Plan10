@@ -58,7 +58,7 @@ def _ensure_pipeline(vrlimit=14):
 
 
 def GenerateVideo(prompt='', media='', output='output.mp4', 
-                  duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
+                  duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1, enhance=True):
 
         
         if isinstance(prompt, list):

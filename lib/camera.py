@@ -402,13 +402,13 @@ if __name__ == '__main__':
         if 'left' in args.camera_move:
             print('pan left')
             shifted_image = camera.pan_left(img)
-            video_prompt = '''Camera pans left. The subjects remains completely stationary in world space. 
+            video_prompt = '''Camera pans slowly. The subjects remains completely stationary in world space. 
 The frame edge passes over the subject, cropping them naturally. 
 Do not track or follow the subject. The subject does not move.'''
         else:
             print('pan right')
             shifted_image = camera.pan_right(img)
-            video_prompt = '''Camera pans right. The subjects remains completely stationary in world space. 
+            video_prompt = '''Camera pans slowly. The subjects remains completely stationary in world space. 
 The frame edge passes over the subject, cropping them naturally. 
 Do not track or follow the subject. The subject does not move.'''
     
@@ -418,5 +418,5 @@ Do not track or follow the subject. The subject does not move.'''
         status = edit.generate(prompt, [shifted_image], args.output, img.width, img.height, -1)
     if args.movement:
         GenerateVideo(prompt='Camera moves to a new field of view', media=[img, args.output], output=args.output.replace('png','mp4'), 
-            duration_sec=5, width=img.width, height=img.height, seed=args.seed)
+            duration_sec=5, width=img.width, height=img.height, seed=args.seed, False)
     print(status)

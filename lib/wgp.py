@@ -99,7 +99,7 @@ async def i2v(prompt='', media='', end='', output='output.mp4',
         print(r.data['result'])
 
 def GenerateVideo(prompt='', media='', output='output.mp4', 
-                  duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
+                  duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1, enhance=True):
 
         print(f"PROMPT: {prompt}")
         
@@ -149,7 +149,10 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         if not prompt:
             prompt = "The characters stand and act naturally. "
 
-        eprompt = EnhancePrompt('tmp.png', prompt, enhance_path)
+        if enhance:
+            eprompt = EnhancePrompt('tmp.png', prompt, enhance_path)
+        else:
+            eprompt = prompt
 
         print("CURRENT PROMPT: ",eprompt)
 
