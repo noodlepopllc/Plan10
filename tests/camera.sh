@@ -1,12 +1,27 @@
 #!/bin/bash
 set -euo pipefail
+if [ ! -d "tests/$1" ]; then 
+    python tests/character_builder.py -D -N $1 -R "latinx_mestizo" -C "red" -T "tan" -H "random" -S "long waves"
+fi
 
-OUTDIR="tests/$1"
+if [ ! -d "tests/$2" ]; then
+    python tests/character_builder.py -D -N $2 -R "east_asian" -C "blonde" -T "fair" -H "random" -S "soft bob"
+fi
+
+if [ ! -d "tests/$1_$2" ]; then
+   python tests/persons.py $1 $2
+fi
+
+OUTDIR="tests/$1_$2"
 mkdir -p "$OUTDIR"
 BG="$OUTDIR/location.png"
 A="$OUTDIR/char1.png"
 B="$OUTDIR/char2.png"
 BG_REV="$OUTDIR/location_reverse.png"
+BG_LEFT="$OUTDIR/location_left.png"
+BG_RIGHT="$OUTDIR/location_right.png"
+
+python lib/config.py -R
 
 source .env
 HEIGHT=$HEIGHT
@@ -80,15 +95,25 @@ pan() {
     fi
 }
 
+# ─── BACKGROUNDS ───
+echo "=== BACKGROUNDS ==="
+if [ ! -f "$BG_LEFT" ]; then 
+    python lib/compositor.py -B $BG -Z "left" -O "$BG_LEFT" -R 
+fi
+
+if [ ! -f "$BG_RIGHT" ]; then 
+    python lib/compositor.py -B $BG -Z "right" -O "$BG_RIGHT" -R
+fi
+
 # ─── SHOTS ───
 
 echo "=== CLOSEUPS & REACTIONS ==="
-shot "$BG" "$A" "$A" "closeup" "She smiles happily." "reaction_A" "eyes blinking naturally, subtle head tilt"
-shot "$BG_REV" "$B" "$B" "closeup" "She smiles happily." "reaction_B" "eyes blinking naturally, soft exhale"
+shot "$BG_LEFT" "$A" "$A" "closeup" "She smiles happily." "reaction_A" "eyes blinking naturally, subtle head tilt"
+shot "$BG_RIGHT" "$B" "$B" "closeup" "She smiles happily." "reaction_B" "eyes blinking naturally, soft exhale"
 
 echo "=== SINGLES & PROFILES ==="
-shot "$BG" "$A" "$A" "medium" "She poses like a model." "single_A" "subtle stance shift"
-shot "$BG_REV" "$B" "$B" "medium" "She poses like a model." "single_B" "subtle breathing"
+shot "$BG_LEFT" "$A" "$A" "medium" "She poses like a model." "single_A" "subtle stance shift"
+shot "$BG_RIGHT" "$B" "$B" "medium" "She poses like a model." "single_B" "subtle breathing"
 
 zoom "single_A" "reaction_A" "" "zoom_A"
 zoom "single_B" "reaction_B" "" "zoom_B"
@@ -104,8 +129,8 @@ pan "master_close_rev" "pan-left" "master_close_pan_left_rev"
 pan "master_close_rev" "pan-right" "master_close_pan_right_rev"
 
 echo "=== OVER-SHOULDER ==="
-shot "$BG_REV" "$A" "$B" "ots" "She speaks in a friendly manner" "ots_A_to_B" "hair softly swaying, subtle breathing"
-shot "$BG" "$B" "$A" "ots" "She speaks in a friendly manner" "ots_B_to_A" "hair softly swaying, relaxed posture"
+shot "$BG_RIGHT" "$A" "$B" "ots" "She speaks in a friendly manner" "ots_A_to_B" "hair softly swaying, subtle breathing"
+shot "$BG_LEFT" "$B" "$A" "ots" "She speaks in a friendly manner" "ots_B_to_A" "hair softly swaying, relaxed posture"
 
 zoom "ots_A_to_B" "reaction_B" "" "zoom_ots_A_to_B"
 zoom "ots_B_to_A" "reaction_A" "" "zoom_ots_B_to_A"

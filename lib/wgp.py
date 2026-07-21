@@ -31,7 +31,7 @@ enhance_path = f'./system/ltx_enhancer_minimal{ANIME}.txt'
 #tool = "ltx2_22B_1_1"
 tool = "ltx2_22B_distilled_1_1"
 
-async def i2v(prompt='', media='', output='output.mp4', 
+async def i2v(prompt='', media='', end='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
     async with Client("http://localhost:7866/mcp") as client:
 
@@ -63,8 +63,10 @@ async def i2v(prompt='', media='', output='output.mp4',
         args = r.data
         args['output_filename'] = output
         args['prompt'] = final_prompt
-        args['image_prompt_type'] =  'S'
+        args['image_prompt_type'] =  'S' if end 'SE'
         args['image_start'] = media
+        if end:
+            args['image_end'] = end
         #args['guidance_scale'] = 3.5
         #args['sample_solver'] = "euler"
         #args['negative_prompt'] = negative_prompt
@@ -139,6 +141,11 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         current_source = video_to_img(start_image, width, height, True, True)
         current_source.save(f'{os.getcwd()}/tmp.png')
 
+        last = None
+        if end_image:
+            last = f'{os.getcwd()}/tmp_end.png'
+            end_image.save(last)
+
         if not prompt:
             prompt = "The characters stand and act naturally. "
 
@@ -147,7 +154,7 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         print("CURRENT PROMPT: ",eprompt)
 
         try:
-            asyncio.run(i2v(eprompt, f'{os.getcwd()}/tmp.png', Path(output).name, 
+            asyncio.run(i2v(eprompt, f'{os.getcwd()}/tmp.png', last, Path(output).name, 
                     duration_sec, width, height, seed))
             description = ''
                 

@@ -9,7 +9,7 @@ from image_gen import add_metadata_char, GenerateImage
 from util import video_to_img, wait_for_file
 import torch, os, sys
 from safetensors import safe_open
-from image_to_video import GenerateVideo
+
 from compositor import _classify_scene
 
 from config import load_environ
@@ -17,6 +17,12 @@ from config import load_environ
 load_environ()
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("WIDTH", "480"))
+WGP = os.environ.get("WGP", "False") != "False"
+
+if WGP:
+    from WGP import GenerateVideo
+else:
+    from image_to_video import GenerateVideo
 
 class CameraMoveEngine:
     def __init__(self, step=0.10):
@@ -345,6 +351,7 @@ if __name__ == '__main__':
     from PIL import Image
     import sys
     import argparse
+    import os
     parser = argparse.ArgumentParser(description='Cinematic Image Pipeline')
     parser.add_argument('-I', '--images', action='append', default=[], help='Input images')
     parser.add_argument('-T', '--target', type=str, default=None, help='Target of the zoom, left, center, right or none')
