@@ -486,7 +486,7 @@ if __name__ == '__main__':
     parser.add_argument('-C', '--character-sheet', action='store_true')
     parser.add_argument('-L', '--location', action='store_true')
     parser.add_argument('-R', '--reset-meta', action='store_true')
-    parser.add_arguemnt('-I', '--info', action='action_store')
+    parser.add_argument('-I', '--info', action='action_store')
     args = parser.parse_args()
     if args.character_sheet:
         if args.reset_meta:
