@@ -3,9 +3,9 @@ Planning and execution of commands to generate images/storyboards
 ```
 git clone https://github.com/noodlepopllc/Plan10.git
 cd Plan10
-conda create python=3.12 -n plan10 -y
-conda activate plan10
-pip install -r requirements.txt
+conda env create -f environment.yml
+conda activate plan10-local
+uv sync 
 
 python lib/config.py
 
