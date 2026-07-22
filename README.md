@@ -5,7 +5,7 @@ git clone https://github.com/noodlepopllc/Plan10.git
 cd Plan10
 conda env create -f environment.yml
 conda activate plan10-local
-uv sync 
+uv pip install -e . 
 
 python lib/config.py
 
