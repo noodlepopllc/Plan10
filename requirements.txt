@@ -12,4 +12,4 @@ faster-whisper
 spacy_download
 fastmcp
 num2words
-git+https://github.com/noodlepopllc/Plan10.git
+git+https://github.com/modelscope/DiffSynth-Studio.git
