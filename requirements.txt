@@ -1,3 +1,4 @@
+git+https://github.com/noodlepopllc/Plan10.git
 torch
 torchaudio
 torchvision
