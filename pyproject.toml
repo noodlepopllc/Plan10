@@ -1,0 +1,25 @@
+[project]
+name = "plan10-project"
+version = "0.1.0"
+requires-python = ">=3.12"  # <--- Forces uv to fetch 3.14-compatible wheels
+dependencies = [
+    "torch",          
+    "torchaudio",
+    "torchvision",
+    "torchcodec",
+    "transformers",
+    "bitsandbytes", 
+    "opencv-python",
+    "uniface",
+    "omnivoice",
+    "librosa",
+    "faster-whisper",
+    "spacy_download",
+    "fastmcp",
+    "num2words",
+    "diffsynth @ git+https://github.com/modelscope/DiffSynth-Studio.git",
+]
+
+[tool.setuptools.packages.find]
+include = ["lib*", "emergent*"]
+

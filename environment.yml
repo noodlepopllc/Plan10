@@ -1,0 +1,11 @@
+# environment.yml
+name: plan10-local
+channels:
+  - pytorch
+  - nvidia
+  - conda-forge
+dependencies:
+  - python=3.12
+  - ffmpeg       # Conda handles the system binary locally
+  - cuda-toolkit # Optional: let conda handle CUDA locally if you prefer
+  - uv
