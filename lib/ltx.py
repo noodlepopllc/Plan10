@@ -1,5 +1,5 @@
 import torch
-from config import load_environ
+from lib.config import load_environ
 load_environ()
 
 from diffsynth.pipelines.ltx2_audio_video import LTX2AudioVideoPipeline, ModelConfig
@@ -24,9 +24,9 @@ VRAM = int(os.environ.get("VRAM", 96))
 DURATION = 10 #5 if VRAM < 24 else 10
 
 if ANIME:
-    from anime_gen import GenerateImage
+    from lib.anime_gen import GenerateImage
 else:
-    from image_gen import GenerateImage
+    from lib.image_gen import GenerateImage
 
 #enhance_path = f'./system/ltx_enhancer{ANIME}.txt'
 enhance_path = f'./system/ltx_enhancer_minimal{ANIME}.txt'

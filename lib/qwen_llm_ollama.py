@@ -4,7 +4,7 @@ import json
 import re
 import requests
 from pathlib import Path
-from config import load_environ
+from lib.config import load_environ
 import random
 
 load_environ()

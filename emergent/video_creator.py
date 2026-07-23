@@ -2,25 +2,24 @@ import sys, os
 import argparse
 from pathlib import Path
 
-sys.path.append('./lib')
-from config import load_environ
+from lib.config import load_environ
 load_environ()
 
-from state_manager import StateManager
-from character import CharacterProfile
-from pipeline import Pipeline
-from scene_analyzer import analyze_scene
+from emergent.state_manager import StateManager
+from emergent.character import CharacterProfile
+from emergent.pipeline import Pipeline
+from lib.scene_analyzer import analyze_scene
 
-from decomposer import decompose_scene
+from lib.decomposer import decompose_scene
 
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
 SEED = int(os.environ.get("SEED", "-1"))
 
 if os.environ.get('ANIME','False') != 'False':
-    from anime_gen import GenerateImage, CreateBackground, CreateCharacterSheet
+    from lib.anime_gen import GenerateImage, CreateBackground, CreateCharacterSheet
 else:
-    from image_gen import GenerateImage, CreateBackground, CreateCharacterSheet
+    from lib.image_gen import GenerateImage, CreateBackground, CreateCharacterSheet
 
 def main():
     parser = argparse.ArgumentParser()

@@ -1,16 +1,16 @@
 import sys, random, re, os
 from pathlib import Path
 from json import load
-sys.path.append('./lib')
-from config import load_environ
+
+from lib.config import load_environ
 from locations import  LocationPairGenerator
 
 load_environ()
 
 if os.environ.get('ANIME','False') != 'False':
-    from anime_gen import CreateCharacterSheet, CreateBackground
+    from lib.anime_gen import CreateCharacterSheet, CreateBackground
 else:
-    from image_gen import CreateCharacterSheet, CreateBackground
+    from lib.image_gen import CreateCharacterSheet, CreateBackground
 
 class CharacterRecord:
     def __init__(self, name, gender, character_description, clothing_description):
@@ -150,7 +150,7 @@ class DuoPOVScene:
             if isinstance(getattr(self, attr), ShuffleBag):
                 getattr(self, attr).reset()
 
-if __name__ == '__main__':
+def main():
     seed = random.randint(0, 100000000)
     random.seed(seed)
     VARIATIONS_PER_PAIR = 1
@@ -212,3 +212,7 @@ if __name__ == '__main__':
             CreateBackground(prompt_b, l2path, seed=seed)
 
         print("#"*100)
+
+if __name__ == '__main__':
+    main()
+

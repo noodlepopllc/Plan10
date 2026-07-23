@@ -2,16 +2,16 @@ import torch, os, gc, time, numpy as np
 from PIL import Image
 from pathlib import Path
 import tqdm
-from util import video_to_img
-from image_analysis import AnalyzeImage, EnhancePrompt
+from lib.util import video_to_img
+from lib.image_analysis import AnalyzeImage, EnhancePrompt
 from diffsynth.pipelines.wan_video import WanVideoPipeline, ModelConfig
 from diffsynth.utils.data import save_video
-from qwen_llm import llm_analyze_media
+from lib.qwen_llm import llm_analyze_media
 import random
-from config import load_environ
+from lib.config import load_environ
 load_environ()
-from image_gen import GenerateImage
-from image_edit import EditImage
+from lib.image_gen import GenerateImage
+from lib.image_edit import EditImage
 
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
@@ -197,16 +197,16 @@ def GenerateI2VPromptSchema():
         }
     }
 
-if __name__ == "__main__":
+def main():
     import argparse, json
 
     WGP = os.environ.get('WGP','False') != 'False'
     LTX = os.environ.get('LTX','False') != 'False'
 
     if WGP:
-        from wgp import GenerateVideo as Video
+        from lib.wgp import GenerateVideo as Video
     elif LTX:
-        from ltx import GenerateVideo as Video
+        from lib.ltx import GenerateVideo as Video
     else:
         Video = GenerateVideo
 
@@ -238,3 +238,7 @@ if __name__ == "__main__":
         seed=args.seed,
     )
     print(result)
+
+if __name__ == "__main__":
+    main()
+

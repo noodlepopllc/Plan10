@@ -4,18 +4,18 @@ from PIL import Image
 import random
 import torch
 import os, gc
-from image_analysis import AnalyzeImage
-from config import load_environ
+from lib.image_analysis import AnalyzeImage
+from lib.config import load_environ
 import numpy as np
 from pathlib import Path
-from util import video_to_img
+from lib.util import video_to_img
 
 load_environ()
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
 
 from diffsynth.diffusion.template import TemplatePipeline
-from image_analysis import AnalyzeImage
+from lib.image_analysis import AnalyzeImage
 
 class FrameDetailer:
     def __init__(self, pipe=None):
@@ -325,10 +325,7 @@ def EditImage(prompt='', images=[''], output='tmp_edit.png', width=WIDTH, height
         del edit
     return status
 
-# ─────────────────────────────────────────────────────────────
-# CLI
-# ─────────────────────────────────────────────────────────────
-if __name__ == '__main__':
+def main():
     import argparse, os
     os.environ['BATCH'] = 'True'
     parser = argparse.ArgumentParser()
@@ -341,3 +338,11 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     print(EditImage(args.prompt, args.images, args.output, args.width, args.height, args.seed))
+
+
+# ─────────────────────────────────────────────────────────────
+# CLI
+# ─────────────────────────────────────────────────────────────
+if __name__ == '__main__':
+    main()
+

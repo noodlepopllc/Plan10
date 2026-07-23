@@ -1,7 +1,7 @@
 # qwen_llm.py
 import os
 
-from config import load_environ
+from lib.config import load_environ
 
 load_environ()
 
@@ -9,7 +9,7 @@ load_environ()
 BACKEND = os.environ.get("LLM_BACKEND", "transformers").lower().strip()
 
 if BACKEND == "ollama":
-    from qwen_llm_ollama import (
+    from lib.qwen_llm_ollama import (
         llm_chat,
         llm_analyze_media
     )
@@ -17,7 +17,7 @@ elif BACKEND == "transformers":
     import gc, json, re, torch
     from pathlib import Path
     from transformers import AutoProcessor, Qwen3_5ForConditionalGeneration, BitsAndBytesConfig
-    from config import load_environ
+    from lib.config import load_environ
     load_environ()
 
 
@@ -113,7 +113,7 @@ elif BACKEND == "transformers":
     # ─────────────────────────────────────────
 
     def llm_analyze_media(media, prompt="Describe this.", system=None, max_tokens=1024, temperature=0.1):
-        from util import video_to_img
+        from lib.util import video_to_img
         import torch
 
         image = None

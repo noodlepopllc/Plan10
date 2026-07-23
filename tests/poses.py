@@ -1,20 +1,25 @@
 from glob import glob
 import sys
-sys.path.append('./lib')
 
-from image_edit import ImageEditQwen, EditImage
-from image_gen import CreateBackground
+from lib.image_edit import ImageEditQwen, EditImage
+from lib.image_gen import CreateBackground
 from PIL import Image
 from pathlib import Path
-from image_gen import add_metadata_char
-from util import video_to_img
+from lib.image_gen import add_metadata_char
+from lib.util import video_to_img
 
-if __name__ == '__main__':
+from lib.config import load_config
+load_config()
+
+WIDTH = int(os.environ.get("WIDTH","480"))
+HEIGHT = int(os.environ.get("HEIGHT","832"))
+
+def main():
     person = sys.argv[1]
     person_pth = Path(person)
     img = video_to_img(person)
-    width = 480
-    height = 832 
+    width = WIDTH
+    height = HEIGHT 
 
     outdir = person_pth.parent
 
@@ -40,4 +45,8 @@ if __name__ == '__main__':
             img_pose = Image.open(pose)
             prompt = f"Transform the person in image 2 to match the pose in image 3. Keep outfit and hair identical. Use the background: {background} from image 1"
             print(EditImage(prompt=prompt, images=[background_img, img, img_pose], output=f'{outdir}/{person_pth.stem}_{base_pose}.png', width=width, height=height, seed=42, img_edit=edit))
+
+if __name__ == '__main__':
+    main()
+
 

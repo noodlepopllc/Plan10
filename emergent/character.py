@@ -1,4 +1,4 @@
-from image_analysis import AnalyzeImage
+from lib.image_analysis import AnalyzeImage
 
 class CharacterProfile:
     def __init__(self, character_ref_path):

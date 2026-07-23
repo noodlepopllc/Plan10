@@ -2,11 +2,12 @@ from diffsynth.pipelines.ernie_image import ErnieImagePipeline, ModelConfig
 import torch, os, gc, random
 from typing import Dict, Any, Tuple
 from PIL import Image, ImageFilter
-from image_analysis import AnalyzeImage, EnhancePrompt
-from config import load_environ
+from lib.image_analysis import AnalyzeImage, EnhancePrompt
+from lib.config import load_environ
 
 load_environ()
 ANIME = os.environ.get('ANIME','False') != 'False'
+SEED = int(os.environ.get("SEED", "-1"))
 
 # ─────────────────────────────────────────────────────────────
 # STRICT RESOLUTION CONSTRAINTS (ERNIE-Image-Turbo Native)
@@ -165,7 +166,7 @@ def GenerateGraphicSchema():
                     },
                     "width": {"type": "integer", "default": 1024},
                     "height": {"type": "integer", "default": 1024},
-                    "seed": {"type": "integer", "default": 42, "description": "Use -1 for random."},
+                    "seed": {"type": "integer", "default": SEED, "description": "Use -1 for random."},
                     "target_video_size": {
                         "type": "string",
                         "default": "",
@@ -182,7 +183,7 @@ def GenerateGraphicSchema():
         }
     }
 
-def GenerateGraphic(prompt='', output='tmp_graphic.png', width=1024, height=1024, seed=42, target_video_size='', padding_style='blur'):
+def GenerateGraphic(prompt='', output='tmp_graphic.png', width=1024, height=1024, seed=SEED, target_video_size='', padding_style='blur'):
     # 1. Enforce model constraints
     w, h = _resolve_resolution(width, height)
     
@@ -203,20 +204,23 @@ def GenerateGraphic(prompt='', output='tmp_graphic.png', width=1024, height=1024
                 
     return status
 
-# ─────────────────────────────────────────────────────────────
-# CLI
-# ─────────────────────────────────────────────────────────────
-if __name__ == '__main__':
+def main():
     import argparse, os
     os.environ['BATCH'] = 'True'
     parser = argparse.ArgumentParser(description='ERNIE Graphic Generation + Video Frame Padding')
     parser.add_argument('-P', '--prompt', type=str, default='cinematic title card, bold sans-serif text, dark gradient background')
     parser.add_argument('-W', '--width', type=int, default=1376)
     parser.add_argument('-H', '--height', type=int, default=768)
-    parser.add_argument('-E', '--seed', type=int, default=42)
+    parser.add_argument('-E', '--seed', type=int, default=SEED)
     parser.add_argument('-O', '--output', type=str, default='output_graphic.png')
     parser.add_argument('-V', '--video', type=str, default='', help='Target video size like 1920x1080')
     parser.add_argument('-S', '--padding', type=str, default='blur', choices=['blur','solid','gradient_edge'])
     args = parser.parse_args()
 
     print(GenerateGraphic(args.prompt, args.output, args.width, args.height, args.seed, args.video, args.padding))
+
+# ─────────────────────────────────────────────────────────────
+# CLI
+# ─────────────────────────────────────────────────────────────
+if __name__ == '__main__':
+    main()

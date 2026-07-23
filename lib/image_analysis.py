@@ -1,4 +1,4 @@
-from qwen_llm import llm_analyze_media
+from lib.qwen_llm import llm_analyze_media
 import os, re
 import torch
 from pathlib import Path

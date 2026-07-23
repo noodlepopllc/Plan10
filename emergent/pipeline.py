@@ -1,17 +1,17 @@
 from pathlib import Path
 import os
 from PIL import Image
-from compositor import CompositeScene
-from config import load_environ
-from util import video_to_img
+from lib.compositor import CompositeScene
+from lib.config import load_environ
+from lib.util import video_to_img
 
 load_environ()
 
 WGP = os.environ.get("WGP","False") != "False"
 LTX = os.environ.get("LTX","False") != "False"
 
-from vision import VisibilityChecker
-from director import Director
+from emergent.vision import VisibilityChecker
+from emergent.director import Director
 
 class Pipeline:
     def __init__(self, character_refs, output_dir, width, height, seed, visual_id, scene_mode=False, goal=None):

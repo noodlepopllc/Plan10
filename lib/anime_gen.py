@@ -6,8 +6,8 @@ from diffsynth.pipelines.qwen_image import QwenImagePipeline, ModelConfig, FlowM
 import gc
 import torch
 import os
-from image_analysis import AnalyzeImage, EnhancePrompt
-from config import load_environ
+from lib.image_analysis import AnalyzeImage, EnhancePrompt
+from lib.config import load_environ
 from PIL import Image
 from PIL.PngImagePlugin import PngInfo
 
@@ -46,6 +46,10 @@ class ImageGenKrea2(object):
                 tokenizer_config=ModelConfig(model_id="Qwen/Qwen3-VL-4B-Instruct", origin_file_pattern=""),
                 vram_limit=self.vrlimit,
             )
+            LORA = os.environ.get("LORA_KREA2", "")
+            print(LORA, os.path.exists(f"./loras/{LORA}"))
+            if LORA and os.path.exists(f"./loras/{LORA}"):
+                self.pipe.load_lora(self.pipe.dit, f"./loras/{LORA}")
 
 
     def generate(self, prompt, output, width, height, seed):
@@ -761,7 +765,7 @@ def CreateBackgroundSchema():
         }
     }
 
-if __name__ == '__main__':
+def main():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('-W', '--width', type=int, default=WIDTH, help='width of output')
@@ -778,3 +782,7 @@ if __name__ == '__main__':
         print(CreateBackground(args.prompt, args.output,args.seed))
     else:
         print(GenerateImage(args.prompt, args.output, args.width, args.height, args.seed))
+
+if __name__ == '__main__':
+    main()
+

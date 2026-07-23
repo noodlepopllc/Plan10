@@ -4,20 +4,20 @@ from pathlib import Path
 import os
 
 sys.path.append('./lib')
-from config import load_environ
+from lib.config import load_environ
 load_environ()
 
 WGP = os.environ.get("WGP","False") != "False"
 LTX = os.environ.get("LTX","False") != "False"
 
 if WGP:
-    from wgp import GenerateVideo
+    from lib.wgp import GenerateVideo
 elif LTX:
-    from ltx import GenerateVideo
+    from lib.ltx import GenerateVideo
 else:
-    from image_to_video import GenerateVideo
+    from lib.image_to_video import GenerateVideo
 
-from state_manager import StateManager
+from emergent.state_manager import StateManager
 
 def main():
     parser = argparse.ArgumentParser()

@@ -47,11 +47,7 @@ def load_context():
             
     return {"messages": [], "assets": {}, "history": []}
 
-
-# =============================================================================
-# MAIN (Adapted to your alias/multi-task workflow)
-# =============================================================================
-if __name__ == "__main__":
+def main():
     p = argparse.ArgumentParser()
     p.add_argument('prompt', nargs='?', default="Generate a cyberpunk city at night.")
     p.add_argument('--max-steps', '-s', type=int, default=5)
@@ -154,3 +150,10 @@ if __name__ == "__main__":
     with open(log_path, "w") as f:
         json.dump({"tasks_run": len(tasks_to_run), "final_assets": ctx["assets"]}, f, indent=2)
     print(f"📄 Log saved: {log_path}")
+
+
+# =============================================================================
+# MAIN (Adapted to your alias/multi-task workflow)
+# =============================================================================
+if __name__ == "__main__":
+    main()

@@ -5,14 +5,15 @@ from diffsynth.pipelines.z_image import ZImagePipeline, ModelConfig
 import gc
 import torch
 import os
-from image_analysis import AnalyzeImage, EnhancePrompt
-from config import load_environ
+from lib.image_analysis import AnalyzeImage, EnhancePrompt
+from lib.config import load_environ
 from PIL import Image
 from PIL.PngImagePlugin import PngInfo
 
 load_environ()
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
+SEED = int(os.environ.get("SEED", "-1"))
 
 class ImageGenKrea2(object):
     def __init__(self,vrlimit=14):
@@ -44,6 +45,10 @@ class ImageGenKrea2(object):
                 tokenizer_config=ModelConfig(model_id="Qwen/Qwen3-VL-4B-Instruct", origin_file_pattern=""),
                 vram_limit=self.vrlimit,
             )
+            LORA = os.environ.get("LORA_KREA2", "")
+            print(LORA, os.path.exists(f"./loras/{LORA}"))
+            if LORA and os.path.exists(f"./loras/{LORA}"):
+                self.pipe.load_lora(self.pipe.dit, f"./loras/{LORA}")
 
 
     def generate(self, prompt, output, width, height, seed):
@@ -244,7 +249,7 @@ elif os.environ.get("IMAGE_GEN", "KLEIN") == "KREA2":
 else:
     ImageGen = ImageGenQwen
 
-def GenerateImage(prompt='', output='tmp.png', width=WIDTH, height=HEIGHT, seed=42):
+def GenerateImage(prompt='', output='tmp.png', width=WIDTH, height=HEIGHT, seed=SEED):
     #prompt = EnhancePrompt('',prompt,'system/QwenImage.txt')['analysis']
     gen = ImageGen()
     status = gen.generate(prompt, output, int(width), int(height), int(seed))
@@ -474,13 +479,13 @@ def CreateBackgroundSchema():
         }
     }
 
-if __name__ == '__main__':
+def main():
     import argparse, os
     os.environ['BATCH'] = 'True'
     parser = argparse.ArgumentParser()
     parser.add_argument('-W', '--width', type=int, default=WIDTH, help='width of output')
     parser.add_argument('-H', '--height', type=int, default=HEIGHT, help='height of output')
-    parser.add_argument('-E', '--seed', type=int, default=42, help='seed')
+    parser.add_argument('-E', '--seed', type=int, default=SEED, help='seed')
     parser.add_argument('-P', '--prompt', type=str, default='a beautiful woman tanning at the beach', help='prompt')
     parser.add_argument('-O', '--output', type=str, default='output.png')
     parser.add_argument('-C', '--character-sheet', action='store_true')
@@ -499,3 +504,6 @@ if __name__ == '__main__':
         print(CreateBackground(args.prompt, args.output,args.seed))
     else:
         print(GenerateImage(args.prompt, args.output, args.width, args.height, args.seed))
+
+if __name__ == '__main__':
+    main()

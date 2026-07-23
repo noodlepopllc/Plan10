@@ -28,6 +28,9 @@ composite_scene shot of a closeup of Alice_Sheet asset smiling expression in the
 >> ALIAS: Alice_Closeup_Indoor
 composite_scene shot of a closeup of Alice_Sheet asset her mouth is open and eyes are wide in shock expression in the Alice_Background_Indoor asset 
 
+>> ALIAS: Alice_Closeup_Indoor_ots
+composite_scene shot of an ots shot of Alice_Sheet asset in the Alice_Background_Indoor asset looking over her shoulder at the library
+
 >> ALIAS: Alice_Film
 image_to_video using the Alice_Composite asset, action she touches the table. 
 

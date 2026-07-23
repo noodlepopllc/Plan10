@@ -1,5 +1,5 @@
-from image_analysis import AnalyzeMedia
-from qwen_llm import llm_analyze_media
+from lib.image_analysis import AnalyzeMedia
+from lib.qwen_llm import llm_analyze_media
 from pathlib import Path
 
 class Director:

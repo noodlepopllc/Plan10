@@ -465,7 +465,7 @@ def reroll_clothing(name):
     with open(f'./tests/{name}/{name}.json', 'w') as char:
         this_char = json.dump(this_char, char, indent=4)
 
-if __name__ == '__main__':
+def main():
     import argparse, json
     import random
 
@@ -555,3 +555,7 @@ if __name__ == '__main__':
     reg = registry.export()
     with open(f'{output}/{args.name}.json', 'w') as js:
         json.dump(reg, js, indent=4)
+
+if __name__ == '__main__':
+    main()
+

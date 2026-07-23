@@ -1,8 +1,10 @@
 import torch, os
-from config import load_environ
+from lib.config import load_environ
 
-from image_analysis import AnalyzeImage
-from util import extract_frame, resize_image, cleanup
+from lib.image_analysis import AnalyzeImage
+from lib.util import extract_frame, resize_image, cleanup
+from PIL import Image
+import numpy as np
 
 class VisibilityChecker:
     def __init__(self, visual_id, width, height):
@@ -15,6 +17,10 @@ class VisibilityChecker:
 
         frame, check_path = extract_frame(media_path, self.width, self.height, 
                                 f"{output_dir}/check_vision.png")
+        
+        # Early detection: Check for black/empty background
+        if self._is_background_empty(check_path):
+            return False, "empty_background", "Background is completely black or empty. Needs regeneration."
         
         # Tier 2: VLM Orientation Check
         prompt = f"""You are an expert visual evaluator. Analyze the image to check for a specific character and determine their orientation.
@@ -45,6 +51,30 @@ class VisibilityChecker:
         response = result['analysis'].strip()
         
         return self._parse_vision_response(response)
+
+    def _is_background_empty(self, image_path, threshold=15, dark_percentage_threshold=90):
+        """Check if an image is mostly black/dark (empty background)."""
+        img = Image.open(image_path)
+        img_array = np.array(img)
+        
+        # Convert to grayscale if RGB
+        if len(img_array.shape) == 3:
+            gray = np.mean(img_array, axis=2)
+        else:
+            gray = img_array
+        
+        # Calculate mean brightness
+        mean_brightness = np.mean(gray)
+        
+        # Calculate percentage of dark pixels
+        dark_pixels = np.sum(gray < threshold)
+        total_pixels = gray.size
+        dark_percentage = (dark_pixels / total_pixels) * 100
+        
+        # Consider empty if mean brightness is very low OR >90% of pixels are dark
+        is_empty = mean_brightness < 20 or dark_percentage > dark_percentage_threshold
+        
+        return is_empty
 
     def _parse_vision_response(self, response):
         match, orientation, analysis = "NO", "unknown", "Unknown"

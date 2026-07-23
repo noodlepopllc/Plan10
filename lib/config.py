@@ -61,10 +61,13 @@ def load_environ(replace_env=False):
                 fp.write(f'export {k}="{v}"\n')
             #fp.write(additional)
 
-if __name__ == '__main__':
+def main():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('-R', '--replace-env', action='store_true', help='Generate reverse-angle background (T2I)')
     args = parser.parse_args()
     load_environ(args.replace_env)
     print("config.json has been created.")
+
+if __name__ == '__main__':
+    main()

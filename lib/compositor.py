@@ -1,14 +1,14 @@
 from PIL import Image, PngImagePlugin
-from image_edit import EditImage
-from image_analysis import AnalyzeImage
+from lib.image_edit import EditImage
+from lib.image_analysis import AnalyzeImage
 import os
 
-from config import load_environ
+from lib.config import load_environ
 
 if os.environ.get('ANIME','False') != 'False':
-    from anime_gen import GenerateImage, add_metadata_char, add_metadata_loc, CreateBackground
+    from lib.anime_gen import GenerateImage, add_metadata_char, add_metadata_loc, CreateBackground
 else:
-    from image_gen import GenerateImage, add_metadata_char, add_metadata_loc, CreateBackground
+    from lib.image_gen import GenerateImage, add_metadata_char, add_metadata_loc, CreateBackground
 
 load_environ()
 WIDTH = int(os.environ.get("WIDTH", "832"))
@@ -204,6 +204,20 @@ def CompositeScene(
             f"Action: {action}. "
             f"Lighting: {lighting_desc} Foreground character is blurred and slightly darker. "
             f"Match REF 1 color temperature. Preserve EXACT rendering style from REF 2 and REF 3. "
+        )
+        # 🆕 NEW: Single-character Over-The-Shoulder shot
+        
+    elif shot_type == 'ots' and len(descriptions) == 1:
+        task = (
+            f"REF 1: {bg_desc}. Background source. "
+            "ALLOW CROPPING: Background elements may extend off-frame naturally to maintain composition. "
+            + spatial_rules +
+            f"Cinematic over-the-shoulder shot. Camera is positioned BEHIND the character. "
+            f"REF 2: Character in the immediate foreground, back of head and shoulder visible, slightly out of focus (shallow depth of field) to frame the shot. {descriptions[0]} "
+            f"The character is looking forward into the environment. "
+            f"Action: {action}. "
+            f"Lighting: {lighting_desc} Focus is primarily on the environment ahead of the character, with the character's shoulder/head framing the composition. "
+            f"Match REF 1 color temperature. Preserve EXACT rendering style from REF 2. "
         )
     elif shot_type == 'two_shot' and len(descriptions) > 1:
         char_1_details = descriptions[0]
@@ -577,8 +591,7 @@ def GenerateZoneBackdrop(
         status['description'] = analysis['analysis']
     return status
 
-
-if __name__ == '__main__':
+def main():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('-W', '--width', type=int, default=WIDTH)
@@ -607,3 +620,7 @@ if __name__ == '__main__':
             print(GenerateReverseBackground(args.background, args.output, 1328, 1328, args.seed))
     else:
         print(CompositeScene(args.background, args.chars, args.shot_type, args.action, args.output, args.seed, args.width, args.height))
+
+
+if __name__ == '__main__':
+    main()
