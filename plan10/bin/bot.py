@@ -1,13 +1,13 @@
 from pathlib import Path
 import torch, os, sys, gc, json, re, time, argparse
-sys.path.append('./lib')
-from config import load_environ
+
+from plan10.lib.config import load_environ
 
 load_environ()
 os.environ['BATCH'] = 'False'
 
 from transformers import AutoTokenizer, AutoModelForCausalLM, BitsAndBytesConfig
-from brain import execute_task
+from plan10.lib.brain import execute_task
 
 
 # =============================================================================

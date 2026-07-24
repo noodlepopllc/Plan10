@@ -1,7 +1,7 @@
 from pathlib import Path
 import json, os, gc, torch, re 
-from tools import ToolHandler
-from qwen_llm import llm_chat
+from plan10.lib.tools import ToolHandler
+from plan10.lib.qwen_llm import llm_chat
 
 CONFIG_FILE = "config.json"
 

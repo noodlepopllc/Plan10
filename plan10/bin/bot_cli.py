@@ -9,13 +9,12 @@ Usage: python cli.py -c alice/context.json
 import sys, os, json, time, argparse, shutil
 from pathlib import Path
 
-sys.path.append('./lib')
-from config import load_environ
+from plan10.lib.config import load_environ
 
 load_environ()
 os.environ['BATCH'] = 'False'
 
-from brain import execute_task
+from plan10.lib.brain import execute_task
 
 # =============================================================================
 # CONTEXT HELPERS

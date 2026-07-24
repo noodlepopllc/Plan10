@@ -1,19 +1,22 @@
 import sys, torch, gc, random, time, os
 from pathlib import Path
-sys.path.append('./lib')
-from image_gen import (
+from plan10.lib.config import load_environ
+
+load_environ()
+
+from plan10.lib.image_gen import (
     CreateCharacterSheetSchema, 
     CreateBackgroundSchema, 
     GenerateImageSchema, 
 ) 
 if os.environ.get('ANIME','False') != 'False':
-    from anime_gen import GenerateImage, CreateBackground, CreateCharacterSheet
+    from plan10.lib.anime_gen import GenerateImage, CreateBackground, CreateCharacterSheet
 else:
-    from image_gen import GenerateImage, CreateBackground, CreateCharacterSheet
-from graphics_gen import GenerateGraphic, GenerateGraphicSchema
-from image_analysis import EnhancePrompt
-from dialog import VoiceDesignSchema, VoiceCloneSchema, DesignVoice, CloneVoice
-from compositor import (
+    from plan10.lib.image_gen import GenerateImage, CreateBackground, CreateCharacterSheet
+from plan10.lib.graphics_gen import GenerateGraphic, GenerateGraphicSchema
+from plan10.lib.image_analysis import EnhancePrompt
+from plan10.lib.dialog import VoiceDesignSchema, VoiceCloneSchema, DesignVoice, CloneVoice
+from plan10.lib.compositor import (
     CompositeSceneSchema, 
     CompositeScene,
     CompositeBackgroundSchema,
@@ -23,27 +26,25 @@ from compositor import (
 import traceback
 
 # UPDATED IMPORTS to match consolidated image_edit.py
-from image_edit import (
+from plan10.lib.image_edit import (
     EditImageSchema, 
     EditImage
 )
 
-from camera import GimbalShotSchema, ApplyGimbalShot
+from plan10.lib.camera import GimbalShotSchema, ApplyGimbalShot
 
-from config import load_environ
 
-load_environ()
 
-from image_to_video import GenerateVideoSchema
-from speech_to_video import GenerateTalkingVideoSchema
+from plan10.lib.image_to_video import GenerateVideoSchema
+from plan10.lib.speech_to_video import GenerateTalkingVideoSchema
 
 if os.environ.get('WGP','False') == 'True':
-    from wgp import GenerateVideo, GenerateTalkingVideo
+    from plan10.lib.wgp import GenerateVideo, GenerateTalkingVideo
 elif os.environ.get('LTX','False') != 'False':
-    from ltx import GenerateVideo, GenerateTalkingVideo
+    from plan10.lib.ltx import GenerateVideo, GenerateTalkingVideo
 else:
-    from image_to_video import GenerateVideo
-    from speech_to_video import GenerateTalkingVideo
+    from plan10.lib.image_to_video import GenerateVideo
+    from plan10.lib.speech_to_video import GenerateTalkingVideo
 
 
 
