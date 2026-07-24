@@ -24,17 +24,17 @@ dependencies = [
 package = true
 
 [tool.setuptools.packages.find]
-include = ["lib*", "emergent*", "bin*"]
+include = ["plan10"]
 
 [tool.setuptools.package-data]
-"data" = ["system/*.txt"]
+"data" = ["plan10/system/*.txt"]
 
 [project.scripts]
-config = "lib.config:main"
+config = "plan10.lib.config:main"
 image_gen = "lib.image_gen:main"
 anime_gen = "lib.anime_gen:main"
 image_edit = "lib.image_edit:main"
-graphics_gen = "lib.graphics_gen:main"
+graphics_gen = "plan10.lib.graphics_gen:main"
 compositor = "lib.compositor:main"
 image_to_video = "lib.image_to_video:main"
 scene_analyzer = "lib.scene_analyzer:main"
