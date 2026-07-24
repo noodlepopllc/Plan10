@@ -154,28 +154,40 @@ class Pipeline:
             recreate = self.recreate_frame
         
         # 1. Check visibility (skip in scene_mode)
-        #if not self.scene_mode:
-        vcheck = VisibilityChecker(self.visual_id, self.width, self.height)
-        visible, reason_code, reason_text = vcheck.check(current_media, self.output_dir)
+        if not self.scene_mode:
+            # Around line 150 in execute_step, update the visibility check handling:
 
-        if not visible:
-            print(f"⚠️ Character not visible ({reason_code}): {reason_text}")
-            
-            if reason_code == "walking_away":
-                print("  → Character is leaving the scene. Forcing cinematic CUT TO new location/angle.")
-                needs_transition = True
+            vcheck = VisibilityChecker(self.visual_id, self.width, self.height)
+            visible, reason_code, reason_text = vcheck.check(current_media, self.output_dir)
+
+            if not visible:
+                print(f"⚠️ Character not visible ({reason_code}): {reason_text}")
                 
-            elif reason_code == "turned_away":
-                print("  → Character is turned away. Recreating frame to face camera (same location)...")
-                current_state = f"{self.visual_id} turns around to face the camera in a frontal or 3/4 view, maintaining the exact same environment."
-                current_media = recreate(current_media, current_state, beat_count)
-                needs_transition = False
-                
-            else:
-                print("  → Unintended loss of visibility. Recreating frame...")
-                current_state = f"{self.visual_id} is now visible in the scene, facing the camera in a frontal or 3/4 view."
-                current_media = recreate(current_media, current_state, beat_count)
-                needs_transition = False
+                if reason_code == "empty_background":
+                    print("  → Background is empty/black. Generating new background...")
+                    # Extract location from history or use generic
+                    location_hint = history[-1] if history else "detailed environment, realistic lighting"
+                    current_media = self.generate_transition_frame(location_hint, beat_count)
+                    needs_transition = False
+                    
+                elif reason_code == "walking_away":
+                    print("  → Character is leaving the scene. Forcing cinematic CUT TO new location/angle.")
+                    needs_transition = True
+                    
+                elif reason_code == "turned_away":
+                    print("  → Character is turned away. Recreating frame to face camera (same location)...")
+                    current_state = f"{self.visual_id} turns around to face the camera in a frontal or 3/4 view, maintaining the exact same environment."
+                    current_media = recreate(current_media, current_state, beat_count)
+                    needs_transition = False
+                    
+                else:
+                    print("  → Unintended loss of visibility. Recreating frame...")
+                    current_state = f"{self.visual_id} is now visible in the scene, facing the camera in a frontal or 3/4 view."
+                    current_media = recreate(current_media, current_state, beat_count)
+                    needs_transition = False
+
+        else:
+            current_media = recreate(current_media, "", beat_count)
 
 
         # 2. Get previous intention

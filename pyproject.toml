@@ -37,4 +37,7 @@ video_runner = "emergent.video_runner:main"
 bot = "bin.bot:main"
 bot_cli = "bin.bot_cli:main"
 image_to_video = "lib.image_to_video:main"
+scene_analyzer = "lib.scene_analyzer:main"
+image_analysis = "lib.image_analysis:main"
+captioner = "lib.captioner:main"
 

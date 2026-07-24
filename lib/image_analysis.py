@@ -209,7 +209,7 @@ def EnhancePrompt(image='', prompt='a beautiful woman', enhancer='', output=None
     
     return status['analysis']
 
-if __name__ == '__main__':
+def main():
     import argparse, sys
 
     parser = argparse.ArgumentParser(description='Analyze Images or Videos.')
@@ -226,3 +226,7 @@ if __name__ == '__main__':
     else:
         result = AnalyzeImage(args.image, args.prompt, output=args.output, backend=args.backend)
         print(result['analysis'])
+
+
+if __name__ == '__main__':
+    main()

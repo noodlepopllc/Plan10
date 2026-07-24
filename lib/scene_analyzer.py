@@ -26,9 +26,12 @@ Output ONLY the "STORY CONTEXT:" section. Do not output the location or body lan
         print(f"Error analyzing scene: {e}", file=sys.stderr)
         sys.exit(1)
 
-if __name__ == "__main__":
+def main():
     parser = argparse.ArgumentParser(description="Analyze an image and extract story context.")
     parser.add_argument('-I', '--image', type=str, required=True, help="Path to the image to analyze")
     args = parser.parse_args()
     
     print(analyze_scene(args.image))
+
+if __name__ == "__main__":
+    main()
