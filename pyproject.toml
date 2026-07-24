@@ -24,7 +24,7 @@ dependencies = [
 package = true
 
 [tool.setuptools.packages.find]
-include = ["plan10"]
+include = ["plan10*"]
 
 [tool.setuptools.package-data]
 "data" = ["plan10/system/*.txt"]
