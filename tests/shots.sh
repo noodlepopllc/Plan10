@@ -40,14 +40,14 @@ shot() {
         echo "🎨 Generating T2I: $out_suffix"
         
         # Always pass both chars. Your Python patch handles routing/ignoring.
-        python lib/compositor.py -B "$bg" -C "$char1" -C "$char2" \
+        uv run compositor -B "$bg" -C "$char1" -C "$char2" \
             -S "$shot_type" -A "$action" \
             -O "$out" || { echo "❌ Compositor failed: $out_suffix"; exit 1; }
             
         touch "$out"  # ✅ Refreshes OS thumbnail cache
 
         echo "🎬 Generating I2V: $out_suffix"
-        python lib/image_to_video.py -P "$vid_prompt" -I "$out" -O "$out_vid" || { echo "❌ I2V failed: $out_suffix"; exit 1; }
+        python uv run image_to_video -P "$vid_prompt" -I "$out" -O "$out_vid" || { echo "❌ I2V failed: $out_suffix"; exit 1; }
         
         echo "✅ $out_suffix | T2I: $action | I2V: $vid_prompt" >> "$OUTDIR/run_manifest.txt"
     else
@@ -58,11 +58,11 @@ shot() {
 # ─── BACKGROUNDS ───
 echo "=== BACKGROUNDS ==="
 if [ ! -f "$BG_LEFT" ]; then 
-    python lib/compositor.py -B $BG -Z "left" -O "$BG_LEFT" -R 
+    python uv run compositor -B $BG -Z "left" -O "$BG_LEFT" -R 
 fi
 
 if [ ! -f "$BG_RIGHT" ]; then 
-    python lib/compositor.py -B $BG -Z "right" -O "$BG_RIGHT" -R
+    python uv run compositor -B $BG -Z "right" -O "$BG_RIGHT" -R
 fi
 
 # ─── SHOTS ───
