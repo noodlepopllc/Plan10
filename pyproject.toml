@@ -26,18 +26,22 @@ package = true
 [tool.setuptools.packages.find]
 include = ["lib*", "emergent*", "bin*"]
 
+[tool.setuptools.package-data]
+"data" = ["system/*.txt"]
+
 [project.scripts]
 config = "lib.config:main"
 image_gen = "lib.image_gen:main"
+anime_gen = "lib.anime_gen:main"
 image_edit = "lib.image_edit:main"
 graphics_gen = "lib.graphics_gen:main"
 compositor = "lib.compositor:main"
-video_creator = "emergent.video_creator:main"
-video_runner = "emergent.video_runner:main"
-bot = "bin.bot:main"
-bot_cli = "bin.bot_cli:main"
 image_to_video = "lib.image_to_video:main"
 scene_analyzer = "lib.scene_analyzer:main"
 image_analysis = "lib.image_analysis:main"
 captioner = "lib.captioner:main"
+video_creator = "emergent.video_creator:main"
+video_runner = "emergent.video_runner:main"
+bot = "bin.bot:main"
+bot_cli = "bin.bot_cli:main"
 

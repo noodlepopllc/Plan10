@@ -192,6 +192,10 @@ def EnhancePrompt(image='', prompt='a beautiful woman', enhancer='', output=None
     Returns:
         Enhanced prompt text
     """
+    if not os.path.exists(enhancer):
+        repo_root = Path(__file__).parent.parent
+        enhancer = repo_root / "system" / Path(enhancer).name
+
     eprompt = Path(enhancer).read_text()
     
     if backend is None:
