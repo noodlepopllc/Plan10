@@ -1,7 +1,7 @@
 [project]
 name = "plan10"
 version = "0.1.0"
-requires-python = ">=3.12"  # <--- Forces uv to fetch 3.14-compatible wheels
+requires-python = ">=3.12"
 dependencies = [
     "torch",          
     "torchaudio",

@@ -1,0 +1,246 @@
+import torch, os, gc, time, numpy as np
+from PIL import Image
+from pathlib import Path
+import tqdm
+
+from diffsynth.pipelines.wan_video import WanVideoPipeline, ModelConfig
+from diffsynth.utils.data import save_video
+import random
+from plan10.lib.config import load_environ
+load_environ()
+
+from plan10.lib.util import video_to_img
+from plan10.lib.image_analysis import AnalyzeImage, EnhancePrompt
+from plan10.lib.image_gen import GenerateImage
+from plan10.lib.image_edit import EditImage
+from plan10.lib.qwen_llm import llm_analyze_media
+
+WIDTH = int(os.environ.get("WIDTH", "832"))
+HEIGHT = int(os.environ.get("HEIGHT", "480"))
+SEED = int(os.environ.get("SEED", "-1"))
+
+WAN21 = os.environ.get("WAN21","14B")
+
+model_id = f"alibaba-pai/Wan2.1-Fun-V1.1-{WAN21}-InP"
+
+def _ensure_pipeline(vrlimit=14):
+
+    # === Global Pipeline Setup (Wan 2.1 I2V) ===
+    vram_config = {
+        "offload_dtype": "disk",
+        "offload_device": "disk",
+        "onload_dtype": torch.bfloat16,
+        "onload_device": "cpu",
+        "preparing_dtype": torch.bfloat16,
+        "preparing_device": "cuda",
+        "computation_dtype": torch.bfloat16,
+        "computation_device": "cuda",
+    }
+
+    _pipe = None
+
+    _pipe = WanVideoPipeline.from_pretrained(
+        torch_dtype=torch.bfloat16,
+        device="cuda",
+        model_configs=[
+            ModelConfig(model_id=model_id, origin_file_pattern="diffusion_pytorch_model*.safetensors", **vram_config),
+            ModelConfig(model_id=model_id, origin_file_pattern="models_t5_umt5-xxl-enc-bf16.pth", **vram_config),
+            ModelConfig(model_id=model_id, origin_file_pattern="Wan2.1_VAE.pth", **vram_config),
+            ModelConfig(model_id=model_id, origin_file_pattern="models_clip_open-clip-xlm-roberta-large-vit-huge-14.pth", **vram_config),
+        ],
+        tokenizer_config=ModelConfig(model_id="Wan-AI/Wan2.1-T2V-1.3B", origin_file_pattern="google/umt5-xxl/"),
+        vram_limit=vrlimit,
+    )
+
+    if '1.3B' in model_id:
+        _pipe.load_lora(_pipe.dit, './loras/loras_accelerators/Wan21_CausVid_bidirect2_T2V_1_3B_lora_rank32.safetensors', alpha=1.0)
+    else:
+        _pipe.load_lora(_pipe.dit, './loras/wan2.1_i2v_lora_rank64_lightx2v_4step.safetensors', alpha=1.0)
+    return _pipe
+
+
+def GenerateVideo(prompt='', media='', output='output.mp4', 
+                  duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1, enhance=True):
+
+        
+        if isinstance(prompt, list):
+            prompt = prompt.pop()
+        
+        start_image = ''
+        end_image = None
+
+        enhance_prompt = True
+
+        if not media:
+            GenerateImage(prompt = prompt, output='first_frame.png', width=width, height=height, seed=seed)
+            media='first_frame.png'
+
+        if isinstance(media, list):
+            start_image = media.pop(0)
+            if len(media) > 0:
+                end_image = video_to_img(media.pop(), width, height, True, False)
+                enhance_prompt = False
+        else:
+            start_image = media
+
+        print(f"PROMPT: {prompt}")
+
+
+        original_prompt = prompt
+
+        width = int(width)
+        height = int(height)
+        seed = int(seed)
+        duration_sec = int(duration_sec)
+        fps = 16
+
+        if seed == -1:
+            seed = random.randint(0,1000000)
+
+        total_frames = (duration_sec * fps) + 1
+
+        print(f"\n🎬 Generating {total_frames/fps:.1f}s video ({total_frames} frames)")
+        print(f"   Resolution: {width}x{height}")
+
+        current_source = video_to_img(start_image, width, height, True, True)
+        current_source.save('tmp.png')
+
+        if not prompt:
+            prompt = "The characters stand and act naturally. "
+
+        eprompt = EnhancePrompt(start_image, prompt, './system/wan2_enhancer.txt') if enhance_prompt else prompt
+
+        print("CURRENT PROMPT: ",eprompt)
+
+        _pipe = _ensure_pipeline()
+
+        num_steps = 8  if '1.3B' in model_id else 4
+
+
+        video = None
+        try:
+            video = _pipe(
+                prompt=eprompt,
+                input_image=current_source,
+                end_image=end_image,
+                width=width, height=height,
+                tiled=True,
+                num_frames=total_frames,
+                cfg_scale=1.0,
+                num_inference_steps=num_steps,
+                seed=seed,
+            )
+
+            save_video(video, output, fps=fps, quality=5)
+            description = ''
+                
+            # Post-processing
+            if os.environ.get('BATCH', 'False') == 'False':
+                tmp_img = video_to_img(output, width, height)
+                tmp_img.save('tmp.png')
+                description = AnalyzeImage('tmp.png', "Briefly describe this image, no more than 100 words")['analysis']
+            
+            return {
+                "status": "success",
+                "output_path": output,
+                "frames": len(video),
+                "description": description,
+                "prompt": eprompt
+            }
+            
+        except Exception as e:
+            print(f"❌ Error: {e}")
+            raise
+        finally:
+            del video
+            gc.collect()
+            torch.cuda.empty_cache()
+
+
+def GenerateVideoSchema():
+    return {
+        "type": "function",
+        "function": {
+            "name": "image_to_video",
+            "description": "Create a video from an image and a prompt using Wan 2.1 I2V.).",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "prompt": {"type": "string", "description": "Prompt for what should be happening in the video"},
+                    "media": {"type": "string", "description": "Path to starting image or video."},
+                    "width": {"type": "integer", "default": f'{WIDTH}'},
+                    "height": {"type": "integer", "default": f'{HEIGHT}'},
+                    "seed": {"type": "integer", "default": 42},
+                    "duration_sec": {"type": "integer", "description": "Total length in seconds", "default": 10}
+                },
+                "required": ["prompt", "media"]
+            }
+        }
+    }
+
+def GenerateI2VPromptSchema():
+    return {
+        "type": "function",
+        "function": {
+            "name": "generate_i2v_prompt",
+            "description": "Analyze a static image and output a short, action-oriented prompt for Image-to-Video.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "image_path": {"type": "string", "description": "Path to the generated image."},
+                    "motion_style": {
+                        "type": "string", 
+                        "enum": ["subtle_cinematic", "dynamic", "ambient_only", "camera_movement"],
+                        "default": "subtle_cinematic"
+                    }
+                },
+                "required": ["image_path"]
+            }
+        }
+    }
+
+def main():
+    import argparse, json
+
+    WGP = os.environ.get('WGP','False') != 'False'
+    LTX = os.environ.get('LTX','False') != 'False'
+
+    if WGP:
+        from lib.wgp import GenerateVideo as Video
+    elif LTX:
+        from lib.ltx import GenerateVideo as Video
+    else:
+        Video = GenerateVideo
+
+    DURATION = 10 if LTX or WGP else 5
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-P', '--prompt', type=str, default='', required=False)
+    parser.add_argument('-I', '--images', action='append', default=[], help='Input images')
+    parser.add_argument('-O', '--output', type=str, default='output.mp4')
+    parser.add_argument('-D', '--duration', type=float, default=DURATION)
+    parser.add_argument('-W', '--width', type=int, default=WIDTH)
+    parser.add_argument('-H', '--height', type=int, default=HEIGHT)
+    parser.add_argument('-S', '--seed', type=int, default=SEED)
+    args = parser.parse_args()
+    
+    # Allow JSON array prompts from CLI
+    try:
+        prompt_input = json.loads(args.prompt)
+    except:
+        prompt_input = args.prompt
+        
+    result = Video(
+        prompt=prompt_input,
+        media=args.images,
+        output=args.output,
+        duration_sec=args.duration,
+        width=args.width,
+        height=args.height,
+        seed=args.seed,
+    )
+    print(result)
+
+if __name__ == "__main__":
+    main()
+
