@@ -19,6 +19,9 @@ SEED = os.environ.get("SEED","-1")
 SEED = random.randint(0,1000000) if SEED == "-1" else int(SEED)  
 
 def _system_prompt(fn="system/bot.txt"):
+    if not os.path.exists(fn):
+        repo_root = Path(__file__).parent.parent
+        fn = repo_root / "system" / Path(enhancer).name
     prompt = Path(fn).read_text().strip()
     while True:
         yield [{"role": "system", "content": prompt}]
