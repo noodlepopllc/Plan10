@@ -15,13 +15,16 @@ from diffsynth.pipelines.wan_video import WanVideoPipeline, ModelConfig, WanVide
 from glob import glob
 from pathlib import Path
 import torchaudio.functional as F
-from util import video_to_img
-from image_analysis import AnalyzeImage
-import random
-from dialog import CloneVoice
 
-from config import load_environ
+from plan10.lib.config import load_environ
 load_environ()
+
+
+from plan10.lib.util import video_to_img
+from plan10.lib.image_analysis import AnalyzeImage
+import random
+from plan10.lib.dialog import CloneVoice
+
 
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
