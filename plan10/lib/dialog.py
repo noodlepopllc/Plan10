@@ -2,7 +2,8 @@ import torch, torchaudio, gc, librosa, traceback
 from omnivoice import OmniVoice
 import numpy as np
 from faster_whisper import WhisperModel
-from plan10.config import load_environ
+from plan10.lib.config import load_environ
+load_environ()
 
 def transcribe(path):
 
