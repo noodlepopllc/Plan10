@@ -1,15 +1,17 @@
 from glob import glob
 import sys
 
-from lib.image_edit import ImageEditQwen, EditImage
-from lib.image_gen import CreateBackground
+from plan10.lib.config import load_config
+load_config()
+
+from plan10.lib.image_edit import ImageEditQwen, EditImage
+from plan10.lib.image_gen import CreateBackground
 from PIL import Image
 from pathlib import Path
-from lib.image_gen import add_metadata_char
-from lib.util import video_to_img
+from plan10.lib.image_gen import add_metadata_char
+from plan10.lib.util import video_to_img
 
-from lib.config import load_config
-load_config()
+
 
 WIDTH = int(os.environ.get("WIDTH","480"))
 HEIGHT = int(os.environ.get("HEIGHT","832"))

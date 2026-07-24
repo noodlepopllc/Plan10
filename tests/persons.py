@@ -2,15 +2,15 @@ import sys, random, re, os
 from pathlib import Path
 from json import load
 
-from lib.config import load_environ
+from plan10.lib.config import load_environ
 from locations import  LocationPairGenerator
 
 load_environ()
 
 if os.environ.get('ANIME','False') != 'False':
-    from lib.anime_gen import CreateCharacterSheet, CreateBackground
+    from plan10.lib.anime_gen import CreateCharacterSheet, CreateBackground
 else:
-    from lib.image_gen import CreateCharacterSheet, CreateBackground
+    from plan10.lib.image_gen import CreateCharacterSheet, CreateBackground
 
 class CharacterRecord:
     def __init__(self, name, gender, character_description, clothing_description):

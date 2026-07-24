@@ -495,14 +495,13 @@ def main():
         args.height = random.choice(heights) if args.height == 'random' else args.height
 
     import sys, os
-    sys.path.append('./lib')
-    from config import load_environ
+    from plan10.lib.config import load_environ
 
     load_environ()
     if os.environ.get('ANIME','False') != 'False':
-        from anime_gen import ImageGen, CreateCharacterSheet
+        from plan10.lib.anime_gen import ImageGen, CreateCharacterSheet
     else:
-        from image_gen import ImageGen, CreateCharacterSheet
+        from plan10.lib.image_gen import ImageGen, CreateCharacterSheet
     from pathlib import Path
 
     output = f'./tests/{args.name}'
