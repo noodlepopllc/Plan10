@@ -3,21 +3,20 @@ import argparse
 from pathlib import Path
 import os
 
-sys.path.append('./lib')
-from lib.config import load_environ
+from plan10.lib.config import load_environ
 load_environ()
 
 WGP = os.environ.get("WGP","False") != "False"
 LTX = os.environ.get("LTX","False") != "False"
 
 if WGP:
-    from lib.wgp import GenerateVideo
+    from plan10.lib.wgp import GenerateVideo
 elif LTX:
-    from lib.ltx import GenerateVideo
+    from plan10.lib.ltx import GenerateVideo
 else:
-    from lib.image_to_video import GenerateVideo
+    from plan10.lib.image_to_video import GenerateVideo
 
-from emergent.state_manager import StateManager
+from plan10.emergent.state_manager import StateManager
 
 def main():
     parser = argparse.ArgumentParser()

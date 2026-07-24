@@ -1,7 +1,7 @@
-from lib.image_analysis import AnalyzeMedia
-from lib.qwen_llm import llm_analyze_media
+from plan10.lib.image_analysis import AnalyzeMedia
+from plan10.lib.qwen_llm import llm_analyze_media
 from pathlib import Path
-from lib.config import load_config
+from plan10.lib.config import load_config
 load_config()
 
 import os

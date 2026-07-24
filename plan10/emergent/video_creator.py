@@ -2,24 +2,24 @@ import sys, os
 import argparse
 from pathlib import Path
 
-from lib.config import load_environ
+from plan10.lib.config import load_environ
 load_environ()
 
-from emergent.state_manager import StateManager
-from emergent.character import CharacterProfile
-from emergent.pipeline import Pipeline
-from lib.scene_analyzer import analyze_scene
+from plan10.emergent.state_manager import StateManager
+from plan10.emergent.character import CharacterProfile
+from plan10.emergent.pipeline import Pipeline
+from plan10.lib.scene_analyzer import analyze_scene
 
-from lib.decomposer import decompose_scene
+from plan10.lib.decomposer import decompose_scene
 
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
 SEED = int(os.environ.get("SEED", "-1"))
 
 if os.environ.get('ANIME','False') != 'False':
-    from lib.anime_gen import GenerateImage, CreateBackground, CreateCharacterSheet
+    from plan10.lib.anime_gen import GenerateImage, CreateBackground, CreateCharacterSheet
 else:
-    from lib.image_gen import GenerateImage, CreateBackground, CreateCharacterSheet
+    from plan10.lib.image_gen import GenerateImage, CreateBackground, CreateCharacterSheet
 
 def main():
     parser = argparse.ArgumentParser()
@@ -45,7 +45,7 @@ def main():
         print("🔄 Resuming from state file...")
         state = state_mgr.load()
         refs = state['character_refs']
-        visual_id = state['visual_id']
+        visual_ids = state['visual_ids']
         beat_count = state['beat_count']
         current_media = state['current_media']
         story_context = state['story_context']
@@ -92,7 +92,9 @@ def main():
         print(f"REFERENCES: {refs}")
         
         profiles = [CharacterProfile(ref) for ref in refs]
-        visual_id = profiles[0].get_visual_id(0)
+        visual_ids = []
+        for profile in profiles:
+            visual_ids.append(profile.get_visual_id(0))
         
         beat_count = 0
         story_context = args.context
@@ -113,7 +115,7 @@ def main():
         context = analyze_scene(current_media)
     
     # Initialize Pipeline
-    pipeline = Pipeline(refs, args.output, args.width, args.height, args.seed, visual_id, 
+    pipeline = Pipeline(refs, args.output, args.width, args.height, args.seed, visual_ids, 
         scene_mode=scene_mode, goal=goal)
     pipeline.initial_media = initial
     if first_run and not args.scene_mode:
@@ -135,7 +137,7 @@ def main():
             "beat_count": beat_count, "current_media": current_media,
             "story_context": context, "history": history,
             "pending_setup": pending_setup, "needs_transition": needs_transition,
-            "character_refs": refs, "visual_id": visual_id,
+            "character_refs": refs, "visual_ids": visual_ids,
             "video_queue": video_queue,
             "output_dir": args.output, "width": args.width, "height": args.height, "seed": args.seed
         })
@@ -162,7 +164,7 @@ def main():
         "pending_setup": result['pending_setup'],
         "needs_transition": result['needs_transition'],
         "character_refs": refs,
-        "visual_id": visual_id,
+        "visual_ids": visual_ids,
         "video_queue": video_queue,
         "scene_mode": scene_mode,
         "output_dir": args.output,

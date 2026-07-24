@@ -1,35 +1,39 @@
 from pathlib import Path
 import os
 from PIL import Image
-from lib.compositor import CompositeScene
-from lib.config import load_environ
-from lib.util import video_to_img
+
+from plan10.lib.config import load_environ
 
 load_environ()
+
+from plan10.lib.compositor import CompositeScene
+from plan10.lib.util import video_to_img
+
 
 WGP = os.environ.get("WGP","False") != "False"
 LTX = os.environ.get("LTX","False") != "False"
 
-from emergent.vision import VisibilityChecker
-from emergent.director import Director
+from plan10.emergent.vision import VisibilityChecker
+from plan10.emergent.director import Director
 
 class Pipeline:
-    def __init__(self, character_refs, output_dir, width, height, seed, visual_id, scene_mode=False, goal=None):
+    def __init__(self, character_refs, output_dir, width, height, seed, visual_ids, scene_mode=False, goal=None):
         self.character_refs = character_refs
         self.output_dir = Path(output_dir)
         self.width = width
         self.height = height
         self.seed = seed
-        self.visual_id = visual_id
+        self.visual_ids = visual_ids
         self.scene_mode = scene_mode
         self.goal = goal
         self.initial_media = None
         
     def recreate_frame(self, media_path, current_state, beat_num):
-        """Recreate frame by stripping and compositing characters."""
+        """Recreate frame by analyzing background, generating description, creating fresh background, then compositing."""
         media_path = Path(media_path)
         ext = media_path.suffix.lower()
         
+        # Step 1: Extract last frame if video
         if ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm']:
             last_frame = video_to_img(str(media_path), self.width, self.height, True, True)
         else:
@@ -38,22 +42,61 @@ class Pipeline:
         last_frame_path = self.output_dir / f"last_frame_{beat_num:03d}.png"
         last_frame.save(str(last_frame_path))
         
-        clean_bg_path = self.output_dir / f"clean_bg_{beat_num:03d}.png"
-        print("  → Stripping characters to establish clean background...")
+        # Step 2: Analyze the background/environment to create a description
+        print(f"  → Analyzing background environment...")
+        from plan10.lib.image_analysis import AnalyzeImage
         
-        CompositeScene(
-            background_path=str(last_frame_path),
-            characters=[],
-            shot_type="establishing",
-            action="maintain exact environment, lighting, and props, but ensure no people are present",
+        bg_analysis_prompt = """Analyze this image and describe ONLY the background/environment in detail. Ignore any people or characters present.
+
+    Provide a comprehensive description of:
+    - LOCATION: Type of setting (indoor/outdoor, specific place)
+    - ARCHITECTURE: Buildings, structures, room layout, furniture
+    - LIGHTING: Time of day, light sources, shadows, mood
+    - ATMOSPHERE: Weather, season, time period, overall feel
+    - COLORS: Dominant color palette, materials, textures
+    - DETAILS: Notable objects, decorations, props, environmental elements
+
+    Focus on creating a description that could be used to recreate this exact environment without any people in it.
+
+    Output format:
+    LOCATION: [detailed description]
+    ARCHITECTURE: [detailed description]
+    LIGHTING: [detailed description]
+    ATMOSPHERE: [detailed description]
+    COLORS: [detailed description]
+    DETAILS: [detailed description]
+
+    COMBINED_DESCRIPTION: [combine all above into one flowing paragraph suitable for image generation]"""
+        
+        result = AnalyzeImage(str(last_frame_path), bg_analysis_prompt)
+        bg_description = result['analysis']
+        
+        # Extract the combined description
+        combined_desc = ""
+        for line in bg_description.split('\n'):
+            if 'COMBINED_DESCRIPTION:' in line:
+                combined_desc = line.split(':', 1)[1].strip()
+                break
+        
+        if not combined_desc:
+            combined_desc = bg_description
+        
+        print(f"  → Background description: {combined_desc[:150]}...")
+        
+        # Step 3: Generate a fresh, clean background from the description
+        clean_bg_path = self.output_dir / f"clean_bg_{beat_num:03d}.png"
+        print(f"  → Generating fresh background from description...")
+        
+        from plan10.lib.image_gen import CreateBackground
+        CreateBackground(
+            prompt=combined_desc,
             output=str(clean_bg_path),
-            width=self.width,
-            height=self.height,
-            seed=self.seed + beat_num
+            seed=self.seed + beat_num + 500
         )
         
+        # Step 4: Composite characters onto the fresh background
         composite_path = self.output_dir / f"recreated_{beat_num:03d}.png"
-        print(f"  → Compositing {len(self.character_refs)} character(s) onto clean background...")
+        print(f"  → Compositing {len(self.character_refs)} character(s) onto fresh background...")
         
         CompositeScene(
             background_path=str(clean_bg_path),
@@ -115,7 +158,7 @@ class Pipeline:
             
             video_prompt = self._format_video_prompt(
                 location="",
-                characters=self.visual_id,
+                characters=f"{' and '.join([x for x in self.visual_ids])} " ,
                 next_action=story_context,
                 camera_framing="maintain current framing, natural movement"
             )
@@ -157,8 +200,15 @@ class Pipeline:
         if not self.scene_mode:
             # Around line 150 in execute_step, update the visibility check handling:
 
-            vcheck = VisibilityChecker(self.visual_id, self.width, self.height)
-            visible, reason_code, reason_text = vcheck.check(current_media, self.output_dir)
+            visible = True
+            reason_code = ''
+            
+            for visual_id in self.visual_ids:
+                vcheck = VisibilityChecker(visual_id, self.width, self.height)
+                visability, reason_code, reason_text = vcheck.check(current_media, self.output_dir)
+                visible &= visability
+                if not visible:
+                    break
 
             if not visible:
                 print(f"⚠️ Character not visible ({reason_code}): {reason_text}")
@@ -176,13 +226,13 @@ class Pipeline:
                     
                 elif reason_code == "turned_away":
                     print("  → Character is turned away. Recreating frame to face camera (same location)...")
-                    current_state = f"{self.visual_id} turns around to face the camera in a frontal or 3/4 view, maintaining the exact same environment."
+                    current_state = f"{' and '.join([x for x in self.visual_ids])} turns around to face the camera in a frontal or 3/4 view, maintaining the exact same environment."
                     current_media = recreate(current_media, current_state, beat_count)
                     needs_transition = False
                     
                 else:
                     print("  → Unintended loss of visibility. Recreating frame...")
-                    current_state = f"{self.visual_id} is now visible in the scene, facing the camera in a frontal or 3/4 view."
+                    current_state = f"{' and '.join([x for x in self.visual_ids])} is now visible in the scene, facing the camera in a frontal or 3/4 view."
                     current_media = recreate(current_media, current_state, beat_count)
                     needs_transition = False
 
@@ -275,7 +325,7 @@ class Pipeline:
 
     def _format_video_prompt(self, location, characters, next_action, camera_framing):
         if not characters:
-            characters = self.visual_id
+            characters = f"{' and '.join([x for x in self.visual_ids])} " 
         
         if not location:
             location = "current location"

@@ -1,8 +1,9 @@
 import torch, os
-from lib.config import load_environ
+from plan10.lib.config import load_environ
+load_environ()
 
-from lib.image_analysis import AnalyzeImage
-from lib.util import extract_frame, resize_image, cleanup
+from plan10.lib.image_analysis import AnalyzeImage
+from plan10.lib.util import extract_frame, resize_image, cleanup
 from PIL import Image
 import numpy as np
 
