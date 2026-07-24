@@ -269,8 +269,7 @@ def bind_identity_first_only(actions, names):
 
 
 import sys
-sys.path.append('./lib')
-from util import segment_sentences
+from plan10.lib.util import segment_sentences
 
 import re
 
