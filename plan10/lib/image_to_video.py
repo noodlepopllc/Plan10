@@ -206,9 +206,9 @@ def main():
     LTX = os.environ.get('LTX','False') != 'False'
 
     if WGP:
-        from lib.wgp import GenerateVideo as Video
+        from plan10.lib.wgp import GenerateVideo as Video
     elif LTX:
-        from lib.ltx import GenerateVideo as Video
+        from plan10.lib.ltx import GenerateVideo as Video
     else:
         Video = GenerateVideo
 

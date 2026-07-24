@@ -1,6 +1,5 @@
 import json, sys
-sys.path.append('./lib')
-from qwen_llm import llm_analyze_media
+from plan10.lib.qwen_llm import llm_analyze_media
 from pathlib import Path
 
 CHARACTERS_MIXED = '''

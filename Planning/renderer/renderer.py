@@ -13,8 +13,8 @@ from utils import (
     split_dialog_sentences
 )
 
-sys.path.append('./lib')
-from config import load_environ
+
+from plan10.lib.config import load_environ
 
 load_environ()
 

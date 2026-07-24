@@ -1,7 +1,7 @@
 import json, sys
 import re
-sys.path.append('./lib')
-from qwen_llm import llm_analyze_media
+
+from plan10.lib.qwen_llm import llm_analyze_media
 from pathlib import Path
 
 prompt_path = './Planning/prompts'
