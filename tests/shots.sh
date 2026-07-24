@@ -47,7 +47,7 @@ shot() {
         touch "$out"  # ✅ Refreshes OS thumbnail cache
 
         echo "🎬 Generating I2V: $out_suffix"
-        python uv run image_to_video -P "$vid_prompt" -I "$out" -O "$out_vid" || { echo "❌ I2V failed: $out_suffix"; exit 1; }
+        uv run image_to_video -P "$vid_prompt" -I "$out" -O "$out_vid" || { echo "❌ I2V failed: $out_suffix"; exit 1; }
         
         echo "✅ $out_suffix | T2I: $action | I2V: $vid_prompt" >> "$OUTDIR/run_manifest.txt"
     else
@@ -58,11 +58,11 @@ shot() {
 # ─── BACKGROUNDS ───
 echo "=== BACKGROUNDS ==="
 if [ ! -f "$BG_LEFT" ]; then 
-    python uv run compositor -B $BG -Z "left" -O "$BG_LEFT" -R 
+    uv run compositor -B $BG -Z "left" -O "$BG_LEFT" -R 
 fi
 
 if [ ! -f "$BG_RIGHT" ]; then 
-    python uv run compositor -B $BG -Z "right" -O "$BG_RIGHT" -R
+    uv run compositor -B $BG -Z "right" -O "$BG_RIGHT" -R
 fi
 
 # ─── SHOTS ───
