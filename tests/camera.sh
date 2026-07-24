@@ -1,15 +1,15 @@
 #!/bin/bash
 set -euo pipefail
 if [ ! -d "tests/$1" ]; then 
-    python tests/character_builder.py -D -N $1 -R "latinx_mestizo" -C "red" -T "tan" -H "random" -S "long waves"
+    uv run character_builder -D -N $1 -R "latinx_mestizo" -C "red" -T "tan" -H "random" -S "long waves"
 fi
 
 if [ ! -d "tests/$2" ]; then
-    python tests/character_builder.py -D -N $2 -R "east_asian" -C "blonde" -T "fair" -H "random" -S "soft bob"
+    uv run character_builder -D -N $2 -R "east_asian" -C "blonde" -T "fair" -H "random" -S "soft bob"
 fi
 
 if [ ! -d "tests/$1_$2" ]; then
-   python tests/persons.py $1 $2
+   uv run persons $1 $2
 fi
 
 OUTDIR="tests/$1_$2"
@@ -21,7 +21,7 @@ BG_REV="$OUTDIR/location_reverse.png"
 BG_LEFT="$OUTDIR/location_left.png"
 BG_RIGHT="$OUTDIR/location_right.png"
 
-python lib/config.py -R
+uv run config -R
 
 source .env
 HEIGHT=$HEIGHT
@@ -39,7 +39,7 @@ shot() {
         echo "🎨 Generating T2I: $out_suffix"
         
         # Always pass both chars. Your Python patch handles routing/ignoring.
-        python lib/compositor.py -B "$bg" -C "$char1" -C "$char2" \
+        uv run compositor -B "$bg" -C "$char1" -C "$char2" \
             -S "$shot_type" -A "$action" \
             -O "$out" -E "$SEED" -H "$HEIGHT" -W "$WIDTH" || { echo "❌ Compositor failed: $out_suffix"; exit 1; }
             
@@ -64,9 +64,9 @@ zoom() {
 
     if [[ ! -f "$out" ]]; then
         echo " Zooming: $out_suffix"
-        python lib/camera.py -I  "$target" -I "$reference" -T "$person" -S 30 -E "$SEED" -O "$out"
+        uv run camera -I  "$target" -I "$reference" -T "$person" -S 30 -E "$SEED" -O "$out"
         touch "$out"
-        python lib/image_to_video.py -I "$target" -I "$out" -P "Camera zooms in on the subject" -O "$out_vid" -W "$WIDTH" -H "$HEIGHT" -S "$SEED" -D 5.0
+        uv run image_to_video -I "$target" -I "$out" -P "Camera zooms in on the subject" -O "$out_vid" -W "$WIDTH" -H "$HEIGHT" -S "$SEED" -D 5.0
          
         echo "✅ $out_suffix | ZOOM: ${input1} ${input2}" >> "$OUTDIR/run_manifest.txt" 
     else
@@ -85,9 +85,9 @@ pan() {
 
     if [[ ! -f "$out" ]]; then
         echo " Zooming: $out_suffix"
-        python lib/camera.py -I  "$target" -C "$movetype" -S 30 -E "$SEED" -O "$out"
+        uv run camera -I  "$target" -C "$movetype" -S 30 -E "$SEED" -O "$out"
         touch "$out" 
-        python lib/image_to_video.py -I "$target" -I "$out" -P "Camera $movetype slowly" -O "$out_vid" -W "$WIDTH" -H "$HEIGHT" -S "$SEED" -D 5.0
+        uv run image_to_video -I "$target" -I "$out" -P "Camera $movetype slowly" -O "$out_vid" -W "$WIDTH" -H "$HEIGHT" -S "$SEED" -D 5.0
         
         echo "✅ $out_suffix | Pan: ${input1} ${movetype}" >> "$OUTDIR/run_manifest.txt" 
     else
@@ -98,11 +98,11 @@ pan() {
 # ─── BACKGROUNDS ───
 echo "=== BACKGROUNDS ==="
 if [ ! -f "$BG_LEFT" ]; then 
-    python lib/compositor.py -B $BG -Z "left" -O "$BG_LEFT" -R 
+    uv run compositor -B $BG -Z "left" -O "$BG_LEFT" -R 
 fi
 
 if [ ! -f "$BG_RIGHT" ]; then 
-    python lib/compositor.py -B $BG -Z "right" -O "$BG_RIGHT" -R
+    uv run compositor -B $BG -Z "right" -O "$BG_RIGHT" -R
 fi
 
 # ─── SHOTS ───
