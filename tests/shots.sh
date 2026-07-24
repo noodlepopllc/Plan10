@@ -22,7 +22,7 @@ BG_REV="$OUTDIR/location_reverse.png"
 BG_LEFT="$OUTDIR/location_left.png"
 BG_RIGHT="$OUTDIR/location_right.png"
 
-python lib/config.py -R
+python uv run config -R
 
 source .env
 HEIGHT=$HEIGHT
