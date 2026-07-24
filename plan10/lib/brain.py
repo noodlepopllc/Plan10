@@ -8,7 +8,7 @@ CONFIG_FILE = "config.json"
 def system_prompt(fn='system/bot.txt'):
     if not os.path.exists(fn):
         repo_root = Path(__file__).parent.parent
-        fn = repo_root / "system" / Path(enhancer).name
+        fn = repo_root / "system" / Path(fn).name
     prompt = Path(fn).read_text()
     while prompt:
         yield [{"role": "system", "content": prompt}]
