@@ -14,6 +14,13 @@ import torch, torchaudio
 from PIL import Image
 from PIL.PngImagePlugin import PngInfo
 
+if os.environ.get('WGP','False') == 'True':
+    from plan10.lib.wgp import GenerateVideo
+elif os.environ.get('LTX','False') != 'False':
+    from plan10.lib.ltx import GenerateVideo
+else:
+    from plan10.lib.image_to_video import GenerateVideo
+
 
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
