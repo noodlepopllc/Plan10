@@ -14,7 +14,7 @@ import torch, torchaudio
 from PIL import Image
 from PIL.PngImagePlugin import PngInfo
 
-if os.environ.get('WGP','False') == 'True':
+if os.environ.get('WGP','False') != 'False':
     from plan10.lib.wgp import GenerateVideo
 elif os.environ.get('LTX','False') != 'False':
     from plan10.lib.ltx import GenerateVideo
@@ -27,7 +27,7 @@ HEIGHT = int(os.environ.get("HEIGHT", "480"))
 
 output = './outputs_qwen'
 count = 0
-duration = 5
+duration = 10 if WGP or LTX else 5
 
 AUDIO_SYSTEM_PROMPT = """
 Convert this visual scene into a comma-separated list of diegetic sound effects only.
