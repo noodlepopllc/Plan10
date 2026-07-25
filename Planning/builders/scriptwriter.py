@@ -230,7 +230,7 @@ def build_script(user_input_path, outpath):
     
     # Step 1: Generate world model
     #world = run_prompt(user_input, WORLD, f'{outpath}/world.txt')
-    world = Path(f'{outpath}/world.txt.txt').read_text()
+    world = Path(f'{outpath}/world.txt').read_text()
     
     # Step 2: Generate screenplay from prose
     screenplay_prompt = f"""World Model:
