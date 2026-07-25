@@ -170,7 +170,7 @@ def safe_json_load(text):
         except json.JSONDecodeError:
             return None
     return None
-    
+
 def run_prompt(prompt, system, pth):
     if not Path(pth).exists():
       result = llm_analyze_media(
@@ -202,7 +202,8 @@ if __name__ == '__main__':
         sys.exit(1)
         
     dir_path = sys.argv[1]
-    world = run_prompt(user_input, WORLD, f'{dir_path}/world.txt')
+    story_input = Path(f'{dir_path}/story.txt').read_text()
+    world = run_prompt(story_input, WORLD, f'{dir_path}/world.txt')
     
     story_to_script(
         story_path=f'{dir_path}/story.txt',
