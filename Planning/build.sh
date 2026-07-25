@@ -10,6 +10,10 @@ if [[ ! -f "$output/story.txt" ]]; then
     python $basepath/builders/storywriter.py -S $1 -O $output/story.txt
 fi
 
+if [[ ! -f "$output/script.txt" ]]; then
+    python $basepath/builders/script.py $output
+fi
+
 if [[ ! -f "$output/complete.json" ]]; then
     python $basepath/builders/scriptwriter.py $1 $output
 fi

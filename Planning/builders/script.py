@@ -1,0 +1,212 @@
+# story_to_script.py
+import re
+import json
+from pathlib import Path
+import sys
+
+# ═══════════════════════════════════════════════════════════════
+# PROMPT 1: ANALYZER (Semantic Extraction)
+# ═══════════════════════════════════════════════════════════════
+ANALYZER_PROMPT = """Extract structured data from this story beat.
+
+WORLD CONTEXT:
+{world_text}
+
+BEAT:
+{beat_text}
+
+OUTPUT FORMAT (JSON ONLY):
+{{
+  "characters": [
+    {{
+      "name": "CHARACTER NAME",
+      "posture": "ONE WORD (sitting/standing/walking)",
+      "posture_changed": true or false,
+      "emotion": "ONE WORD",
+      "dialog": "spoken words or null",
+      "action": "action description or null"
+    }}
+  ],
+  "zone": "Exact zone name from WORLD CONTEXT",
+  "shot_setup": "Brief visual description of ALL characters and props (max 20 words)."
+}}
+
+CRITICAL RULES:
+1. CHARACTERS: Extract ALL characters present in the beat, not just the speaker.
+2. For each character, extract their individual posture, emotion, dialog, and action.
+3. POSTURE_CHANGED: Set to true ONLY if that specific character's posture explicitly changes.
+4. DIALOG: Extract ONLY words inside quotation marks. Strip quotes. Preserve punctuation.
+5. SHOT_SETUP: Describe the visual setup including ALL characters present.
+6. Output ONLY the raw JSON."""
+
+# ═══════════════════════════════════════════════════════════════
+# PROMPT 2: FORMATTER (Strict Templating)
+# ═══════════════════════════════════════════════════════════════
+FORMATTER_PROMPT = """Format this beat as a script line using data from BEAT DATA.
+
+BEAT DATA:
+{beat_data_json}
+
+OUTPUT FORMAT:
+[ZONE: <zone>]
+>> <shot_setup>
+
+<CHARACTER_1> (<posture>, <emotion>)
+<dialog_1>
+<action_1>
+
+<CHARACTER_2> (<posture>, <emotion>)
+<dialog_2>
+<action_2>
+
+RULES:
+1. Output a block for EACH character in the characters array.
+2. Separate character blocks with a blank line.
+3. Character names in ALL CAPS.
+4. If dialog is null, omit that line for that character.
+5. If action is null, omit that line for that character.
+6. Output ONLY the formatted text."""
+
+# ═══════════════════════════════════════════════════════════════
+# PYTHON STATE TRACKER (Deterministic Logic)
+# ═══════════════════════════════════════════════════════════════
+def update_state(state, analyzed_beat):
+    """Handle multiple characters per beat."""
+    new_state = state.copy()
+    
+    if 'character_postures' not in new_state:
+        new_state['character_postures'] = {}
+    
+    # Process each character in the beat
+    for char_data in analyzed_beat.get('characters', []):
+        char = char_data.get('name')
+        if not char:
+            continue
+            
+        # Add to active characters
+        if char not in new_state['active_characters']:
+            new_state['active_characters'].append(char)
+        
+        # Update posture if changed or first time seeing character
+        posture_changed = char_data.get('posture_changed', False)
+        if posture_changed or char not in new_state['character_postures']:
+            new_state['character_postures'][char] = char_data['posture']
+        
+        # Track last speaker/actor
+        if char_data.get('dialog'):
+            new_state['last_speaker'] = char
+        if char_data.get('action'):
+            new_state['last_actor'] = char
+    
+    # Update zone
+    if analyzed_beat.get('zone') and analyzed_beat['zone'] != 'Unknown':
+        new_state['zone'] = analyzed_beat['zone']
+    
+    return new_state
+
+# ═══════════════════════════════════════════════════════════════
+# MAIN PROCESSING FUNCTION
+# ═══════════════════════════════════════════════════════════════
+def story_to_script(story_path, world_path, output_path, llm_call_func):
+    # Load files
+    world_text = Path(world_path).read_text()
+    story_text = Path(story_path).read_text()
+    
+    # Split into beats (paragraphs)
+    beats = [b.strip() for b in re.split(r'\n\s*\n', story_text) if b.strip() and 'COLD OPEN END' not in b]
+    
+    # Initialize output file
+    output_file = Path(output_path)
+    output_file.parent.mkdir(parents=True, exist_ok=True)
+    if output_file.exists():
+        output_file.unlink()
+    
+    # Initial state
+    state = {
+        'zone': 'Unknown',
+        'active_characters': [],
+        'last_speaker': None,
+        'last_actor': None,
+        'character_postures': {}
+    }
+    
+    # Process each beat
+    for i, beat in enumerate(beats):
+        # 1. Analyze (LLM does semantic extraction)
+        analyzer_prompt = ANALYZER_PROMPT.format(world_text=world_text, beat_text=beat)
+        analyzed_text = llm_call_func(analyzer_prompt, temperature=0.1)
+        analyzed_beat = safe_json_load(analyzed_text)
+        
+        if not analyzed_beat:
+            print(f"WARNING: Beat {i+1} failed analysis, skipping.")
+            continue
+            
+        # 2. Track State (Python does deterministic tracking)
+        state = update_state(state, analyzed_beat)
+        
+        # Enforce state continuity: override analyzer's posture with state's posture if no change occurred
+        char = analyzed_beat.get('character')
+        if char and char in state['character_postures']:
+            analyzed_beat['posture'] = state['character_postures'][char]
+        
+        # 3. Format (LLM does strict templating)
+        formatter_prompt = FORMATTER_PROMPT.format(
+            beat_data_json=json.dumps(analyzed_beat, indent=2)
+        )
+        script_line = llm_call_func(formatter_prompt, temperature=0.1)
+        
+        # Append to file
+        with open(output_file, 'a') as f:
+            f.write(script_line.strip() + '\n\n')
+            
+        print(f"Processed beat {i+1}/{len(beats)} | Zone: {state.get('zone', 'Unknown')} | Posture: {state['character_postures'].get(char, 'Unknown')}")
+
+def safe_json_load(text):
+    """Safely extract JSON from LLM output."""
+    match = re.search(r'\{.*\}', text, re.DOTALL)
+    if match:
+        try:
+            return json.loads(match.group(0))
+        except json.JSONDecodeError:
+            return None
+    return None
+    
+def run_prompt(prompt, system, pth):
+    if not Path(pth).exists():
+      result = llm_analyze_media(
+          media="", 
+          prompt=prompt,
+          system=system,
+          max_tokens=8192,
+          temperature=0.2)['analysis']
+      with open(pth, 'w') as out_f:
+        out_f.write(result)
+      print(f'Wrote {pth}')
+      return result
+    else:
+      print(f'{pth} Exists')
+      return Path(pth).read_text()
+
+# ═══════════════════════════════════════════════════════════════
+# USAGE
+# ═══════════════════════════════════════════════════════════════
+if __name__ == '__main__':
+    from plan10.lib.qwen_llm import llm_analyze_media
+    
+    def my_llm_call(prompt, temperature=0.1):
+        result = llm_analyze_media('', prompt=prompt, system=None, max_tokens=2048, temperature=temperature)
+        return result['analysis'] 
+    
+    if len(sys.argv) < 2:
+        print("Usage: python story_to_script.py <directory_path>")
+        sys.exit(1)
+        
+    dir_path = sys.argv[1]
+    world = run_prompt(user_input, WORLD, f'{dir_path}/world.txt')
+    
+    story_to_script(
+        story_path=f'{dir_path}/story.txt',
+        world_path=f'{dir_path}/world.txt',
+        output_path=f'{dir_path}/script.txt',
+        llm_call_func=my_llm_call
+    )
