@@ -64,13 +64,15 @@ def parse_screenplay_to_jsonl(screenplay_text, biography_data):
     # Extract metadata
     tag_line, location, characters = extract_metadata_from_screenplay(screenplay_text)
     
-    # Get valid zones from biography
+    # Get valid zones from biography (these are the clean names)
     valid_zones = set()
     if 'locations' in biography_data:
         for loc in biography_data['locations']:
             if 'zones' in loc:
                 for zone in loc['zones']:
-                    valid_zones.add(zone.get('zone_name', ''))
+                    zone_name = zone.get('zone_name', '').strip()
+                    if zone_name:
+                        valid_zones.add(zone_name)
     
     # Get valid character names
     valid_characters = set()
@@ -94,14 +96,30 @@ def parse_screenplay_to_jsonl(screenplay_text, biography_data):
     for zone_name, block_content in blocks:
         zone_name = zone_name.strip()
         
-        # Validate zone
-        if zone_name not in valid_zones:
+        # Try exact match first (case-insensitive)
+        matched_zone = None
+        for valid_zone in valid_zones:
+            if zone_name.lower() == valid_zone.lower():
+                matched_zone = valid_zone
+                break
+        
+        # If no exact match, check if registry zone name is contained in screenplay zone
+        if not matched_zone:
+            for valid_zone in valid_zones:
+                if valid_zone.lower() in zone_name.lower():
+                    matched_zone = valid_zone
+                    break
+        
+        # Use matched zone or fallback
+        if matched_zone:
+            zone_name = matched_zone
+        else:
             print(f"WARNING: Invalid zone '{zone_name}', using first valid zone")
             zone_name = list(valid_zones)[0] if valid_zones else 'Unknown'
         
         current_state['zone'] = zone_name
         
-        # Split block into sub-beats by double newlines
+        # Rest of parsing logic...
         sub_beats = [b.strip() for b in block_content.split('\n\n') if b.strip()]
         
         for sub in sub_beats:
