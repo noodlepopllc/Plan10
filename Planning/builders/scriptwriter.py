@@ -105,58 +105,58 @@ def parse_screenplay_to_jsonl(screenplay_text, biography_data):
         sub_beats = [b.strip() for b in block_content.split('\n\n') if b.strip()]
         
         for sub in sub_beats:
-            lines = sub.split('\n')
+            lines = [l.strip() for l in sub.split('\n') if l.strip()]
             
-            # Pattern 1: CHARACTER (action)\nDialog → action+dialog
-            match_combined = re.match(r'^([A-Z][A-Z\s]+)\s*\(([^)]+)\)\s*\n(.+)$', sub, re.DOTALL)
+            if not lines:
+                continue
             
-            # Pattern 2: CHARACTER\nDialog → dialog-only
-            match_dialog = re.match(r'^([A-Z][A-Z\s]+)\s*\n(.+)$', sub, re.DOTALL)
+            # First line should be: CHARACTER (posture, emotion)
+            char_match = re.match(r'^([A-Z][A-Z\s]+)\s*\(([^)]+)\)', lines[0])
             
-            # Pattern 3: CHARACTER action. → action-only
-            match_action = re.match(r'^([A-Z][A-Z\s]+)\s+(.+\.?)$', sub, re.DOTALL)
+            if not char_match:
+                continue
             
-            if match_combined:
-                speaker = match_combined.group(1).strip()
-                action = match_combined.group(2).strip()
-                dialog = match_combined.group(3).strip()
-                
-                # Clean dialog
-                dialog = dialog.replace('"', '').replace('"', '').replace('"', '').strip()
-                
-                beat = build_beat(speaker, action, dialog, current_state, valid_characters)
-                beats.append(beat)
-                
-                # Update state
+            speaker = char_match.group(1).strip()
+            posture_emotion = char_match.group(2).strip()
+            
+            # Extract posture and emotion from parentheses
+            posture, emotion = parse_posture_emotion(posture_emotion)
+            
+            # Update state with posture
+            current_state['posture'] = posture
+            current_state['facial'] = emotion
+            
+            # Process remaining lines
+            dialog = ""
+            action = ""
+            
+            for line in lines[1:]:
+                # Check if line starts with quote (dialog)
+                if line.startswith('"') or line.startswith('"'):
+                    # Extract dialog, strip quotes
+                    dialog = line.strip('"').strip('"').strip('"').strip('"').strip()
+                else:
+                    # It's an action
+                    action = line
+            
+            # Build beat
+            beat = build_beat(speaker, action, dialog, current_state, valid_characters)
+            beats.append(beat)
+            
+            # Update state
+            if action:
                 current_state['posture'] = infer_posture(action)
                 current_state['facial'] = infer_facial(action)
-                current_state['last_actor'] = speaker
-                
-            elif match_dialog:
-                speaker = match_dialog.group(1).strip()
-                dialog = match_dialog.group(2).strip()
-                
-                # Clean dialog
-                dialog = dialog.replace('"', '').replace('"', '').replace('"', '').strip()
-                
-                beat = build_beat(speaker, "", dialog, current_state, valid_characters)
-                beats.append(beat)
-                
-                current_state['last_actor'] = speaker
-                
-            elif match_action:
-                speaker = match_action.group(1).strip()
-                action = match_action.group(2).strip()
-                
-                beat = build_beat(speaker, action, "", current_state, valid_characters)
-                beats.append(beat)
-                
-                # Update state
-                current_state['posture'] = infer_posture(action)
-                current_state['facial'] = infer_facial(action)
-                current_state['last_actor'] = speaker
+            current_state['last_actor'] = speaker
     
     return beats
+
+def parse_posture_emotion(text):
+    """Parse 'posture, emotion' from parentheses."""
+    parts = [p.strip() for p in text.split(',')]
+    posture = parts[0] if len(parts) > 0 else 'standing'
+    emotion = parts[1] if len(parts) > 1 else 'neutral'
+    return posture, emotion
 
 def build_beat(speaker, action, dialog, current_state, valid_characters):
     """Build a single JSONL beat with proper field mapping."""

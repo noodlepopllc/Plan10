@@ -51,20 +51,16 @@ OUTPUT FORMAT:
 [ZONE: <zone>]
 >> <shot_setup>
 
-<CHARACTER_1> (<posture>, <emotion>)
-<dialog_1>
-<action_1>
-
-<CHARACTER_2> (<posture>, <emotion>)
-<dialog_2>
-<action_2>
+<CHARACTER> (<posture>, <emotion>)
+"<dialog>"
+<action>
 
 RULES:
-1. Output a block for EACH character in the characters array.
-2. Separate character blocks with a blank line.
-3. Character names in ALL CAPS.
-4. If dialog is null, omit that line for that character.
-5. If action is null, omit that line for that character.
+1. If dialog exists, wrap it in QUOTES: "dialog text here"
+2. If dialog is null/empty, omit the dialog line entirely.
+3. Action line has NO quotes.
+4. If action is null/empty, omit the action line entirely.
+5. Character name in ALL CAPS.
 6. Output ONLY the formatted text."""
 
 # ═══════════════════════════════════════════════════════════════
