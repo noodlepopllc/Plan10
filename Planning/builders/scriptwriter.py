@@ -240,7 +240,7 @@ Prose Story:
 {user_input}"""
     
     #screenplay = run_prompt(screenplay_prompt, SCREENPLAY, f'{outpath}/screenplay.txt')
-    screenplay = Path(f'{outpath}/screenplay.txt').read_text()
+    screenplay = Path(f'{outpath}/script.txt').read_text()
     
     # Step 3: Generate biography/registry
     biography_text = run_prompt(world, BIOGRAPHY, f'{outpath}/registry.json')
