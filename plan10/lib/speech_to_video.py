@@ -303,9 +303,9 @@ def main():
     LTX = os.environ.get('LTX','False') != 'False'
 
     if WGP:
-        from wgp import GenerateTalkingVideo as Speech
+        from plan10.lib.wgp import GenerateTalkingVideo as Speech
     elif LTX:
-        from ltx import GenerateTalkingVideo as Speech
+        from plan10.lib.ltx import GenerateTalkingVideo as Speech
     else:
         Speech = GenerateTalkingVideo
 
