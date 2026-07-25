@@ -1,15 +1,15 @@
 #!/bin/bash
 set -euo pipefail
 if [ ! -d "tests/$1" ]; then 
-    uv run character_builder -D -N $1 -R "latinx_mestizo" -C "red" -T "tan" -H "random" -S "long waves"
+    python tests/character_builder.py -D -N $1
 fi
 
 if [ ! -d "tests/$2" ]; then
-    uv run character_builder -D -N $2 -R "east_asian" -C "blonde" -T "fair" -H "random" -S "soft bob"
+    python tests/character_builder.py -D -N $2
 fi
 
 if [ ! -d "tests/$1_$2" ]; then
-   uv run persons $1 $2
+   python tests/persons.py $1 $2
 fi
 
 OUTDIR="tests/$1_$2"

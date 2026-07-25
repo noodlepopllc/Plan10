@@ -55,7 +55,7 @@ shot() {
 
     if [[ ! -f "$out" ]]; then
         echo "🎨 T2I: $out_suffix"
-        python lib/compositor.py \
+        uv run compositor \
             -B "$bg" \
             -C "$char" \
             -S "$shot_type" \
@@ -89,7 +89,7 @@ dialog() {
 
     if [[ ! -f "$voice_vid" ]]; then
         echo "🎨 S2V: $voice_vid"
-        python lib/speech_to_video.py \
+        uv run speech_to_video \
             -P "$action" \
             -I "$input" \
             -T "$dialog_text" \
@@ -117,7 +117,7 @@ two_person() {
     # Medium of background character
     if [[ ! -f "$medium" ]]; then
         echo "🎨 T2I: $medium"
-        python lib/compositor.py \
+        uv run compositor \
             -B "$bg" \
             -C "$char_bg" \
             -S "medium" \
@@ -129,7 +129,7 @@ two_person() {
     # OTS with foreground + medium background
     if [[ ! -f "$out" ]]; then
         echo "🎨 T2I: $out_suffix (OTS)"
-        python lib/compositor.py \
+        uv run compositor \
             -B "$bg" \
             -C "$char_fg" \
             -C "$medium" \
@@ -141,14 +141,14 @@ two_person() {
         touch "$out"
 
         echo "🎬 I2V Exits frame: $out_suffix"
-        python lib/image_to_video.py \
+        uv run image_to_video \
           -P "Over the entire duration, the woman with her back to the camera in the foreground slowly walks forward and completely out of frame in a smooth, continuous motion, no cuts, no teleporting. The woman in the background steps forward. The final frame should match the second image, with only the background woman visible." \
           -I "$out" \
           -I "$medium" \
           -O "$removed_vid" \
 
         echo "🎬 I2V Closeup: $out_suffix"
-        python lib/image_to_video.py \
+        uv run image_to_video \
             -P "She moves forward as the camera zooms in on her face. $vid_prompt" \
             -I "$medium" \
             -I "$closeup" \
@@ -197,11 +197,11 @@ DIALOG_LINES=(
 # ─── BACKGROUNDS ───
 echo "=== BACKGROUNDS ==="
 if [ ! -f "$BG_LEFT" ]; then 
-    python lib/compositor.py -B $BG -Z "left" -O "$BG_LEFT" -R 
+    uv run compositor -B $BG -Z "left" -O "$BG_LEFT" -R 
 fi
 
 if [ ! -f "$BG_RIGHT" ]; then 
-    python lib/compositor.py -B $BG -Z "right" -O "$BG_RIGHT" -R
+    uv run compositor -B $BG -Z "right" -O "$BG_RIGHT" -R
 fi
 
 VOICE1="$OUTDIR/char1.wav"
@@ -212,13 +212,13 @@ VOICE2="$OUTDIR/char2.wav"
 # ────────────────────────────────────────────────
 
 if [[ ! -f $VOICE1 ]]; then
-python lib/dialog.py \
+uv run dialog \
   -I "female, young adult, moderate pitch, canadian accent" \
   -O "$VOICE1"
 fi
 
 if [[ ! -f $VOICE2 ]]; then
-python lib/dialog.py \
+uv run dialog \
   -I "female, young adult, high pitch, portuguese accent" \
   -O "$VOICE2"
 fi
