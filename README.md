@@ -7,7 +7,7 @@ conda env create -f environment.yml
 conda activate plan10-local
 uv pip install -e . 
 
-python lib/config.py
+uv run config
 
 # The following are very large, test out first with existing and download as needed
 
