@@ -42,6 +42,80 @@ def split_prose_into_paragraphs(prose):
     paragraphs = re.split(r'\n\s*\n', prose.strip())
     return [p.strip() for p in paragraphs if p.strip()]
 
+import re
+
+def smart_chunk_prose(prose, target_tokens=300, max_tokens=400):
+    """
+    Intelligently chunk prose into semantically coherent pieces.
+    
+    Strategy:
+    1. Split on paragraph breaks (\n\n) if they exist
+    2. If a paragraph is too long, split it on sentence boundaries
+    3. Group sentences together to hit target_tokens
+    4. Never exceed max_tokens per chunk
+    """
+    
+    # Helper: rough token count (1 token ≈ 4 characters for English)
+    def count_tokens(text):
+        return len(text) // 4
+    
+    # Step 1: Try to split on paragraph breaks
+    paragraphs = re.split(r'\n\s*\n', prose.strip())
+    paragraphs = [p.strip() for p in paragraphs if p.strip()]
+    
+    # If we got multiple paragraphs, check if any are too long
+    if len(paragraphs) > 1:
+        chunks = []
+        for para in paragraphs:
+            if count_tokens(para) <= max_tokens:
+                chunks.append(para)
+            else:
+                # Paragraph is too long, split it on sentences
+                sub_chunks = split_on_sentences(para, target_tokens, max_tokens)
+                chunks.extend(sub_chunks)
+        return chunks
+    
+    # Step 2: No paragraph breaks found, split entire text on sentences
+    else:
+        return split_on_sentences(prose, target_tokens, max_tokens)
+
+def split_on_sentences(text, target_tokens, max_tokens):
+    """
+    Split text on sentence boundaries and group sentences together.
+    """
+    # Split on sentence-ending punctuation followed by space
+    # This regex handles: "Hello." "What?" "Wow!" but not "Dr. Smith"
+    sentences = re.split(r'(?<=[.!?])\s+', text.strip())
+    sentences = [s.strip() for s in sentences if s.strip()]
+    
+    chunks = []
+    current_chunk = []
+    current_tokens = 0
+    
+    for sentence in sentences:
+        sentence_tokens = len(sentence) // 4
+        
+        # If adding this sentence would exceed max_tokens, start a new chunk
+        if current_tokens + sentence_tokens > max_tokens and current_chunk:
+            chunks.append(' '.join(current_chunk))
+            current_chunk = [sentence]
+            current_tokens = sentence_tokens
+        else:
+            current_chunk.append(sentence)
+            current_tokens += sentence_tokens
+            
+            # If we've hit the target, save this chunk and start fresh
+            if current_tokens >= target_tokens:
+                chunks.append(' '.join(current_chunk))
+                current_chunk = []
+                current_tokens = 0
+    
+    # Don't forget the last chunk
+    if current_chunk:
+        chunks.append(' '.join(current_chunk))
+    
+    return chunks
+
 def parse_iterative_output(llm_output):
     """Extract the clean screenplay text and the new state from the LLM output."""
     parts = re.split(r'<STATE_UPDATE>\s*(.*?)\s*</STATE_UPDATE>', llm_output, flags=re.DOTALL)
@@ -223,8 +297,6 @@ def infer_facial(action_text):
 # ═══════════════════════════════════════════════════════════════
 
 def build_script(user_input_path, outpath):
-    """Main pipeline: Generate world → iterative screenplay → biography → narrative JSONL."""
-    
     outpath = Path(outpath)
     outpath.mkdir(parents=True, exist_ok=True)
     
@@ -233,14 +305,18 @@ def build_script(user_input_path, outpath):
     # Step 1: Generate world model
     world = run_prompt(user_input, WORLD, f'{outpath}/world.txt')
     
-    # Step 2: Generate screenplay PER PARAGRAPH (The Fix)
+    # Step 2: Generate screenplay PER CHUNK (using smart chunking)
     screenplay_path = f'{outpath}/screenplay.txt'
     
     if not Path(screenplay_path).exists():
-        print("Generating screenplay iteratively per paragraph...")
-        paragraphs = split_prose_into_paragraphs(user_input)
+        print("Generating screenplay iteratively per chunk...")
         
-        # Initial state for the first paragraph
+        # NEW: Use smart chunking instead of naive paragraph splitting
+        chunks = smart_chunk_prose(user_input, target_tokens=300, max_tokens=400)
+        
+        print(f"  -> Split prose into {len(chunks)} chunks")
+        
+        # Initial state for the first chunk
         state = {
             "previous_zone": "Unknown",
             "active_characters": "",
@@ -249,22 +325,22 @@ def build_script(user_input_path, outpath):
         
         full_screenplay_parts = []
         
-        for i, para in enumerate(paragraphs):
+        for i, chunk in enumerate(chunks):
             is_first = (i == 0)
             
             # Choose the correct prompt template
             template = SCREENPLAY_FIRST if is_first else SCREENPLAY_CONTINUE
             
-            # CORRECTLY INJECT THE ACTUAL VARIABLES
+            # Inject variables
             prompt = template.format(
                 world_model=world,
                 previous_zone=state['previous_zone'],
                 active_characters=state['active_characters'],
                 last_known_action=state['last_known_action'],
-                prose_story=para
+                prose_story=chunk
             )
             
-            # Call LLM (system prompt is empty because ROLE is in the template)
+            # Call LLM
             result = llm_analyze_media(
                 media="", 
                 prompt=prompt,
@@ -273,13 +349,13 @@ def build_script(user_input_path, outpath):
                 temperature=0.2
             )['analysis']
             
-            # Parse output into clean text and new state
+            # Parse output
             screenplay_text, new_state = parse_iterative_output(result)
             full_screenplay_parts.append(screenplay_text)
             
-            # Update state for the next paragraph
+            # Update state
             state = new_state
-            print(f"  -> Processed paragraph {i+1}/{len(paragraphs)} | Zone: {state['previous_zone']}")
+            print(f"  -> Processed chunk {i+1}/{len(chunks)} | Zone: {state['previous_zone']} | Tokens: ~{len(chunk)//4}")
             
         full_screenplay = "\n\n".join(full_screenplay_parts)
         with open(screenplay_path, 'w') as out_f:
@@ -287,7 +363,7 @@ def build_script(user_input_path, outpath):
         print(f'Wrote {screenplay_path}')
     else:
         print(f'{screenplay_path} Exists')
-    
+        
     # Step 3: Generate biography/registry
     biography_text = run_prompt(world, BIOGRAPHY, f'{outpath}/registry.json')
     
