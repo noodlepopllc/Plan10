@@ -1,5 +1,5 @@
 from glob import glob
-import sys
+import sys, os
 
 from plan10.lib.config import load_config
 load_config()
