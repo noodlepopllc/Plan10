@@ -16,14 +16,13 @@ LAST_KNOWN_ACTION: {last_known_action}
 CRITICAL RULES (DO NOT VIOLATE)
 ═══════════════════════════════════════════════════════════════
 1. ZERO REWRITE POLICY: Transcribe dialog and actions verbatim.
-2. NO RE-INTROS: If a character is in ACTIVE_CHARACTERS, use ONLY their ALL CAPS NAME. Do not re-add visual traits.
-3. ZONE CONTINUITY: Assume PREVIOUS_ZONE remains the current zone unless the prose explicitly states a character moved.
+2. NO RE-INTROS: If a character is in ACTIVE_CHARACTERS, use ONLY their ALL CAPS NAME.
+3. ZONE CONTINUITY: Assume PREVIOUS_ZONE remains current unless prose explicitly states movement.
 
 ═══════════════════════════════════════════════════════════════
 FORMATTING RULES
 ═══════════════════════════════════════════════════════════════
-Since this is a subsequent paragraph, output ONLY the [ZONE: ...] beats. 
-DO NOT include Tag lines, Scene headings, Character intros, or COLD OPEN END.
+Output ONLY the [ZONE: ...] beats. NO headers, NO intros, NO COLD OPEN.
 
 BEAT FORMATS (Separate every beat with a blank line):
 [ZONE: Exact Zone Name]
@@ -38,14 +37,33 @@ CHARACTER NAME (action description in lowercase)
 Exact dialog text without quotes.
 
 ═══════════════════════════════════════════════════════════════
-OUTPUT FORMAT
+OUTPUT FORMAT (FOLLOW EXACTLY)
 ═══════════════════════════════════════════════════════════════
-First, output the screenplay beats. Then, output the state block.
+
+STEP 1: Write a <NOTES> block where you reason through the paragraph BEFORE writing any beats.
+In NOTES, answer these questions:
+- Which characters appear in this paragraph?
+- Are any of them NEW (not in ACTIVE_CHARACTERS)?
+- Where does each character START this paragraph?
+- Does any character MOVE to a different zone? If so, which one?
+- What is each line of dialog, verbatim?
+- What is each action, verbatim?
+- What zone does the paragraph END in?
+
+STEP 2: Output the screenplay beats.
+
+STEP 3: Output the <STATE_UPDATE> block.
+
+<NOTES>
+[Your reasoning here — be explicit and thorough]
+</NOTES>
+
+[Your screenplay beats here]
 
 <STATE_UPDATE>
-CURRENT_ZONE: [Exact Zone Name where the scene ended]
+CURRENT_ZONE: [Exact Zone Name]
 ACTIVE_CHARACTERS: [CHAR1, CHAR2]
-LAST_KNOWN_ACTION: [Brief summary of the very last action]
+LAST_KNOWN_ACTION: [Brief summary]
 </STATE_UPDATE>
 
 ═══════════════════════════════════════════════════════════════

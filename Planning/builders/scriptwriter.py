@@ -117,7 +117,12 @@ def split_on_sentences(text, target_tokens, max_tokens):
     return chunks
 
 def parse_iterative_output(llm_output):
-    """Extract the clean screenplay text and the new state from the LLM output."""
+    """Extract clean screenplay text, stripping NOTES and STATE_UPDATE."""
+    
+    # Strip the NOTES block entirely
+    llm_output = re.sub(r'<NOTES>.*?</NOTES>', '', llm_output, flags=re.DOTALL)
+    
+    # Split on STATE_UPDATE to extract state
     parts = re.split(r'<STATE_UPDATE>\s*(.*?)\s*</STATE_UPDATE>', llm_output, flags=re.DOTALL)
     
     screenplay_text = parts[0].strip()
