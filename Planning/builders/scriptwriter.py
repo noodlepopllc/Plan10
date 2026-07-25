@@ -4,16 +4,10 @@ import re
 from plan10.lib.qwen_llm import llm_analyze_media
 from pathlib import Path
 
-# ═══════════════════════════════════════════════════════════════
-# 1. LOAD PROMPTS
-# ═══════════════════════════════════════════════════════════════
 prompt_path = './Planning/prompts'
 WORLD = Path(f'{prompt_path}/scriptwriter/world.txt').read_text()
 BIOGRAPHY = Path(f'{prompt_path}/scriptwriter/biography.txt').read_text()
-
-# NEW: Load the two iterative screenplay prompts
-SCREENPLAY_FIRST = Path(f'{prompt_path}/scriptwriter/screenplay_first.txt').read_text()
-SCREENPLAY_CONTINUE = Path(f'{prompt_path}/scriptwriter/screenplay_continue.txt').read_text()
+SCREENPLAY = Path(f'{prompt_path}/screenplay.txt').read_text()
 
 REQUIRED_FIELDS = ['actor', 'speaker', 'action', 'dialog', 'location', 'zone', 'posture', 'facial']
 
@@ -33,122 +27,6 @@ def run_prompt(prompt, system, pth):
       print(f'{pth} Exists')
       return Path(pth).read_text()
 
-# ═══════════════════════════════════════════════════════════════
-# 2. ITERATIVE SCREENPLAY HELPERS
-# ═══════════════════════════════════════════════════════════════
-
-def split_prose_into_paragraphs(prose):
-    """Split prose into chunks by double newlines."""
-    paragraphs = re.split(r'\n\s*\n', prose.strip())
-    return [p.strip() for p in paragraphs if p.strip()]
-
-import re
-
-def smart_chunk_prose(prose, target_tokens=300, max_tokens=400):
-    """
-    Intelligently chunk prose into semantically coherent pieces.
-    
-    Strategy:
-    1. Split on paragraph breaks (\n\n) if they exist
-    2. If a paragraph is too long, split it on sentence boundaries
-    3. Group sentences together to hit target_tokens
-    4. Never exceed max_tokens per chunk
-    """
-    
-    # Helper: rough token count (1 token ≈ 4 characters for English)
-    def count_tokens(text):
-        return len(text) // 4
-    
-    # Step 1: Try to split on paragraph breaks
-    paragraphs = re.split(r'\n\s*\n', prose.strip())
-    paragraphs = [p.strip() for p in paragraphs if p.strip()]
-    
-    # If we got multiple paragraphs, check if any are too long
-    if len(paragraphs) > 1:
-        chunks = []
-        for para in paragraphs:
-            if count_tokens(para) <= max_tokens:
-                chunks.append(para)
-            else:
-                # Paragraph is too long, split it on sentences
-                sub_chunks = split_on_sentences(para, target_tokens, max_tokens)
-                chunks.extend(sub_chunks)
-        return chunks
-    
-    # Step 2: No paragraph breaks found, split entire text on sentences
-    else:
-        return split_on_sentences(prose, target_tokens, max_tokens)
-
-def split_on_sentences(text, target_tokens, max_tokens):
-    """
-    Split text on sentence boundaries and group sentences together.
-    """
-    # Split on sentence-ending punctuation followed by space
-    # This regex handles: "Hello." "What?" "Wow!" but not "Dr. Smith"
-    sentences = re.split(r'(?<=[.!?])\s+', text.strip())
-    sentences = [s.strip() for s in sentences if s.strip()]
-    
-    chunks = []
-    current_chunk = []
-    current_tokens = 0
-    
-    for sentence in sentences:
-        sentence_tokens = len(sentence) // 4
-        
-        # If adding this sentence would exceed max_tokens, start a new chunk
-        if current_tokens + sentence_tokens > max_tokens and current_chunk:
-            chunks.append(' '.join(current_chunk))
-            current_chunk = [sentence]
-            current_tokens = sentence_tokens
-        else:
-            current_chunk.append(sentence)
-            current_tokens += sentence_tokens
-            
-            # If we've hit the target, save this chunk and start fresh
-            if current_tokens >= target_tokens:
-                chunks.append(' '.join(current_chunk))
-                current_chunk = []
-                current_tokens = 0
-    
-    # Don't forget the last chunk
-    if current_chunk:
-        chunks.append(' '.join(current_chunk))
-    
-    return chunks
-
-def parse_iterative_output(llm_output):
-    """Extract clean screenplay text, stripping NOTES and STATE_UPDATE."""
-    
-    # Strip the NOTES block entirely
-    llm_output = re.sub(r'<NOTES>.*?</NOTES>', '', llm_output, flags=re.DOTALL)
-    
-    # Split on STATE_UPDATE to extract state
-    parts = re.split(r'<STATE_UPDATE>\s*(.*?)\s*</STATE_UPDATE>', llm_output, flags=re.DOTALL)
-    
-    screenplay_text = parts[0].strip()
-    
-    new_state = {
-        "previous_zone": "Unknown",
-        "active_characters": "",
-        "last_known_action": ""
-    }
-    
-    if len(parts) > 1:
-        state_block = parts[1].strip()
-        zone_match = re.search(r'CURRENT_ZONE:\s*(.+)', state_block)
-        chars_match = re.search(r'ACTIVE_CHARACTERS:\s*(.+)', state_block)
-        action_match = re.search(r'LAST_KNOWN_ACTION:\s*(.+)', state_block)
-        
-        if zone_match: new_state['previous_zone'] = zone_match.group(1).strip()
-        if chars_match: new_state['active_characters'] = chars_match.group(1).strip()
-        if action_match: new_state['last_known_action'] = action_match.group(1).strip()
-        
-    return screenplay_text, new_state
-
-# ═══════════════════════════════════════════════════════════════
-# 3. YOUR EXISTING PARSING LOGIC (Unchanged)
-# ═══════════════════════════════════════════════════════════════
-
 def extract_metadata_from_screenplay(screenplay_text):
     """Extract tag line, location, and character intros from screenplay header."""
     lines = screenplay_text.strip().split('\n')
@@ -160,14 +38,17 @@ def extract_metadata_from_screenplay(screenplay_text):
     for line in lines:
         line = line.strip()
         
+        # Tag line
         if line.startswith('>>'):
             tag_line = line[2:].strip()
         
+        # Scene heading: INT. LOCATION - TIME
         if line.startswith('INT.') or line.startswith('EXT.'):
             match = re.match(r'(INT\.|EXT\.)\s+(.+?)\s*-\s*(.+)', line)
             if match:
                 location = match.group(2).strip()
         
+        # Character intro: NAME (traits) action.
         char_match = re.match(r'^([A-Z][A-Z\s]+)\s*\(([^)]+)\)\s*(.+)$', line)
         if char_match:
             name = char_match.group(1).strip()
@@ -178,12 +59,12 @@ def extract_metadata_from_screenplay(screenplay_text):
 
 def parse_screenplay_to_jsonl(screenplay_text, biography_data):
     """Parse screenplay format directly into JSONL beats."""
-    # Safety tweak: strip any leftover STATE_UPDATE tags just in case
-    screenplay_text = re.sub(r'<STATE_UPDATE>.*?</STATE_UPDATE>', '', screenplay_text, flags=re.DOTALL).strip()
-    
     beats = []
+    
+    # Extract metadata
     tag_line, location, characters = extract_metadata_from_screenplay(screenplay_text)
     
+    # Get valid zones from biography
     valid_zones = set()
     if 'locations' in biography_data:
         for loc in biography_data['locations']:
@@ -191,14 +72,17 @@ def parse_screenplay_to_jsonl(screenplay_text, biography_data):
                 for zone in loc['zones']:
                     valid_zones.add(zone.get('zone_name', ''))
     
+    # Get valid character names
     valid_characters = set()
     if 'biographies' in biography_data:
         for char in biography_data['biographies']:
             valid_characters.add(char.get('name', '').upper())
     
+    # Split by [ZONE: ...] markers
     zone_pattern = r'\[ZONE:\s*([^\]]+)\](.*?)(?=\[ZONE:|$)'
     blocks = re.findall(zone_pattern, screenplay_text, re.DOTALL)
     
+    # Track state
     current_state = {
         'posture': 'standing',
         'facial': 'neutral',
@@ -210,37 +94,54 @@ def parse_screenplay_to_jsonl(screenplay_text, biography_data):
     for zone_name, block_content in blocks:
         zone_name = zone_name.strip()
         
+        # Validate zone
         if zone_name not in valid_zones:
             print(f"WARNING: Invalid zone '{zone_name}', using first valid zone")
             zone_name = list(valid_zones)[0] if valid_zones else 'Unknown'
         
         current_state['zone'] = zone_name
         
+        # Split block into sub-beats by double newlines
         sub_beats = [b.strip() for b in block_content.split('\n\n') if b.strip()]
         
         for sub in sub_beats:
+            lines = sub.split('\n')
+            
+            # Pattern 1: CHARACTER (action)\nDialog → action+dialog
             match_combined = re.match(r'^([A-Z][A-Z\s]+)\s*\(([^)]+)\)\s*\n(.+)$', sub, re.DOTALL)
+            
+            # Pattern 2: CHARACTER\nDialog → dialog-only
             match_dialog = re.match(r'^([A-Z][A-Z\s]+)\s*\n(.+)$', sub, re.DOTALL)
-            match_action = re.match(r'^([A-Z][A-Z\s]+)\s+(.+)$', sub, re.DOTALL)
+            
+            # Pattern 3: CHARACTER action. → action-only
+            match_action = re.match(r'^([A-Z][A-Z\s]+)\s+(.+\.?)$', sub, re.DOTALL)
             
             if match_combined:
                 speaker = match_combined.group(1).strip()
                 action = match_combined.group(2).strip()
-                dialog = match_combined.group(3).strip().replace('"', '').replace('"', '').replace('"', '').strip()
+                dialog = match_combined.group(3).strip()
+                
+                # Clean dialog
+                dialog = dialog.replace('"', '').replace('"', '').replace('"', '').strip()
                 
                 beat = build_beat(speaker, action, dialog, current_state, valid_characters)
                 beats.append(beat)
                 
+                # Update state
                 current_state['posture'] = infer_posture(action)
                 current_state['facial'] = infer_facial(action)
                 current_state['last_actor'] = speaker
                 
             elif match_dialog:
                 speaker = match_dialog.group(1).strip()
-                dialog = match_dialog.group(2).strip().replace('"', '').replace('"', '').replace('"', '').strip()
+                dialog = match_dialog.group(2).strip()
+                
+                # Clean dialog
+                dialog = dialog.replace('"', '').replace('"', '').replace('"', '').strip()
                 
                 beat = build_beat(speaker, "", dialog, current_state, valid_characters)
                 beats.append(beat)
+                
                 current_state['last_actor'] = speaker
                 
             elif match_action:
@@ -250,6 +151,7 @@ def parse_screenplay_to_jsonl(screenplay_text, biography_data):
                 beat = build_beat(speaker, action, "", current_state, valid_characters)
                 beats.append(beat)
                 
+                # Update state
                 current_state['posture'] = infer_posture(action)
                 current_state['facial'] = infer_facial(action)
                 current_state['last_actor'] = speaker
@@ -257,10 +159,14 @@ def parse_screenplay_to_jsonl(screenplay_text, biography_data):
     return beats
 
 def build_beat(speaker, action, dialog, current_state, valid_characters):
+    """Build a single JSONL beat with proper field mapping."""
+    
+    # Validate speaker
     if speaker not in valid_characters:
         print(f"WARNING: Unknown character '{speaker}'")
         speaker = list(valid_characters)[0] if valid_characters else "UNKNOWN"
     
+    # Determine actor/speaker fields
     actor = speaker if action else ""
     speaker_field = speaker if dialog else ""
     
@@ -276,116 +182,81 @@ def build_beat(speaker, action, dialog, current_state, valid_characters):
     }
 
 def infer_posture(action_text):
+    """Infer posture from action description."""
     a = action_text.lower()
-    if any(w in a for w in ['sits', 'sitting', 'seated', 'on bench', 'on chair']): return 'sitting'
-    if any(w in a for w in ['stands', 'standing', 'rose', 'stands up']): return 'standing'
-    if any(w in a for w in ['kneels', 'kneeling']): return 'kneeling'
-    if any(w in a for w in ['crouches', 'crouching']): return 'crouching'
-    if any(w in a for w in ['lies', 'laying', 'reclines', 'lays down']): return 'laying'
-    return 'standing'
+    if any(w in a for w in ['sits', 'sitting', 'seated', 'on bench', 'on chair']): 
+        return 'sitting'
+    if any(w in a for w in ['stands', 'standing', 'rose', 'stands up']): 
+        return 'standing'
+    if any(w in a for w in ['kneels', 'kneeling']): 
+        return 'kneeling'
+    if any(w in a for w in ['crouches', 'crouching']): 
+        return 'crouching'
+    if any(w in a for w in ['lies', 'laying', 'reclines', 'lays down']): 
+        return 'laying'
+    return 'standing'  # Default
 
 def infer_facial(action_text):
+    """Infer facial expression from action description."""
     a = action_text.lower()
-    if 'eyes widen' in a or 'eyes widened' in a: return 'eyes widened'
-    if 'frown' in a or 'frustrated' in a: return 'frowning'
-    if 'smile' in a or 'beams' in a or 'grin' in a: return 'smiling'
-    if 'rolls' in a and 'eye' in a: return 'eyes narrowed'
-    if 'angry' in a or 'glare' in a: return 'angry'
-    if 'laugh' in a: return 'laughing'
-    if 'scowl' in a: return 'scowling'
-    if 'look' in a and 'down' in a: return 'looking down'
-    if 'look' in a and 'away' in a: return 'looking away'
-    return 'neutral'
-
-# ═══════════════════════════════════════════════════════════════
-# 4. MAIN PIPELINE
-# ═══════════════════════════════════════════════════════════════
+    if 'eyes widen' in a or 'eyes widened' in a: 
+        return 'eyes widened'
+    if 'frown' in a or 'frustrated' in a: 
+        return 'frowning'
+    if 'smile' in a or 'beams' in a or 'grin' in a: 
+        return 'smiling'
+    if 'rolls' in a and 'eye' in a: 
+        return 'eyes narrowed'
+    if 'angry' in a or 'glare' in a: 
+        return 'angry'
+    if 'laugh' in a: 
+        return 'laughing'
+    if 'scowl' in a: 
+        return 'scowling'
+    if 'look' in a and 'down' in a: 
+        return 'looking down'
+    if 'look' in a and 'away' in a: 
+        return 'looking away'
+    return 'neutral'  # Default
 
 def build_script(user_input_path, outpath):
+    """Main pipeline: Generate world → screenplay → biography → narrative JSONL."""
+    
     outpath = Path(outpath)
     outpath.mkdir(parents=True, exist_ok=True)
     
+    # Read user input
     user_input = Path(user_input_path).read_text()
     
     # Step 1: Generate world model
     world = run_prompt(user_input, WORLD, f'{outpath}/world.txt')
     
-    # Step 2: Generate screenplay PER CHUNK (using smart chunking)
-    screenplay_path = f'{outpath}/screenplay.txt'
+    # Step 2: Generate screenplay from prose
+    screenplay_prompt = f"""World Model:
+{world}
+
+Prose Story:
+{user_input}"""
     
-    if not Path(screenplay_path).exists():
-        print("Generating screenplay iteratively per chunk...")
-        
-        # NEW: Use smart chunking instead of naive paragraph splitting
-        chunks = smart_chunk_prose(user_input, target_tokens=300, max_tokens=400)
-        
-        print(f"  -> Split prose into {len(chunks)} chunks")
-        
-        # Initial state for the first chunk
-        state = {
-            "previous_zone": "Unknown",
-            "active_characters": "",
-            "last_known_action": "Scene begins."
-        }
-        
-        full_screenplay_parts = []
-        
-        for i, chunk in enumerate(chunks):
-            is_first = (i == 0)
-            
-            # Choose the correct prompt template
-            template = SCREENPLAY_FIRST if is_first else SCREENPLAY_CONTINUE
-            
-            # Inject variables
-            prompt = template.format(
-                world_model=world,
-                previous_zone=state['previous_zone'],
-                active_characters=state['active_characters'],
-                last_known_action=state['last_known_action'],
-                prose_story=chunk
-            )
-            
-            # Call LLM
-            result = llm_analyze_media(
-                media="", 
-                prompt=prompt,
-                system="", 
-                max_tokens=8192,
-                temperature=0.2
-            )['analysis']
-            
-            # Parse output
-            screenplay_text, new_state = parse_iterative_output(result)
-            full_screenplay_parts.append(screenplay_text)
-            
-            # Update state
-            state = new_state
-            print(f"  -> Processed chunk {i+1}/{len(chunks)} | Zone: {state['previous_zone']} | Tokens: ~{len(chunk)//4}")
-            
-        full_screenplay = "\n\n".join(full_screenplay_parts)
-        with open(screenplay_path, 'w') as out_f:
-            out_f.write(full_screenplay)
-        print(f'Wrote {screenplay_path}')
-    else:
-        print(f'{screenplay_path} Exists')
-        
+    screenplay = run_prompt(screenplay_prompt, SCREENPLAY, f'{outpath}/screenplay.txt')
+    
     # Step 3: Generate biography/registry
     biography_text = run_prompt(world, BIOGRAPHY, f'{outpath}/registry.json')
     
+    # Parse biography JSON
     try:
         biography_data = json.loads(biography_text)
     except json.JSONDecodeError:
         print("ERROR: Could not parse biography JSON")
         biography_data = {}
     
-    # Step 4: Parse screenplay directly to JSONL
+    # Step 4: Parse screenplay directly to JSONL (NEW APPROACH)
     narrative_path = f'{outpath}/narrative.json'
     
     if not Path(narrative_path).exists():
         print("Parsing screenplay to JSONL...")
-        screenplay_text = Path(screenplay_path).read_text()
         
-        beats = parse_screenplay_to_jsonl(screenplay_text, biography_data)
+        beats = parse_screenplay_to_jsonl(screenplay, biography_data)
         
         with open(narrative_path, 'w') as out_f:
             for beat in beats:
