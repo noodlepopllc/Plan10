@@ -25,7 +25,9 @@ else:
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
 
-output = './outputs_qwen'
+output = './outputs'
+directory = Path(output)
+directory.mkdir(parents=True, exist_ok=True)
 count = 0
 duration = 10 if WGP or LTX else 5
 
