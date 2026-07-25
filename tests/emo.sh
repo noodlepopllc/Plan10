@@ -34,7 +34,7 @@ B="$OUTDIR/char2.png"
 BG_LEFT="$OUTDIR/location_left.png"
 BG_RIGHT="$OUTDIR/location_right.png"
 
-python lib/config.py -R
+uv run config -R
 
 source .env
 echo "DEBUG: HEIGHT='$HEIGHT' WIDTH='$WIDTH'"
