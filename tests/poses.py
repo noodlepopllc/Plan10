@@ -11,8 +11,6 @@ from pathlib import Path
 from plan10.lib.image_gen import add_metadata_char
 from plan10.lib.util import video_to_img
 
-
-
 WIDTH = int(os.environ.get("WIDTH","480"))
 HEIGHT = int(os.environ.get("HEIGHT","832"))
 
