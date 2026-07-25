@@ -113,7 +113,8 @@ def story_to_script(story_path, world_path, output_path, llm_call_func):
     story_text = Path(story_path).read_text()
     
     # Split into beats (paragraphs)
-    beats = [b.strip() for b in re.split(r'\n\s*\n', story_text) if b.strip() and 'COLD OPEN END' not in b]
+    #beats = [b.strip() for b in re.split(r'\n\s*\n', story_text) if b.strip() and 'COLD OPEN END' not in b]
+    beats = split_into_beats(story_text)
     
     # Initialize output file
     output_file = Path(output_path)
@@ -170,6 +171,30 @@ def safe_json_load(text):
         except json.JSONDecodeError:
             return None
     return None
+
+def split_into_beats(story_text):
+    """Split story into beats, handling both paragraph and line-by-line formats."""
+    
+    # First try paragraph breaks
+    paragraphs = [b.strip() for b in re.split(r'\n\s*\n', story_text) if b.strip()]
+    
+    # Filter out markers
+    paragraphs = [p for p in paragraphs if 'COLD OPEN END' not in p]
+    
+    # If we got very few paragraphs but many lines, it's line-by-line format
+    total_lines = len([l for l in story_text.split('\n') if l.strip()])
+    
+    if len(paragraphs) <= 2 and total_lines > 5:
+        # Fall back to single-line beats
+        beats = [l.strip() for l in story_text.split('\n') if l.strip()]
+        beats = [b for b in beats if 'COLD OPEN END' not in b]
+        
+        # Strip leading numbers like "1. " or "1) "
+        beats = [re.sub(r'^\d+[\.\)]\s*', '', b) for b in beats]
+        
+        return beats
+    
+    return paragraphs
 
 def run_prompt(prompt, system, pth):
     if not Path(pth).exists():
