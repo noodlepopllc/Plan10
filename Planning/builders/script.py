@@ -74,10 +74,14 @@ def update_state(state, analyzed_beat):
         new_state['character_postures'] = {}
     
     # Process each character in the beat
+    # Enforce state continuity for ALL characters in the beat
     for char_data in analyzed_beat.get('characters', []):
         char = char_data.get('name')
         if not char:
             continue
+        if char and char in state['character_postures']:
+            char_data['posture'] = state['character_postures'][char]
+
             
         # Add to active characters
         if char not in new_state['active_characters']:
@@ -141,11 +145,6 @@ def story_to_script(story_path, world_path, output_path, llm_call_func):
         # 2. Track State (Python does deterministic tracking)
         state = update_state(state, analyzed_beat)
         
-        # Enforce state continuity: override analyzer's posture with state's posture if no change occurred
-        char = analyzed_beat.get('character')
-        if char and char in state['character_postures']:
-            analyzed_beat['posture'] = state['character_postures'][char]
-        
         # 3. Format (LLM does strict templating)
         formatter_prompt = FORMATTER_PROMPT.format(
             beat_data_json=json.dumps(analyzed_beat, indent=2)
@@ -171,23 +170,27 @@ def safe_json_load(text):
 def split_into_beats(story_text):
     """Split story into beats, handling both paragraph and line-by-line formats."""
     
-    # First try paragraph breaks
+    # Remove everything before and including COLD OPEN END
+    if 'COLD OPEN END' in story_text:
+        story_text = story_text.split('COLD OPEN END')[-1]
+    
+    # Remove star markers
+    story_text = re.sub(r'\*+', '', story_text)
+    
+    # Try paragraph breaks
     paragraphs = [b.strip() for b in re.split(r'\n\s*\n', story_text) if b.strip()]
     
-    # Filter out markers
-    paragraphs = [p for p in paragraphs if 'COLD OPEN END' not in p]
-    
-    # If we got very few paragraphs but many lines, it's line-by-line format
+    # Count total non-empty lines
     total_lines = len([l for l in story_text.split('\n') if l.strip()])
     
-    if len(paragraphs) <= 2 and total_lines > 5:
+    # Check if any single paragraph contains many lines (line-by-line block)
+    has_line_block = any(len(p.split('\n')) > 5 for p in paragraphs)
+    
+    if len(paragraphs) <= 5 and total_lines > 10 and has_line_block:
         # Fall back to single-line beats
         beats = [l.strip() for l in story_text.split('\n') if l.strip()]
-        beats = [b for b in beats if 'COLD OPEN END' not in b]
-        
         # Strip leading numbers like "1. " or "1) "
         beats = [re.sub(r'^\d+[\.\)]\s*', '', b) for b in beats]
-        
         return beats
     
     return paragraphs
