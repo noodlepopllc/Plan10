@@ -155,7 +155,7 @@ def story_to_script(story_path, world_path, output_path, llm_call_func):
         with open(output_file, 'a') as f:
             f.write(script_line.strip() + '\n\n')
             
-        print(f"Processed beat {i+1}/{len(beats)} | Zone: {state.get('zone', 'Unknown')} | Posture: {state['character_postures'].get(char, 'Unknown')}")
+        print(f"Processed beat {i+1}/{len(beats)} | Zone: {state.get('zone', 'Unknown')}")
 
 def safe_json_load(text):
     """Safely extract JSON from LLM output."""
