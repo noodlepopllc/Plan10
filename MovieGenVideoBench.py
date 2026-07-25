@@ -14,9 +14,9 @@ import torch, torchaudio
 from PIL import Image
 from PIL.PngImagePlugin import PngInfo
 
-if os.environ.get('WGP','False') != 'False':
+if WGP := os.environ.get('WGP','False') != 'False':
     from plan10.lib.wgp import GenerateVideo
-elif os.environ.get('LTX','False') != 'False':
+elif LTX := os.environ.get('LTX','False') != 'False':
     from plan10.lib.ltx import GenerateVideo
 else:
     from plan10.lib.image_to_video import GenerateVideo
