@@ -297,14 +297,7 @@ def GenerateTalkingVideoSchema():
         }
     }
 
-    
-    
-    
-
-# =============================================================================
-# ENTRY POINT
-# =============================================================================
-if __name__ == "__main__":
+def main():
     import argparse, os
     WGP = os.environ.get('WGP','False') != 'False'
     LTX = os.environ.get('LTX','False') != 'False'
@@ -327,4 +320,12 @@ if __name__ == "__main__":
     parser.add_argument('-S', '--seed', type=int, default=SEED)
     args = parser.parse_args()
     Speech(args.prompt, args.text, args.audio, args.image, args.output, args.width, args.height, args.seed)
+
+
+# =============================================================================
+# ENTRY POINT
+# =============================================================================
+if __name__ == "__main__":
+    main()
+
 
