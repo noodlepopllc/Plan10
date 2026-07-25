@@ -74,22 +74,26 @@ def update_state(state, analyzed_beat):
         new_state['character_postures'] = {}
     
     # Process each character in the beat
-    # Enforce state continuity for ALL characters in the beat
     for char_data in analyzed_beat.get('characters', []):
         char = char_data.get('name')
         if not char:
             continue
-        if char and char in state['character_postures']:
-            char_data['posture'] = state['character_postures'][char]
-
             
         # Add to active characters
         if char not in new_state['active_characters']:
             new_state['active_characters'].append(char)
         
-        # Update posture if changed or first time seeing character
+        # Check if posture changed
         posture_changed = char_data.get('posture_changed', False)
-        if posture_changed or char not in new_state['character_postures']:
+        
+        if posture_changed:
+            # Analyzer detected a change, use the new posture
+            new_state['character_postures'][char] = char_data['posture']
+        elif char in state['character_postures']:
+            # No change detected, enforce continuity with previous posture
+            char_data['posture'] = state['character_postures'][char]
+        else:
+            # First time seeing this character, use analyzer's posture
             new_state['character_postures'][char] = char_data['posture']
         
         # Track last speaker/actor
