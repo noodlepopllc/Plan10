@@ -8,6 +8,10 @@ cp $1 $output/story.txt
 
 basepath="Planning"
 
+if [[ ! -f "$output/script.txt" ]]; then
+    python $basepath/builders/script.py $output
+fi
+
 if [[ ! -f "$output/complete.json" ]]; then
     python $basepath/builders/scriptwriter.py $1 $output
 fi
