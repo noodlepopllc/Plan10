@@ -4,10 +4,16 @@ import re
 from plan10.lib.qwen_llm import llm_analyze_media
 from pathlib import Path
 
+# ═══════════════════════════════════════════════════════════════
+# 1. LOAD PROMPTS
+# ═══════════════════════════════════════════════════════════════
 prompt_path = './Planning/prompts'
 WORLD = Path(f'{prompt_path}/scriptwriter/world.txt').read_text()
 BIOGRAPHY = Path(f'{prompt_path}/scriptwriter/biography.txt').read_text()
-SCREENPLAY = Path(f'{prompt_path}/screenplay.txt').read_text()
+
+# NEW: Load the two iterative screenplay prompts
+SCREENPLAY_FIRST = Path(f'{prompt_path}/scriptwriter/screenplay_first.txt').read_text()
+SCREENPLAY_CONTINUE = Path(f'{prompt_path}/scriptwriter/screenplay_continue.txt').read_text()
 
 REQUIRED_FIELDS = ['actor', 'speaker', 'action', 'dialog', 'location', 'zone', 'posture', 'facial']
 
@@ -28,96 +34,13 @@ def run_prompt(prompt, system, pth):
       return Path(pth).read_text()
 
 # ═══════════════════════════════════════════════════════════════
-# NEW: ITERATIVE SCREENPLAY GENERATION
+# 2. ITERATIVE SCREENPLAY HELPERS
 # ═══════════════════════════════════════════════════════════════
 
 def split_prose_into_paragraphs(prose):
     """Split prose into chunks by double newlines."""
     paragraphs = re.split(r'\n\s*\n', prose.strip())
     return [p.strip() for p in paragraphs if p.strip()]
-
-def build_iterative_prompt(world_model, state, paragraph, is_first):
-    """Build the prompt for a single paragraph iteration."""
-    if is_first:
-        header_instructions = """Since this is the FIRST paragraph, you MUST start your output with:
->> [One sentence tag line]
-INT. [LOCATION NAME] - [DAY/NIGHT]
-[CHARACTER NAME] ([visual traits]) [brief action establishing position].
-[1-2 lines of scene description]
-COLD OPEN END
-Then proceed with the [ZONE: ...] beats."""
-    else:
-        header_instructions = """Since this is a subsequent paragraph, output ONLY the [ZONE: ...] beats. Do not include scene headings or character intros."""
-
-    return f"""ROLE: You are a deterministic, state-aware text parser. Your ONLY job is to transcribe the provided prose paragraph into a strict structural format. You are FORBIDDEN from rewriting, adapting, summarizing, or altering the original dialog or actions.
-
-═══════════════════════════════════════════════════════════════
-WORLD FILE (IMMUTABLE - DO NOT ALTER)
-═══════════════════════════════════════════════════════════════
-{world_model}
-
-═══════════════════════════════════════════════════════════════
-ROLLING STATE (WHAT HAPPENED LAST)
-═══════════════════════════════════════════════════════════════
-PREVIOUS_ZONE: {state['previous_zone']}
-ACTIVE_CHARACTERS: {state['active_characters']}
-LAST_KNOWN_ACTION: {state['last_known_action']}
-
-═══════════════════════════════════════════════════════════════
-CRITICAL RULES (DO NOT VIOLATE)
-═══════════════════════════════════════════════════════════════
-1. VERBATIM DIALOG: Copy dialog EXACTLY as written. Do not make it "punchier", do not adapt it.
-2. NO RE-INTROS: If a character is in ACTIVE_CHARACTERS, use ONLY their ALL CAPS NAME. Do not re-add their visual traits. Only add traits for NEW characters appearing in this paragraph.
-3. ZONE CONTINUITY: Assume PREVIOUS_ZONE remains the current zone unless the prose explicitly states a character moved. If they move, use the EXACT new zone name from the WORLD FILE.
-4. NO INTERNAL THOUGHTS: Only transcribe observable actions and spoken words.
-
-═══════════════════════════════════════════════════════════════
-FORMATTING RULES
-═══════════════════════════════════════════════════════════════
-{header_instructions}
-
-Separate every beat with a blank line. Use ONLY these three formats:
-
-[FORMAT A: ACTION ONLY]
-[ZONE: Exact Zone Name]
-CHARACTER NAME action description ending with a period.
-
-[FORMAT B: DIALOG ONLY]
-[ZONE: Exact Zone Name]
-CHARACTER NAME
-Exact dialog text without quotes.
-
-[FORMAT C: ACTION + DIALOG]
-[ZONE: Exact Zone Name]
-CHARACTER NAME (action description in lowercase)
-Exact dialog text without quotes.
-
-RULES FOR BEATS:
-- Blank line after every [ZONE: marker].
-- Blank line after every beat.
-- Character names in ALL CAPS.
-- Dialog: NO quotes, NO "he said/she said" tags.
-- Present tense only.
-
-═══════════════════════════════════════════════════════════════
-OUTPUT FORMAT
-═══════════════════════════════════════════════════════════════
-First, output the screenplay text for the CURRENT PARAGRAPH.
-Then, output a <STATE_UPDATE> block so the system knows the context for the next paragraph.
-
-<STATE_UPDATE>
-CURRENT_ZONE: [Exact Zone Name]
-ACTIVE_CHARACTERS: [CHAR1, CHAR2]
-LAST_KNOWN_ACTION: [Brief summary of last action]
-</STATE_UPDATE>
-
-═══════════════════════════════════════════════════════════════
-BEGIN CONVERSION
-═══════════════════════════════════════════════════════════════
-
-CURRENT PARAGRAPH:
-{paragraph}
-"""
 
 def parse_iterative_output(llm_output):
     """Extract the clean screenplay text and the new state from the LLM output."""
@@ -144,23 +67,28 @@ def parse_iterative_output(llm_output):
     return screenplay_text, new_state
 
 # ═══════════════════════════════════════════════════════════════
-# YOUR EXISTING PARSING LOGIC (Unchanged, with one safety tweak)
+# 3. YOUR EXISTING PARSING LOGIC (Unchanged)
 # ═══════════════════════════════════════════════════════════════
 
 def extract_metadata_from_screenplay(screenplay_text):
+    """Extract tag line, location, and character intros from screenplay header."""
     lines = screenplay_text.strip().split('\n')
+    
     tag_line = ""
     location = "Unknown"
     characters = {}
     
     for line in lines:
         line = line.strip()
+        
         if line.startswith('>>'):
             tag_line = line[2:].strip()
+        
         if line.startswith('INT.') or line.startswith('EXT.'):
             match = re.match(r'(INT\.|EXT\.)\s+(.+?)\s*-\s*(.+)', line)
             if match:
                 location = match.group(2).strip()
+        
         char_match = re.match(r'^([A-Z][A-Z\s]+)\s*\(([^)]+)\)\s*(.+)$', line)
         if char_match:
             name = char_match.group(1).strip()
@@ -170,6 +98,7 @@ def extract_metadata_from_screenplay(screenplay_text):
     return tag_line, location, characters
 
 def parse_screenplay_to_jsonl(screenplay_text, biography_data):
+    """Parse screenplay format directly into JSONL beats."""
     # Safety tweak: strip any leftover STATE_UPDATE tags just in case
     screenplay_text = re.sub(r'<STATE_UPDATE>.*?</STATE_UPDATE>', '', screenplay_text, flags=re.DOTALL).strip()
     
@@ -201,9 +130,11 @@ def parse_screenplay_to_jsonl(screenplay_text, biography_data):
     
     for zone_name, block_content in blocks:
         zone_name = zone_name.strip()
+        
         if zone_name not in valid_zones:
             print(f"WARNING: Invalid zone '{zone_name}', using first valid zone")
             zone_name = list(valid_zones)[0] if valid_zones else 'Unknown'
+        
         current_state['zone'] = zone_name
         
         sub_beats = [b.strip() for b in block_content.split('\n\n') if b.strip()]
@@ -217,8 +148,10 @@ def parse_screenplay_to_jsonl(screenplay_text, biography_data):
                 speaker = match_combined.group(1).strip()
                 action = match_combined.group(2).strip()
                 dialog = match_combined.group(3).strip().replace('"', '').replace('"', '').replace('"', '').strip()
+                
                 beat = build_beat(speaker, action, dialog, current_state, valid_characters)
                 beats.append(beat)
+                
                 current_state['posture'] = infer_posture(action)
                 current_state['facial'] = infer_facial(action)
                 current_state['last_actor'] = speaker
@@ -226,6 +159,7 @@ def parse_screenplay_to_jsonl(screenplay_text, biography_data):
             elif match_dialog:
                 speaker = match_dialog.group(1).strip()
                 dialog = match_dialog.group(2).strip().replace('"', '').replace('"', '').replace('"', '').strip()
+                
                 beat = build_beat(speaker, "", dialog, current_state, valid_characters)
                 beats.append(beat)
                 current_state['last_actor'] = speaker
@@ -233,8 +167,10 @@ def parse_screenplay_to_jsonl(screenplay_text, biography_data):
             elif match_action:
                 speaker = match_action.group(1).strip()
                 action = match_action.group(2).strip()
+                
                 beat = build_beat(speaker, action, "", current_state, valid_characters)
                 beats.append(beat)
+                
                 current_state['posture'] = infer_posture(action)
                 current_state['facial'] = infer_facial(action)
                 current_state['last_actor'] = speaker
@@ -283,10 +219,12 @@ def infer_facial(action_text):
     return 'neutral'
 
 # ═══════════════════════════════════════════════════════════════
-# MAIN PIPELINE
+# 4. MAIN PIPELINE
 # ═══════════════════════════════════════════════════════════════
 
 def build_script(user_input_path, outpath):
+    """Main pipeline: Generate world → iterative screenplay → biography → narrative JSONL."""
+    
     outpath = Path(outpath)
     outpath.mkdir(parents=True, exist_ok=True)
     
@@ -313,13 +251,24 @@ def build_script(user_input_path, outpath):
         
         for i, para in enumerate(paragraphs):
             is_first = (i == 0)
-            prompt = build_iterative_prompt(world, state, para, is_first)
             
-            # Call LLM
+            # Choose the correct prompt template
+            template = SCREENPLAY_FIRST if is_first else SCREENPLAY_CONTINUE
+            
+            # CORRECTLY INJECT THE ACTUAL VARIABLES
+            prompt = template.format(
+                world_model=world,
+                previous_zone=state['previous_zone'],
+                active_characters=state['active_characters'],
+                last_known_action=state['last_known_action'],
+                prose_story=para
+            )
+            
+            # Call LLM (system prompt is empty because ROLE is in the template)
             result = llm_analyze_media(
                 media="", 
                 prompt=prompt,
-                system=SCREENPLAY, 
+                system="", 
                 max_tokens=8192,
                 temperature=0.2
             )['analysis']
@@ -338,9 +287,10 @@ def build_script(user_input_path, outpath):
         print(f'Wrote {screenplay_path}')
     else:
         print(f'{screenplay_path} Exists')
-        
+    
     # Step 3: Generate biography/registry
     biography_text = run_prompt(world, BIOGRAPHY, f'{outpath}/registry.json')
+    
     try:
         biography_data = json.loads(biography_text)
     except json.JSONDecodeError:
@@ -349,14 +299,17 @@ def build_script(user_input_path, outpath):
     
     # Step 4: Parse screenplay directly to JSONL
     narrative_path = f'{outpath}/narrative.json'
+    
     if not Path(narrative_path).exists():
         print("Parsing screenplay to JSONL...")
         screenplay_text = Path(screenplay_path).read_text()
+        
         beats = parse_screenplay_to_jsonl(screenplay_text, biography_data)
         
         with open(narrative_path, 'w') as out_f:
             for beat in beats:
                 out_f.write(json.dumps(beat) + '\n')
+        
         print(f'Wrote {narrative_path} with {len(beats)} beats')
     else:
         print(f'{narrative_path} Exists')
