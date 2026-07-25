@@ -202,6 +202,7 @@ if __name__ == '__main__':
         sys.exit(1)
         
     dir_path = sys.argv[1]
+    prompt_path = './Planning/prompts'
     WORLD = Path(f'{prompt_path}/scriptwriter/world.txt').read_text()
     story_input = Path(f'{dir_path}/story.txt').read_text()
     world = run_prompt(story_input, WORLD, f'{dir_path}/world.txt')
