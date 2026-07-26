@@ -113,9 +113,8 @@ def update_state(state, analyzed_beat):
 # ═══════════════════════════════════════════════════════════════
 # MAIN PROCESSING FUNCTION
 # ═══════════════════════════════════════════════════════════════
-def story_to_script(story_path, world_path, output_path, llm_call_func):
+def story_to_script(story_path, world_text, output_path, llm_call_func):
     # Load files
-    world_text = Path(world_path).read_text()
     story_text = Path(story_path).read_text()
     
     # Split into beats (paragraphs)
@@ -217,6 +216,25 @@ def run_prompt(prompt, system, pth):
       print(f'{pth} Exists')
       return Path(pth).read_text()
 
+def format_compact_world(world_json):
+    """Extract names and zone purposes for Analyzer."""
+    chars = [c['name'] for c in world_json.get('biographies', [])]
+    
+    zones = []
+    for loc in world_json.get('locations', []):
+        for zone in loc.get('zones', []):
+            zone_name = zone.get('zone_name', '')
+            purpose = zone.get('purpose', 'N/A')
+            if zone_name:
+                zones.append(f"{zone_name}: {purpose}")
+    
+    return "\n".join([
+        "VALID CHARACTERS: " + ", ".join(chars),
+        "",
+        "VALID ZONES (with purposes):",
+        "\n".join(f"- {z}" for z in zones)
+    ])
+
 # ═══════════════════════════════════════════════════════════════
 # USAGE
 # ═══════════════════════════════════════════════════════════════
@@ -238,10 +256,11 @@ if __name__ == '__main__':
     story_input = Path(f'{dir_path}/story.txt').read_text()
     world = run_prompt(story_input, WORLD, f'{dir_path}/world.txt')
     biography_text = run_prompt(world, BIOGRAPHY, f'{dir_path}/registry.json')
+    world_text = format_compact_world(world)
     
     story_to_script(
         story_path=f'{dir_path}/story.txt',
-        world_path=f'{dir_path}/world.txt',
+        world_path=world_text,
         output_path=f'{dir_path}/script.txt',
         llm_call_func=my_llm_call
     )
