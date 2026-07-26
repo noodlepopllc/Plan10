@@ -239,6 +239,7 @@ def format_compact_world(world_json):
 # USAGE
 # ═══════════════════════════════════════════════════════════════
 if __name__ == '__main__':
+    import json
     from plan10.lib.qwen_llm import llm_analyze_media
     
     def my_llm_call(prompt, temperature=0.1):
@@ -256,7 +257,7 @@ if __name__ == '__main__':
     story_input = Path(f'{dir_path}/story.txt').read_text()
     world = run_prompt(story_input, WORLD, f'{dir_path}/world.txt')
     biography_text = run_prompt(world, BIOGRAPHY, f'{dir_path}/registry.json')
-    world_text = format_compact_world(biography_text)
+    world_text = format_compact_world(json.loads(biography_text))
     
     story_to_script(
         story_path=f'{dir_path}/story.txt',
