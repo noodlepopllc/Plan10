@@ -33,31 +33,12 @@ Lisa is texting on her bed. Maria enters the room.
 
 TOPICAL_SCENARIOS = ['DEBATE', 'TEACHING', 'DISCUSSION', 'MENTORSHIP']
 
-TOPICAL_SEED_GENERATOR = '''
+TOPICAL_SEED_GENERATOR_TEMPLATE = '''
 🎓 TOPICAL SCENE SEED GENERATOR (EDUCATIONAL/DEBATE)
 ROLE — Generate structured seeds for educational or debate scenes
 
-⭐ SCENARIO TYPE SELECTION
-If user specifies scenario type, use it. Otherwise select from:
-    1. DEBATE: Two characters with opposing viewpoints
-    2. TEACHING: Expert teaching a student/apprentice
-    3. DISCUSSION: Collaborative exploration of a topic
-    4. MENTORSHIP: Experienced guide helping novice through challenge
-
-Selection: Use (current hour % 4) + 1 if not specified.
-
-⭐ TOPIC SELECTION
-If user specifies topic, use it. Otherwise generate from these categories:
-- Philosophy/Ethics
-- Science/Technology
-- History/Politics
-- Art/Culture
-- Personal Development
-- Social Issues
-- Creative Process
-- Professional Skills
-
-Selection: Use (current minute % 8) + 1 if not specified.
+⭐ SCENARIO TYPE: {scenario}
+⭐ TOPIC: {topic}
 
 ⭐ CHARACTER ROLES
 
@@ -316,6 +297,24 @@ Write in standard literary prose. Begin with the cold open, insert the ******* C
 BEGIN OUTPUT NOW
 '''
 
+TOPICAL_SEED_GENERATOR_TEMPLATE = '''
+🎓 TOPICAL SCENE SEED GENERATOR (EDUCATIONAL/DEBATE)
+ROLE — Generate structured seeds for educational or debate scenes
+
+⭐ SCENARIO TYPE: {scenario}
+⭐ TOPIC: {topic}
+
+⭐ CHARACTER ROLES
+[... rest of your prompt stays the same, just remove the
+     "Selection method" paragraphs entirely ...]
+'''
+
+def topical_seed_generator(scenario, topic):
+    return TOPICAL_SEED_GENERATOR_TEMPLATE.format(
+        scenario=scenario,
+        topic=topic
+    )
+
 # ============================================================================
 # CORE FUNCTIONS
 # ============================================================================
@@ -338,6 +337,11 @@ def run_prompt(prompt, system, pth):
 # ============================================================================
 # MAIN
 # ============================================================================
+TOPICS = [
+    'Philosophy/Ethics', 'Science/Technology', 'History/Politics',
+    'Art/Culture', 'Personal Development', 'Social Issues',
+    'Creative Process', 'Professional Skills'
+]
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Expand a seed into a full scene')
@@ -355,24 +359,21 @@ if __name__ == '__main__':
 
     output_path = Path(args.output)
 
-    # Determine seed source
     if args.seed:
-        # Use provided seed file
         seed_text = Path(args.seed).read_text()
         print(f'Using seed from {args.seed}')
-    elif args.topical and args.topic:
-        # Generate topical seed from topic
+
+    elif args.topical:
+        # Python handles ALL random selection
+        scenario = args.scenario.upper() if args.scenario and args.scenario.upper() in TOPICAL_SCENARIOS else random.choice(TOPICAL_SCENARIOS)
+        topic = args.topic if args.topic else random.choice(TOPICS)
+
         seed_path = output_path.with_name(output_path.stem + '_seed.txt')
-        inputs = f'Generate a topical seed\nTopic: {args.topic}\n'
-        if args.scenario:
-            if args.scenario.upper() in TOPICAL_SCENARIOS:
-                inputs += f'Scenario Type: {args.scenario.upper()}\n'
-            else:
-                print(f'Warning: Unknown scenario "{args.scenario}", using random')
-        seed_text = run_prompt(inputs, TOPICAL_SEED_GENERATOR, str(seed_path))
-        print(f'Generated topical seed for topic: {args.topic}')
+        inputs = f'Generate a topical seed\nTopic: {topic}\nScenario Type: {scenario}\n'
+        seed_text = run_prompt(inputs, topical_seed_generator(scenario, topic), str(seed_path))
+        print(f'Generated topical seed: {scenario} / {topic}')
+
     else:
-        # Use default seed
         seed_text = SEED
         print('Using default seed')
 

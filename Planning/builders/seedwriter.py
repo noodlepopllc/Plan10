@@ -122,23 +122,17 @@ FOCUS = 'DIALOG-HEAVY,ACTION-HEAVY,EMOTIONAL SUBTEXT,MULTI-CHARACTER,PROP PASSIN
 GENRES = 'Medieval Fantasy,Cyberpunk,Post-Apocalyptic,Victorian,Sci-Fi Space Station,1920s Noir,Modern Urban,Ancient Mythological,Steampunk,Western'.split(',')
 if __name__ == '__main__':
     import argparse
-    import random
     parser = argparse.ArgumentParser()
     parser.add_argument('-O', '--output', type=str, default='story.txt')
     parser.add_argument('-F', '--focus', type=str, default=None)
     parser.add_argument('-G', '--genre', type=str, default=None)
     parser.add_argument('-D', '--gender', type=str, default='mixed')
     args = parser.parse_args()
-    inputs = "Generate a test seed"
-    if args.focus:  # Changed from args.topic to args.focus
-      if args.focus.upper() in FOCUS:
-        focus = args.focus.upper()
-      else:
-        focus = random.choice(FOCUS)
-      if args.genre:
-        genre = args.genre
-      else:
-        genre = random.choice(GENRES)
-      inputs = f'{inputs}\nGenre: {genre}\n Focus: {focus}'  # Changed topic to focus
-    SEED_GENERATOR = seed_generator(args.gender)
+    
+    # Random selection ALWAYS happens (outside the conditional)
+    genre = args.genre if args.genre else random.choice(GENRES)
+    focus = args.focus.upper() if args.focus and args.focus.upper() in FOCUS else random.choice(FOCUS)
+    
+    inputs = f"Generate a test seed\nGenre: {genre}\nFocus: {focus}"
+    SEED_GENERATOR = seed_generator(args.gender, genre, focus)
     print(run_prompt(inputs, SEED_GENERATOR, args.output))
