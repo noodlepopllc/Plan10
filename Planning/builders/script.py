@@ -32,12 +32,13 @@ OUTPUT FORMAT (JSON ONLY):
 }}
 
 CRITICAL RULES:
-1. CHARACTERS: Extract ALL characters present in the beat, not just the speaker.
-2. For each character, extract their individual posture, emotion, dialog, and action.
-3. POSTURE_CHANGED: Set to true ONLY if that specific character's posture explicitly changes.
-4. DIALOG: Extract ONLY words inside quotation marks. Strip quotes. Preserve punctuation.
-5. SHOT_SETUP: Describe the visual setup including ALL characters present.
-6. Output ONLY the raw JSON."""
+1. CHARACTER NAMES: Use EXACT full names from WORLD CONTEXT. NEVER abbreviate (e.g., use "RIVKA" not "RIV", "KAELEN" not "KAEL").
+2. CHARACTERS: Extract ALL characters present in the beat, not just the speaker.
+3. For each character, extract their individual posture, emotion, dialog, and action.
+4. POSTURE_CHANGED: Set to true ONLY if that specific character's posture explicitly changes.
+5. DIALOG: Extract ONLY words inside quotation marks. Strip quotes. Preserve punctuation.
+6. SHOT_SETUP: Describe the visual setup including ALL characters present.
+7. Output ONLY the raw JSON."""
 
 # ═══════════════════════════════════════════════════════════════
 # PROMPT 2: FORMATTER (Strict Templating)
