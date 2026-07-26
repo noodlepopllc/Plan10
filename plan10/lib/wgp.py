@@ -25,8 +25,8 @@ if ANIME:
 else:
     from plan10.lib.image_gen import GenerateImage
 
-enhance_path = f'./system/ltx_enhancer{ANIME}.txt'
-#enhance_path = f'./system/ltx_enhancer_minimal{ANIME}.txt'
+#enhance_path = f'./system/ltx_enhancer{ANIME}.txt'
+enhance_path = f'./system/ltx_enhancer_minimal{ANIME}.txt'
 
 #tool = "ltx2_22B_1_1"
 tool = "ltx2_22B_distilled_1_1"
