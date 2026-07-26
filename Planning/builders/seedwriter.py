@@ -1,7 +1,6 @@
-import json, sys
+import json, sys, random
 from plan10.lib.qwen_llm import llm_analyze_media
 from pathlib import Path
-import random
 
 CHARACTERS_MIXED = '''
 **Characters** (2–4 characters):
@@ -27,50 +26,21 @@ NEVER output a male character
 - [Additional characters if applicable]
 '''
 
-def seed_generator(gender):
+def seed_generator(gender, genre, focus):
   CHARACTERS = CHARACTERS_MIXED if gender == 'mixed' else CHARACTERS_FEMALE
   
   return f'''
   🎲 AUTOMATIC SEED STORY GENERATOR (ISOLATION-SAFE)
   ROLE — TEST SEED GENERATOR
   Generate a single, self-contained structured seed for testing a Text-to-Video (T2V) / Image-to-Video (I2V) storytelling pipeline.
-  ⭐ GENRE SELECTION
-  If the user specifies a genre, use it.
-  If no genre is specified, select from this list using the current timestamp:
-
-      Medieval Fantasy
-      Cyberpunk
-      Post-Apocalyptic
-      Victorian
-      Sci-Fi Space Station
-      1920s Noir
-      Modern Urban
-      Ancient Mythological
-      Steampunk
-      Western
-
-  Selection method: Use (current minute % 10) + 1 to pick from the list. If timestamp unavailable, pick genre #1.
-  ⭐ TEST FOCUS SELECTION
-  If the user specifies a focus, use it.
-  If no focus is specified, select from this list:
-
-      DIALOG-HEAVY: Lots of conversation, actions interspersed
-      ACTION-HEAVY: Minimal dialog, mostly physical movement
-      EMOTIONAL SUBTEXT: Body language reveals what dialog hides
-      MULTI-CHARACTER: 3+ characters with overlapping goals
-      PROP PASSING: Objects being handed, taken, dropped, fought over
-      SPACE EXPLORATION: Characters moving through multiple zones
-      POWER DYNAMIC: Clear status imbalance
-      INTIMACY ESCALATION: Moving from distance to closeness (or reverse)
-      MISUNDERSTANDING: Characters operating on different information
-      TIME PRESSURE: External deadline forcing decisions
-
-  Selection method: Use (current hour % 10) + 1 to pick from the list. If timestamp unavailable, pick focus #1.
+  
+  ⭐ GENRE: {genre}
+  ⭐ TEST FOCUS: {focus}
 
   ⭐ SEED STRUCTURE (OUTPUT EXACTLY THIS FORMAT)
 
-  **Genre**: [selected genre]
-  **Test Focus**: [selected focus]
+  **Genre**: {genre}
+  **Test Focus**: {focus}
 
   {CHARACTERS}
 
@@ -117,10 +87,9 @@ def run_prompt(prompt, system, pth):
       print(f'{pth} Exists')
       return Path(pth).read_text()
 
-
-
 FOCUS = 'DIALOG-HEAVY,ACTION-HEAVY,EMOTIONAL SUBTEXT,MULTI-CHARACTER,PROP PASSING,SPACE EXPLORATION,POWER DYNAMIC,INTIMACY ESCALATION,MISUNDERSTANDING,TIME PRESSURE'.split(',')
 GENRES = 'Medieval Fantasy,Cyberpunk,Post-Apocalyptic,Victorian,Sci-Fi Space Station,1920s Noir,Modern Urban,Ancient Mythological,Steampunk,Western'.split(',')
+
 if __name__ == '__main__':
     import argparse
     parser = argparse.ArgumentParser()
@@ -130,7 +99,7 @@ if __name__ == '__main__':
     parser.add_argument('-D', '--gender', type=str, default='mixed')
     args = parser.parse_args()
     
-    # Random selection ALWAYS happens (outside the conditional)
+    # Do random selection in Python, not the LLM
     genre = args.genre if args.genre else random.choice(GENRES)
     focus = args.focus.upper() if args.focus and args.focus.upper() in FOCUS else random.choice(FOCUS)
     
