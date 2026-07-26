@@ -32,7 +32,7 @@ OUTPUT FORMAT (JSON ONLY):
 }}
 
 CRITICAL RULES:
-1. CHARACTER NAMES: Use EXACT full names from WORLD CONTEXT. NEVER abbreviate (e.g., use "RIVKA" not "RIV", "KAELEN" not "KAEL").
+1. ZONE SELECTION: Look for explicit zone references in the beat (props, background elements, actions). Match them to the VALID ZONES list. If the beat mentions "greasy steel table" or "hard drive on table", use "Greasy Steel Table Zone". If it mentions "damp concrete floor" or "pivoting on floor", use "Damp Concrete Floor Zone". If it mentions "crates against wall", use "Perimeter Wall Zone".
 2. CHARACTERS: Extract ALL characters present in the beat, not just the speaker.
 3. For each character, extract their individual posture, emotion, dialog, and action.
 4. POSTURE_CHANGED: Set to true ONLY if that specific character's posture explicitly changes.
@@ -217,7 +217,7 @@ def run_prompt(prompt, system, pth):
       return Path(pth).read_text()
 
 def format_compact_world(world_json):
-    """Extract names and zone purposes for Analyzer."""
+    """Extract names, zone purposes, and key props for Analyzer."""
     chars = [c['name'] for c in world_json.get('biographies', [])]
     
     zones = []
@@ -225,13 +225,27 @@ def format_compact_world(world_json):
         for zone in loc.get('zones', []):
             zone_name = zone.get('zone_name', '')
             purpose = zone.get('purpose', 'N/A')
+            
+            # Extract key props from anchored_elements
+            props = []
+            for elem in zone.get('anchored_elements', []):
+                props.append(elem.get('name', ''))
+            
+            # Extract visible background elements
+            bg_elements = zone.get('visible_background_elements', [])
+            
             if zone_name:
-                zones.append(f"{zone_name}: {purpose}")
+                zone_info = f"{zone_name}: {purpose}"
+                if props:
+                    zone_info += f" | Props: {', '.join(props[:3])}"  # Top 3 props
+                if bg_elements:
+                    zone_info += f" | Background: {', '.join(bg_elements[:3])}"  # Top 3 bg elements
+                zones.append(zone_info)
     
     return "\n".join([
         "VALID CHARACTERS: " + ", ".join(chars),
         "",
-        "VALID ZONES (with purposes):",
+        "VALID ZONES (with purposes and key elements):",
         "\n".join(f"- {z}" for z in zones)
     ])
 
