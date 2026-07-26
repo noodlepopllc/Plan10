@@ -217,7 +217,7 @@ def run_prompt(prompt, system, pth):
       return Path(pth).read_text()
 
 def format_compact_world(world_json):
-    """Extract names, zone purposes, and key props for Analyzer."""
+    """Extract names and UNIQUE zone differentiators for Analyzer."""
     chars = [c['name'] for c in world_json.get('biographies', [])]
     
     zones = []
@@ -226,28 +226,24 @@ def format_compact_world(world_json):
             zone_name = zone.get('zone_name', '')
             purpose = zone.get('purpose', 'N/A')
             
-            # Extract key props from anchored_elements
-            props = []
+            # Extract ONLY the unique anchored elements (the differentiators)
+            unique_props = []
             for elem in zone.get('anchored_elements', []):
-                props.append(elem.get('name', ''))
-            
-            # Extract visible background elements
-            bg_elements = zone.get('visible_background_elements', [])
+                unique_props.append(elem.get('name', ''))
             
             if zone_name:
-                zone_info = f"{zone_name}: {purpose}"
-                if props:
-                    zone_info += f" | Props: {', '.join(props[:3])}"  # Top 3 props
-                if bg_elements:
-                    zone_info += f" | Background: {', '.join(bg_elements[:3])}"  # Top 3 bg elements
+                # Format to highlight WHAT makes this zone unique
+                zone_info = f"- {zone_name}: {purpose}"
+                if unique_props:
+                    zone_info += f" | UNIQUE TO THIS ZONE: {', '.join(unique_props)}"
                 zones.append(zone_info)
     
     return "\n".join([
         "VALID CHARACTERS: " + ", ".join(chars),
         "",
-        "VALID ZONES (with purposes and key elements):",
-        "\n".join(f"- {z}" for z in zones)
-    ])
+        "VALID ZONES (Use UNIQUE elements to choose the correct zone):",
+        "\n".join(zones)
+        ])
 
 # ═══════════════════════════════════════════════════════════════
 # USAGE
