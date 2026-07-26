@@ -110,27 +110,56 @@ def update_state(state, analyzed_beat):
     
     return new_state
 
-def extract_names_only(world_text):
-    """Extract only character and zone names from world.txt."""
-    names = []
+def extract_zone_purposes(world_text):
+    """Extract zone names with their functional purposes."""
+    zones = {}
+    current_zone = None
     
-    # Extract character names from "Name: XXXX" lines
+    lines = world_text.split('\n')
+    for line in lines:
+        stripped = line.strip()
+        
+        # Detect zone headers like "**Greasy Steel Table Zone**"
+        zone_match = re.match(r'\*\*(.+?Zone)\*\*', stripped)
+        if zone_match:
+            current_zone = zone_match.group(1).strip()
+            zones[current_zone] = []
+            continue
+        
+        # Extract functional purpose
+        if current_zone and 'Functional Purpose:' in stripped:
+            purpose = stripped.replace('Functional Purpose:', '').strip()
+            zones[current_zone].append(purpose)
+        
+        # Reset when we hit a new section
+        if stripped.startswith('# SECTION'):
+            current_zone = None
+    
+    # Format output
+    lines = []
+    for zone_name, purposes in zones.items():
+        if purposes:
+            lines.append(f"- {zone_name}: {purposes[0]}")
+        else:
+            lines.append(f"- {zone_name}")
+    
+    return "\n".join(lines)
+
+def extract_compact_world(world_text):
+    """Extract character names and zone purposes for efficient LLM context."""
+    # Extract character names
     char_names = re.findall(r'Name:\s*(.+)', world_text)
-    for name in char_names:
-        name = name.strip()
-        if name and name not in names:
-            names.append(name)
+    char_names = [n.strip() for n in char_names if n.strip()]
     
-    # Extract zone names from "**XXX Zone**" lines
-    zone_names = re.findall(r'\*\*(.+?Zone)\*\*', world_text)
-    for zone in zone_names:
-        zone = zone.strip()
-        if zone and zone not in names:
-            names.append(zone)
+    # Extract zone purposes
+    zone_info = extract_zone_purposes(world_text)
     
-    # Build compact context
-    lines = ["VALID CHARACTERS: " + ", ".join(char_names)]
-    lines.append("VALID ZONES: " + ", ".join(zone_names))
+    lines = [
+        "VALID CHARACTERS: " + ", ".join(char_names),
+        "",
+        "VALID ZONES (with purposes):",
+        zone_info
+    ]
     
     return "\n".join(lines)
 
@@ -142,7 +171,7 @@ def story_to_script(story_path, world_path, output_path, llm_call_func):
     world_text = Path(world_path).read_text()
     story_text = Path(story_path).read_text()
 
-    brief = extract_names_only(world_text)
+    brief = extract_compact_world(world_text)
     
     # Split into beats (paragraphs)
     #beats = [b.strip() for b in re.split(r'\n\s*\n', story_text) if b.strip() and 'COLD OPEN END' not in b]
