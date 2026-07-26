@@ -2,12 +2,14 @@
 
 echo "🎬 Starting creative loop. Press Ctrl+C to stop."
 
+export BRIEF="True"
+
 while true; do
     # Run creative step
     uv run video_creator "$@"
     CLI_EXIT=$?
     
-    if [ $CLI_EXIT -lt 0 ]; then
+    if [ $CLI_EXIT -ne 0 ]; then
         echo "❌ Creative step failed with error code $CLI_EXIT"
         break
     fi
@@ -16,7 +18,7 @@ while true; do
    uv run video_runner "$@"
     VIDEO_EXIT=$?
     
-    if [ $VIDEO_EXIT -lt 0 ]; then
+    if [ $VIDEO_EXIT -ne 0 ]; then
         echo "❌ Video rendering failed with error code $VIDEO_EXIT"
         break
     fi

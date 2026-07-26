@@ -28,8 +28,10 @@ if ANIME:
 else:
     from plan10.lib.image_gen import GenerateImage
 
+BRIEF = os.environ.get("BRIEF","False") != "False"
+
 #enhance_path = f'./system/ltx_enhancer{ANIME}.txt'
-enhance_path = f'./system/ltx_enhancer_minimal{ANIME}.txt'
+enhance_path = f'./system/ltx_enhancer_minimal{ANIME}.txt' if BRIEF else f'./system/ltx_enhancer{ANIME}.txt'
 
 def i2v_diffsynth_fast(prompt='', media='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
