@@ -256,7 +256,7 @@ if __name__ == '__main__':
     story_input = Path(f'{dir_path}/story.txt').read_text()
     world = run_prompt(story_input, WORLD, f'{dir_path}/world.txt')
     biography_text = run_prompt(world, BIOGRAPHY, f'{dir_path}/registry.json')
-    world_text = format_compact_world(world)
+    world_text = format_compact_world(biography_text)
     
     story_to_script(
         story_path=f'{dir_path}/story.txt',
