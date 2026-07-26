@@ -216,34 +216,78 @@ def run_prompt(prompt, system, pth):
       print(f'{pth} Exists')
       return Path(pth).read_text()
 
+def extract_zone_differentiators(world_json):
+    """Programmatically find shared vs unique elements across zones."""
+    from collections import defaultdict
+    
+    # Collect all elements from all zones
+    element_zones = defaultdict(set)  # element_name -> set of zone_names
+    
+    for loc in world_json.get('locations', []):
+        for zone in loc.get('zones', []):
+            zone_name = zone.get('zone_name', '')
+            
+            # From anchored_elements
+            for elem in zone.get('anchored_elements', []):
+                elem_name = elem.get('name', '').lower()
+                if elem_name:
+                    element_zones[elem_name].add(zone_name)
+            
+            # From visible_background_elements
+            for bg_elem in zone.get('visible_background_elements', []):
+                elem_name = bg_elem.lower().strip()
+                if elem_name:
+                    element_zones[elem_name].add(zone_name)
+    
+    # Classify: shared (appears in 2+ zones) vs unique (appears in 1 zone)
+    shared_elements = []
+    zone_unique = defaultdict(list)
+    
+    for elem, zones in element_zones.items():
+        if len(zones) >= 2:
+            shared_elements.append(elem)
+        else:
+            # This element is unique to the single zone it appears in
+            zone_name = list(zones)[0]
+            zone_unique[zone_name].append(elem)
+    
+    return shared_elements, zone_unique
+
 def format_compact_world(world_json):
-    """Extract names and UNIQUE zone differentiators for Analyzer."""
+    """Extract names and programmatically-computed zone differentiators."""
     chars = [c['name'] for c in world_json.get('biographies', [])]
     
+    # Compute shared vs unique programmatically
+    shared_elements, zone_unique = extract_zone_differentiators(world_json)
+    
+    # Build zone descriptions with unique elements only
     zones = []
     for loc in world_json.get('locations', []):
         for zone in loc.get('zones', []):
             zone_name = zone.get('zone_name', '')
             purpose = zone.get('purpose', 'N/A')
             
-            # Extract ONLY the unique anchored elements (the differentiators)
-            unique_props = []
-            for elem in zone.get('anchored_elements', []):
-                unique_props.append(elem.get('name', ''))
+            # Get ONLY the unique elements for this zone
+            unique_props = zone_unique.get(zone_name, [])
             
             if zone_name:
-                # Format to highlight WHAT makes this zone unique
                 zone_info = f"- {zone_name}: {purpose}"
                 if unique_props:
-                    zone_info += f" | UNIQUE TO THIS ZONE: {', '.join(unique_props)}"
+                    zone_info += f" | UNIQUE: {', '.join(unique_props[:5])}"  # Limit to top 5
                 zones.append(zone_info)
     
-    return "\n".join([
+    # Build final output
+    lines = [
         "VALID CHARACTERS: " + ", ".join(chars),
         "",
-        "VALID ZONES (Use UNIQUE elements to choose the correct zone):",
+        "SHARED ACROSS ALL ZONES (ignore these for zone selection):",
+        f"- {', '.join(shared_elements[:10])}",  # Limit to top 10
+        "",
+        "VALID ZONES (choose based on UNIQUE elements only):",
         "\n".join(zones)
-        ])
+    ]
+    
+    return "\n".join(lines)
 
 # ═══════════════════════════════════════════════════════════════
 # USAGE
