@@ -11,6 +11,69 @@ SCREENPLAY = Path(f'{prompt_path}/screenplay.txt').read_text()
 
 REQUIRED_FIELDS = ['actor', 'speaker', 'action', 'dialog', 'location', 'zone', 'posture', 'facial']
 
+def find_closest_character(name, valid_characters):
+    """Find closest matching character name using multiple strategies."""
+    name_upper = name.upper().strip()
+    
+    # Strategy 1: Exact match
+    if name_upper in valid_characters:
+        return name_upper
+    
+    # Strategy 2: Input is a prefix of a valid character (KAEL -> KAELEN, RIV -> RIVKA)
+    prefix_matches = [v for v in valid_characters if v.startswith(name_upper)]
+    if len(prefix_matches) == 1:
+        return prefix_matches[0]
+    
+    # Strategy 3: Valid character is a prefix of input
+    prefix_matches = [v for v in valid_characters if name_upper.startswith(v)]
+    if len(prefix_matches) == 1:
+        return prefix_matches[0]
+    
+    # Strategy 4: Substring containment (KAEL in KAELEN)
+    contains_matches = [v for v in valid_characters if name_upper in v or v in name_upper]
+    if len(contains_matches) == 1:
+        return contains_matches[0]
+    
+    # Strategy 5: Simple edit distance (Levenshtein-like)
+    best_match = None
+    best_distance = float('inf')
+    for v in valid_characters:
+        distance = simple_edit_distance(name_upper, v)
+        if distance < best_distance:
+            best_distance = distance
+            best_match = v
+    
+    # Only accept if reasonably close (within 30% of name length)
+    if best_distance <= max(len(name_upper), len(best_match)) * 0.3:
+        return best_match
+    
+    return None
+
+def simple_edit_distance(s1, s2):
+    """Simple character-by-character distance (no external deps)."""
+    # Quick check: if one is prefix of other, distance is length difference
+    if s1.startswith(s2) or s2.startswith(s1):
+        return abs(len(s1) - len(s2))
+    
+    # Otherwise use basic Levenshtein
+    if len(s1) < len(s2):
+        s1, s2 = s2, s1
+    
+    if len(s2) == 0:
+        return len(s1)
+    
+    previous_row = range(len(s2) + 1)
+    for i, c1 in enumerate(s1):
+        current_row = [i + 1]
+        for j, c2 in enumerate(s2):
+            insertions = previous_row[j + 1] + 1
+            deletions = current_row[j] + 1
+            substitutions = previous_row[j] + (c1 != c2)
+            current_row.append(min(insertions, deletions, substitutions))
+        previous_row = current_row
+    
+    return previous_row[-1]
+
 def run_prompt(prompt, system, pth):
     if not Path(pth).exists():
       result = llm_analyze_media(
@@ -57,6 +120,39 @@ def extract_metadata_from_screenplay(screenplay_text):
     
     return tag_line, location, characters
 
+def find_closest_zone(zone_name, valid_zones):
+    """Find closest matching zone, handling bracketed suffixes."""
+    zone_clean = zone_name.strip()
+    
+    # Strip bracketed suffixes: "Neon Bazaar Stall Zones [Greasy Steel Table Zone]" -> "Greasy Steel Table Zone"
+    bracket_match = re.search(r'\[([^\]]+)\]', zone_clean)
+    if bracket_match:
+        zone_clean = bracket_match.group(1).strip()
+    
+    # Exact match
+    for v in valid_zones:
+        if zone_clean.lower() == v.lower():
+            return v
+    
+    # Substring containment
+    for v in valid_zones:
+        if v.lower() in zone_clean.lower() or zone_clean.lower() in v.lower():
+            return v
+    
+    # Edit distance
+    best_match = None
+    best_distance = float('inf')
+    for v in valid_zones:
+        distance = simple_edit_distance(zone_clean.lower(), v.lower())
+        if distance < best_distance:
+            best_distance = distance
+            best_match = v
+    
+    if best_distance <= max(len(zone_clean), len(best_match)) * 0.4:
+        return best_match
+    
+    return None
+
 def parse_screenplay_to_jsonl(screenplay_text, biography_data):
     """Parse screenplay format directly into JSONL beats."""
     beats = []
@@ -96,22 +192,11 @@ def parse_screenplay_to_jsonl(screenplay_text, biography_data):
     for zone_name, block_content in blocks:
         zone_name = zone_name.strip()
         
-        # Try exact match first (case-insensitive)
-        matched_zone = None
-        for valid_zone in valid_zones:
-            if zone_name.lower() == valid_zone.lower():
-                matched_zone = valid_zone
-                break
-        
-        # If no exact match, check if registry zone name is contained in screenplay zone
-        if not matched_zone:
-            for valid_zone in valid_zones:
-                if valid_zone.lower() in zone_name.lower():
-                    matched_zone = valid_zone
-                    break
-        
-        # Use matched zone or fallback
+        # Find closest zone match
+        matched_zone = find_closest_zone(zone_name, valid_zones)
         if matched_zone:
+            if matched_zone != zone_name:
+                print(f"INFO: Normalized zone '{zone_name}' -> '{matched_zone}'")
             zone_name = matched_zone
         else:
             print(f"WARNING: Invalid zone '{zone_name}', using first valid zone")
@@ -179,9 +264,15 @@ def parse_posture_emotion(text):
 def build_beat(speaker, action, dialog, current_state, valid_characters):
     """Build a single JSONL beat with proper field mapping."""
     
-    # Validate speaker
-    if speaker not in valid_characters:
-        print(f"WARNING: Unknown character '{speaker}'")
+    # Fuzzy match speaker to valid characters
+    matched_speaker = find_closest_character(speaker, valid_characters)
+    
+    if matched_speaker:
+        if matched_speaker != speaker.upper():
+            print(f"INFO: Normalized character '{speaker}' -> '{matched_speaker}'")
+        speaker = matched_speaker
+    else:
+        print(f"WARNING: Unknown character '{speaker}', using first valid character")
         speaker = list(valid_characters)[0] if valid_characters else "UNKNOWN"
     
     # Determine actor/speaker fields
