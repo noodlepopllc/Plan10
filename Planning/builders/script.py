@@ -110,59 +110,6 @@ def update_state(state, analyzed_beat):
     
     return new_state
 
-def extract_zone_purposes(world_text):
-    """Extract zone names with their functional purposes."""
-    zones = {}
-    current_zone = None
-    
-    lines = world_text.split('\n')
-    for line in lines:
-        stripped = line.strip()
-        
-        # Detect zone headers like "**Greasy Steel Table Zone**"
-        zone_match = re.match(r'\*\*(.+?Zone)\*\*', stripped)
-        if zone_match:
-            current_zone = zone_match.group(1).strip()
-            zones[current_zone] = []
-            continue
-        
-        # Extract functional purpose
-        if current_zone and 'Functional Purpose:' in stripped:
-            purpose = stripped.replace('Functional Purpose:', '').strip()
-            zones[current_zone].append(purpose)
-        
-        # Reset when we hit a new section
-        if stripped.startswith('# SECTION'):
-            current_zone = None
-    
-    # Format output
-    lines = []
-    for zone_name, purposes in zones.items():
-        if purposes:
-            lines.append(f"- {zone_name}: {purposes[0]}")
-        else:
-            lines.append(f"- {zone_name}")
-    
-    return "\n".join(lines)
-
-def extract_compact_world(world_text):
-    """Extract character names and zone purposes for efficient LLM context."""
-    # Extract character names
-    char_names = re.findall(r'Name:\s*(.+)', world_text)
-    char_names = [n.strip() for n in char_names if n.strip()]
-    
-    # Extract zone purposes
-    zone_info = extract_zone_purposes(world_text)
-    
-    lines = [
-        "VALID CHARACTERS: " + ", ".join(char_names),
-        "",
-        "VALID ZONES (with purposes):",
-        zone_info
-    ]
-    
-    return "\n".join(lines)
-
 # ═══════════════════════════════════════════════════════════════
 # MAIN PROCESSING FUNCTION
 # ═══════════════════════════════════════════════════════════════
@@ -170,8 +117,6 @@ def story_to_script(story_path, world_path, output_path, llm_call_func):
     # Load files
     world_text = Path(world_path).read_text()
     story_text = Path(story_path).read_text()
-
-    brief = extract_compact_world(world_text)
     
     # Split into beats (paragraphs)
     #beats = [b.strip() for b in re.split(r'\n\s*\n', story_text) if b.strip() and 'COLD OPEN END' not in b]
@@ -195,7 +140,7 @@ def story_to_script(story_path, world_path, output_path, llm_call_func):
     # Process each beat
     for i, beat in enumerate(beats):
         # 1. Analyze (LLM does semantic extraction)
-        analyzer_prompt = ANALYZER_PROMPT.format(world_text=brief, beat_text=beat)
+        analyzer_prompt = ANALYZER_PROMPT.format(world_text=world_text, beat_text=beat)
         analyzed_text = llm_call_func(analyzer_prompt, temperature=0.1)
         analyzed_beat = safe_json_load(analyzed_text)
         
@@ -289,8 +234,10 @@ if __name__ == '__main__':
     dir_path = sys.argv[1]
     prompt_path = './Planning/prompts'
     WORLD = Path(f'{prompt_path}/scriptwriter/world.txt').read_text()
+    BIOGRAPHY = Path(f'{prompt_path}/scriptwriter/biography.txt').read_text()
     story_input = Path(f'{dir_path}/story.txt').read_text()
     world = run_prompt(story_input, WORLD, f'{dir_path}/world.txt')
+    biography_text = run_prompt(world, BIOGRAPHY, f'{outpath}/registry.json')
     
     story_to_script(
         story_path=f'{dir_path}/story.txt',

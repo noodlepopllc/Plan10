@@ -352,7 +352,8 @@ Prose Story:
     screenplay = Path(f'{outpath}/script.txt').read_text()
     
     # Step 3: Generate biography/registry
-    biography_text = run_prompt(world, BIOGRAPHY, f'{outpath}/registry.json')
+    #biography_text = run_prompt(world, BIOGRAPHY, f'{outpath}/registry.json')
+    biography_text = Path(f'{outpath}/registry.json').read_text()
     
     # Parse biography JSON
     try:
