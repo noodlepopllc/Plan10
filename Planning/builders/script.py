@@ -237,7 +237,7 @@ if __name__ == '__main__':
     BIOGRAPHY = Path(f'{prompt_path}/scriptwriter/biography.txt').read_text()
     story_input = Path(f'{dir_path}/story.txt').read_text()
     world = run_prompt(story_input, WORLD, f'{dir_path}/world.txt')
-    biography_text = run_prompt(world, BIOGRAPHY, f'{outpath}/registry.json')
+    biography_text = run_prompt(world, BIOGRAPHY, f'{dir_path}/registry.json')
     
     story_to_script(
         story_path=f'{dir_path}/story.txt',
