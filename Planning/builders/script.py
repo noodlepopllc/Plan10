@@ -110,6 +110,30 @@ def update_state(state, analyzed_beat):
     
     return new_state
 
+def extract_names_only(world_text):
+    """Extract only character and zone names from world.txt."""
+    names = []
+    
+    # Extract character names from "Name: XXXX" lines
+    char_names = re.findall(r'Name:\s*(.+)', world_text)
+    for name in char_names:
+        name = name.strip()
+        if name and name not in names:
+            names.append(name)
+    
+    # Extract zone names from "**XXX Zone**" lines
+    zone_names = re.findall(r'\*\*(.+?Zone)\*\*', world_text)
+    for zone in zone_names:
+        zone = zone.strip()
+        if zone and zone not in names:
+            names.append(zone)
+    
+    # Build compact context
+    lines = ["VALID CHARACTERS: " + ", ".join(char_names)]
+    lines.append("VALID ZONES: " + ", ".join(zone_names))
+    
+    return "\n".join(lines)
+
 # ═══════════════════════════════════════════════════════════════
 # MAIN PROCESSING FUNCTION
 # ═══════════════════════════════════════════════════════════════
@@ -117,6 +141,8 @@ def story_to_script(story_path, world_path, output_path, llm_call_func):
     # Load files
     world_text = Path(world_path).read_text()
     story_text = Path(story_path).read_text()
+
+    brief = extract_names_only(world_text)
     
     # Split into beats (paragraphs)
     #beats = [b.strip() for b in re.split(r'\n\s*\n', story_text) if b.strip() and 'COLD OPEN END' not in b]
@@ -140,7 +166,7 @@ def story_to_script(story_path, world_path, output_path, llm_call_func):
     # Process each beat
     for i, beat in enumerate(beats):
         # 1. Analyze (LLM does semantic extraction)
-        analyzer_prompt = ANALYZER_PROMPT.format(world_text=world_text, beat_text=beat)
+        analyzer_prompt = ANALYZER_PROMPT.format(world_text=brief, beat_text=beat)
         analyzed_text = llm_call_func(analyzer_prompt, temperature=0.1)
         analyzed_beat = safe_json_load(analyzed_text)
         
