@@ -261,7 +261,7 @@ if __name__ == '__main__':
     
     story_to_script(
         story_path=f'{dir_path}/story.txt',
-        world_path=world_text,
+        world_text=world_text,
         output_path=f'{dir_path}/script.txt',
         llm_call_func=my_llm_call
     )
