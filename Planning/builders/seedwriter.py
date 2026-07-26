@@ -1,6 +1,7 @@
 import json, sys
 from plan10.lib.qwen_llm import llm_analyze_media
 from pathlib import Path
+import random
 
 CHARACTERS_MIXED = '''
 **Characters** (2–4 characters):
