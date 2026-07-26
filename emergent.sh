@@ -3,6 +3,7 @@
 echo "🎬 Starting creative loop. Press Ctrl+C to stop."
 
 export BRIEF="True"
+BEAT=1
 
 while true; do
     # Run creative step
@@ -23,6 +24,8 @@ while true; do
         break
     fi
     
-    echo "🔁 Beat $CLI_EXIT complete. Continuing..."
+    echo "🔁 Beat $BEAT complete. Continuing..."
+    BEAT=$((BEAT + 1))
     sleep 1
+
 done
