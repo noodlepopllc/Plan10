@@ -61,8 +61,9 @@ RULES:
 2. If dialog is null/empty, omit the dialog line entirely.
 3. Action line has NO quotes.
 4. If action is null/empty, omit the action line entirely.
-5. Character name in ALL CAPS.
-6. Output ONLY the formatted text."""
+5. Character name MUST be the EXACT full name from BEAT DATA. NEVER abbreviate or shorten names.
+6. Character name in ALL CAPS.
+7. Output ONLY the formatted text."""
 
 # ═══════════════════════════════════════════════════════════════
 # PYTHON STATE TRACKER (Deterministic Logic)
