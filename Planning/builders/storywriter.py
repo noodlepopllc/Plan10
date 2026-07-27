@@ -325,7 +325,7 @@ def run_prompt(prompt, system, pth):
             media="",
             prompt=prompt,
             system=system,
-            max_tokens=8192)['analysis']
+            max_tokens=32000)['analysis']
         with open(pth, 'w') as out_f:
             out_f.write(result)
         print(f'Wrote {pth}')
