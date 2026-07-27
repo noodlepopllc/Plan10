@@ -169,8 +169,9 @@ Width: {self.WIDTH}, Height: {self.HEIGHT}, Duration: {duration}, Seed: {self.SE
 """)
 
     def dialog_final(self, alias, base_alias, voice_alias, text, prompt=""):
+        final_alias = alias + '_full' if prompt else alias
         final = f"""
->> ALIAS: {alias}
+>> ALIAS: {final_alias}
 dialog_to_video media={base_alias} asset
 audio={voice_alias} asset
 text="{text}",
