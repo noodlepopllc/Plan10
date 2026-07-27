@@ -319,13 +319,13 @@ def topical_seed_generator(scenario, topic):
 # CORE FUNCTIONS
 # ============================================================================
 
-def run_prompt(prompt, system, pth):
+def run_prompt(prompt, system, pth, max_tokens=8192):
     if not Path(pth).exists():
         result = llm_analyze_media(
             media="",
             prompt=prompt,
             system=system,
-            max_tokens=32000)['analysis']
+            max_tokens=max_tokens)['analysis']
         with open(pth, 'w') as out_f:
             out_f.write(result)
         print(f'Wrote {pth}')
@@ -345,42 +345,44 @@ TOPICS = [
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Expand a seed into a full scene')
-    parser.add_argument('-S', '--seed', type=str, default=None,
-                        help='Path to seed file (uses default seed if not provided)')
-    parser.add_argument('-O', '--output', type=str, default='story.txt',
-                        help='Output file path')
-    parser.add_argument('-T', '--topic', type=str, default=None,
-                        help='Topic for topical scenes (e.g., "AI ethics", "healthcare")')
-    parser.add_argument('--scenario', type=str, default=None,
-                        help='Scenario type for topical: DEBATE/TEACHING/DISCUSSION/MENTORSHIP')
-    parser.add_argument('--topical', action='store_true',
-                        help='Use topical/educational expander (debate/teaching)')
+    parser.add_argument('-S', '--seed', type=str, default=None)
+    parser.add_argument('-O', '--output', type=str, default='story.txt')
+    parser.add_argument('-T', '--topic', type=str, default=None)
+    parser.add_argument('--scenario', type=str, default=None)
+    parser.add_argument('--topical', action='store_true')
+    parser.add_argument('--max-tokens', type=int, default=None,
+                        help='Override default token budget')
     args = parser.parse_args()
 
     output_path = Path(args.output)
+
+    # Set token budget based on expander type
+    if args.max_tokens:
+        token_budget = args.max_tokens
+    elif args.topical:
+        token_budget = 16384  # Topical needs more room for 20-40 beats
+    else:
+        token_budget = 8192   # Action scenes need less
 
     if args.seed:
         seed_text = Path(args.seed).read_text()
         print(f'Using seed from {args.seed}')
 
     elif args.topical:
-        # Python handles ALL random selection
         scenario = args.scenario.upper() if args.scenario and args.scenario.upper() in TOPICAL_SCENARIOS else random.choice(TOPICAL_SCENARIOS)
         topic = args.topic if args.topic else random.choice(TOPICS)
 
         seed_path = output_path.with_name(output_path.stem + '_seed.txt')
         inputs = f'Generate a topical seed\nTopic: {topic}\nScenario Type: {scenario}\n'
-        seed_text = run_prompt(inputs, topical_seed_generator(scenario, topic), str(seed_path))
+        seed_text = run_prompt(inputs, topical_seed_generator(scenario, topic), str(seed_path), max_tokens=4096)
         print(f'Generated topical seed: {scenario} / {topic}')
 
     else:
         seed_text = SEED
         print('Using default seed')
 
-    # Select expander
     expander = TOPICAL_EXPANDER if args.topical else ALTERNATIVE
     expander_type = 'topical' if args.topical else 'action'
-    print(f'Expanding with {expander_type} expander')
+    print(f'Expanding with {expander_type} expander (token budget: {token_budget})')
 
-    # Generate story
-    print(run_prompt(seed_text, expander, str(output_path)))
+    print(run_prompt(seed_text, expander, str(output_path), max_tokens=token_budget))
