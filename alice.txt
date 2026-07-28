@@ -14,7 +14,7 @@ cute black kitten heels, black ribbon tied in her hair, knee high white stocking
 create_background a scene in the book with a table inside of a mysterious magical study, fairy tale, vibrant colors, realistic fantasy indoor scene from 'Alice in Wonderland'. 
 
 >> ALIAS: Alice_Background_Outdoor
-create_background a scene in the book with large mushrooms, fairy tale, vibrant colors, realistic fantasy outdoor scene from 'Alice in Wonderland'. 
+create_background a scene in the book with large mushrooms, fairy tale, vibrant colors, realistic fantasy outdoor scene, vacant of any characters from 'Alice in Wonderland'. 
 
 >> ALIAS: Alice_Composite
 composite_scene by combining Alice_Sheet asset with Alice_Background_Indoor asset she examines the table as she stands beside it, only a small portion of the table is visible as the rest extends outside of the view. 
