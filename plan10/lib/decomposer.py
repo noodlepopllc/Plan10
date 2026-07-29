@@ -105,93 +105,93 @@ TOTAL_CHARACTERS: [actual count, maximum 3]"""
     - Do NOT merge similar-looking characters into one description
     - Focus on main characters, ignore background extras"""
         
-        result = AnalyzeImage(input_image, analysis_prompt)
-        analysis = result['analysis']
-        print(analysis)
+    result = AnalyzeImage(input_image, analysis_prompt)
+    analysis = result['analysis']
+    print(analysis)
+    
+    # Parse character count (cap at 2 for compositor compatibility)
+    char_count = 1
+    for line in analysis.split('\n'):
+        if 'TOTAL_CHARACTERS:' in line:
+            try:
+                detected_count = int(line.split(':')[1].strip())
+                char_count = min(detected_count, 2)  # Cap at 2
+                if detected_count > 2:
+                    print(f"⚠️ Detected {detected_count} characters, but compositor only supports 2. Using first 2.")
+            except:
+                pass
+    
+    print(f"\n✓ Found {char_count} character(s)")
+    
+    # Step 2: Generate character sheets for each character
+    characters = []
+    with ImageGen() as igen:
+        for i in range(1, char_count + 1):
+            print(f"\n🎨 Generating character sheet {i}...")
+            
+            # Extract character description from analysis
+            char_desc = extract_character_description(analysis, i)
+            
+            char_output = output_dir / f"character_{i}.png"
+            
+            # Use CreateCharacterSheet to generate clean reference
+            status = CreateCharacterSheet(
+                prompt=char_desc,
+                output=str(char_output),
+                seed=seed + i,
+                imagegen=igen
+            )
+            
+            characters.append({
+                'id': i,
+                'path': str(char_output),
+                'description': status['description'],
+                'prompt_used': status.get('prompt', '')
+            })
+            
+            print(f"  ✓ Saved: {char_output}")
         
-        # Parse character count (cap at 2 for compositor compatibility)
-        char_count = 1
-        for line in analysis.split('\n'):
-            if 'TOTAL_CHARACTERS:' in line:
-                try:
-                    detected_count = int(line.split(':')[1].strip())
-                    char_count = min(detected_count, 2)  # Cap at 2
-                    if detected_count > 2:
-                        print(f"⚠️ Detected {detected_count} characters, but compositor only supports 2. Using first 2.")
-                except:
-                    pass
-        
-        print(f"\n✓ Found {char_count} character(s)")
-        
-        # Step 2: Generate character sheets for each character
-        characters = []
-        with ImageGen() as igen:
-            for i in range(1, char_count + 1):
-                print(f"\n🎨 Generating character sheet {i}...")
-                
-                # Extract character description from analysis
-                char_desc = extract_character_description(analysis, i)
-                
-                char_output = output_dir / f"character_{i}.png"
-                
-                # Use CreateCharacterSheet to generate clean reference
-                status = CreateCharacterSheet(
-                    prompt=char_desc,
-                    output=str(char_output),
-                    seed=seed + i,
-                    imagegen=igen
-                )
-                
-                characters.append({
-                    'id': i,
-                    'path': str(char_output),
-                    'description': status['description'],
-                    'prompt_used': status.get('prompt', '')
-                })
-                
-                print(f"  ✓ Saved: {char_output}")
-        
-        # Step 3: Generate clean background plate
-        print(f"\n🏞️ Generating clean background plate...")
-        
-        # Extract environment description
-        #env_desc = extract_environment_description(analysis)
-        
-        bg_tmp = output_dir / "tmp_background.png"
-        
-        # Use CreateBackground to generate clean plate
-        status = CompositeScene(
-            background_path=input_image,
-            characters=[],
-            output=str(bg_tmp),
-            seed=seed
-        )
-        
-        bg_output = output_dir / "background.png"
+    # Step 3: Generate clean background plate
+    print(f"\n🏞️ Generating clean background plate...")
+    
+    # Extract environment description
+    #env_desc = extract_environment_description(analysis)
+    
+    bg_tmp = output_dir / "tmp_background.png"
+    
+    # Use CreateBackground to generate clean plate
+    status = CompositeScene(
+        background_path=input_image,
+        characters=[],
+        output=str(bg_tmp),
+        seed=seed
+    )
+    
+    bg_output = output_dir / "background.png"
 
-        status = EditImage(prompt='remove people from image', images=[str(bg_tmp)], output=str(bg_output))
-        
-        print(f"  ✓ Saved: {bg_output}")
-        
-        # Step 4: Save manifest
-        manifest = {
-            'source': input_image,
-            'background': str(bg_output),
-            'environment_description': status['description'],
-            'characters': characters,
-            'analysis': analysis
-        }
-        
-        manifest_path = output_dir / "manifest.json"
-        with open(manifest_path, 'w') as f:
-            json.dump(manifest, f, indent=2)
-        
-        print(f"\n✅ Decomposition complete!")
-        print(f"   Background: {bg_output}")
-        print(f"   Characters: {len(characters)}")
-        print(f"   Manifest: {manifest_path}")
-        
-        return manifest
+    status = EditImage(prompt='remove people from image', images=[str(bg_tmp)], output=str(bg_output))
+    
+    print(f"  ✓ Saved: {bg_output}")
+    
+    # Step 4: Save manifest
+    manifest = {
+        'source': input_image,
+        'background': str(bg_output),
+        'environment_description': status['description'],
+        'characters': characters,
+        'analysis': analysis
+    }
+    
+    manifest_path = output_dir / "manifest.json"
+    with open(manifest_path, 'w') as f:
+        json.dump(manifest, f, indent=2)
+    
+    print(f"\n✅ Decomposition complete!")
+    print(f"   Background: {bg_output}")
+    print(f"   Characters: {len(characters)}")
+    print(f"   Manifest: {manifest_path}")
+    
+    return manifest
 
 
 def extract_character_description(analysis, char_num):
