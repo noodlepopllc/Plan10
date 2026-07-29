@@ -337,22 +337,8 @@ def build_script(user_input_path, outpath):
     # Read user input
     user_input = Path(user_input_path).read_text()
     
-    # Step 1: Generate world model
-    #world = run_prompt(user_input, WORLD, f'{outpath}/world.txt')
-    world = Path(f'{outpath}/world.txt').read_text()
-    
-    # Step 2: Generate screenplay from prose
-    screenplay_prompt = f"""World Model:
-{world}
-
-Prose Story:
-{user_input}"""
-    
-    #screenplay = run_prompt(screenplay_prompt, SCREENPLAY, f'{outpath}/screenplay.txt')
     screenplay = Path(f'{outpath}/script.txt').read_text()
     
-    # Step 3: Generate biography/registry
-    #biography_text = run_prompt(world, BIOGRAPHY, f'{outpath}/registry.json')
     biography_text = Path(f'{outpath}/registry.json').read_text()
     
     # Parse biography JSON
