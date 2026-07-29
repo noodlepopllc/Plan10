@@ -12,8 +12,6 @@ from PIL import Image
 from plan10.lib.image_edit import EditImage
 
 ANIME = os.environ.get("ANIME", "False") != "False"
-WIDTH = int(os.environ.get("WIDTH", "832"))
-HEIGHT = int(os.environ.get("HEIGHT", "480"))
 SEED = int(os.environ.get("SEED", "-1"))
 
 if ANIME:
@@ -29,15 +27,13 @@ from pathlib import Path
 from plan10.lib.image_analysis import AnalyzeImage
 
 
-def decompose_scene(input_image, output_dir, width=832, height=480, seed=42):
+def decompose_scene(input_image, output_dir, seed=42):
     """
     Decompose a scene into individual character sheets and background plate.
     
     Args:
         input_image: Path to scene image
         output_dir: Directory to save extracted assets
-        width: Output width for final assets
-        height: Output height for final assets
         seed: Random seed for generation
     """
     output_dir = Path(output_dir)
@@ -183,7 +179,6 @@ TOTAL_CHARACTERS: [actual count, maximum 3]"""
             'background': str(bg_output),
             'environment_description': status['description'],
             'characters': characters,
-            'dimensions': {'width': width, 'height': height},
             'analysis': analysis
         }
         
@@ -271,8 +266,6 @@ def main():
     parser = argparse.ArgumentParser(description="Decompose scene into characters and background")
     parser.add_argument('-I', '--input', type=str, required=True, help="Input scene image")
     parser.add_argument('-O', '--output', type=str, required=True, help="Output directory")
-    parser.add_argument('-W', '--width', type=int, default=832, help="Output width")
-    parser.add_argument('-H', '--height', type=int, default=480, help="Output height")
     parser.add_argument('-S', '--seed', type=int, default=42, help="Random seed")
     
     args = parser.parse_args()
@@ -280,8 +273,6 @@ def main():
     decompose_scene(
         input_image=args.input,
         output_dir=args.output,
-        width=args.width,
-        height=args.height,
         seed=args.seed
     )
 

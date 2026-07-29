@@ -21,7 +21,7 @@ def load_config():
         "IMAGE_EDIT": "KLEIN",
         "WIDTH": "768",
         "HEIGHT": "448",
-        "SEED": "122333",
+        "SEED": "42",
         "TRANSFORMERS_CACHE":"$HF_HOME",
         "WGP": "False",
         "LTX": "DISTILLED",
