@@ -169,7 +169,7 @@ TOTAL_CHARACTERS: [actual count, maximum 3]"""
     
     bg_output = output_dir / "background.png"
 
-    tmp = Image.open(bg_output)
+    tmp = Image.open(bg_tmp)
 
     status = EditImage(prompt='remove people from image', images=[str(bg_tmp)], output=str(bg_output), width=tmp.width, height=tmp.height)
     
