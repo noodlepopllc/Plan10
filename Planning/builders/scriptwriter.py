@@ -335,7 +335,7 @@ def build_script(user_input_path, outpath):
     outpath.mkdir(parents=True, exist_ok=True)
     
     # Read user input
-    user_input = Path(user_input_path).read_text()
+    #user_input = Path(user_input_path).read_text()
     
     screenplay = Path(f'{outpath}/script.txt').read_text()
     
