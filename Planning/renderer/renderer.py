@@ -316,7 +316,7 @@ def render_beats_dialog(assets, actions, mappings, T, backdrop_position):
             zone_mappings = mappings.get(zone_name, {})
             
             char_idx = char_index_map.get(speaker, 0)
-            if backdrop_position != "ANY":
+            if backdrop_position == "ANY":
                 shot_variant = 'LEFT' if char_idx == 0 else 'RIGHT'
             else:
                 shot_variant = backdrop_position
