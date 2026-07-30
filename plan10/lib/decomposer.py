@@ -173,7 +173,7 @@ TOTAL_CHARACTERS: [actual count, maximum 3]"""
 
     status = EditImage(prompt='remove people from image', images=[str(bg_tmp)], output=str(bg_output), width=tmp.width, height=tmp.height)
 
-    add_metadata_loc(bg_output)
+    add_metadata_loc(str(bg_output))
     
     print(f"  ✓ Saved: {bg_output}")
     
