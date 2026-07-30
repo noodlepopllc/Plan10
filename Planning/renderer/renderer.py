@@ -170,7 +170,7 @@ def strip_leading_name(action, char):
     return pattern.sub("", action).strip()
 
 
-def render_beats_actions(assets, actions, mappings, T):
+def render_beats_actions(assets, actions, mappings, T, backdrop_position):
     char_aliases = {canonical(c['name']): f"CHAR_{normalize(c['name'])}" for c in assets['biographies']}
     char_index_map = {canonical(bio['name']): i for i, bio in enumerate(assets['biographies'])}
     
@@ -190,7 +190,10 @@ def render_beats_actions(assets, actions, mappings, T):
         
         zone_name = beat['zone']
         zone_mappings = mappings.get(zone_name, {})
-        
+
+
+        if backdrop_position != "ANY":
+            shot_variant = backdrop_position
         if len(beat_chars) == 1:
             char_name = list(beat_chars)[0]
             char_idx = char_index_map.get(canonical(char_name), 0)
@@ -274,7 +277,7 @@ def clean_dialog_line(line):
     # If narration is embedded, remove it
     return re.sub(r'"\s*[^"]*"\s*', lambda m: m.group(0), line).strip()
 
-def render_beats_dialog(assets, actions, mappings, T):
+def render_beats_dialog(assets, actions, mappings, T, backdrop_position):
     char_aliases = {
         canonical(c['name']): f"CHAR_{normalize(c['name'])}"
         for c in assets['biographies']
@@ -313,7 +316,10 @@ def render_beats_dialog(assets, actions, mappings, T):
             zone_mappings = mappings.get(zone_name, {})
             
             char_idx = char_index_map.get(speaker, 0)
-            shot_variant = 'LEFT' if char_idx == 0 else 'RIGHT'
+            if backdrop_position != "ANY":
+                shot_variant = 'LEFT' if char_idx == 0 else 'RIGHT'
+            else:
+                shot_variant = backdrop_position
             zone_alias = zone_mappings.get(shot_variant, 'UNKNOWN')
 
             speaker_alias = char_aliases[speaker]
@@ -427,6 +433,11 @@ def main():
     
     basepath = sys.argv[1]
 
+    if len(sys.argv) > 3 and sys.argv[3] in ("LEFT","MIDDLE","RIGHT"):
+        backdrop_position = sys.argv[3]
+    else:
+        backdrop_position = "ANY"
+
     with open(f"{basepath}/output/registry.json") as ass:
         assets = json.load(ass)
     actions = []
@@ -450,8 +461,8 @@ def main():
     mappings = create_backdrop_mapping(assets, actions)
     get_backgrounds(assets, mappings, T)
 
-    render_beats_actions(assets, actions, mappings, T)
-    render_beats_dialog(assets, actions, mappings, T)
+    render_beats_actions(assets, actions, mappings, T, backdrop_position)
+    render_beats_dialog(assets, actions, mappings, T, backdrop_position)
 
     if len(sys.argv) > 2 and sys.argv[2] in ("images", "all", "videos", "identity", "dialog", "full", "closeup"):
         mode = sys.argv[2]
