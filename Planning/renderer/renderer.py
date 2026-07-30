@@ -362,8 +362,8 @@ def render_beats_dialog(assets, actions, mappings, T, backdrop_position):
                 dialog_pose_prompt_close = (
                     f"{dlg['speaker']} (facial expression {facial})"
                 )
-                T.dialog_closeup(base_alias_closeup, zone_alias, speaker_alias, dialog_pose_prompt_close)
-                T.dialog_medium(base_alias_medium, zone_alias, speaker_alias, dialog_pose_prompt_close)
+                T.dialog_closeup(base_alias_closeup, zone_alias, speaker_alias, dialog_prompt)
+                T.dialog_medium(base_alias_medium, zone_alias, speaker_alias, dialog_prompt)
                 dialog_base_cache[dialog_key_closeup] = base_alias_closeup
                 dialog_base_cache[dialog_key_medium] = base_alias_medium
             else:
