@@ -339,7 +339,7 @@ def render_beats_dialog(assets, actions, mappings, T, backdrop_position):
             if not facial:
                 facial = 'neutral'
 
-            start_desc = beat.get('starting_description', {})
+            start_desc = beat.get('posture', {})
             posture = start_desc.get(raw_speaker, None)
             if posture:
                 pose_sentence = f"{dlg['speaker']} is {posture}."
