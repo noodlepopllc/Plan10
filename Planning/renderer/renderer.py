@@ -194,7 +194,7 @@ def render_beats_actions(assets, actions, mappings, T, backdrop_position):
 
         if backdrop_position != "ANY":
             shot_variant = backdrop_position
-        if len(beat_chars) == 1:
+        elif len(beat_chars) == 1:
             char_name = list(beat_chars)[0]
             char_idx = char_index_map.get(canonical(char_name), 0)
             shot_variant = 'LEFT' if char_idx == 0 else 'RIGHT'
