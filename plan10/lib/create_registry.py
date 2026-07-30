@@ -69,7 +69,7 @@ def parse_json_response(text):
     end = text.rfind('}')
     if start != -1 and end != -1:
         text = text[start:end + 1]
-    
+    print(text)
     return json.loads(text)
 
 
