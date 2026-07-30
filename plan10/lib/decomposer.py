@@ -15,9 +15,9 @@ ANIME = os.environ.get("ANIME", "False") != "False"
 SEED = int(os.environ.get("SEED", "-1"))
 
 if ANIME:
-    from plan10.lib.anime_gen import CreateCharacterSheet, CreateBackground, ImageGen
+    from plan10.lib.anime_gen import CreateCharacterSheet, CreateBackground, ImageGen, add_metadata_loc
 else:
-    from plan10.lib.image_gen import CreateCharacterSheet, CreateBackground, ImageGen
+    from plan10.lib.image_gen import CreateCharacterSheet, CreateBackground, ImageGen, add_metadata_loc
 
 from plan10.lib.compositor import CompositeScene
 
@@ -172,6 +172,8 @@ TOTAL_CHARACTERS: [actual count, maximum 3]"""
     tmp = Image.open(bg_tmp)
 
     status = EditImage(prompt='remove people from image', images=[str(bg_tmp)], output=str(bg_output), width=tmp.width, height=tmp.height)
+
+    add_metadata_loc(bg_output)
     
     print(f"  ✓ Saved: {bg_output}")
     
