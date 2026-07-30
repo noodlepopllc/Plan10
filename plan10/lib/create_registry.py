@@ -112,6 +112,41 @@ KNOWN DESCRIPTION (from image metadata - treat as ground truth):
 
 Use the known description as the primary source. Only infer missing details by analyzing the image visually.
 
+CORE RULES:
+- NO camera references (no "camera", "angle", "frame", "shot", "lens")
+- NO character names, appearance, clothing, or actions
+- Describe ONLY the physical environment
+- All descriptions must be physical, deterministic, and renderable
+- Large furniture MUST NOT dominate the foreground or block the central area
+- The center and foreground of every zone MUST have clear, open floor space
+- Furniture orientation must be described relative to FIXED STRUCTURES (walls, windows, doors), NOT relative to a viewer
+
+ZONE DEFINITION REQUIREMENTS:
+Each zone_definition MUST describe:
+1. What part of the location this area occupies
+2. Fixed physical features (furniture, structures) and their orientation relative to walls/windows
+3. Spatial relationship to other zones
+4. What environmental elements are on the LEFT side
+5. What environmental elements are on the RIGHT side
+6. Clear open floor space in the center/foreground
+7. Functional purpose (NO story events)
+
+FURNITURE ORIENTATION RULE:
+Describe furniture direction relative to room geometry.
+CORRECT: "The desk's long edge runs parallel to the window wall, with the seating side facing the room interior"
+WRONG: "The desk faces the camera" or "The desk faces the viewer"
+
+STAGING RULES:
+- Large objects (desks, counters, tables) must be positioned against walls or in the background
+- If a desk is present, describe which wall it is against and which direction the seating side faces
+- The center foreground must remain open for actors to stand
+- No object should span the entire width of the foreground
+
+LIGHTING CONSISTENCY:
+- Establish a single time of day, sky condition, and external lighting that applies to ALL zones
+- All windows must show the same sky condition
+- The setting.room_form MUST include: exact time of day, sky condition, sun position, external light color
+
 Output STRICTLY as a JSON object with this exact structure:
 {{
   "setting": {{
@@ -126,17 +161,17 @@ Output STRICTLY as a JSON object with this exact structure:
     "zones": [
       {{
         "zone_name": "string (physical area name, e.g., 'Corner Table', 'Bar Counter')",
-        "zone_definition": "3-5 sentences describing physical space: what part of location it occupies, fixed features, furniture, spatial relationship to other zones, what environmental elements are on left side, what environmental elements are on right side, and clear open floor space in the center/foreground. NO camera references, NO character names, NO character appearance, NO character actions, NO large foreground-blocking objects.",
+        "zone_definition": "3-5 sentences: what part of location, fixed features with orientation relative to walls/windows, left side elements, right side elements, clear center/foreground floor space. NO camera refs, NO character names.",
         "purpose": "1-2 sentences describing functional purpose. NO story events.",
         "anchored_elements": [
           {{
             "name": "string",
             "material": "string",
-            "position": "string (physical position in zone: left side, right side, background, far left, far right. MUST NOT be foreground/center if large)",
-            "orientation": "string"
+            "position": "string (left side, right side, background, far left, far right. MUST NOT be foreground/center if large)",
+            "orientation": "string (describe direction relative to walls/windows, e.g., 'long edge parallel to window wall')"
           }}
         ],
-        "visible_background_elements": ["5-8 background elements visible in the full zone"]
+        "visible_background_elements": ["5-8 specific background elements visible in the full zone, covering both left and right sides"]
       }}
     ]
   }}
@@ -148,7 +183,6 @@ Output ONLY the JSON object. No markdown fences, no commentary, no explanation."
     
     result = AnalyzeImage(image_path, prompt)
     return parse_json_response(result['analysis'])
-
 
 def build_registry(background_path, character_paths, output_path):
     """Build the complete registry JSON from images."""
