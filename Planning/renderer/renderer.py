@@ -388,15 +388,14 @@ def render_beats_dialog(assets, actions, mappings, T, backdrop_position):
                         f"Over-the-shoulder shot from behind {other_alias}'s shoulder, "
                         f"focusing on {speaker_alias} who has a {facial} expression"
                     )
+                    T.dialog_ots(base_alias_ots, zone_alias, ots_char_assets, dialog_pose_prompt_ots)
+                    dialog_base_cache[dialog_key_ots] = base_alias_ots
                 else:
                     # Fallback if there's somehow no second character in the zone
                     ots_char_assets = speaker_alias
                     dialog_pose_prompt_ots = (
                         f"Over-the-shoulder shot, focusing on {speaker_alias} with a {facial} expression"
                     )
-                
-                T.dialog_ots(base_alias_ots, zone_alias, ots_char_assets, dialog_pose_prompt_ots)
-                dialog_base_cache[dialog_key_ots] = base_alias_ots
             else:
                 base_alias_ots = dialog_base_cache[dialog_key_ots]
 
