@@ -545,11 +545,9 @@ def split_dialog_sentences(beats, biography, syllable_threshold=16):
             same_posture = beat.get('posture') == prev.get('posture')
             same_zone = beat.get('zone') == prev.get('zone')
             same_location = beat.get('location') == prev.get('location')
+            no_action = not beat.get('action')  # Only consolidate if no action
             
-            if same_actor and same_posture and same_zone and same_location:
-                if beat.get('action'):
-                    prev['actions'].append(beat['action'])
-                
+            if same_actor and same_posture and same_zone and same_location and no_action:
                 if line:
                     line = line.strip()
                     sentences = segment_sentences(line)
@@ -561,13 +559,9 @@ def split_dialog_sentences(beats, biography, syllable_threshold=16):
                     else:
                         sentences = recombine_by_syllables(sentences, threshold=syllable_threshold)
                         for sent in sentences:
-                            #prev['dialog'].append({"speaker": speaker, "line": sent.strip()})
                             chunks = chunk_long_sentence(sent.strip(), syllable_threshold)
                             for chunk in chunks:
                                 prev['dialog'].append({"speaker": speaker, "line": chunk.strip()})
-                
-                if prev['actions']:
-                    prev['arc'] = f"{prev['actor']} {prev['posture'][prev['actor']]} with a {prev['facial']} expression, {', '.join(prev['actions'])}"
                 
                 continue
         
