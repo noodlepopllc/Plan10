@@ -209,7 +209,7 @@ async def s2v(prompt='', media='', audio='', text='', output='output.mp4',
         args['prompt'] = newprompt
         args['image_prompt_type'] =  'S'
         args['image_start'] = media
-        args['prompt_enhancer'] = 'TI'
+        #args['prompt_enhancer'] = 'TI'
         args['audio_prompt_type'] = 'A1OF'
         args['audio_guide'] = audio
         args['activated_loras'] = ["id-lora-celebvhq-ltx2.3.safetensors"]
