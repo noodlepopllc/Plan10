@@ -11,8 +11,8 @@ class CommandBuffer:
         self.videos = []
         self.images = []
         self.video_images = []
-        self.dialog = []
-        self.dialog_images = []
+        self.ots = []
+        self.ots_images = []
         self.closeup = []
         self.closeup_images = []
         self.medium = []
@@ -40,9 +40,9 @@ class CommandBuffer:
             for c in self.videos:
                 print(c)
         if mode in ("all", "dialog", "ots"):
-            for c in self.dialog_images:
+            for c in self.ots_images:
                 print(c)
-            for c in self.dialog:
+            for c in self.ots:
                 print(c)
         if mode in ("all", "dialog", "closeup"):
             for c in self.closeup_images:
@@ -196,7 +196,7 @@ Width: {self.WIDTH}, Height: {self.HEIGHT}, Seed: {self.SEED}
         elif "MEDIUM" in base_alias:
             self.buffer.medium.append(final)
         else:
-            self.buffer.dialog.append(final)
+            self.buffer.ots.append(final)
 
     # ---------------------------------------------------------
     # DIALOG MOTION PROMPT
