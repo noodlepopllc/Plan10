@@ -15,6 +15,8 @@ class CommandBuffer:
         self.dialog_images = []
         self.closeup = []
         self.closeup_images = []
+        self.medium = []
+        self.medium_images = []
         self.full = []
 
     def dump(self, mode="all"):
@@ -28,12 +30,16 @@ class CommandBuffer:
                 print(c)
             for c in self.dialog_images:
                 print(c)
+            for c in self.closeup_images:
+                print(c)
+            for c in self.medium_images:
+                print(c)
         if mode in ("all", "videos"):
             for c in self.video_images:
                 print(c)
             for c in self.videos:
                 print(c)
-        if mode in ("all", "dialog"):
+        if mode in ("all", "dialog", "ots"):
             for c in self.dialog_images:
                 print(c)
             for c in self.dialog:
@@ -42,6 +48,11 @@ class CommandBuffer:
             for c in self.closeup_images:
                 print(c)
             for c in self.closeup:
+                print(c)
+        if mode in ("all", "dialog", "medium"):
+            for c in self.medium_images:
+                print(c)
+            for c in self.medium:
                 print(c)
         if mode in ("full"):
             for c in self.dialog_images:
@@ -144,7 +155,7 @@ Width: {self.WIDTH}, Height: {self.HEIGHT}, Seed: {self.SEED}
 """)
 
     def dialog_ots(self, alias, zone_alias, char_assets, prompt):
-        self.buffer.dialog_images.append(f"""
+        self.buffer.ots_images.append(f"""
 >> ALIAS: {alias}
 composite_scene {zone_alias} asset and {char_assets},
 shot_type: "ots",
@@ -153,7 +164,7 @@ Width: {self.WIDTH}, Height: {self.HEIGHT}, Seed: {self.SEED}
 """)
 
     def dialog_medium(self, alias, zone_alias, char_alias, prompt):
-        self.buffer.dialog_images.append(f"""
+        self.buffer.medium_images.append(f"""
 >> ALIAS: {alias}
 composite_scene {zone_alias} asset and {char_alias} asset,
 shot_type: "medium",
@@ -182,6 +193,8 @@ Width: {self.WIDTH}, Height: {self.HEIGHT}, Seed: {self.SEED}
             self.buffer.full.append(final)
         elif "CLOSEUP" in base_alias:
             self.buffer.closeup.append(final)
+        elif "MEDIUM" in base_alias:
+            self.buffer.medium.append(final)
         else:
             self.buffer.dialog.append(final)
 
