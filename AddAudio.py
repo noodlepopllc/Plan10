@@ -1,20 +1,21 @@
 import sys, os, time
-sys.path.append('./lib')
+from plan10.lib.config import load_environ
+load_environ()
 
-from qwen_llm import llm_analyze_media
+from plan10.lib.qwen_llm import llm_analyze_media
 
-from image_gen import GenerateImage
-from image_to_video import GenerateVideo
+from plan10.lib.image_gen import GenerateImage
+from plan10.lib.image_to_video import GenerateVideo
 from pathlib import Path
 import torch, torchaudio
 
-from config import load_environ
+
 from PIL import Image
 from PIL.PngImagePlugin import PngInfo
-from image_analysis import AnalyzeImage
-from util import video_to_img
+from plan10.lib.image_analysis import AnalyzeImage
+from plan10.lib.util import video_to_img
 
-load_environ()
+
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
 
@@ -36,10 +37,6 @@ Rules:
 
 Example Output: "Subtle candle wax crackling, heavy leather armor creaking with body movement, soft linen dress rustling, quiet stone room echo"
 """
-
-
-
-
 
 ### Checkout woosh repo, add dependencies and uncomment
 
