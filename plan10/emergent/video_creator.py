@@ -81,8 +81,6 @@ def main():
             decompose_scene(
                 input_image=current_media,
                 output_dir=args.output,
-                width=args.width,
-                height=args.height,
                 seed=args.seed
             )
             for p in ['character_1.png', 'character_2.png']:
