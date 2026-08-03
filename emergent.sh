@@ -10,7 +10,7 @@ while true; do
     uv run video_creator "$@"
     CLI_EXIT=$?
     
-    if [ $CLI_EXIT -ne 0 ]; then
+    if [ $CLI_EXIT -eq 255 ]; then
         echo "❌ Creative step failed with error code $CLI_EXIT"
         break
     fi
@@ -19,7 +19,7 @@ while true; do
    uv run video_runner "$@"
     VIDEO_EXIT=$?
     
-    if [ $VIDEO_EXIT -ne 0 ]; then
+    if [ $VIDEO_EXIT -eq 255 ]; then
         echo "❌ Video rendering failed with error code $VIDEO_EXIT"
         break
     fi

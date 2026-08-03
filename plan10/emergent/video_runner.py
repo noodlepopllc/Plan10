@@ -74,7 +74,7 @@ def main():
         print(f"❌ Video generation failed: {e}")
         pending_job['status'] = 'failed'
         state_mgr.save(state)
-        sys.exit(-1)
+        sys.exit(255)
 
 if __name__ == "__main__":
     main()

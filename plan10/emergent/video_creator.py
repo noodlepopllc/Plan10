@@ -144,7 +144,7 @@ def main():
         print(f"\n❌ CRITICAL ERROR: {e}")
         import traceback
         traceback.print_exc()
-        sys.exit(-1)
+        sys.exit(255)
 
     # Add the new video job to the queue
     video_queue.append(result['video_job'])
