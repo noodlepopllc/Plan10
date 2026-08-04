@@ -39,16 +39,25 @@ def _ensure_pipeline(vrlimit=14):
     }
 
     _pipe = None
-
-    _pipe = WanVideoPipeline.from_pretrained(
-        torch_dtype=torch.bfloat16,
-        device="cuda",
-        model_configs=[
+    if WAN22:
+        configs = [
+        ModelConfig(model_id=model_id, origin_file_pattern="high_noise_model/diffusion_pytorch_model*.safetensors", **vram_config),
+        ModelConfig(model_id=model_id, origin_file_pattern="low_noise_model/diffusion_pytorch_model*.safetensors", **vram_config),
+        ModelConfig(model_id=model_id, origin_file_pattern="models_t5_umt5-xxl-enc-bf16.pth", **vram_config),
+        ModelConfig(model_id=model_id, origin_file_pattern="Wan2.1_VAE.pth", **vram_config),
+    ]
+    else: 
+        configs = [
             ModelConfig(model_id=model_id, origin_file_pattern="diffusion_pytorch_model*.safetensors", **vram_config),
             ModelConfig(model_id=model_id, origin_file_pattern="models_t5_umt5-xxl-enc-bf16.pth", **vram_config),
             ModelConfig(model_id=model_id, origin_file_pattern="Wan2.1_VAE.pth", **vram_config),
             ModelConfig(model_id=model_id, origin_file_pattern="models_clip_open-clip-xlm-roberta-large-vit-huge-14.pth", **vram_config),
-        ],
+        ]
+
+    _pipe = WanVideoPipeline.from_pretrained(
+        torch_dtype=torch.bfloat16,
+        device="cuda",
+        model_configs=configs,
         tokenizer_config=ModelConfig(model_id="Wan-AI/Wan2.1-T2V-1.3B", origin_file_pattern="google/umt5-xxl/"),
         vram_limit=vrlimit,
     )
