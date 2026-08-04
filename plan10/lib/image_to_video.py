@@ -63,19 +63,6 @@ def _ensure_pipeline(vrlimit=14):
         vram_limit=vrlimit,
     )
 
-    '''
-    if WAN22:
-        lora_hi = ModelConfig(
-            model_id="lightx2v/Wan2.2-Lightning",
-            origin_file_pattern="Wan2.2-T2V-A14B-4steps-lora-rank64-Seko-V2.0/high_noise_model.safetensors"
-        )
-        lora_low = ModelConfig(
-            model_id="lightx2v/Wan2.2-Lightning",
-            origin_file_pattern="Wan2.2-T2V-A14B-4steps-lora-rank64-Seko-V2.0/low_noise_model.safetensors"
-        )
-        _pipe.load_lora(_pipe.dit, lora_hi, alpha=0.6)
-        _pipe.load_lora(_pipe.dit2, lora_low, alpha=1.0)
-    '''
     if '1.3B' in model_id:
         _pipe.load_lora(_pipe.dit, './loras/loras_accelerators/Wan21_CausVid_bidirect2_T2V_1_3B_lora_rank32.safetensors', alpha=1.0)
     else:
@@ -231,11 +218,14 @@ def main():
 
     WGP = os.environ.get('WGP','False') != 'False'
     LTX = os.environ.get('LTX','False') != 'False'
+    MMH3 = os.envion.get('MMH3', 'False') != 'False'
 
     if WGP:
         from plan10.lib.wgp import GenerateVideo as Video
     elif LTX:
         from plan10.lib.ltx import GenerateVideo as Video
+    elif MMH3:
+        from plan10.lib.mmh3 import GenerateVideo as Video
     else:
         Video = GenerateVideo
 

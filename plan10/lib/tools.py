@@ -42,6 +42,8 @@ if os.environ.get('WGP','False') == 'True':
     from plan10.lib.wgp import GenerateVideo, GenerateTalkingVideo
 elif os.environ.get('LTX','False') != 'False':
     from plan10.lib.ltx import GenerateVideo, GenerateTalkingVideo
+elif os.environ.get('MMH3', 'False') != 'False':
+    from plan10.lib.mmh3 import GenerateVideo, GenerateTalkingVideo
 else:
     from plan10.lib.image_to_video import GenerateVideo
     from plan10.lib.speech_to_video import GenerateTalkingVideo

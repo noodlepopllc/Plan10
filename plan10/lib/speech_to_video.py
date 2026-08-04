@@ -301,11 +301,14 @@ def main():
     import argparse, os
     WGP = os.environ.get('WGP','False') != 'False'
     LTX = os.environ.get('LTX','False') != 'False'
+    MMH3 = os.environ.get('MMH3', 'False') != 'False'
 
     if WGP:
         from plan10.lib.wgp import GenerateTalkingVideo as Speech
     elif LTX:
         from plan10.lib.ltx import GenerateTalkingVideo as Speech
+    elif MMH3:
+        from plan10.lib.mmh3 import GenerateTalkingVideo as Speech
     else:
         Speech = GenerateTalkingVideo
 
