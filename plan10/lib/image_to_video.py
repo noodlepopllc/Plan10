@@ -218,7 +218,7 @@ def main():
 
     WGP = os.environ.get('WGP','False') != 'False'
     LTX = os.environ.get('LTX','False') != 'False'
-    MMH3 = os.envion.get('MMH3', 'False') != 'False'
+    MMH3 = os.environ.get('MMH3', 'False') != 'False'
 
     if WGP:
         from plan10.lib.wgp import GenerateVideo as Video
