@@ -20,7 +20,7 @@ WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
 ANIME = "_anime" if os.environ.get("ANIME","False") != "False" else ""
 VRAM = int(os.environ.get("VRAM", 96))
-DURATION = 8 #5 if VRAM < 24 else 10
+DURATION = 5 #5 if VRAM < 24 else 10
 
 if ANIME:
     from plan10.lib.anime_gen import GenerateImage
