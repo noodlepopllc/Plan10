@@ -53,6 +53,17 @@ def i2v_diffsynth_fast(prompt='', media='', output='output.mp4',
         "computation_dtype": torch.bfloat16,
         "computation_device": "cuda",
     }
+    if allocated_varam_limit > 32:
+        vram_config = {
+            "offload_dtype": torch.bfloat16,
+            "offload_device": "cpu",
+            "onload_dtype": torch.bfloat16,
+            "onload_device": "cpu",
+            "preparing_dtype": torch.bfloat16,
+            "preparing_device": "cuda",
+            "computation_dtype": torch.bfloat16,
+            "computation_device": "cuda",
+        }
     model_path = "locklight/LTX-2-Repackage-local"
     pipe = LTX2AudioVideoPipeline.from_pretrained(
         torch_dtype=torch.bfloat16,
