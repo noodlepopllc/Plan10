@@ -90,12 +90,9 @@ def i2v_diffsynth(prompt='', media='', output='output.mp4',
         keyframes=[image], keyframe_indices=[0],
     )
     
-    write_video_audio_ltx2(
-        video=video,
-        audio=audio,
-        output_path=output,
-        fps=24,
-        audio_sample_rate=pipe.audio_vocoder.output_sampling_rate,
+    write_video_audio(
+        video=video, audio=audio,
+        output_path=output, fps=24, audio_sample_rate=32000,
     )
     
     # Clean up memory cleanly
