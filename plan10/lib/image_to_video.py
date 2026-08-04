@@ -76,7 +76,7 @@ def _ensure_pipeline(vrlimit=14):
         _pipe.load_lora(_pipe.dit, lora_hi, alpha=0.6)
         _pipe.load_lora(_pipe.dit2, lora_low, alpha=1.0)
     '''
-    elif '1.3B' in model_id:
+    if '1.3B' in model_id:
         _pipe.load_lora(_pipe.dit, './loras/loras_accelerators/Wan21_CausVid_bidirect2_T2V_1_3B_lora_rank32.safetensors', alpha=1.0)
     else:
         _pipe.load_lora(_pipe.dit, './loras/wan2.1_i2v_lora_rank64_lightx2v_4step.safetensors', alpha=1.0)
