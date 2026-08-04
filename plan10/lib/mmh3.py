@@ -50,7 +50,7 @@ def i2v_diffsynth(prompt='', media='', output='output.mp4',
         "onload_dtype": torch.bfloat16,
         "onload_device": "cpu",
         "preparing_dtype": torch.bfloat16,
-        "preparing_device": "cpu",
+        "preparing_device": "cpu" if VRAM < 24 else "cuda",
         "computation_dtype": torch.bfloat16,
         "computation_device": "cuda",
     }
@@ -86,7 +86,7 @@ def i2v_diffsynth(prompt='', media='', output='output.mp4',
     # Run core inference pipeline
     video, audio = pipe(
         prompt=prompt,
-        height=832, width=480, num_frames=124, num_inference_steps=50, seed=0,
+        height=832, width=480, num_frames=124, num_inference_steps=20, seed=seed,
         keyframes=[image], keyframe_indices=[0],
     )
     
