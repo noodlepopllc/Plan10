@@ -229,7 +229,7 @@ def main():
     else:
         Video = GenerateVideo
 
-    DURATION = 10 if LTX or WGP or MMH3 else 5
+    DURATION = 10 if LTX or WGP else (8 if MMH3 else 5)
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-P', '--prompt', type=str, default='', required=False)
