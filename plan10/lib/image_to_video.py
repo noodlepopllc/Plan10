@@ -72,8 +72,8 @@ def _ensure_pipeline(vrlimit=14):
             model_id="lightx2v/Wan2.2-Lightning",
             origin_file_pattern="Wan2.2-T2V-A14B-4steps-lora-rank64-Seko-V2.0/low_noise_model.safetensors"
         )
-        _pipe.load_lora(_pipe.dit, lora_hi, alpha=1.2)
-        _pipe.load_lora(_pipe.dit2, lora_low, alpha=0.8)
+        _pipe.load_lora(_pipe.dit, lora_hi, alpha=0.6)
+        _pipe.load_lora(_pipe.dit2, lora_low, alpha=1.0)
     elif '1.3B' in model_id:
         _pipe.load_lora(_pipe.dit, './loras/loras_accelerators/Wan21_CausVid_bidirect2_T2V_1_3B_lora_rank32.safetensors', alpha=1.0)
     else:
@@ -137,7 +137,7 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         _pipe = _ensure_pipeline()
 
         num_steps = 8  if '1.3B' in model_id else 4
-        num_steps = 6 if WAN22 else num_steps
+        num_steps = 8 if WAN22 else num_steps
 
 
         video = None
