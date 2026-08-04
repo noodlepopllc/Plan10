@@ -53,7 +53,7 @@ def i2v_diffsynth_fast(prompt='', media='', output='output.mp4',
         "computation_dtype": torch.bfloat16,
         "computation_device": "cuda",
     }
-    if allocated_varam_limit > 32:
+    if allocated_vram_limit > 32:
         vram_config = {
             "offload_dtype": torch.bfloat16,
             "offload_device": "cpu",
