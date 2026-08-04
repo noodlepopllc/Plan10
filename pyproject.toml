@@ -17,11 +17,14 @@ dependencies = [
     "spacy_download",
     "fastmcp",
     "num2words",
-    "diffsynth @ git+https://github.com/modelscope/DiffSynth-Studio.git",
+    "diffsynth[all]",
 ]
 
 [tool.uv]
 package = true
+
+[tool.uv.sources]
+diffsynth = { git = "https://github.com/modelscope/DiffSynth-Studio.git" }
 
 [tool.setuptools.packages.find]
 include = ["plan10*"]
