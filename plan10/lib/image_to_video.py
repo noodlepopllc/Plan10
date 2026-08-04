@@ -64,8 +64,16 @@ def _ensure_pipeline(vrlimit=14):
     )
 
     if WAN22:
-        _pipe.load_lora(_pipe.dit, "lightx2v/Wan2.2-Lightning", origin_file_pattern="Wan2.2-T2V-A14B-4steps-lora-rank64-Seko-V2.0/high_noise_model.safetensors", alpha=1.0)
-        _pipe.load_lora(_pipe.dit2, "lightx2v/Wan2.2-Lightning", origin_file_pattern="Wan2.2-T2V-A14B-4steps-lora-rank64-Seko-V2.0/low_noise_model.safetensors", alpha=1.0)
+        lora_hi = ModelConfig(
+            model_id="lightx2v/Wan2.2-Lightning",
+            origin_file_pattern="Wan2.2-T2V-A14B-4steps-lora-rank64-Seko-V2.0/high_noise_model.safetensors"
+        )
+        lora_low = ModelConfig(
+            model_id="lightx2v/Wan2.2-Lightning",
+            origin_file_pattern="Wan2.2-T2V-A14B-4steps-lora-rank64-Seko-V2.0/low_noise_model.safetensors"
+        )
+        _pipe.load_lora(_pipe.dit, lora_hi, alpha=1.0)
+        _pipe.load_lora(_pipe.dit2, lora_low, alpha=1.0)
     elif '1.3B' in model_id:
         _pipe.load_lora(_pipe.dit, './loras/loras_accelerators/Wan21_CausVid_bidirect2_T2V_1_3B_lora_rank32.safetensors', alpha=1.0)
     else:
