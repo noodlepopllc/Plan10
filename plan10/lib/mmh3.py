@@ -1,0 +1,315 @@
+import torch
+from plan10.lib.config import load_environ
+load_environ()
+
+from diffsynth.pipelines.minimax_h3_audio_video import MiniMaxH3Pipeline, ModelConfig
+from diffsynth.utils.data.audio_video import write_video_audio
+from modelscope import dataset_snapshot_download
+from PIL import Image
+
+import logging, os, gc
+import json
+from time import sleep
+from pathlib import Path
+from plan10.lib.util import video_to_img
+from plan10.lib.image_analysis import AnalyzeImage, EnhancePrompt
+from plan10.lib.image_gen import add_metadata_char
+import random
+
+WIDTH = int(os.environ.get("WIDTH", "832"))
+HEIGHT = int(os.environ.get("HEIGHT", "480"))
+ANIME = "_anime" if os.environ.get("ANIME","False") != "False" else ""
+VRAM = int(os.environ.get("VRAM", 96))
+DURATION = 10 #5 if VRAM < 24 else 10
+
+if ANIME:
+    from plan10.lib.anime_gen import GenerateImage
+else:
+    from plan10.lib.image_gen import GenerateImage
+
+BRIEF = os.environ.get("BRIEF","False") != "False"
+
+#enhance_path = f'./system/ltx_enhancer{ANIME}.txt'
+enhance_path = f'./system/ltx_enhancer_minimal{ANIME}.txt' if BRIEF else f'./system/ltx_enhancer{ANIME}.txt'
+
+
+def i2v_diffsynth(prompt='', media='', output='output.mp4', 
+                  duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
+    
+    # Enable fast hardware math handling for Blackwell cores
+    torch.backends.cudnn.benchmark = True
+    torch.backends.cuda.matmul.allow_tf32 = True
+
+    #width, height = (720, 1280) if height > width else (1280, 720)
+
+    # 1. FIXED VRAM CONFIG: Lock everything directly inside CUDA space.
+    # By removing "cpu" offloading, we stop the ARM-to-GPU step-by-step page fault loops.
+    vram_config = {
+        "offload_dtype": "disk",
+        "offload_device": "disk",
+        "onload_dtype": torch.bfloat16,
+        "onload_device": "cpu",
+        "preparing_dtype": torch.bfloat16,
+        "preparing_device": "cpu",
+        "computation_dtype": torch.bfloat16,
+        "computation_device": "cuda",
+    }
+
+    # 2. INCREASE VRAM LIMIT OR REMOVE STRIP BOUNDARY
+    # Your Spark has 128GB. If os.environ["VRAM"] is set to a low value (like 12 or 16),
+    # DiffSynth will manually break up the models even if you set the device to "cuda".
+    # We override it here to leverage your hardware's full capacity.
+    allocated_vram_limit = min(VRAM, 96)
+
+    pipe = MiniMaxH3Pipeline.from_pretrained(
+        torch_dtype=torch.bfloat16,
+        device="cuda",
+        model_configs=[
+            ModelConfig(model_id="DiffSynth-Studio/MiniMax-H3-NF4", origin_file_pattern="minimax-h3-fl2va-nf4.safetensors", **vram_config),
+            ModelConfig(model_id="DiffSynth-Studio/MiniMax-H3-NF4", origin_file_pattern="minimax-h3-text-encoder-nf4.safetensors", **vram_config),
+            ModelConfig(model_id="DiffSynth-Studio/MiniMax-H3-NF4", origin_file_pattern="video_vae_nf4.safetensors", **vram_config),
+            ModelConfig(model_id="DiffSynth-Studio/MiniMax-H3-NF4", origin_file_pattern="audio_vae_nf4.safetensors", **vram_config),
+        ],
+        processor_config=ModelConfig(model_id="MiniMaxAI/MiniMax-H3", origin_file_pattern="FL2VA/processor/"),
+        vram_limit=torch.cuda.mem_get_info("cuda")[1] / (1024 ** 3) - 2,
+    )
+
+
+    # Force explicit SFX and ban melody structure in the positive prompt
+    sfx_modifiers = ", realistic sound effects only, crisp SFX, ambient background noise, completely devoid of music, no BGM, no instruments"
+    final_prompt = f"{prompt}{sfx_modifiers}" if prompt else "ambient sound effects, SFX, absolute no music"
+
+    num_frames = (duration_sec * 24) + 1
+
+    image = Image.open(media).convert("RGB").resize((width, height))
+    
+    # Run core inference pipeline
+    video, audio = pipe(
+        prompt=prompt,
+        height=832, width=480, num_frames=124, num_inference_steps=50, seed=0,
+        keyframes=[image], keyframe_indices=[0],
+    )
+    
+    write_video_audio_ltx2(
+        video=video,
+        audio=audio,
+        output_path=output,
+        fps=24,
+        audio_sample_rate=pipe.audio_vocoder.output_sampling_rate,
+    )
+    
+    # Clean up memory cleanly
+    del pipe
+    gc.collect()
+    if torch.cuda.is_available():  
+        torch.cuda.empty_cache()
+
+i2v = i2v_diffsynth
+
+def GenerateVideo(prompt='', media='', output='output.mp4', 
+                  duration_sec=DURATION, width=WIDTH, height=HEIGHT, seed=-1, enhance=True):
+
+        print(f"PROMPT: {prompt}")
+        
+        if isinstance(prompt, list):
+            prompt = prompt.pop()
+        
+        start_image = ''
+        end_image = None
+
+        if not media:
+            GenerateImage(prompt = prompt, output='first_frame.png', width=width, height=height, seed=seed)
+            media='first_frame.png'
+
+        if isinstance(media, list):
+            start_image = media.pop(0)
+            if len(media) > 0:
+                end_image = video_to_img(media.pop(), width, height, True, False)
+        else:
+            start_image = media
+
+        print(f"MEDIA: {start_image}")
+
+        original_prompt = prompt
+
+        width = int(width)
+        height = int(height)
+        seed = int(seed)
+        duration_sec = int(duration_sec)
+        fps = 24
+
+        if seed == -1:
+            seed = random.randint(0,1000000)
+
+        total_frames = (duration_sec * fps) + 1
+
+        print(f"\n🎬 Generating {total_frames/fps:.1f}s video ({total_frames} frames)")
+        print(f"   Resolution: {width}x{height}")
+
+        current_source = video_to_img(start_image, width, height, True, True)
+        current_source.save('tmp.png')
+
+        if not prompt:
+            prompt = "The characters stand and act naturally. "
+
+        eprompt = EnhancePrompt(start_image, prompt, enhance_path)
+
+        print("CURRENT PROMPT: ",eprompt)
+
+        try:
+            i2v(eprompt, 'tmp.png', output, 
+                    duration_sec, width, height, seed)
+            description = ''
+                
+            # Post-processing
+            if os.environ.get('BATCH', 'False') == 'False':
+                tmp_img = video_to_img(f'{output}', width, height)
+                tmp_img.save('tmp.png')
+                description = AnalyzeImage('tmp.png', "Briefly describe this image, no more than 100 words")['analysis']
+            
+            return {
+                "status": "success",
+                "output_path": output,
+                "frames": (duration_sec * fps) + 1,
+                "description": description,
+                "prompt": eprompt
+            }
+            
+        except Exception as e:
+            print(f"❌ Error: {e}")
+            raise
+
+import math
+
+def count_syllables(word):
+    """Count syllables in a word using heuristic rules."""
+    word = word.lower().strip(".,!?;:'\"")
+    if not word:
+        return 0
+    
+    # Special cases
+    if len(word) <= 2:
+        return 1
+    
+    # Count vowel groups
+    vowels = "aeiouy"
+    count = 0
+    prev_vowel = False
+    
+    for char in word:
+        is_vowel = char in vowels
+        if is_vowel and not prev_vowel:
+            count += 1
+        prev_vowel = is_vowel
+    
+    # Adjustments for silent endings
+    if word.endswith('e') and count > 1:
+        count -= 1
+    if word.endswith('le') and len(word) > 2 and word[-3] not in vowels:
+        count += 1
+    if word.endswith('ed') and count > 1:
+        if word[-3] not in 'td':
+            count -= 1
+    
+    return max(1, count)
+
+
+def estimate_duration(text):
+    """
+    Estimate TTS duration using syllable count.
+    Formula: ceil((syllables × 0.37) + 1.0) seconds
+    """
+    words = text.split()
+    total_syllables = sum(count_syllables(w) for w in words)
+    duration = (total_syllables * 0.37) + 3.0
+    return math.ceil(duration)
+
+
+def GenerateTalkingVideo(
+    prompt='',
+    text='',
+    audio='',
+    media='',
+    output='output.mp4',
+    width=WIDTH,
+    height=HEIGHT,
+    seed=-1):
+    print(f"PROMPT: {prompt}")
+    
+    if isinstance(prompt, list):
+        prompt = prompt.pop()
+    
+    start_image = ''
+    end_image = None
+
+    if not media:
+        GenerateImage(prompt = prompt, output='first_frame.png', width=width, height=height, seed=seed)
+        media='first_frame.png'
+
+    if isinstance(media, list):
+        start_image = media.pop(0)
+        if len(media) > 0:
+            end_image = video_to_img(media.pop(), width, height, True, False)
+    else:
+        start_image = f'{os.getcwd()}/{media}'
+
+    ref_audio = f'{os.getcwd()}/{audio}'
+
+    print(f"MEDIA: {start_image}")
+
+    original_prompt = prompt
+
+    width = int(width)
+    height = int(height)
+    seed = int(seed)
+    duration_sec = int(estimate_duration(text))
+    fps = 24
+
+    if seed == -1:
+        seed = random.randint(0,1000000)
+
+    total_frames = (duration_sec * fps) + 1
+
+    print(f"\n🎬 Generating {total_frames/fps:.1f}s video ({total_frames} frames)")
+    print(f"   Resolution: {width}x{height}")
+
+    current_source = video_to_img(start_image, width, height, True, True)
+    current_source.save('tmp.png')
+
+    if not prompt:
+        prompt = "The characters stand and act naturally. "
+
+    desc = Image.open(start_image).info.get('Description')
+    if not desc:
+        desc = add_metadata_char(start_image, '', seed)
+
+    eprompt = f'The person can be described as {desc}. The person says "{text}." {prompt}.'
+
+    print("ORIGINAL PROMPT: ",eprompt)
+
+    eprompt = EnhancePrompt(start_image, eprompt, enhance_path)
+
+    print("CURRENT PROMPT: ",eprompt)
+
+    try:
+        i2v(eprompt, start_image, output, 
+                duration_sec, width, height, seed)
+        description = ''
+            
+        # Post-processing
+        if os.environ.get('BATCH', 'False') == 'False':
+            tmp_img = video_to_img(f'{output}', width, height)
+            tmp_img.save('tmp.png')
+            description = AnalyzeImage('tmp.png', "Briefly describe this image, no more than 100 words")['analysis']
+        
+        return {
+            "status": "success",
+            "output_path": output,
+            "frames": (duration_sec * fps) + 1,
+            "description": description,
+            "prompt": eprompt
+        }
+        
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        raise
