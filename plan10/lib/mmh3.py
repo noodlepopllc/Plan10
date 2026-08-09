@@ -321,7 +321,7 @@ def GenerateTalkingVideo(
             prompt=cprompt,
             height=height, width=width, num_frames=124, num_inference_steps=20, seed=seed,
             references=[
-                {"type": "image", "image": currennt_source},
+                {"type": "image", "image": current_source},
                 {"type": "audio", "audio": ref_audio, "sample_rate": sample_rate},
             ],
         )
