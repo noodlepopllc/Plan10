@@ -350,11 +350,14 @@ def GenerateTalkingVideo(
         raise
 
 def compose_video(background='',characters=[], voices=[], text=[], action='', output='output.mp4', height=HEIGHT, width=WIDTH, seed=SEED, duration=5):
-    desc_background = AnalyzeImage(background)['analysis']
-    background_image = Image.open(background)
+    references = []
+    desc_background = ''
+    if background:
+        desc_background = AnalyzeImage(background)['analysis']
+        references.append({"type": "image", "image": Image.open(background)})
     character_assets = []
     for ndx in range(len(characters)):
-        character_assets.append((characters[ndx], AnalyzeImage(characters[ndx])['analysis']), text[ndx], voices[ndx])
+        character_assets.append((characters[ndx], AnalyzeImage(characters[ndx])['analysis'], text[ndx], voices[ndx]))
 
     try:
         vram_config = {
@@ -379,17 +382,17 @@ def compose_video(background='',characters=[], voices=[], text=[], action='', ou
             processor_config=ModelConfig(model_id="MiniMaxAI/MiniMax-H3", origin_file_pattern="Ref2VA/processor/"),
             vram_limit=64,
         )
-        frames = duration * 24.0
-        frames = ((frames % 17) * 17) + 5 
-        references = []
-        references.append({"type": "image", "image": Image.open(background)})
+        frames = duration * 24
+        frames = int(((frames // 17) * 17) + 5) 
+
         cprompt = []
-        for ndx in range(character_assets):
+        cprompt.append(f'''<Picture 1> is {desc_background}. This will be the background for [Shot 1] \n''')
+        for ndx in range(len(character_assets)):
             char = character_assets[ndx]
             references.append({"type": "image", "image": Image.open(char[0])})
-            ref_audio, sample_rate = read_audio(char[-1]), duration=5, resample=True, resample_rate=pipe.audio_vae.sample_rate)
+            ref_audio, sample_rate = read_audio(char[-1], duration=5, resample=True, resample_rate=pipe.audio_vae.sample_rate)
             references.append({"type": "audio", "audio": ref_audio, "sample_rate": sample_rate})
-            tmp = f'''subject_definitions:\n<Subject {ndx+1}> {char[1]} <Audio 1> is the voice timbre reference for <Subject {ndx+1}>'s voice, containing a spoken voiceover. \n''')
+            tmp = f'''subject_definitions:\n<Subject {ndx+1}> {char[1]} <Audio 1> is the voice timbre reference for <Subject {ndx+1}>'s voice, containing a spoken voiceover. \n'''
             if ndx == 0 and char[2] and len(character_assets) == 2:
                 tmp += f'''<Subject 1> says "{text}." to <Subject 2>\n'''
             elif ndx == 1 and char[2] and len(character_assets) == 2:
@@ -397,7 +400,7 @@ def compose_video(background='',characters=[], voices=[], text=[], action='', ou
             elif char[2]:
                 tmp += f'''<Subject 1> says "{text}." \n'''
             cprompt.append(tmp)
-        cprompt.append(prompt)
+        cprompt.append(action)
         video, audio = pipe(
             prompt=''.join(cprompt),
             height=height, width=width, num_frames=frames, num_inference_steps=20, seed=seed,
@@ -408,6 +411,7 @@ def compose_video(background='',characters=[], voices=[], text=[], action='', ou
             output_path=output, fps=24, audio_sample_rate=32000,
         )
             
+        description = ''
         # Post-processing
         if os.environ.get('BATCH', 'False') == 'False':
             tmp_img = video_to_img(f'{output}', width, height)
@@ -417,9 +421,9 @@ def compose_video(background='',characters=[], voices=[], text=[], action='', ou
         return {
             "status": "success",
             "output_path": output,
-            "frames": (duration_sec * fps) + 1,
+            "frames":  frames,
             "description": description,
-            "prompt": eprompt
+            "prompt": ''.join(cprompt)
         }
         
     except Exception as e:
@@ -433,13 +437,14 @@ def main():
     parser.add_argument('-H', '--height', type=int, default=HEIGHT)
     parser.add_argument('-E', '--seed', type=int, default=SEED)
     parser.add_argument('-D', '--duration', type=int, default=DURATION)
-    parser.add_argument('-O', '--output', type=str, default='output.png')
+    parser.add_argument('-O', '--output', type=str, default='output.mp4')
     parser.add_argument('-B', '--background', type=str, help='Background path')
-    parser.add_argument('-A', '--action', type=str, help='Action to complete')
+    parser.add_argument('-A', '--action', type=str, default='', help='Action to complete')
     parser.add_argument('-C', '--chars', action='append', default=[], help='Character paths (1-2)')
     parser.add_argument('-V', '--voices', action='append', default=[], help='Voice reference paths (1-2)')
     parser.add_argument('-T', '--texts', action='append', default=[], help='Spoken dialog (1-2)')
     args = parser.parse_args()
+    print(args)
     print(compose_video(background=args.background,characters=args.chars, voices=args.voices, text=args.texts, action=args.action, output=args.output, height=args.height, width=args.width, seed=args.seed, duration=args.duration))
 
 if __name__ == '__main__':

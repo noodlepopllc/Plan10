@@ -322,7 +322,7 @@ def main():
     args = parser.parse_args()
     if not args.ref_audio:
         DesignVoice(args.instruct, args.output, args.seed)
-    if args.transcribe and args.ref_audio:
+    elif args.transcribe and args.ref_audio:
         print(transcribe(args.ref_audio))
     else:
         create_audio_and_free_vram(args.text, args.instruct, args.ref_audio, '', args.output, 2, args.duration, 16000, args.seed, args.no_whisper)
