@@ -273,6 +273,8 @@ def GenerateTalkingVideo(
     current_source = video_to_img(start_image, width, height, True, True)
     current_source.save('tmp.png')
 
+    
+
     if not prompt:
         prompt = "The characters stand and act naturally. "
 
@@ -281,17 +283,50 @@ def GenerateTalkingVideo(
         desc = add_metadata_char(start_image, '', seed)
 
     eprompt = f'The person can be described as {desc}. The person says "{text}." {prompt}.'
+    cprompt = f'''subject_definitions:\n<Subject 1> {desc} <Audio 1> is the voice timbre reference for <Subject 1>'s voice, containing a spoken female voiceover. <Subject 1> The person says "{text}." {prompt}.'''
 
-    print("ORIGINAL PROMPT: ",eprompt)
+    print("ORIGINAL PROMPT: ",cprompt)
 
     eprompt = EnhancePrompt(start_image, eprompt, enhance_path)
 
     print("CURRENT PROMPT: ",eprompt)
 
     try:
-        i2v(eprompt, start_image, output, 
-                duration_sec, width, height, seed)
-        description = ''
+        vram_config = {
+            "offload_dtype": "disk",
+            "offload_device": "disk",
+            "onload_dtype": torch.bfloat16,
+            "onload_device": "cpu",
+            "preparing_dtype": torch.bfloat16,
+            "preparing_device": "cuda",
+            "computation_dtype": torch.bfloat16,
+            "computation_device": "cuda",
+        }
+        pipe = MiniMaxH3Pipeline.from_pretrained(
+            torch_dtype=torch.bfloat16,
+            device="cuda",
+            model_configs=[
+                ModelConfig(model_id="DiffSynth-Studio/MiniMax-H3-NF4", origin_file_pattern="minimax-h3-ref2va-nf4.safetensors", **vram_config),
+                ModelConfig(model_id="DiffSynth-Studio/MiniMax-H3-NF4", origin_file_pattern="minimax-h3-text-encoder-nf4.safetensors", **vram_config),
+                ModelConfig(model_id="DiffSynth-Studio/MiniMax-H3-NF4", origin_file_pattern="video_vae_nf4.safetensors", **vram_config),
+                ModelConfig(model_id="DiffSynth-Studio/MiniMax-H3-NF4", origin_file_pattern="audio_vae_nf4.safetensors", **vram_config),
+            ],
+            processor_config=ModelConfig(model_id="MiniMaxAI/MiniMax-H3", origin_file_pattern="Ref2VA/processor/"),
+            vram_limit=64,
+        )
+        ref_audio, sample_rate = read_audio(audio, duration=5, resample=True, resample_rate=pipe.audio_vae.sample_rate)
+        video, audio = pipe(
+            prompt=cprompt,
+            height=height, width=width, num_frames=124, num_inference_steps=20, seed=seed,
+            references=[
+                {"type": "image", "image": currennt_source},
+                {"type": "audio", "audio": ref_audio, "sample_rate": sample_rate},
+            ],
+        )
+        write_video_audio(
+            video=video, audio=audio,
+            output_path=output, fps=24, audio_sample_rate=32000,
+        )
             
         # Post-processing
         if os.environ.get('BATCH', 'False') == 'False':
