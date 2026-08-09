@@ -55,7 +55,7 @@ class CommandBuffer:
             for c in self.medium:
                 print(c)
         if mode in ("full"):
-            for c in self.dialog_images:
+            for c in self.medium_images:
                 print(c)
             for c in self.full:
                 print(c)
