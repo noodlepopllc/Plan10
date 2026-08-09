@@ -20,6 +20,7 @@ import random
 
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
+SEED = int(os.environ.get("SEED", "-1"))
 ANIME = "_anime" if os.environ.get("ANIME","False") != "False" else ""
 VRAM = int(os.environ.get("VRAM", 96))
 DURATION = 5 #5 if VRAM < 24 else 10
@@ -347,3 +348,99 @@ def GenerateTalkingVideo(
     except Exception as e:
         print(f"❌ Error: {e}")
         raise
+
+def compose_video(background='',characters=[], voices=[], text=[], action='', output='output.mp4', height=HEIGHT, width=WIDTH, seed=SEED, duration=5):
+    desc_background = AnalyzeImage(background)['analysis']
+    background_image = Image.open(background)
+    character_assets = []
+    for ndx in range(len(characters)):
+        character_assets.append((characters[ndx], AnalyzeImage(characters[ndx])['analysis']), text[ndx], voices[ndx])
+
+    try:
+        vram_config = {
+            "offload_dtype": "disk",
+            "offload_device": "disk",
+            "onload_dtype": torch.bfloat16,
+            "onload_device": "cpu",
+            "preparing_dtype": torch.bfloat16,
+            "preparing_device": "cuda",
+            "computation_dtype": torch.bfloat16,
+            "computation_device": "cuda",
+        }
+        pipe = MiniMaxH3Pipeline.from_pretrained(
+            torch_dtype=torch.bfloat16,
+            device="cuda",
+            model_configs=[
+                ModelConfig(model_id="DiffSynth-Studio/MiniMax-H3-NF4", origin_file_pattern="minimax-h3-ref2va-nf4.safetensors", **vram_config),
+                ModelConfig(model_id="DiffSynth-Studio/MiniMax-H3-NF4", origin_file_pattern="minimax-h3-text-encoder-nf4.safetensors", **vram_config),
+                ModelConfig(model_id="DiffSynth-Studio/MiniMax-H3-NF4", origin_file_pattern="video_vae_nf4.safetensors", **vram_config),
+                ModelConfig(model_id="DiffSynth-Studio/MiniMax-H3-NF4", origin_file_pattern="audio_vae_nf4.safetensors", **vram_config),
+            ],
+            processor_config=ModelConfig(model_id="MiniMaxAI/MiniMax-H3", origin_file_pattern="Ref2VA/processor/"),
+            vram_limit=64,
+        )
+        frames = duration * 24.0
+        frames = ((frames % 17) * 17) + 5 
+        references = []
+        references.append({"type": "image", "image": Image.open(background)})
+        cprompt = []
+        for ndx in range(character_assets):
+            char = character_assets[ndx]
+            references.append({"type": "image", "image": Image.open(char[0])})
+            ref_audio, sample_rate = read_audio(char[-1]), duration=5, resample=True, resample_rate=pipe.audio_vae.sample_rate)
+            references.append({"type": "audio", "audio": ref_audio, "sample_rate": sample_rate})
+            tmp = f'''subject_definitions:\n<Subject {ndx+1}> {char[1]} <Audio 1> is the voice timbre reference for <Subject {ndx+1}>'s voice, containing a spoken voiceover. \n''')
+            if ndx == 0 and char[2] and len(character_assets) == 2:
+                tmp += f'''<Subject 1> says "{text}." to <Subject 2>\n'''
+            elif ndx == 1 and char[2] and len(character_assets) == 2:
+                tmp += f'''<Subject 2> responds  "{text}." to <Subject 1>\n'''
+            elif char[2]:
+                tmp += f'''<Subject 1> says "{text}." \n'''
+            cprompt.append(tmp)
+        cprompt.append(prompt)
+        video, audio = pipe(
+            prompt=''.join(cprompt),
+            height=height, width=width, num_frames=frames, num_inference_steps=20, seed=seed,
+            references=references,
+        )
+        write_video_audio(
+            video=video, audio=audio,
+            output_path=output, fps=24, audio_sample_rate=32000,
+        )
+            
+        # Post-processing
+        if os.environ.get('BATCH', 'False') == 'False':
+            tmp_img = video_to_img(f'{output}', width, height)
+            tmp_img.save('tmp.png')
+            description = AnalyzeImage('tmp.png', "Briefly describe this image, no more than 100 words")['analysis']
+        
+        return {
+            "status": "success",
+            "output_path": output,
+            "frames": (duration_sec * fps) + 1,
+            "description": description,
+            "prompt": eprompt
+        }
+        
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        raise
+
+def main():
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-W', '--width', type=int, default=WIDTH)
+    parser.add_argument('-H', '--height', type=int, default=HEIGHT)
+    parser.add_argument('-E', '--seed', type=int, default=SEED)
+    parser.add_argument('-D', '--duration', type=int, default=DURATION)
+    parser.add_argument('-O', '--output', type=str, default='output.png')
+    parser.add_argument('-B', '--background', type=str, help='Background path')
+    parser.add_argument('-A', '--action', type=str, help='Action to complete')
+    parser.add_argument('-C', '--chars', action='append', default=[], help='Character paths (1-2)')
+    parser.add_argument('-V', '--voices', action='append', default=[], help='Voice reference paths (1-2)')
+    parser.add_argument('-T', '--texts', action='append', default=[], help='Spoken dialog (1-2)')
+    args = parser.parse_args()
+    print(compose_video(background=args.background,characters=args.chars, voices=args.voices, text=args.texts, action=args.action, output=args.output, height=args.height, width=args.width, seed=args.seed, duration=args.duration))
+
+if __name__ == '__main__':
+    main()
