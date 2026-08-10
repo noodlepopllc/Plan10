@@ -353,11 +353,11 @@ def compose_video(background='',characters=[], voices=[], text=[], action='', ou
     references = []
     desc_background = ''
     if background:
-        desc_background = AnalyzeImage(background)['analysis']
+        desc_background = AnalyzeImage(image=background, prompt='Describe image background in 10 - 15 words')['analysis']
         references.append({"type": "image", "image": Image.open(background)})
     character_assets = []
     for ndx in range(len(characters)):
-        character_assets.append((characters[ndx], AnalyzeImage(characters[ndx])['analysis'], text[ndx], voices[ndx]))
+        character_assets.append((characters[ndx], AnalyzeImage(image=characters[ndx], prompt='Briefly describe this character sheet of the front and back of the character. 10 - 15 words')['analysis'], text[ndx], voices[ndx]))
 
     try:
         vram_config = {
@@ -392,7 +392,7 @@ def compose_video(background='',characters=[], voices=[], text=[], action='', ou
             references.append({"type": "image", "image": Image.open(char[0])})
             ref_audio, sample_rate = read_audio(char[-1], duration=5, resample=True, resample_rate=pipe.audio_vae.sample_rate)
             references.append({"type": "audio", "audio": ref_audio, "sample_rate": sample_rate})
-            tmp = f'''subject_definitions:\n<Subject {ndx+1}> {char[1]} <Audio 1> is the voice timbre reference for <Subject {ndx+1}>'s voice, containing a spoken voiceover. \n'''
+            tmp = f'''subject_definitions:\n<Subject {ndx+1}> Character sheet displaying the front and back of {char[1]} <Audio 1> is the voice timbre reference for <Subject {ndx+1}>'s voice, containing a spoken voiceover. \n'''
             if ndx == 0 and char[2] and len(character_assets) == 2:
                 tmp += f'''<Subject 1> says "{text}." to <Subject 2>\n'''
             elif ndx == 1 and char[2] and len(character_assets) == 2:
@@ -401,6 +401,7 @@ def compose_video(background='',characters=[], voices=[], text=[], action='', ou
                 tmp += f'''<Subject 1> says "{text}." \n'''
             cprompt.append(tmp)
         cprompt.append(action)
+        print("FINAL PROMPT: ",''.join(cprompt))
         video, audio = pipe(
             prompt=''.join(cprompt),
             height=height, width=width, num_frames=frames, num_inference_steps=20, seed=seed,
