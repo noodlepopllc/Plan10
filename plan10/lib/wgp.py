@@ -256,7 +256,7 @@ async def s2v_h3(prompt='', media='', audio='', text='', output='output.mp4',
 
         newprompt = ("subject_definitions:\n <Subject 1> is the person in <Picture 1> and appears in [Shot 1], preserving their exact identity, facial features, skin tone, hairstyle, body proportions, clothing, footwear, "
     "and distinctive accessories.\n <Audio 1> is the voice timbre reference for <Subject 1>'s voice, containing a spoken voiceover. summary:\n"
-    f''' <Picture 1> is the first frame of [Shot 1] <Subject 1> (S1) The camera pushes in on subjects face as they say <d>[English] {text} </d> <Subject 1> {prompt} '''
+    f''' <Picture 1> is the first frame of [Shot 1] <Subject 1> (S1) says <d>[English] {text} </d> '''
     )
 
         #desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
@@ -270,7 +270,7 @@ async def s2v_h3(prompt='', media='', audio='', text='', output='output.mp4',
         args["activated_loras"] = ["minimax_h3_larryvrh_v4_step600_ema.safetensors"]
         args["loras_multipliers"] = "1.0|"
         args['output_filename'] = output
-        args['prompt'] = prompt
+        args['prompt'] = newprompt
         args['image_refs'] = [media]
         args["audio_guide"] = audio
         args["audio_prompt_type"] = "A"
@@ -286,6 +286,7 @@ async def s2v_h3(prompt='', media='', audio='', text='', output='output.mp4',
         args["audio_scale"] = 1
         args["sample_solver"] = "euler"
         args["embedded_guidance_scale"] = 6
+        args['resolution'] = '480x832'
         args['video_length'] = 124
 
 

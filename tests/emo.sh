@@ -214,13 +214,13 @@ VOICE2="$OUTDIR/char2.wav"
 if [[ ! -f $VOICE1 ]]; then
 uv run dialog \
   -I "female, young adult, moderate pitch, canadian accent" \
-  -O "$VOICE1"
+  -O "$VOICE1" -L 
 fi
 
 if [[ ! -f $VOICE2 ]]; then
 uv run dialog \
   -I "female, young adult, high pitch, portuguese accent" \
-  -O "$VOICE2"
+  -O "$VOICE2" -L
 fi
 
 # Micro‑motion for I2V

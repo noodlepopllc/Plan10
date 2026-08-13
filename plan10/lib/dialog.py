@@ -231,11 +231,12 @@ def VoiceCloneSchema():
         }
     }
 
-def DesignVoice(voice, output, seed=-1):
-    duration=5.0
+def DesignVoice(voice, output, seed=-1, long=False):
+    duration=10.0 if long else 5.0
     # The actual prompt fed into the model
     text = "The quick, anxious boy judged the rough wizard's vibrant, icy voice..." # as a huge, sharp, mellow echo drifting through the quiet, yellow forest."
-    final_prompt = f"{text} | voice: {voice}"
+    long_text = "The quick, anxious boy judged the rough wizard's vibrant, icy voice as a huge, sharp, mellow echo drifting through the quiet, yellow forest."
+    final_prompt = f"{long_text} | voice: {voice}"
     duration=float(duration)
     seed=int(seed)
 
@@ -319,9 +320,10 @@ def main():
     parser.add_argument('-W', '--no-whisper', action='store_false', help='turn off whisper transcription')
     parser.add_argument('-D', '--duration', type=float, default=5.0, help='duration of the generated clip')
     parser.add_argument('-S', '--transcribe', type=str, default='', help='transcribe the reference audio')
+    parser.add_argument('-L', '--long', action='store_true', help='increased duration for designed voice')
     args = parser.parse_args()
     if not args.ref_audio:
-        DesignVoice(args.instruct, args.output, args.seed)
+        DesignVoice(args.instruct, args.output, args.seed, args.long)
     elif args.transcribe and args.ref_audio:
         print(transcribe(args.ref_audio))
     else:
