@@ -5,6 +5,10 @@ echo "🎬 Starting creative loop. Press Ctrl+C to stop."
 export BRIEF="True"
 BEAT=1
 
+uv run config -R
+
+source .env
+
 while true; do
     # Run creative step
     uv run video_creator "$@"
