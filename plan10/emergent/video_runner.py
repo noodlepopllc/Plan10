@@ -15,7 +15,7 @@ if WGP:
 elif LTX:
     from plan10.lib.ltx import GenerateVideo
 elif MMH3:
-    from plan10.lib.mmh3 import GenerateVideo as Video
+    from plan10.lib.mmh3 import GenerateVideo
 else:
     from plan10.lib.image_to_video import GenerateVideo
 
