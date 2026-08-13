@@ -1,19 +1,18 @@
 #!/bin/bash
 set -euo pipefail
 #set -x   # debug
-set -euo pipefail
-
 if [ ! -d "tests/$1" ]; then 
-    python tests/character_builder.py -D -N $1
+    python tests/character_builder.py -D -N $1 -R "latinx_mestizo" -C "red" -T "tan" -H "random" -S "long waves"
 fi
 
 if [ ! -d "tests/$2" ]; then
-    python tests/character_builder.py -D -N $2
+    python tests/character_builder.py -D -N $2 -R "east_asian" -C "blonde" -T "fair" -H "random" -S "soft bob"
 fi
 
 if [ ! -d "tests/$1_$2" ]; then
    python tests/persons.py $1 $2
 fi
+
 
 # ────────────────────────────────────────────────
 # Environment / setup

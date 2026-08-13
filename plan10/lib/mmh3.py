@@ -68,14 +68,17 @@ def i2v_diffsynth(prompt='', media='', output='output.mp4',
         torch_dtype=torch.bfloat16,
         device="cuda",
         model_configs=[
-            ModelConfig(model_id="DiffSynth-Studio/MiniMax-H3-NF4", origin_file_pattern="minimax-h3-fl2va-pruned-nf4.safetensors", **vram_config),
-            ModelConfig(model_id="DiffSynth-Studio/MiniMax-H3-NF4", origin_file_pattern="minimax-h3-text-encoder-nf4.safetensors", **vram_config),
-            ModelConfig(model_id="DiffSynth-Studio/MiniMax-H3-NF4", origin_file_pattern="video_vae_nf4.safetensors", **vram_config),
-            ModelConfig(model_id="DiffSynth-Studio/MiniMax-H3-NF4", origin_file_pattern="audio_vae_nf4.safetensors", **vram_config),
+            ModelConfig(model_id="MiniMax/MiniMax-H3", origin_file_pattern="FL2VA/text_encoder/model*.safetensors", **vram_config),
+            ModelConfig(model_id="MiniMax/MiniMax-H3", origin_file_pattern="FL2VA/transformer/model*.safetensors", **vram_config),
+            ModelConfig(model_id="MiniMax/MiniMax-H3", origin_file_pattern="FL2VA/video_vae/source/model.safetensors", **vram_config),
+            ModelConfig(model_id="MiniMax/MiniMax-H3", origin_file_pattern="FL2VA/audio_vae/model.safetensors", **vram_config),
         ],
         processor_config=ModelConfig(model_id="MiniMaxAI/MiniMax-H3", origin_file_pattern="FL2VA/processor/"),
         vram_limit=torch.cuda.mem_get_info("cuda")[1] / (1024 ** 3) - 2,
     )
+
+
+    pipe.load_lora(pipe.dit, ModelConfig(model_id="lightx2v/Minimax-h3-Turbo", origin_file_pattern="minimax_h3_fl2v_turbo_4step_v1.0_768p_bf16.safetensors"))
 
 
     # Force explicit SFX and ban melody structure in the positive prompt
@@ -89,7 +92,7 @@ def i2v_diffsynth(prompt='', media='', output='output.mp4',
     # Run core inference pipeline
     video, audio = pipe(
         prompt=prompt,
-        height=height, width=width, num_frames=num_frames, num_inference_steps=20, seed=seed,
+        height=height, width=width, num_frames=num_frames, num_inference_steps=4, seed=seed,
         keyframes=[image], keyframe_indices=[0],
     )
     
