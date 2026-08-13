@@ -32,7 +32,7 @@ enhance_path = f'./system/ltx_enhancer_minimal{ANIME}.txt' if BRIEF else f'./sys
 #tool = "ltx2_22B_1_1"
 tool = "ltx2_22B_distilled_1_1"
 
-async def i2v(prompt='', media='', end='', output='output.mp4', 
+async def i2v_ltx(prompt='', media='', end='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
     async with Client("http://localhost:7866/mcp") as client:
 
@@ -71,15 +71,8 @@ async def i2v(prompt='', media='', end='', output='output.mp4',
         args['image_start'] = media
         if end:
             args['image_end'] = end
-        #args['guidance_scale'] = 3.5
-        #args['sample_solver'] = "euler"
-        #args['negative_prompt'] = negative_prompt
-        #args['num_inference_steps'] = 30
-        #args['prompt_enhancer'] = 'TI'
-        #args['audio_source'] = None
-        #args['audio_prompt_type'] = 'A'
 
-        args['resolution'] = '720x1280' if height > width else '1280x720'
+        args['resolution'] = '704x1280' if height > width else '1280x704'
         args['video_length'] = (duration_sec * 24) + 1 
         print(args)
         r = await client.call_tool("wangp_generate", {"source": args})
@@ -101,6 +94,8 @@ async def i2v(prompt='', media='', end='', output='output.mp4',
                 print(this)
             r = await client.call_tool("wangp_get_job", {"job_id": job_id})
         print(r.data['result'])
+
+i2v = i2v_ltx
 
 def GenerateVideo(prompt='', media='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1, enhance=True):
