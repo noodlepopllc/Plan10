@@ -105,7 +105,7 @@ def i2v_diffsynth(prompt='', media='', output='output.mp4',
     # Run core inference pipeline
     video, audio = pipe(
         prompt=prompt,
-        height=height, width=width, num_frames=num_frames, num_inference_steps=4, seed=seed,
+        height=height, width=width, num_frames=num_frames, num_inference_steps=4 if FAST else 20, seed=seed,
         keyframes=[image], keyframe_indices=[0],
     )
     
