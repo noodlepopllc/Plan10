@@ -183,7 +183,7 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
             print(f"❌ Error: {e}")
             raise
 
-async def s2v(prompt='', media='', audio='', text='', output='output.mp4', 
+async def s2v_ltx(prompt='', media='', audio='', text='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
     async with Client("http://localhost:7866/mcp") as client:
 
@@ -238,6 +238,82 @@ async def s2v(prompt='', media='', audio='', text='', output='output.mp4',
                 print(this)
             r = await client.call_tool("wangp_get_job", {"job_id": job_id})
         print(r.data['result'])
+
+async def s2v_h3(prompt='', media='', audio='', text='', output='output.mp4', 
+                  duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
+    async with Client("http://localhost:7866/mcp") as client:
+
+        model = "minimax_h3_ref2va_pruned"
+
+        r = await client.call_tool("wangp_get_default_settings", {"model_type":model})
+        results = json.dumps(r.data, indent=4)
+
+        '''
+        desc = Image.open(media).info.get('Description')
+        if not desc:
+            desc = add_metadata_char(media, '', seed)
+        '''
+
+        newprompt = ("subject_definitions:\n <Subject 1> is the person in <Picture 1> and appears in [Shot 1], preserving their exact identity, facial features, skin tone, hairstyle, body proportions, clothing, footwear, "
+    "and distinctive accessories.\n <Audio 1> is the voice timbre reference for <Subject 1>'s voice, containing a spoken voiceover. summary:\n"
+    f''' <Picture 1> is the first frame of [Shot 1] <Subject 1> (S1) The camera pushes in on subjects face as they say <d>[English] {text} </d> <Subject 1> {prompt} '''
+    )
+
+        #desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
+        #audio_desc = translate_to_audio_prompt(desc)
+
+        #newprompt = f"[VISUAL]: {desc} {prompt} Lips moving in perfect sync with the audio. \n[SPEECH]: {text}.\n[SOUNDS]: {audio_desc}."
+        print(newprompt)
+
+        args = r.data
+
+        args["activated_loras"] = ["minimax_h3_larryvrh_v4_step600_ema.safetensors"]
+        args["loras_multipliers"] = "1.0|"
+        args['output_filename'] = output
+        args['prompt'] = prompt
+        args['image_refs'] = [media]
+        args["audio_guide"] = audio
+        args["audio_prompt_type"] = "A"
+        args["video_prompt_type"] = "I"
+        args["multi_prompts_gen_type"] = "PG"
+        args["num_inference_steps"] = 4
+        args["guidance_scale"] = 1
+        args["guidance2_scale"] = 5
+        args["guidance3_scale"] = 5
+        args["model_switch_phase"] = 1
+        args["alt_guidance_scale"] = 1
+        args["audio_guidance_scale"] = 1
+        args["audio_scale"] = 1
+        args["sample_solver"] = "euler"
+        args["embedded_guidance_scale"] = 6
+        args['video_length'] = 124
+
+
+        args['resolution'] = f'{width}x{height}'
+        #args['video_length'] = (((duration_sec * 24) // 17) * 17) + 5  
+        print(args)
+        r = await client.call_tool("wangp_generate", {"source": args})
+        print(r.data['job_id'])
+        job_id = r.data['job_id']
+
+        r = await client.call_tool("wangp_get_job", {"job_id": job_id})
+        last = ''
+        while r.data and not r.data['done']:
+            sleep(5)
+            this = '' 
+            if 'events' not in r.data:
+                continue
+            for event in r.data['events']:
+                if event['data'] and 'text' in event['data']:
+                    if '%|' in event['data']['text']:
+                        this = event['data']['text']
+            if this != last:
+                last = this
+                print(this)
+            r = await client.call_tool("wangp_get_job", {"job_id": job_id})
+        print(r.data['result'])
+
+s2v = s2v_h3 if os.environ.get('MMH3','False') != 'False' else s2v_ltx
 
 import math
 
@@ -321,7 +397,9 @@ def GenerateTalkingVideo(
     width = int(width)
     height = int(height)
     seed = int(seed)
-    duration_sec = 10; #int(estimate_duration(text)) + 1
+    estimated =  int(estimate_duration(text)) + 1
+    print(f"ESTIMATED DURATION: {estimated} s")
+    duration_sec = 5 if estimated < 5 else 10
     fps = 24
 
     if seed == -1:

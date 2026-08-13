@@ -394,7 +394,7 @@ def compose_video(background='',characters=[], voices=[], text=[], action='', ou
             references.append({"type": "audio", "audio": ref_audio, "sample_rate": sample_rate})
             tmp = f'''subject_definitions:\n<Subject {ndx+1}> Character sheet displaying the front and back of {char[1]} <Audio 1> is the voice timbre reference for <Subject {ndx+1}>'s voice, containing a spoken voiceover. \n'''
             if ndx == 0 and char[2] and len(character_assets) == 2:
-                tmp += f'''<Subject 1> says "{text}." to <Subject 2>\n'''
+                tmp += f'''<Subject 1> says <d> [English] {text} </d> to <Subject 2>\n'''
             elif ndx == 1 and char[2] and len(character_assets) == 2:
                 tmp += f'''<Subject 2> responds  "{text}." to <Subject 1>\n'''
             elif char[2]:

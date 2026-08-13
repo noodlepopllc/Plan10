@@ -165,18 +165,18 @@ two_person() {
 # Emotion Action Table (diffusion‑friendly verbs)
 # ────────────────────────────────────────────────
 EMOTIONS=(
-  "She maintains a neutral expression."
-  "She smiles softly."
-  "She smiles brightly."
-  "She opens her mouth in surprise."
-  "Her eyes widen in shock."
-  "She frowns slightly."
-  "She frowns deeply."
-  "She tilts her head in confusion."
-  "She glances away nervously."
-  "She smirks subtly."
-  "She stares intensely."
-  "She looks embarrassed, gaze lowering."
+  " maintains a neutral expression."
+  " smiles softly."
+  " smiles brightly."
+  " opens her mouth in surprise."
+  " eyes widen in shock."
+  " frowns slightly."
+  " frowns deeply."
+  " tilts her head in confusion."
+  " glances away nervously."
+  " smirks subtly."
+  " stares intensely."
+  " looks embarrassed, gaze lowering."
 )
 
 DIALOG_LINES=(
