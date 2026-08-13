@@ -249,9 +249,12 @@ async def s2v_h3(prompt='', media='', audio='', text='', output='output.mp4',
             desc = add_metadata_char(media, '', seed)
         '''
 
+        desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
+        audio_desc = translate_to_audio_prompt(desc)
+
         newprompt = ("subject_definitions:\n <Subject 1> is the person in <Picture 1> and appears in [Shot 1], preserving their exact identity, facial features, skin tone, hairstyle, body proportions, clothing, footwear, "
     "and distinctive accessories.\n <Audio 1> is the voice timbre reference for <Subject 1>'s voice, containing a spoken voiceover. summary:\n"
-    f''' <Picture 1> is the first frame of [Shot 1] <Subject 1> (S1) says <d>[English] {text} </d> {prompt} '''
+    f''' <Picture 1> is the first frame of [Shot 1] <Subject 1> (S1) says <d>[English] {text} </d> {prompt} \n overall_soundscape: {audio_desc} '''
     )
 
         #desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
