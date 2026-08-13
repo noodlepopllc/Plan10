@@ -248,18 +248,17 @@ async def s2v_h3(prompt='', media='', audio='', text='', output='output.mp4',
         desc = Image.open(media).info.get('Description')
         if not desc:
             desc = add_metadata_char(media, '', seed)
+        '''
 
-        char_desc = AnalyzeImage(media, "Briefly describe the character in the image 15 words")['analysis']
+        cam_desc = AnalyzeImage(media, "Briefly describe camera shot framing, return either closeup shot or medium shot")['analysis']
         
-
         desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
         audio_desc = translate_to_audio_prompt(desc)
-        '''
         
 
         newprompt = ("subject_definitions:\n <Subject 1> is the person in <Picture 1> and appears in [Shot 1], preserving their exact identity, facial features, skin tone, hairstyle, body proportions, clothing, footwear, "
     "and distinctive accessories.\n <Audio 1> is the voice timbre reference for <Subject 1>'s voice, containing a spoken voiceover. summary:\n"
-    f''' <Picture 1> is the first frame of [Shot 1] <Subject 1> camera pushes in towards face framing them in the center of the frame <Subject 1> (S1) speaks clearly <d>[English] {text} </d> ''') #[Shot 2] {prompt} \n ''') #overall_soundscape: {audio_desc} ''')
+    f''' <Picture 1> is the first frame of [Shot 1] static {cam_desc} Camera focuses on <Subject 1> as they speak, keeping them clearly in frame. <Subject 1> (S1) speaks clearly <d>[English] {text} </d> overall_soundscape: {audio_desc} ''') #[Shot 2] {prompt} \n ''') #overall_soundscape: {audio_desc} ''')
 
         #desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
         #audio_desc = translate_to_audio_prompt(desc)
@@ -278,7 +277,7 @@ async def s2v_h3(prompt='', media='', audio='', text='', output='output.mp4',
         args["audio_prompt_type"] = "A"
         args["video_prompt_type"] = "I"
         args["multi_prompts_gen_type"] = "PG"
-        args["num_inference_steps"] = 4
+        args["num_inference_steps"] = 6
         args["guidance_scale"] = 1
         args["guidance2_scale"] = 5
         args["guidance3_scale"] = 5
@@ -288,8 +287,8 @@ async def s2v_h3(prompt='', media='', audio='', text='', output='output.mp4',
         args["audio_scale"] = 1
         args["sample_solver"] = "euler"
         args["embedded_guidance_scale"] = 6
-        args['resolution'] = '480x832'
-        args['video_length'] = 124
+        args['resolution'] = f'{width}x{height}'
+        args['video_length'] = (((duration_sec * 24) // 17) * 17) + 5
 
 
         args['resolution'] = f'{width}x{height}'
@@ -371,7 +370,8 @@ def GenerateTalkingVideo(
     output='output.mp4',
     width=WIDTH,
     height=HEIGHT,
-    seed=-1):
+    seed=-1,
+    max_duration=10):
     print(f"PROMPT: {prompt}")
     
     if isinstance(prompt, list):
@@ -402,7 +402,7 @@ def GenerateTalkingVideo(
     seed = int(seed)
     estimated =  int(estimate_duration(text)) + 1
     print(f"ESTIMATED DURATION: {estimated} s")
-    duration_sec = 5 if estimated < 5 else 10
+    duration_sec = 5 if estimated < 5 else max_duration
     fps = 24
 
     if seed == -1:

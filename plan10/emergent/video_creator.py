@@ -32,6 +32,7 @@ def main():
     parser.add_argument('-H', '--height', type=int, default=HEIGHT)
     parser.add_argument('-S', '--seed', type=int, default=SEED)
     parser.add_argument('-M', '--scene-mode', action='store_true')
+    parser.add_argument('-D', '--duration', type=int, default=5)
     parser.add_argument('--reset', action='store_true')
     parser.add_argument('-G', '--goal', type=str, default=None, 
         help='Narrative goal to work toward (e.g., "woman gets ready for work")')
@@ -56,6 +57,7 @@ def main():
         scene_mode = state.get('scene_mode', False) 
         initial = state['initial_media']
         goal = state.get('goal')
+        duration = state.get('duration')
     else:
         scene_mode = args.scene_mode
         first_run = True
@@ -171,6 +173,7 @@ def main():
         "seed": args.seed,
         "initial_media": initial,
         "goal": goal,
+        "duration": duration,
     }
     state_mgr.save(new_state)
     

@@ -358,7 +358,8 @@ def GenerateTalkingVideo(
     output='output.mp4',
     width=WIDTH,
     height=HEIGHT,
-    seed=-1):
+    seed=-1,
+    max_duration=10):
     print(f"PROMPT: {prompt}")
     
     if isinstance(prompt, list):
@@ -387,7 +388,7 @@ def GenerateTalkingVideo(
     width = int(width)
     height = int(height)
     seed = int(seed)
-    duration_sec = int(estimate_duration(text))
+    duration_sec = min(int(estimate_duration(text)), max_duration)
     fps = 24
 
     if seed == -1:

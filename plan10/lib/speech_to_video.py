@@ -321,8 +321,9 @@ def main():
     parser.add_argument('-W', '--width', type=int, default=WIDTH)
     parser.add_argument('-H', '--height', type=int, default=HEIGHT)
     parser.add_argument('-S', '--seed', type=int, default=SEED)
+    parser.add_argument('-D', '--max_duration', type=int, default=10)
     args = parser.parse_args()
-    Speech(args.prompt, args.text, args.audio, args.image, args.output, args.width, args.height, args.seed)
+    Speech(args.prompt, args.text, args.audio, args.image, args.output, args.width, args.height, args.seed, args.max_duration)
 
 
 # =============================================================================

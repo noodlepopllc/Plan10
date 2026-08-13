@@ -34,6 +34,7 @@ def main():
     
     state = state_mgr.load()
     video_queue = state.get('video_queue', [])
+    duration = int(state.get('duration', '5'))
     
     # Find the first pending job
     pending_job = None
@@ -61,7 +62,7 @@ def main():
             prompt=pending_job['prompt'],
             media=pending_job['input_media'],
             output=pending_job['output_path'],
-            duration_sec=10 if WGP or LTX else 5,
+            duration_sec=duration,
             seed=pending_job['seed']
         )
         

@@ -94,6 +94,7 @@ dialog() {
             -T "$dialog_text" \
             -A "$voice" \
             -O "$voice_vid" \
+            -D 5 \
             || { echo "❌ S2V failed: $voice_vid"; exit 1; }
 
         echo "✅ S2V: $voice_vid" >> "$OUTDIR/run_manifest.txt"
