@@ -24,6 +24,7 @@ SEED = int(os.environ.get("SEED", "-1"))
 ANIME = "_anime" if os.environ.get("ANIME","False") != "False" else ""
 VRAM = int(os.environ.get("VRAM", 96))
 DURATION = 5 #5 if VRAM < 24 else 10
+FAST = os.environ.get("MMH3","False") == "FAST"
 
 if ANIME:
     from plan10.lib.anime_gen import GenerateImage
@@ -64,21 +65,33 @@ def i2v_diffsynth(prompt='', media='', output='output.mp4',
     # We override it here to leverage your hardware's full capacity.
     allocated_vram_limit = min(VRAM, 96)
 
-    pipe = MiniMaxH3Pipeline.from_pretrained(
-        torch_dtype=torch.bfloat16,
-        device="cuda",
-        model_configs=[
-            ModelConfig(model_id="MiniMaxAI/MiniMax-H3", origin_file_pattern="FL2VA/text_encoder/model*.safetensors", **vram_config),
-            ModelConfig(model_id="MiniMaxAI/MiniMax-H3", origin_file_pattern="FL2VA/transformer/model*.safetensors", **vram_config),
-            ModelConfig(model_id="MiniMaxAI/MiniMax-H3", origin_file_pattern="FL2VA/video_vae/source/model.safetensors", **vram_config),
-            ModelConfig(model_id="MiniMaxAI/MiniMax-H3", origin_file_pattern="FL2VA/audio_vae/model.safetensors", **vram_config),
-        ],
-        processor_config=ModelConfig(model_id="MiniMaxAI/MiniMax-H3", origin_file_pattern="FL2VA/processor/"),
-        vram_limit=torch.cuda.mem_get_info("cuda")[1] / (1024 ** 3) - 2,
-    )
-
-
-    pipe.load_lora(pipe.dit, ModelConfig(model_id="lightx2v/Minimax-h3-Turbo", origin_file_pattern="minimax_h3_fl2v_turbo_4step_v1.0_768p_bf16.safetensors"))
+    if FAST:
+        pipe = MiniMaxH3Pipeline.from_pretrained(
+            torch_dtype=torch.bfloat16,
+            device="cuda",
+            model_configs=[
+                ModelConfig(model_id="MiniMaxAI/MiniMax-H3", origin_file_pattern="FL2VA/text_encoder/model*.safetensors", **vram_config),
+                ModelConfig(model_id="MiniMaxAI/MiniMax-H3", origin_file_pattern="FL2VA/transformer/model*.safetensors", **vram_config),
+                ModelConfig(model_id="MiniMaxAI/MiniMax-H3", origin_file_pattern="FL2VA/video_vae/source/model.safetensors", **vram_config),
+                ModelConfig(model_id="MiniMaxAI/MiniMax-H3", origin_file_pattern="FL2VA/audio_vae/model.safetensors", **vram_config),
+            ],
+            processor_config=ModelConfig(model_id="MiniMaxAI/MiniMax-H3", origin_file_pattern="FL2VA/processor/"),
+            vram_limit=allocated_vram_limit,
+        )
+        pipe.load_lora(pipe.dit, ModelConfig(model_id="lightx2v/Minimax-h3-Turbo", origin_file_pattern="minimax_h3_fl2v_turbo_4step_v1.0_768p_bf16.safetensors"))
+    else:
+        pipe = MiniMaxH3Pipeline.from_pretrained(
+            torch_dtype=torch.bfloat16,
+            device="cuda",
+            model_configs=[
+                ModelConfig(model_id="DiffSynth-Studio/MiniMax-H3-NF4", origin_file_pattern="minimax-h3-fl2va-pruned-nf4.safetensors", **vram_config),
+                ModelConfig(model_id="DiffSynth-Studio/MiniMax-H3-NF4", origin_file_pattern="minimax-h3-text-encoder-nf4.safetensors", **vram_config),
+                ModelConfig(model_id="DiffSynth-Studio/MiniMax-H3-NF4", origin_file_pattern="video_vae_nf4.safetensors", **vram_config),
+                ModelConfig(model_id="DiffSynth-Studio/MiniMax-H3-NF4", origin_file_pattern="audio_vae_nf4.safetensors", **vram_config),
+            ],
+            processor_config=ModelConfig(model_id="MiniMaxAI/MiniMax-H3", origin_file_pattern="FL2VA/processor/"),
+            vram_limit=allocated_vram_limit,
+        )
 
 
     # Force explicit SFX and ban melody structure in the positive prompt

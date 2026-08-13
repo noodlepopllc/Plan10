@@ -173,7 +173,7 @@ def main():
         "seed": args.seed,
         "initial_media": initial,
         "goal": goal,
-        "duration": duration,
+        "duration": args.duration,
     }
     state_mgr.save(new_state)
     
