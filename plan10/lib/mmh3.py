@@ -14,7 +14,7 @@ import json
 from time import sleep
 from pathlib import Path
 from plan10.lib.util import video_to_img, fix_minimax_audio
-from plan10.lib.image_analysis import AnalyzeImage, EnhancePrompt
+from plan10.lib.image_analysis import AnalyzeImage, EnhancePrompt,translate_to_audio_prompt
 from plan10.lib.image_gen import add_metadata_char
 import random
 
