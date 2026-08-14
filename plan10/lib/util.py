@@ -2,6 +2,37 @@ from PIL import Image
 import os, time, cv2, gc, torch
 import numpy as np
 
+import librosa
+import soundfile as sf
+
+def fix_minimax_audio(input_path, output_path, target_sr=44100, target_duration=11.0):
+    # 1. Load, convert to mono, and automatically resample to 44.1 kHz
+    # (Setting sr=target_sr forces librosa to resample upon loading)
+    y, sr = librosa.load(input_path, sr=target_sr, mono=True)
+    
+    # 2. Peak normalize to -3 dB to prevent gain clipping and distortion
+    # We find the max amplitude, scale it to 1.0, and multiply by 10^(-3/20) ~ 0.707
+    max_val = np.max(np.abs(y))
+    if max_val > 0:
+        y = (y / max_val) * 0.707
+
+    # 3. Pad with digital silence to pass the 10-second requirement
+    current_samples = len(y)
+    required_samples = int(target_duration * sr)
+    
+    if current_samples < required_samples:
+        padding_needed = required_samples - current_samples
+        silence = np.zeros(padding_needed)
+        # Append the silence to the tail end of the audio array
+        y = np.concatenate([y, silence])
+        print(f"Padded track with {padding_needed / sr:.2f} seconds of silence.")
+    
+    # 4. Export as a standard 16-bit PCM WAV file
+    # 'PCM_16' forces the 24-bit downsample to avoid bit-depth parsing bugs
+    sf.write(output_path, y, sr, subtype='PCM_16')
+    print(f"Successfully saved fixed file to: {output_path}")
+
+
 def wait_for_file(path: str, timeout: float = 60.0, min_size: int = 1024, stable_for: float = 1.5):
     """Wait until file exists, has reasonable size, AND stops growing."""
     start = time.time()

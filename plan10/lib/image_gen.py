@@ -266,43 +266,45 @@ def add_metadata_char(imgpath, prompt='', seed=-1, generation_prompt=None):
     metadata = PngInfo()
 
     base_instructions = '''
-    Analyze the subject and describe ONLY clearly visible traits. Return a single comma-separated string in this exact order: 
-    subject_type, age_stage, ethnicity_origin, skin_surface, face_shape, jawline, cheekbones, eyes, eyebrows, nose, lips, 
-    hair_fur_length_color_texture, hair_style, hairline, facial_hair_features, head_accessories, eyewear, clothing, footwear,
-    distinctive_markers.
-    
-    Rules:
-    - Be accurate. Do NOT guess. If a trait isn't visible or doesn't apply, write 'neutral'.
-    - subject_type: human, anthropomorphic, android, masked, heavily_stylized, neutral
-    - age_stage: child, youth, young adult, adult, elderly, timeless, neutral
-    - ethnicity_origin: east asian, south asian, middle eastern, african, european, latinx, fantasy_race, machine_origin, neutral
-    - skin_surface: fair, light, medium, tan, deep, metallic, synthetic, fur, scales, painted, masked, neutral
-    - face_shape: oval, round, heart, square, long, muzzle, angular, geometric, neutral
-    - jawline: soft, defined, sharp, angular, mechanical, fur-lined, hidden, neutral
-    - cheekbones: low, medium, high, structural, hidden, neutral
-    - eyes: almond, round, narrow, wide-set, glowing, lens, visor, painted, hidden, neutral
-    - eyebrows: straight, arched, thick, thin, painted, mechanical, fur, hidden, neutral
-    - nose: small, medium, large, narrow, wide, snout, vent, painted, hidden, neutral
-    - lips: thin, medium, full, painted, sealed, mechanical, hidden, neutral
-    - hair_fur_length_color_texture: short/medium/long + color + straight/wavy/curly/coarse, OR fur: short/long + color + dense/patchy, OR synthetic: fiber/metallic + color, OR 'neutral'
-    - hair_style: ponytail, bun, braid, tied-back, loose, half-up, bob, pixie, crew cut, buzz cut, fade, undercut, slicked back, messy, short crop, comb over, mane, tufted, helmet-integrated, none, neutral
-    - hairline: straight, widow's peak, rounded, receding, fur-edge, seam-line, masked, neutral
-    - facial_hair_features: clean-shaven, stubble, mustache, beard, goatee, sideburns, fur_muzzle, mechanical_grille, painted, hidden, neutral
-    - head_accessories: ribbons, bandana, hats, helmet, mask_partial, mask_full, crown, none, neutral
-    - eyewear: glasses, sunglasses, visor, goggles, none, neutral
-    - clothing: describe visible items simply: yellow sundress, white tshirt, armored vest, etc.
-    - footwear: white tennis shoes, red heels, mechanical boots, paw-pads, none, neutral
-    - distinctive_markers: List 2-3 highly specific unique visual traits that make this character instantly recognizable (e.g., "prominent scar across left eyebrow", "silver circlet on forehead", "small beauty mark on right cheek"). If no distinctive markers visible, write 'neutral'.
+        Analyze the subject and describe ONLY clearly visible, literal traits. Return a single comma-separated string in this exact order: 
+        subject_type, age_stage, ethnicity_origin, skin_surface, face_shape, jawline, cheekbones, eyes, eyebrows, nose, lips, 
+        hair_fur_length_color_texture, hair_style, hairline, facial_hair_features, head_accessories, eyewear, clothing, footwear,
+        distinctive_markers.
+        
+        Rules:
+        - Be exhaustive and hyper-accurate. Do NOT guess. If a trait isn't visible, use 'hidden_from_view'. If it doesn't apply, use 'not_applicable'.
+        - subject_type: human, anthropomorphic, android, masked, heavily_stylized, hidden_from_view
+        - age_stage: child, youth, young adult, adult, elderly, timeless, hidden_from_view
+        - ethnicity_origin: east asian, south asian, middle eastern, african, european, latinx, fantasy_race, machine_origin, hidden_from_view
+        - skin_surface: fair, light, medium, tan, deep, metallic, synthetic, fur, scales, painted, masked, hidden_from_view
+        - face_shape: oval, round, heart, square, long, muzzle, angular, geometric, hidden_from_view
+        - jawline: soft, defined, sharp, angular, mechanical, fur-lined, hidden_from_view
+        - cheekbones: low, medium, high, structural, hidden_from_view
+        - eyes: almond, round, narrow, wide-set, glowing, lens, visor, painted, hidden_from_view
+        - eyebrows: straight, arched, thick, thin, painted, mechanical, fur, hidden_from_view
+        - nose: small, medium, large, narrow, wide, snout, vent, painted, hidden_from_view
+        - lips: thin, medium, full, painted, sealed, mechanical, hidden_from_view
+        - hair_fur_length_color_texture: short/medium/long + color + straight/wavy/curly/coarse, OR fur: short/long + color + dense/patchy, OR synthetic: fiber/metallic + color, OR 'not_applicable', OR 'hidden_from_view'
+        - hair_style: ponytail, bun, braid, tied-back, loose, half-up, bob, pixie, crew cut, buzz cut, fade, undercut, slicked back, messy, short crop, comb over, mane, tufted, helmet-integrated, none, hidden_from_view
+        - hairline: straight, widow's peak, rounded, receding, fur-edge, seam-line, masked, hidden_from_view
+        - facial_hair_features: clean-shaven, stubble, mustache, beard, goatee, sideburns, fur_muzzle, mechanical_grille, painted, hidden_from_view
+        - head_accessories: ribbons, bandana, hats, helmet, mask_partial, mask_full, crown, none, hidden_from_view
+        - eyewear: glasses, sunglasses, visor, goggles, none, hidden_from_view
+        - clothing: describe visible items simply (e.g., "yellow sundress", "white tshirt"). Strict Rule: Verify the exact vertical hemline relative to the knee. Explicitly classify as "above-knee shorts" or "ankle-length pants". If the lower body is cut off, use 'hidden_from_view' for those specific missing garments.
+        - footwear: white tennis shoes, red heels, mechanical boots, paw-pads, none, hidden_from_view. Strict Rule: If the feet are cut off by the edge of the frame, you MUST write 'hidden_from_view'.
+        - distinctive_markers: List 2-3 highly specific unique visual traits that make this character instantly recognizable (e.g., "prominent scar across left eyebrow", "silver circlet on forehead", "small beauty mark on right cheek"). If no distinctive markers visible, write 'none'.
 
-    Critical Rules:
-    1. If subject_type is masked/heavily_stylized: prioritize describing what is VISIBLE through/around the mask or makeup.
-    2. If subject_type is anthropomorphic: map human-equivalent terms (e.g., muzzle for nose, fur for hair, paw-pads for footwear).
-    3. If subject_type is android: use mechanical/synthetic descriptors where applicable; 'neutral' for biological terms that don't apply.
-    4. NEVER force human defaults: if hair isn't visible, write 'none' or 'neutral', NOT 'bob' or 'pixie'.
-    5. For heavy makeup: describe the painted/applied appearance, not the underlying biology.
+        Critical Rules for Klein 4b Compatibility:
+        1. If subject_type is masked/heavily_stylized: prioritize describing what is VISIBLE through/around the mask or makeup.
+        2. If subject_type is anthropomorphic: map human-equivalent terms (e.g., muzzle for nose, fur for hair, paw-pads for footwear).
+        3. If subject_type is android: use mechanical/synthetic descriptors where applicable; 'not_applicable' for biological terms that don't apply.
+        4. NEVER force human defaults: if hair isn't visible, write 'none' or 'hidden_from_view', NOT 'bob' or 'pixie'.
+        5. For heavy makeup: describe the painted/applied appearance, not the underlying biology.
+        6. Camera Frame & Composition Constraint: Do not extrapolate or guess clothing or footwear details that are cut off by the edge of the image. If garment folds make length ambiguous, describe only the explicit length seen. Never infer the lower body style based on the upper body style. Prevent Klein 4b hallucinations by being completely literal.
 
-    Respond ONLY with the string.
-    '''
+        Respond ONLY with the string.
+        '''
+
 
     # Inject the generation prompt if provided
     if generation_prompt:

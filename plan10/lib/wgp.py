@@ -9,7 +9,7 @@ from time import sleep
 
 from pathlib import Path
 
-from plan10.lib.util import video_to_img
+from plan10.lib.util import video_to_img, fix_minimax_audio
 from plan10.lib.image_analysis import AnalyzeImage, EnhancePrompt, translate_to_audio_prompt
 
 from plan10.lib.image_gen import add_metadata_char
@@ -212,7 +212,7 @@ async def s2v_ltx(prompt='', media='', audio='', text='', output='output.mp4',
         #args['audio_source'] = None
         #args['audio_prompt_type'] = 'A'
 
-        args['resolution'] = '720x1280' if height > width else '1280x720'
+        args['resolution'] = f'{width}x{height}' #'720x1280' if height > width else '1280x720'
         args['video_length'] = (duration_sec * 24) + 1 
         print(args)
         r = await client.call_tool("wangp_generate", {"source": args})
@@ -237,6 +237,10 @@ async def s2v_ltx(prompt='', media='', audio='', text='', output='output.mp4',
 async def s2v_h3(prompt='', media='', audio='', text='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
     async with Client("http://localhost:7866/mcp") as client:
+
+        fixed_audio = audio.replace('.wav', '_minimax.wav')
+        if not Path(fixed_audio).exists():
+            fix_minimax_audio(audio, fixed_audio)
 
         model = "minimax_h3_ref2va_pruned"
 
@@ -274,11 +278,11 @@ async def s2v_h3(prompt='', media='', audio='', text='', output='output.mp4',
         args['output_filename'] = output
         args['prompt'] = newprompt
         args['image_refs'] = [media]
-        args["audio_guide"] = audio
+        args["audio_guide"] = fixed_audio
         args["audio_prompt_type"] = "A"
         args["video_prompt_type"] = "I"
         args["multi_prompts_gen_type"] = "PG"
-        args["num_inference_steps"] = 6
+        args["num_inference_steps"] = 8
         args["guidance_scale"] = 1
         args["guidance2_scale"] = 5
         args["guidance3_scale"] = 5
@@ -287,7 +291,7 @@ async def s2v_h3(prompt='', media='', audio='', text='', output='output.mp4',
         args["audio_guidance_scale"] = 1
         args["audio_scale"] = 1
         args["sample_solver"] = "euler"
-        args["embedded_guidance_scale"] = 6
+        args["embedded_guidance_scale"] = 1.5
         args['resolution'] = f'{width}x{height}'
         args['video_length'] = (((duration_sec * 24) // 17) * 17) + 5
 

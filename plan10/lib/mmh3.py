@@ -13,7 +13,7 @@ import logging, os, gc
 import json
 from time import sleep
 from pathlib import Path
-from plan10.lib.util import video_to_img
+from plan10.lib.util import video_to_img, fix_minimax_audio
 from plan10.lib.image_analysis import AnalyzeImage, EnhancePrompt
 from plan10.lib.image_gen import add_metadata_char
 import random
@@ -252,6 +252,10 @@ def GenerateTalkingVideo(
     seed=-1,
     max_duration=10):
     print(f"PROMPT: {prompt}")
+
+    fixed_audio = audio.replace('.wav', '_minimax.wav')
+    if not Path(fixed_audio).exists():
+        fix_minimax_audio(audio, fixed_audio)
     
     if isinstance(prompt, list):
         prompt = prompt.pop()
@@ -279,7 +283,7 @@ def GenerateTalkingVideo(
     width = int(width)
     height = int(height)
     seed = int(seed)
-    duration_sec = 5 # int(estimate_duration(text))
+    duration_sec = 5 #int(estimate_duration(text))
     fps = 24
 
     if seed == -1:
@@ -293,23 +297,32 @@ def GenerateTalkingVideo(
     current_source = video_to_img(start_image, width, height, True, True)
     current_source.save('tmp.png')
 
-    
-
-    if not prompt:
-        prompt = "The characters stand and act naturally. "
+    #if not prompt:
+    #    prompt = "The characters stand and act naturally. "
 
     desc = Image.open(start_image).info.get('Description')
     if not desc:
         desc = add_metadata_char(start_image, '', seed)
 
-    eprompt = f'The person can be described as {desc}. The person says "{text}." {prompt}.'
-    cprompt = f'''subject_definitions:\n<Subject 1> {desc} <Audio 1> is the voice timbre reference for <Subject 1>'s voice, containing a spoken female voiceover. <Subject 1> The person says "{text}." {prompt}.'''
+    #eprompt = f'The person can be described as {desc}. The person says "{text}." {prompt}.'
+    #cprompt = f'''subject_definitions:\n<Subject 1> {desc} <Audio 1> is the voice timbre reference for <Subject 1>'s voice, containing a spoken female voiceover. <Subject 1> The person says "{text}." {prompt}.'''
 
-    print("ORIGINAL PROMPT: ",cprompt)
+    cam_desc = AnalyzeImage(media, "Briefly describe camera shot framing, return either closeup shot or medium shot")['analysis']
+        
+    desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
+    audio_desc = translate_to_audio_prompt(desc)
+        
 
-    eprompt = EnhancePrompt(start_image, eprompt, enhance_path)
+    newprompt = ("subject_definitions:\n <Subject 1> is the person in <Picture 1> and appears in [Shot 1], preserving their exact identity, facial features, skin tone, hairstyle, body proportions, clothing, footwear, "
+    "and distinctive accessories.\n <Audio 1> is the voice timbre reference for <Subject 1>'s voice, containing a spoken voiceover. summary:\n"
+    f''' <Picture 1> is the first frame of [Shot 1] static {cam_desc} Camera focuses on <Subject 1> as they speak, keeping them clearly in frame. <Subject 1> remains stationary as they speak (S1) clearly <d>[English] {text} </d> \n'''
+    f''' After speaking, <Subject 1> {prompt} They continue to move naturally for the remainder of the video. \n overall_soundscape: {audio_desc} ''')
 
-    print("CURRENT PROMPT: ",eprompt)
+    #print("ORIGINAL PROMPT: ",cprompt)
+
+    #eprompt = EnhancePrompt(start_image, eprompt, enhance_path)
+
+    print("CURRENT PROMPT: ",newprompt)
 
     try:
         vram_config = {
@@ -334,10 +347,10 @@ def GenerateTalkingVideo(
             processor_config=ModelConfig(model_id="MiniMaxAI/MiniMax-H3", origin_file_pattern="Ref2VA/processor/"),
             vram_limit=64,
         )
-        ref_audio, sample_rate = read_audio(audio, duration=5, resample=True, resample_rate=pipe.audio_vae.sample_rate)
+        ref_audio, sample_rate = read_audio(fixed_audio, duration=5, resample=True, resample_rate=pipe.audio_vae.sample_rate)
         video, audio = pipe(
-            prompt=cprompt,
-            height=height, width=width, num_frames=124, num_inference_steps=20, seed=seed,
+            prompt=newprompt,
+            height=height, width=width, num_frames=(((duration_sec * 24) // 17) * 17) + 5, num_inference_steps=20, seed=seed,
             references=[
                 {"type": "image", "image": current_source},
                 {"type": "audio", "audio": ref_audio, "sample_rate": sample_rate},
