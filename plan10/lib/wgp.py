@@ -72,7 +72,7 @@ async def i2v_ltx(prompt='', media='', end='', output='output.mp4',
         if end:
             args['image_end'] = end
 
-        args['resolution'] = '704x1280' if height > width else '1280x704'
+        args['resolution'] = f'{width}x{height}'
         args['video_length'] = (duration_sec * 24) + 1 
         print(args)
         r = await client.call_tool("wangp_generate", {"source": args})
@@ -95,7 +95,57 @@ async def i2v_ltx(prompt='', media='', end='', output='output.mp4',
             r = await client.call_tool("wangp_get_job", {"job_id": job_id})
         print(r.data['result'])
 
-i2v = i2v_ltx
+async def i2v_h3(prompt='', media='', end='', output='output.mp4', 
+                  duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
+    async with Client("http://localhost:7866/mcp") as client:
+
+        tool = "minimax_h3_fl2va_pruned"
+
+        r = await client.call_tool("wangp_get_default_settings", {"model_type":tool})
+        results = json.dumps(r.data, indent=4)
+
+        desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
+        audio_desc = translate_to_audio_prompt(desc)
+
+        # Force explicit SFX and ban melody structure in the positive prompt
+        sfx_modifiers = ", realistic sound effects only, crisp SFX, ambient background noise, completely devoid of music, no BGM, no instruments"
+        final_prompt = f"{prompt} {audio_desc} {sfx_modifiers}" if prompt else "ambient sound effects, SFX, absolute no music"
+
+        args = r.data
+        args['output_filename'] = output
+        args['prompt'] = final_prompt
+        args['image_prompt_type'] =  'SE' if end else 'S'
+        args['image_start'] = media
+        args['resolution'] = f'{width}x{height}'
+        args['video_length'] = (((duration_sec * 24) // 17) * 17) + 5
+        args["activated_loras"] = ["minimax_h3_larryvrh_v4_step600_ema.safetensors"]
+        args["loras_multipliers"] = "1.0|"
+        args["guidance_scale"] = 1
+        
+        if end:
+            args['image_end'] = end
+        print(args)
+        r = await client.call_tool("wangp_generate", {"source": args})
+        print(r.data['job_id'])
+        job_id = r.data['job_id']
+
+        r = await client.call_tool("wangp_get_job", {"job_id": job_id})
+        last = ''
+        while not r.data['done']:
+            sleep(5)
+            this = '' 
+            if r.data.get('events',[]):
+                for event in r.data['events']:
+                    if event and event.get('data') and 'text' in event.get('data',''):
+                        if '%|' in event['data']['text']:
+                            this = event['data']['text']
+            if this != last:
+                last = this
+                print(this)
+            r = await client.call_tool("wangp_get_job", {"job_id": job_id})
+        print(r.data['result'])
+
+i2v = i2v_h3 if os.environ.get('MMH3','False') != 'False' else i2v_ltx
 
 def GenerateVideo(prompt='', media='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1, enhance=True):
