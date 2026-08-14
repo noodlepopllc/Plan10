@@ -98,7 +98,7 @@ def i2v_diffsynth(prompt='', media='', output='output.mp4',
     sfx_modifiers = ", realistic sound effects only, crisp SFX, ambient background noise, completely devoid of music, no BGM, no instruments"
     final_prompt = f"{prompt}{sfx_modifiers}" if prompt else "ambient sound effects, SFX, absolute no music"
 
-    num_frames = (duration_sec * 24) + 1
+    num_frames = (((duration_sec * 24) // 17) * 17) + 5
 
     image = Image.open(media).convert("RGB").resize((width, height))
     
@@ -360,7 +360,7 @@ def GenerateTalkingVideo(
             video=video, audio=audio,
             output_path=output, fps=24, audio_sample_rate=32000,
         )
-            
+        description = ''   
         # Post-processing
         if os.environ.get('BATCH', 'False') == 'False':
             tmp_img = video_to_img(f'{output}', width, height)
