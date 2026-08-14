@@ -372,7 +372,7 @@ def GenerateTalkingVideo(
             "output_path": output,
             "frames": (duration_sec * fps) + 1,
             "description": description,
-            "prompt": eprompt
+            "prompt": newprompt
         }
         
     except Exception as e:
