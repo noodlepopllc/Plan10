@@ -19,6 +19,7 @@ HEIGHT = int(os.environ.get("HEIGHT", "480"))
 SEED = int(os.environ.get("SEED", "-1"))
 ANIME = "_anime" if os.environ.get("ANIME","False") != "False" else ""
 ARC = os.environ.get("LTX","False") == "ARC"
+MMH3 = os.environ.get('MMH3','False') != 'False'
 
 if ANIME:
     from plan10.lib.anime_gen import GenerateImage
@@ -104,16 +105,18 @@ async def i2v_h3(prompt='', media='', end='', output='output.mp4',
         r = await client.call_tool("wangp_get_default_settings", {"model_type":tool})
         results = json.dumps(r.data, indent=4)
 
+        '''
         desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
         audio_desc = translate_to_audio_prompt(desc)
 
         # Force explicit SFX and ban melody structure in the positive prompt
         sfx_modifiers = ", realistic sound effects only, crisp SFX, ambient background noise, completely devoid of music, no BGM, no instruments"
         final_prompt = f"{prompt} {audio_desc} {sfx_modifiers}" if prompt else "ambient sound effects, SFX, absolute no music"
+        '''
 
         args = r.data
         args['output_filename'] = output
-        args['prompt'] = final_prompt
+        args['prompt'] = prompt
         args['image_prompt_type'] =  'SE' if end else 'S'
         args['image_start'] = media
         args['resolution'] = f'{width}x{height}'
@@ -121,7 +124,7 @@ async def i2v_h3(prompt='', media='', end='', output='output.mp4',
         args["activated_loras"] = ["minimax_h3_larryvrh_v4_step600_ema.safetensors"]
         args["loras_multipliers"] = "1.0|"
         args["guidance_scale"] = 1
-        
+        args["num_inference_steps"] = 4
         if end:
             args['image_end'] = end
         print(args)
@@ -145,7 +148,7 @@ async def i2v_h3(prompt='', media='', end='', output='output.mp4',
             r = await client.call_tool("wangp_get_job", {"job_id": job_id})
         print(r.data['result'])
 
-i2v = i2v_h3 if os.environ.get('MMH3','False') != 'False' else i2v_ltx
+i2v = i2v_h3 if MMH3 else i2v_ltx
 
 def GenerateVideo(prompt='', media='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1, enhance=True):
@@ -198,7 +201,7 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         if not prompt:
             prompt = "The characters stand and act naturally. "
 
-        if enhance:
+        if enhance and not MMH3:
             eprompt = EnhancePrompt('tmp.png', prompt, enhance_path)
         else:
             eprompt = prompt
@@ -370,7 +373,7 @@ async def s2v_h3(prompt='', media='', audio='', text='', output='output.mp4',
             r = await client.call_tool("wangp_get_job", {"job_id": job_id})
         print(r.data['result'])
 
-s2v = s2v_h3 if os.environ.get('MMH3','False') != 'False' else s2v_ltx
+s2v = s2v_h3 if MMH3 else s2v_ltx
 
 import math
 
@@ -414,7 +417,7 @@ def estimate_duration(text):
     """
     words = text.split()
     total_syllables = sum(count_syllables(w) for w in words)
-    duration = (total_syllables * 0.37) + 1.0
+    duration = (total_syllables * 0.37)
     return math.ceil(duration)
 
 def GenerateTalkingVideo(

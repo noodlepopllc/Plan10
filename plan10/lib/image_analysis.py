@@ -178,7 +178,7 @@ def AnalyzeImage(image='', prompt='Describe this.', output=None, backend=None):
     
     return status
 
-def EnhancePrompt(image='', prompt='a beautiful woman', enhancer='', output=None, backend=None):
+def EnhancePrompt(image='', prompt='a beautiful woman', enhancer='', output=None, backend=None, ispath=True):
     """
     Enhance a prompt using image/video analysis.
     
@@ -192,11 +192,14 @@ def EnhancePrompt(image='', prompt='a beautiful woman', enhancer='', output=None
     Returns:
         Enhanced prompt text
     """
-    if not os.path.exists(enhancer):
-        repo_root = Path(__file__).parent.parent
-        enhancer = repo_root / "system" / Path(enhancer).name
+    if ispath:
+        if not os.path.exists(enhancer):
+            repo_root = Path(__file__).parent.parent
+            enhancer = repo_root / "system" / Path(enhancer).name
 
-    eprompt = Path(enhancer).read_text()
+        eprompt = Path(enhancer).read_text()
+    else:
+        eprompt = enhancer
     
     if backend is None:
         backend = os.environ.get("VISION_BACKEND", "qwen").lower()

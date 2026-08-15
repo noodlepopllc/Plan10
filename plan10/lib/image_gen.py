@@ -267,7 +267,7 @@ def add_metadata_char(imgpath, prompt='', seed=-1, generation_prompt=None):
 
     base_instructions = '''
         Analyze the subject and describe ONLY clearly visible, literal traits. Return a single comma-separated string in this exact order: 
-        subject_type, age_stage, ethnicity_origin, skin_surface, face_shape, jawline, cheekbones, eyes, eyebrows, nose, lips, 
+        subject_type, age_stage, ethnicity_origin, gender, skin_surface, face_shape, jawline, cheekbones, eyes, eyebrows, nose, lips, 
         hair_fur_length_color_texture, hair_style, hairline, facial_hair_features, head_accessories, eyewear, clothing, footwear,
         distinctive_markers.
         
@@ -276,6 +276,7 @@ def add_metadata_char(imgpath, prompt='', seed=-1, generation_prompt=None):
         - subject_type: human, anthropomorphic, android, masked, heavily_stylized, hidden_from_view
         - age_stage: child, youth, young adult, adult, elderly, timeless, hidden_from_view
         - ethnicity_origin: east asian, south asian, middle eastern, african, european, latinx, fantasy_race, machine_origin, hidden_from_view
+        - gender: male, female, androgynous, unknown
         - skin_surface: fair, light, medium, tan, deep, metallic, synthetic, fur, scales, painted, masked, hidden_from_view
         - face_shape: oval, round, heart, square, long, muzzle, angular, geometric, hidden_from_view
         - jawline: soft, defined, sharp, angular, mechanical, fur-lined, hidden_from_view
@@ -497,7 +498,7 @@ def main():
     args = parser.parse_args()
     if args.character_sheet:
         if args.reset_meta:
-            print(add_metadata_char(args.output))
+            print(add_metadata_char(args.output, args.prompt))
         elif args.info:
             print(Image.open(args.output).info.get('Description'))
         else:

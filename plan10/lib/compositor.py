@@ -152,7 +152,7 @@ def CompositeScene(
         task = (
             f"REF 1: {bg_desc}. "
             f"{shot_type.upper()} SHOT of the environment. "
-            f"Camera focus instruction: {action}. "
+            f"Focus instruction: {action}. "
             "No characters, no silhouettes, no human forms. "
             f"Preserve exact rendering style of REF 1 ({style} style). "
             "ALLOW CROPPING of background elements naturally. "

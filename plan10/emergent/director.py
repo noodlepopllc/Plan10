@@ -8,7 +8,8 @@ import os
 
 WGP = os.environ.get("WGP","False") != "False"
 LTX = os.environ.get("LTX", "False") != "False"
-DIALOG_ALLOWED = WGP or LTX
+MMH3 = os.environ.get("MMH3","False") != "False"
+DIALOG_ALLOWED = WGP or LTX or MMH3
 class Director:
     def analyze_reality(self, media_path, intended_action, width, height, output_dir):
         """Analyze what actually happened in the video/image."""

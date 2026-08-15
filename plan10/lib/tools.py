@@ -175,8 +175,8 @@ class ToolHandler(object):
             "composite_scene": ["background_path", "characters", "shot_type", "action", "width", "height", "output", "alias","seed"],
             "composite_background": ["background_path", "shot_type", "width", "height", "output", "alias","seed"],
             "edit_image": ["images", "prompt", "width", "height", "seed", "output", "alias"],
-            "image_to_video": ["prompt", "media", "width", "height", "seed", "duration_sec", "output", "alias"],
-            "dialog_to_video": ["prompt", "text", "media", "audio", "width", "height", "seed", "output", "alias"],
+            "image_to_video": ["prompt", "media", "seed", "duration_sec", "output", "alias"],
+            "dialog_to_video": ["prompt", "text", "media", "audio", "seed", "output", "alias"],
             "design_voice": ["voice", "output", "seed"],
             "generate_graphic": ["prompt", "output", "width", "height", "seed", "target_video_size", "padding_style", "alias"],
             "apply_gimbal_shot": ["media", "output", "angle", "height", "distance", "alias"]
