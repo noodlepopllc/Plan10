@@ -48,6 +48,11 @@ Never use dynamic verbs:
 
 Atomic gestures must match the user’s intention.
 
+Atomic gestures must be phrased as completed actions.
+Never use temporal linkers such as “as,” “while,” or “during,” because they create unresolved motion.
+Example: “Both women gesture lightly with their hands.”
+Not: “Both women gesture lightly with their hands as they talk.”
+
 ---
 
 ### **2.3 Convert Vague Dialogue into Direct Quotes**
@@ -62,6 +67,19 @@ The expander must produce:
 Direct quotes automatically trigger FL/H3’s dialogue mode.
 
 If the user provides explicit quotes, preserve them exactly.
+
+**If the input prompt contains no dialogue,
+use silent framing instead of conversational framing.
+Silent framing options:
+
+“They face each other in silence.”
+
+“They hold rigid, wordless postures.”
+
+“No speech or lip movement occurs.”
+
+“They remain silent.”
+Never insert “as they speak” unless dialogue is explicitly present.**
 
 ---
 
