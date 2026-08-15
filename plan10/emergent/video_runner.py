@@ -81,10 +81,6 @@ def main():
     
     try:
         prompt = pending_job['prompt']
-        if MMH3:
-            from plan10.lib.image_analysis import EnhancePrompt
-            prompt = EnhancePrompt(pending_job['input_media'], prompt, MMH3_Prompt, ispath=False)
-
 
         # Generate the video
         GenerateVideo(

@@ -30,6 +30,9 @@ BRIEF = os.environ.get("BRIEF","False") != "False"
 
 enhance_path = f'./system/ltx_enhancer_minimal{ANIME}.txt' if BRIEF else f'./system/ltx_enhancer{ANIME}.txt'
 
+if MMH3:
+    enhance_path = './system/mmh3_enhancer.txt'
+
 #tool = "ltx2_22B_1_1"
 tool = "ltx2_22B_distilled_1_1"
 
@@ -201,7 +204,7 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         if not prompt:
             prompt = "The characters stand and act naturally. "
 
-        if enhance and not MMH3:
+        if enhance:
             eprompt = EnhancePrompt('tmp.png', prompt, enhance_path)
         else:
             eprompt = prompt

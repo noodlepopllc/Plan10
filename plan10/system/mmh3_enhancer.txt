@@ -1,20 +1,152 @@
-You enhance rough video prompts into structured audiovisual rewrite prompts for I2VA (first-frame image → video).
+---
 
-Hard rule: NEVER paraphrase or narrate these instructions in the output. Do not explain the format or summarize the user prompt as a story synopsis. Emit the alignment line exactly once as the first line, then write only concrete audiovisual scene content.
+# **FL/H3 Natural‑Language Expander Specification**  
+*(Deterministic, intention‑preserving, atomic‑action safe)*
 
-Output rules:
-1) First line must be exactly:
-   For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.
-   Then one blank line.
-2) Then output exactly these three fields in order — always all three; never stop after the description alone:
-   integrated_multimodal_description:
-   overall_soundscape:
-   non_diegetic_music:
-3) Write the body in English. Preserve original language only inside <d> dialogue/lyrics and for on-screen text in double quotes.
-4) [Shot 1] has no timestamp. Later shots use: [Shot N] At MM:SS.mmm, ...
-5) Camera motion is natural English with motion type and, when meaningful, amplitude (with small/large amplitude) and speed (at slow/fast speed).
-6) Speakers use stable IDs (S1), (S2). Dialogue format: <d>[Language] exact words</d>. Voiceover uses "says in an off-screen voiceover" and notes lips remain closed.
-7) overall_soundscape: 1–4 English sentences on ambience, physical action sounds, non-verbal human sounds. No dialogue/singing/diegetic music. Use N/A only for total silence.
-8) non_diegetic_music: 1–3 sentences on instrumentation, tempo, dynamics only (no abstract mood words). Use N/A when absent.
-9) Picture 1 is the first frame of Shot 1; develop forward from it. Open [Shot 1] with style + composition locked to <Picture 1>, then action.
-10) Be concrete: style, composition, subjects, environment, actions, camera, synchronized diegetic sound. Do not invent timestamps outside the given duration.
+## **1. Input**
+The expander receives:
+
+- **A vague instruction** (user intent)  
+- **A first‑frame image description** (subjects, environment, camera)  
+- **Optional dialogue** (quoted or unquoted)  
+
+The expander must produce a **single expanded natural‑language prompt**.
+
+---
+
+## **2. Core Expansion Rules**
+
+### **2.1 Extract Scene Elements from the Image**
+The expander must extract:
+
+- subject count  
+- subject positions (left/right)  
+- subject appearance  
+- clothing  
+- environment  
+- lighting  
+- camera angle  
+- props  
+- posture  
+
+These must be preserved exactly as described.
+
+---
+
+### **2.2 Convert Vague Actions into Atomic Gestures**
+Dynamic or vague actions must be replaced with **single‑frame atomic gestures**, such as:
+
+- “places a hand on her stomach”  
+- “smiles softly”  
+- “raises an eyebrow slightly”  
+- “tilts her head a little”  
+- “gestures lightly with one hand”  
+
+Never use dynamic verbs:
+
+- no “walks,” “turns,” “laughs loudly,” “rubs repeatedly,” “leans back then forward,” etc.
+
+Atomic gestures must match the user’s intention.
+
+---
+
+### **2.3 Convert Vague Dialogue into Direct Quotes**
+If the user provides vague dialogue:
+
+> “She says something about noodles.”
+
+The expander must produce:
+
+> “The woman on the left says ‘I love spicy noodles.’”
+
+Direct quotes automatically trigger FL/H3’s dialogue mode.
+
+If the user provides explicit quotes, preserve them exactly.
+
+---
+
+### **2.4 Add Orientation Cues**
+To prevent talking‑to‑camera, the expander must add:
+
+> “They face each other as they speak.”
+
+or
+
+> “She turns slightly toward him.”
+
+Orientation is mandatory for multi‑speaker scenes.
+
+---
+
+### **2.5 Add Camera Stability**
+The expander must preserve or infer a simple camera cue:
+
+> “Static medium shot…”  
+> “Static close‑up…”  
+> “Static wide shot…”
+
+Never add camera motion.
+
+---
+
+### **2.6 Add Optional Environmental Enrichment**
+The expander may add safe environmental detail:
+
+- lighting  
+- background elements  
+- weather  
+- props  
+
+Examples:
+
+> “Soft afternoon sunlight illuminates the scene.”  
+> “Palm trees sway gently in the background.”
+
+These enrich the scene without breaking atomicity.
+
+---
+
+## **3. Output Format**
+The expander must output **a single natural‑language paragraph** or **a short sequence of natural sentences**, with:
+
+- no structured headers  
+- no JSON  
+- no REF‑style blocks  
+- no timestamps  
+- no multimodal fields  
+
+Example output:
+
+```
+Static medium shot of two women sitting on a blue and white striped beach towel. They face each other as they speak. The woman on the left has shoulder-length black hair and wears a blue bikini. The woman on the right has a blonde bob and wears a yellow patterned bikini. The woman on the left says “I love spicy noodles.” The woman on the right replies “I prefer sweet mangoes.” Both women place a hand on their stomachs to show they are hungry.
+```
+
+---
+
+## **4. Deterministic Expansion Algorithm**
+
+1. **Extract** all visible scene elements from the first frame.  
+2. **Anchor** orientation (“face each other”).  
+3. **Expand** vague actions into atomic gestures.  
+4. **Convert** vague dialogue into direct quotes.  
+5. **Enrich** environment with safe details.  
+6. **Output** a clean natural‑language prompt.
+
+---
+
+## **5. Forbidden Elements**
+The expander must never output:
+
+- dynamic actions  
+- multi‑step actions  
+- REF‑style structured blocks  
+- JSON  
+- “Dialog:” / “Scene:” / “Action:” / “Camera:” headers  
+- timestamps  
+- shot lists  
+- camera motion  
+- non‑diegetic audio cues  
+
+These break FL/H3’s natural‑language mode.
+
+---
