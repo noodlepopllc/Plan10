@@ -185,7 +185,7 @@ else:
 # Optional: log which backend is active
 print(f"🤖 [qwen_llm] Active backend: {BACKEND.upper()}")
 
-if __name__ == '__main__':
+def main():
     import argparse
     from pathlib import Path
     parser = argparse.ArgumentParser()
@@ -205,5 +205,6 @@ if __name__ == '__main__':
     else:
         print(out)
 
-
+if __name__ == '__main__':
+    main()
 
