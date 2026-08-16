@@ -193,11 +193,13 @@ def main():
     parser.add_argument('-P', '--prompt', type=str, default='a beautiful woman tanning at the beach', help='prompt')
     parser.add_argument('-O', '--output', type=str, default=None, help='optionally save to file')
     parser.add_argument('-S', '--system', type=str, default='None', help='path to system prompt')
+    parser.add_argument('-T', '--max-tokens', type=int, default=1024, help='max number of tokens')
     args = parser.parse_args()
     system_prompt = None
     if Path(args.system).exists():
         system_prompt = Path(args.system).read_text().strip()
     max_tokens = 4096 if system_prompt else 1024
+    max_tokens = max(max_tokens,args.max_tokens)
     out = llm_analyze_media(args.media if args.media else '', args.prompt, system_prompt, max_tokens=max_tokens)['analysis']
     if args.output:
         from pathlib import Path
