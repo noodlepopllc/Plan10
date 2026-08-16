@@ -39,7 +39,7 @@ class CommandBuffer:
                 print(c)
             for c in self.videos:
                 print(c)
-        if mode in ("all", "dialog", "ots"):
+        if mode in ("ots"):
             for c in self.ots_images:
                 print(c)
             for c in self.ots:

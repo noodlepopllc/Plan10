@@ -21,6 +21,8 @@ ANIME = "_anime" if os.environ.get("ANIME","False") != "False" else ""
 ARC = os.environ.get("LTX","False") == "ARC"
 MMH3 = os.environ.get('MMH3','False') != 'False'
 
+MAX_DURATION = 5 if MMH3 else 10
+
 if ANIME:
     from plan10.lib.anime_gen import GenerateImage
 else:
@@ -114,16 +116,19 @@ async def i2v_h3(prompt='', media='', end='', output='output.mp4',
 
         # Force explicit SFX and ban melody structure in the positive prompt
         sfx_modifiers = ", realistic sound effects only, crisp SFX, ambient background noise, completely devoid of music, no BGM, no instruments"
-        final_prompt = f"{prompt} {audio_desc} {sfx_modifiers}" if prompt else "ambient sound effects, SFX, absolute no music"
+        final_prompt = f"{prompt} {audio_desc}" # {sfx_modifiers}" if prompt else "ambient sound effects, SFX, absolute no music"
+
+        frames = (((duration_sec * 24) // 17) * 17) + 5
+        frames = 107 if frames < 107 else frames
 
 
         args = r.data
         args['output_filename'] = output
-        args['prompt'] = prompt
+        args['prompt'] = final_prompt
         args['image_prompt_type'] =  'SE' if end else 'S'
         args['image_start'] = media
         args['resolution'] = f'{width}x{height}'
-        args['video_length'] = (((duration_sec * 24) // 17) * 17) + 5
+        args['video_length'] = frames
         args["activated_loras"] = ["minimax_h3_larryvrh_v4_step600_ema.safetensors"]
         args["loras_multipliers"] = "1.0|"
         args["guidance_scale"] = 1
@@ -314,12 +319,17 @@ async def s2v_h3(prompt='', media='', audio='', text='', output='output.mp4',
         
         desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
         audio_desc = translate_to_audio_prompt(desc)
+
+        lipsync = ("subject_definitions:\n <Subject 1> is the person in <Picture 1> and appears in [Shot 1], preserving their exact identity, facial features, skin tone, hairstyle, body proportions, clothing, footwear, "
+    "and distinctive accessories.\n <Audio 1> provides the voice timbre, delivery, and lip-sync mapping. summary:\n"
+    f''' <Picture 1> is the first frame of [Shot 1] static {cam_desc} Camera focuses on <Subject 1> as they speak, keeping them clearly in frame. The character faces the camera and speaks, with precise lip movements, jaw adjustments, and subtle facial micro-expressions perfectly synchronized to the cadence and dialogue of <Audio 1>.  \n'''
+    f''' After speaking, <Subject 1> {prompt} They continue to move naturally for the remainder of the video. \n overall_soundscape: {audio_desc} ''') 
         
 
         newprompt = ("subject_definitions:\n <Subject 1> is the person in <Picture 1> and appears in [Shot 1], preserving their exact identity, facial features, skin tone, hairstyle, body proportions, clothing, footwear, "
     "and distinctive accessories.\n <Audio 1> is the voice timbre reference for <Subject 1>'s voice, containing a spoken voiceover. summary:\n"
     f''' <Picture 1> is the first frame of [Shot 1] static {cam_desc} Camera focuses on <Subject 1> as they speak, keeping them clearly in frame. <Subject 1> remains stationary as they speak (S1) clearly <d>[English] {text} </d> \n'''
-    f''' After speaking, <Subject 1> {prompt} They continue to move naturally for the remainder of the video. \n overall_soundscape: {audio_desc} ''') #[Shot 2] {prompt} \n ''') #overall_soundscape: {audio_desc} ''')
+    f''' After speaking, <Subject 1> {prompt} They continue to move naturally for the remainder of the video. \n overall_soundscape: {audio_desc} ''') 
 
         #desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
         #audio_desc = translate_to_audio_prompt(desc)
@@ -332,7 +342,7 @@ async def s2v_h3(prompt='', media='', audio='', text='', output='output.mp4',
         args["activated_loras"] = ["minimax_h3_larryvrh_v4_step600_ema.safetensors"]
         args["loras_multipliers"] = "1.0|"
         args['output_filename'] = output
-        args['prompt'] = newprompt
+        args['prompt'] = lipsync if not text else newprompt
         args['image_refs'] = [media]
         args["audio_guide"] = fixed_audio
         args["audio_prompt_type"] = "A"
@@ -432,7 +442,7 @@ def GenerateTalkingVideo(
     width=WIDTH,
     height=HEIGHT,
     seed=-1,
-    max_duration=10):
+    max_duration=MAX_DURATION):
     print(f"PROMPT: {prompt}")
     
     if isinstance(prompt, list):

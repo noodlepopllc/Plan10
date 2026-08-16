@@ -47,7 +47,7 @@ shot() {
         touch "$out"  # ✅ Refreshes OS thumbnail cache
 
         echo "🎬 Generating I2V: $out_suffix"
-        uv run image_to_video -P "$vid_prompt" -I "$out" -O "$out_vid" || { echo "❌ I2V failed: $out_suffix"; exit 1; }
+        uv run image_to_video -P "$vid_prompt" -I "$out" -O "$out_vid" -D 4 || { echo "❌ I2V failed: $out_suffix"; exit 1; }
         
         echo "✅ $out_suffix | T2I: $action | I2V: $vid_prompt" >> "$OUTDIR/run_manifest.txt"
     else

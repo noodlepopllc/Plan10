@@ -240,7 +240,7 @@ def render_beats_actions(assets, actions, mappings, T, backdrop_position):
             video_counters[beat['beat']] += 1
             
             duration = 10 if os.environ.get('WGP','False') == 'True' or os.environ.get('LTX','False') != 'False' else 5
-            duration = 5 if os.environ.get('MMH3', 'False') != 'False' else 10
+            duration = 4 if os.environ.get('MMH3', 'False') != 'False' else 10
             
             T.action_video(
                 video_alias,
