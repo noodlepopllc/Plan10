@@ -302,10 +302,11 @@ async def s2v_h3(prompt='', media='', audio='', text='', output='output.mp4',
 
         if not text:
             y, sr = librosa.load(audio, sr=None)
-            duration_sec = librosa.get_duration(y=y, sr=sr)
+            duration = librosa.get_duration(y=y, sr=sr)
             fixed_audio = 'tmp_wav.txt'
-            fix_minimax_audio(audio, fixed_audio, target_duration=duration_sec)
- 
+            fix_minimax_audio(audio, fixed_audio, target_duration=duration)
+            y, sr = librosa.load(fixed_audio, sr=None)
+            duration_sec = int(librosa.get_duration(y=y, sr=sr))
         else:
             fixed_audio = audio.replace('.wav', '_minimax.wav')
             if not Path(fixed_audio).exists():
