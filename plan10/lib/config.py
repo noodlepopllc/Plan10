@@ -23,6 +23,7 @@ def load_config():
         "HEIGHT": "448",
         "SEED": "42",
         "TRANSFORMERS_CACHE":"$HF_HOME",
+        "MMH3": "False",
         "WGP": "False",
         "LTX": "DISTILLED",
         "ANIME": "False"
@@ -49,7 +50,8 @@ def load_environ(replace_env=False):
         cfg = load_config()
         for k, v in cfg.items():
             if k not in os.environ:
-                os.environ[k] = v
+                if isinstance(v, str):
+                    os.environ[k] = v
         os.environ["LOADED"] = "True"
     cfg = load_config()
     if replace_env:
@@ -58,7 +60,8 @@ def load_environ(replace_env=False):
     if not os.path.exists('.env'):
         with Path('.env').open('a') as fp:
             for k, v in cfg.items():
-                fp.write(f'export {k}="{v}"\n')
+                if isinstance(v, str):
+                    fp.write(f'export {k}="{v}"\n')
             #fp.write(additional)
 
 def main():

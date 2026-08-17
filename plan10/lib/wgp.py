@@ -299,6 +299,7 @@ async def s2v_ltx(prompt='', media='', end_image='', audio='', text='', output='
 async def s2v_h3(prompt='', media='', end_image='', audio='', text='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
     transcript = ''
+    cam_desc = ''
     if not text:
         from plan10.lib.dialog import transcribe
         y, sr = librosa.load(audio, sr=None)
@@ -308,8 +309,9 @@ async def s2v_h3(prompt='', media='', end_image='', audio='', text='', output='o
         transcript = " ".join(segs)
     else:
         fixed_audio = audio 
+        cam_desc = AnalyzeImage(media, "Briefly describe camera shot framing, return either closeup shot or medium shot")['analysis']
 
-    cam_desc = AnalyzeImage(media, "Briefly describe camera shot framing, return either closeup shot or medium shot")['analysis']
+    
     
     desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
     audio_desc = translate_to_audio_prompt(desc)
@@ -318,7 +320,8 @@ async def s2v_h3(prompt='', media='', end_image='', audio='', text='', output='o
 "and distinctive accessories.\n <Audio 1> provides the voice timbre, delivery, and lip-sync mapping. summary:\n"
 f"spoken_text: \nThe narration spoken in <Audio 1> is: \"{transcript}\""
 f''' <Picture 1> is the first frame of [Shot 1] static. The first frame of the video must match <Picture 1> exactly, including identical pose, head angle, hand position, body orientation, facial expression, and clothing folds, with zero deviation. \n'''
-f'''{cam_desc} Camera focuses on <Subject 1> as they speak with initial framing, keeping them clearly in frame. The character faces the camera and speaks, with precise lip movements, jaw adjustments, and subtle facial micro-expressions perfectly synchronized to the cadence and dialogue of <Audio 1>.  \n'''
+#f'''{cam_desc} Camera focuses on <Subject 1> as they speak with initial framing, keeping them clearly in frame.  '''
+f''' The character faces the camera and speaks, with precise lip movements, jaw adjustments, and subtle facial micro-expressions perfectly synchronized to the cadence and dialogue of <Audio 1>.  \n'''
 f''' After speaking, <Subject 1> {prompt} '''
 f'''{"They continue to move naturally for the remainder of the video transitioning into <Picture 2> is the last frame of [Shot 1] static. After transitioning fully into <Picture 2>, the subject holds completely still with no additional motion for the remainder of the clip." if end_image else ''} \n'''
 f''' overall_soundscape: {audio_desc} ''') 
