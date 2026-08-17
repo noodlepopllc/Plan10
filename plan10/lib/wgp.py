@@ -6,6 +6,7 @@ from PIL import Image
 import asyncio, logging, os, random, json
 from fastmcp import Client
 from time import sleep
+import librosa
 
 from pathlib import Path
 
@@ -299,9 +300,16 @@ async def s2v_h3(prompt='', media='', audio='', text='', output='output.mp4',
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
     async with Client("http://localhost:7866/mcp") as client:
 
-        fixed_audio = audio.replace('.wav', '_minimax.wav')
-        if not Path(fixed_audio).exists():
-            fix_minimax_audio(audio, fixed_audio)
+        if not text:
+            y, sr = librosa.load(audio, sr=None)
+            duration_sec = librosa.get_duration(y=y, sr=sr)
+            fixed_audio = 'tmp_wav.txt'
+            fix_minimax_audio(audio, fixed_audio, target_duration=duration_sec)
+ 
+        else:
+            fixed_audio = audio.replace('.wav', '_minimax.wav')
+            if not Path(fixed_audio).exists():
+                fix_minimax_audio(audio, fixed_audio)
 
         model = "minimax_h3_ref2va_pruned"
 
@@ -335,14 +343,17 @@ async def s2v_h3(prompt='', media='', audio='', text='', output='output.mp4',
         #audio_desc = translate_to_audio_prompt(desc)
 
         #newprompt = f"[VISUAL]: {desc} {prompt} Lips moving in perfect sync with the audio. \n[SPEECH]: {text}.\n[SOUNDS]: {audio_desc}."
-        print(newprompt)
+        print(newprompt if text else lipsync)
 
         args = r.data
+
+
+
 
         args["activated_loras"] = ["minimax_h3_larryvrh_v4_step600_ema.safetensors"]
         args["loras_multipliers"] = "1.0|"
         args['output_filename'] = output
-        args['prompt'] = lipsync if not text else newprompt
+        args['prompt'] = newprompt if text else lipsync
         args['image_refs'] = [media]
         args["audio_guide"] = fixed_audio
         args["audio_prompt_type"] = "A"
