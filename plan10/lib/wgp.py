@@ -303,7 +303,7 @@ async def s2v_h3(prompt='', media='', audio='', text='', output='output.mp4',
         if not text:
             y, sr = librosa.load(audio, sr=None)
             duration = librosa.get_duration(y=y, sr=sr)
-            fixed_audio = 'tmp_wav.txt'
+            fixed_audio = 'tmp_wav.wav'
             fix_minimax_audio(audio, fixed_audio, target_duration=duration)
             y, sr = librosa.load(fixed_audio, sr=None)
             duration_sec = int(librosa.get_duration(y=y, sr=sr))
