@@ -298,24 +298,19 @@ async def s2v_ltx(prompt='', media='', audio='', text='', output='output.mp4',
 
 async def s2v_h3(prompt='', media='', audio='', text='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
+    if not text:
+        from plan10.lib.dialog import transcribe
+        y, sr = librosa.load(audio, sr=None)
+        duration_sec = int(math.ceil(librosa.get_duration(y=y, sr=sr)) + 1)
+        fixed_audio = audio
+        segs = transcribe(audio)
+        transcript = " ".join(segs)
+    else:
+        fixed_audio = audio 
     async with Client("http://localhost:7866/mcp") as client:
         transcript = ''
 
-        if not text:
-            from plan10.lib.dialog import transcribe
-            y, sr = librosa.load(audio, sr=None)
-            duration_sec = int(math.ceil(librosa.get_duration(y=y, sr=sr)) + 1)
-            fixed_audio = audio
-            segs = transcribe(audio)
-            transcript = " ".join(segs)
-            #f'{os.getcwd()}/tmp_wav.wav'
-            #fix_minimax_audio(audio, fixed_audio, target_duration=duration)
-            #y, sr = librosa.load(fixed_audio, sr=None)
-            #duration_sec = math.ceil(librosa.get_duration(y=y, sr=sr))
-        else:
-            fixed_audio = audio #audio.replace('.wav', '_minimax.wav')
-            # if not Path(fixed_audio).exists():
-            #    fix_minimax_audio(audio, fixed_audio)
+
 
         model = "minimax_h3_ref2va_pruned"
 
