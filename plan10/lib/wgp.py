@@ -449,9 +449,9 @@ def GenerateTalkingVideo(
         media='first_frame.png'
 
     if isinstance(media, list):
-        start_image = f'{os.getcwd()}/{mmedia.pop(0)}'
+        start_image = f'{os.getcwd()}/{media.pop(0)}'
         if len(media) > 0:
-            end_image = f'{os.getcwd()}/{mmedia.pop(0)}'
+            end_image = f'{os.getcwd()}/{media.pop(0)}'
     else:
         start_image = f'{os.getcwd()}/{media}'
 
