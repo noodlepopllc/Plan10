@@ -240,7 +240,7 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
             print(f"❌ Error: {e}")
             raise
 
-async def s2v_ltx(prompt='', media='', audio='', text='', output='output.mp4', 
+async def s2v_ltx(prompt='', media='', end_image='', audio='', text='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
     async with Client("http://localhost:7866/mcp") as client:
 
@@ -296,7 +296,7 @@ async def s2v_ltx(prompt='', media='', audio='', text='', output='output.mp4',
             r = await client.call_tool("wangp_get_job", {"job_id": job_id})
         print(r.data['result'])
 
-async def s2v_h3(prompt='', media='', audio='', text='', output='output.mp4', 
+async def s2v_h3(prompt='', media='', end_image='', audio='', text='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
     transcript = ''
     if not text:
@@ -318,7 +318,7 @@ async def s2v_h3(prompt='', media='', audio='', text='', output='output.mp4',
 "and distinctive accessories.\n <Audio 1> provides the voice timbre, delivery, and lip-sync mapping. summary:\n"
 f"spoken_text: \nThe narration spoken in <Audio 1> is: \"{transcript}\""
 f''' <Picture 1> is the first frame of [Shot 1] static {cam_desc} Camera focuses on <Subject 1> as they speak, keeping them clearly in frame. The character faces the camera and speaks, with precise lip movements, jaw adjustments, and subtle facial micro-expressions perfectly synchronized to the cadence and dialogue of <Audio 1>.  \n'''
-f''' After speaking, <Subject 1> {prompt} They continue to move naturally for the remainder of the video. \n overall_soundscape: {audio_desc} ''') 
+f''' After speaking, <Subject 1> {prompt} They continue to move naturally for the remainder of the video. {<Picture 2> is the last frame of [Shot 1] if end_iamge else ''} static \n overall_soundscape: {audio_desc} ''') 
     
 
     newprompt = ("subject_definitions:\n <Subject 1> is the person in <Picture 1> and appears in [Shot 1], preserving their exact identity, facial features, skin tone, hairstyle, body proportions, clothing, footwear, "
@@ -338,7 +338,7 @@ f''' After speaking, <Subject 1> {prompt} They continue to move naturally for th
         args["loras_multipliers"] = "1.0|"
         args['output_filename'] = output
         args['prompt'] = newprompt if text else lipsync
-        args['image_refs'] = [media]
+        args['image_refs'] = [media, end_image] if end_image else [media]
         args["audio_guide"] = fixed_audio
         args["audio_prompt_type"] = "A"
         args["video_prompt_type"] = "I"
@@ -449,9 +449,9 @@ def GenerateTalkingVideo(
         media='first_frame.png'
 
     if isinstance(media, list):
-        start_image = media.pop(0)
+        start_image = f'{os.getcwd()}/{mmedia.pop(0)}
         if len(media) > 0:
-            end_image = video_to_img(media.pop(), width, height, True, False)
+            end_image = f'{os.getcwd()}/{mmedia.pop(0)}
     else:
         start_image = f'{os.getcwd()}/{media}'
 
@@ -497,7 +497,7 @@ def GenerateTalkingVideo(
     print("CURRENT PROMPT: ",eprompt)
 
     try:
-        asyncio.run(s2v(eprompt, current_source_path, ref_audio, text, Path(output).name, 
+        asyncio.run(s2v(eprompt, current_source_path, end_image, ref_audio, text, Path(output).name, 
                 duration_sec, width, height, seed))
         description = ''
             
