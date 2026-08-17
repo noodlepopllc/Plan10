@@ -302,7 +302,7 @@ async def s2v_h3(prompt='', media='', audio='', text='', output='output.mp4',
         transcript = ''
 
         if not text:
-            from lib.plan10.dialog import transcribe
+            from plan10.lib.dialog import transcribe
             y, sr = librosa.load(audio, sr=None)
             duration_sec = int(math.ceil(librosa.get_duration(y=y, sr=sr)) + 1)
             fixed_audio = audio
