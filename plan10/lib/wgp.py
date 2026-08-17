@@ -299,30 +299,28 @@ async def s2v_ltx(prompt='', media='', audio='', text='', output='output.mp4',
 async def s2v_h3(prompt='', media='', audio='', text='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
     async with Client("http://localhost:7866/mcp") as client:
+        transcript = ''
 
         if not text:
+            from lib.plan10.dialog import transcribe
             y, sr = librosa.load(audio, sr=None)
-            duration = librosa.get_duration(y=y, sr=sr)
-            fixed_audio = f'{os.getcwd()}/tmp_wav.wav'
-            fix_minimax_audio(audio, fixed_audio, target_duration=duration)
-            y, sr = librosa.load(fixed_audio, sr=None)
-            duration_sec = math.ceil(librosa.get_duration(y=y, sr=sr))
+            duration_sec = int(math.ceil(librosa.get_duration(y=y, sr=sr)) + 1)
+            fixed_audio = audio
+            segs = transcribe(audio)
+            transcript = " ".join(segs)
+            #f'{os.getcwd()}/tmp_wav.wav'
+            #fix_minimax_audio(audio, fixed_audio, target_duration=duration)
+            #y, sr = librosa.load(fixed_audio, sr=None)
+            #duration_sec = math.ceil(librosa.get_duration(y=y, sr=sr))
         else:
-            fixed_audio = audio.replace('.wav', '_minimax.wav')
-            if not Path(fixed_audio).exists():
-                fix_minimax_audio(audio, fixed_audio)
+            fixed_audio = audio #audio.replace('.wav', '_minimax.wav')
+            # if not Path(fixed_audio).exists():
+            #    fix_minimax_audio(audio, fixed_audio)
 
         model = "minimax_h3_ref2va_pruned"
 
         r = await client.call_tool("wangp_get_default_settings", {"model_type":model})
         results = json.dumps(r.data, indent=4)
-
-
-        '''
-        desc = Image.open(media).info.get('Description')
-        if not desc:
-            desc = add_metadata_char(media, '', seed)
-        '''
 
         cam_desc = AnalyzeImage(media, "Briefly describe camera shot framing, return either closeup shot or medium shot")['analysis']
         
@@ -331,6 +329,7 @@ async def s2v_h3(prompt='', media='', audio='', text='', output='output.mp4',
 
         lipsync = ("subject_definitions:\n <Subject 1> is the person in <Picture 1> and appears in [Shot 1], preserving their exact identity, facial features, skin tone, hairstyle, body proportions, clothing, footwear, "
     "and distinctive accessories.\n <Audio 1> provides the voice timbre, delivery, and lip-sync mapping. summary:\n"
+    f"spoken_text: \nThe narration spoken in <Audio 1> is: \"{transcript}\""
     f''' <Picture 1> is the first frame of [Shot 1] static {cam_desc} Camera focuses on <Subject 1> as they speak, keeping them clearly in frame. The character faces the camera and speaks, with precise lip movements, jaw adjustments, and subtle facial micro-expressions perfectly synchronized to the cadence and dialogue of <Audio 1>.  \n'''
     f''' After speaking, <Subject 1> {prompt} They continue to move naturally for the remainder of the video. \n overall_soundscape: {audio_desc} ''') 
         
@@ -340,17 +339,9 @@ async def s2v_h3(prompt='', media='', audio='', text='', output='output.mp4',
     f''' <Picture 1> is the first frame of [Shot 1] static {cam_desc} Camera focuses on <Subject 1> as they speak, keeping them clearly in frame. <Subject 1> remains stationary as they speak (S1) clearly <d>[English] {text} </d> \n'''
     f''' After speaking, <Subject 1> {prompt} They continue to move naturally for the remainder of the video. \n overall_soundscape: {audio_desc} ''') 
 
-        #desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
-        #audio_desc = translate_to_audio_prompt(desc)
-
-        #newprompt = f"[VISUAL]: {desc} {prompt} Lips moving in perfect sync with the audio. \n[SPEECH]: {text}.\n[SOUNDS]: {audio_desc}."
         print(newprompt if text else lipsync)
 
         args = r.data
-
-
-
-
         args["activated_loras"] = ["minimax_h3_larryvrh_v4_step600_ema.safetensors"]
         args["loras_multipliers"] = "1.0|"
         args['output_filename'] = output
@@ -373,9 +364,7 @@ async def s2v_h3(prompt='', media='', audio='', text='', output='output.mp4',
         args['resolution'] = f'{width}x{height}'
         args['video_length'] = (((duration_sec * 24) // 17) * 17) + 5
 
-
         args['resolution'] = f'{width}x{height}'
-        #args['video_length'] = (((duration_sec * 24) // 17) * 17) + 5  
         print(args)
         r = await client.call_tool("wangp_generate", {"source": args})
         print(r.data['job_id'])
