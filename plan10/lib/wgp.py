@@ -309,7 +309,7 @@ async def s2v_h3(prompt='', media='', audio='', text='', output='output.mp4',
     else:
         fixed_audio = audio 
 
-        cam_desc = AnalyzeImage(media, "Briefly describe camera shot framing, return either closeup shot or medium shot")['analysis']
+    cam_desc = AnalyzeImage(media, "Briefly describe camera shot framing, return either closeup shot or medium shot")['analysis']
     
     desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
     audio_desc = translate_to_audio_prompt(desc)
