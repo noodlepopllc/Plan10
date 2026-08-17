@@ -3,7 +3,7 @@ load_environ()
 
 from PIL import Image
 
-import asyncio, logging, os, random, json
+import asyncio, logging, os, random, json, math
 from fastmcp import Client
 from time import sleep
 import librosa
@@ -306,7 +306,7 @@ async def s2v_h3(prompt='', media='', audio='', text='', output='output.mp4',
             fixed_audio = 'tmp_wav.wav'
             fix_minimax_audio(audio, fixed_audio, target_duration=duration)
             y, sr = librosa.load(fixed_audio, sr=None)
-            duration_sec = int(librosa.get_duration(y=y, sr=sr))
+            duration_sec = math.ceil(librosa.get_duration(y=y, sr=sr))
         else:
             fixed_audio = audio.replace('.wav', '_minimax.wav')
             if not Path(fixed_audio).exists():
