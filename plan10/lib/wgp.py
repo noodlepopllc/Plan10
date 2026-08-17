@@ -479,6 +479,7 @@ def GenerateTalkingVideo(
 
     current_source = video_to_img(start_image, width, height, True, True)
     current_source.save('tmp.png')
+    current_source_path = f'{os.getcwd()}/tmp.png'
 
     if ARC and prompt: 
         desc = Image.open(start_image).info.get('Description')
@@ -496,7 +497,7 @@ def GenerateTalkingVideo(
     print("CURRENT PROMPT: ",eprompt)
 
     try:
-        asyncio.run(s2v(eprompt, start_image, ref_audio, text, Path(output).name, 
+        asyncio.run(s2v(eprompt, current_source_path, ref_audio, text, Path(output).name, 
                 duration_sec, width, height, seed))
         description = ''
             
