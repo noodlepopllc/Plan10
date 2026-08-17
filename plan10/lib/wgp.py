@@ -318,7 +318,7 @@ async def s2v_h3(prompt='', media='', end_image='', audio='', text='', output='o
 "and distinctive accessories.\n <Audio 1> provides the voice timbre, delivery, and lip-sync mapping. summary:\n"
 f"spoken_text: \nThe narration spoken in <Audio 1> is: \"{transcript}\""
 f''' <Picture 1> is the first frame of [Shot 1] static {cam_desc} Camera focuses on <Subject 1> as they speak with initial framing, keeping them clearly in frame. The character faces the camera and speaks, with precise lip movements, jaw adjustments, and subtle facial micro-expressions perfectly synchronized to the cadence and dialogue of <Audio 1>.  \n'''
-f''' After speaking, <Subject 1> {prompt} They continue to move naturally for the remainder of the video transitioning into {"<Picture 2> is the last frame of [Shot 1]" if end_image else ''} static \n overall_soundscape: {audio_desc} ''') 
+f''' After speaking, <Subject 1> {prompt} They continue to move naturally for the remainder of the video transitioning into {"<Picture 2> is the last frame of [Shot 1] static" if end_image else ''} static \n overall_soundscape: {audio_desc} ''') 
     
 
     newprompt = ("subject_definitions:\n <Subject 1> is the person in <Picture 1> and appears in [Shot 1], preserving their exact identity, facial features, skin tone, hairstyle, body proportions, clothing, footwear, "
