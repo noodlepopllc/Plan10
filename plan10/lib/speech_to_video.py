@@ -229,7 +229,14 @@ def GenerateTalkingVideo(
     if seed == -1:
         seed = random.randint(0,1000000)
 
-    input_image  = video_to_img(media, width, height, True)
+    if isinstance(media, list):
+        start_image = f'{os.getcwd()}/{mmedia.pop(0)}'
+        if len(media) > 0:
+            end_image = f'{os.getcwd()}/{mmedia.pop(0)}'
+    else:
+        start_image = f'{os.getcwd()}/{media}'
+
+    input_image  = video_to_img(start_image, width, height, True)
     if text:
         audio = CloneVoice(text, audio, 'tmp.wav', duration=5.0, seed=-1)['output_path']
     input_audio, sample_rate = librosa.load(audio, sr=16000, mono=True, dtype=np.float32)
@@ -316,14 +323,14 @@ def main():
     parser.add_argument('-P', '--prompt', type=str, default='')
     parser.add_argument('-T', '--text', type=str, default='')
     parser.add_argument('-A', '--audio', type=str, default='')
-    parser.add_argument('-I', '--image', type=str, required=True)
+    parser.add_argument('-I', '--images', action='append', default=[], help='Input images')
     parser.add_argument('-O', '--output', type=str, default='output.mp4')
     parser.add_argument('-W', '--width', type=int, default=WIDTH)
     parser.add_argument('-H', '--height', type=int, default=HEIGHT)
     parser.add_argument('-S', '--seed', type=int, default=SEED)
     parser.add_argument('-D', '--max_duration', type=int, default=10)
     args = parser.parse_args()
-    Speech(args.prompt, args.text, args.audio, args.image, args.output, args.width, args.height, args.seed, args.max_duration)
+    Speech(args.prompt, args.text, args.audio, args.images, args.output, args.width, args.height, args.seed, args.max_duration)
 
 
 # =============================================================================
