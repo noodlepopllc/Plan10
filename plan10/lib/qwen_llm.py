@@ -190,7 +190,7 @@ def main():
     from pathlib import Path
     parser = argparse.ArgumentParser()
     parser.add_argument('-M','--media', type=str, default=None, help='media to analyze')
-    parser.add_argument('-P', '--prompt', type=str, default='a beautiful woman tanning at the beach', help='prompt')
+    parser.add_argument('-P', '--prompt', type=str, default='describe this image', help='prompt')
     parser.add_argument('-O', '--output', type=str, default=None, help='optionally save to file')
     parser.add_argument('-S', '--system', type=str, default='None', help='path to system prompt')
     parser.add_argument('-T', '--max-tokens', type=int, default=1024, help='max number of tokens')

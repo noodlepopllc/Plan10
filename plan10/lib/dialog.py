@@ -320,7 +320,7 @@ def main():
     parser.add_argument('-O', '--output', type=str, default='output.wav', help='output filename')
     parser.add_argument('-W', '--no-whisper', action='store_false', help='turn off whisper transcription')
     parser.add_argument('-D', '--duration', type=float, default=5.0, help='duration of the generated clip')
-    parser.add_argument('-S', '--transcribe', type=str, default='', help='transcribe the reference audio')
+    parser.add_argument('-S', '--transcribe', action='store_true', help='transcribe the reference audio')
     parser.add_argument('-L', '--long', action='store_true', help='increased duration for designed voice')
     args = parser.parse_args()
     if not args.ref_audio:
