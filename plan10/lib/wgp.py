@@ -349,7 +349,7 @@ f''' After speaking, <Subject 1> {prompt} They continue to move naturally for th
         args["audio_prompt_type"] = "A"
         args["video_prompt_type"] = "I"
         args["multi_prompts_gen_type"] = "PG"
-        args["num_inference_steps"] = 8
+        args["num_inference_steps"] = 4
         args["guidance_scale"] = 1
         args["guidance2_scale"] = 5
         args["guidance3_scale"] = 5
