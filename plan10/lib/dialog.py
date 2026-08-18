@@ -326,7 +326,10 @@ def main():
     if not args.ref_audio:
         DesignVoice(args.instruct, args.output, args.seed, args.long)
     elif args.transcribe and args.ref_audio:
-        print(transcribe(args.ref_audio))
+        output = ' '.join(transcribe(args.ref_audio))
+        if args.output.endswith('.txt'):
+            Path(args.output).write_text(output)
+        print(output)
     else:
         create_audio_and_free_vram(args.text, args.instruct, args.ref_audio, '', args.output, 2, args.duration, 16000, args.seed, args.no_whisper)
 
