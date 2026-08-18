@@ -309,6 +309,7 @@ def CloneVoice(text, audio, output, duration=5.0, seed=-1):
 
 def main():
     import argparse
+    from pathlib import Path
     parser = argparse.ArgumentParser(
                     prog='GenerateDialog',
                     description='Generate voices with dialog',
