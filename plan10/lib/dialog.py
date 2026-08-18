@@ -329,7 +329,9 @@ def main():
     elif args.transcribe and args.ref_audio:
         output = ' '.join(transcribe(args.ref_audio))
         if args.output.endswith('.txt'):
-            Path(args.output).write_text(output)
+            y, sr = librosa.load(args.ref_audio, sr=None)
+            dur = librosa.get_duration(y=y, sr=sr)
+            Path(args.output).write_text(f'{duration},{output}')
         print(output)
     else:
         create_audio_and_free_vram(args.text, args.instruct, args.ref_audio, '', args.output, 2, args.duration, 16000, args.seed, args.no_whisper)
