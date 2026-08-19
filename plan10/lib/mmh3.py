@@ -279,7 +279,7 @@ def GenerateTalkingVideo(
     else:
         cam_desc = AnalyzeImage(media, "Briefly describe camera shot framing, return either closeup shot or medium shot")['analysis']
 
-    desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
+    desc = AnalyzeImage(start_image, "Briefly describe this image, background and character, no more than 50 words")['analysis']
     audio_desc = translate_to_audio_prompt(desc)
 
     lipsync = ("subject_definitions:\n <Subject 1> is the person in <Picture 1> and appears in [Shot 1], preserving their exact identity, facial features, skin tone, hairstyle, body proportions, clothing, footwear, "
