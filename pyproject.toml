@@ -30,7 +30,7 @@ diffsynth = { git = "https://github.com/modelscope/DiffSynth-Studio.git" }
 include = ["plan10*"]
 
 [tool.setuptools.package-data]
-"data" = ["plan10/system/*.txt"]
+plan10 = ["system/*.txt"]
 
 [project.scripts]
 config = "plan10.lib.config:main"
