@@ -379,6 +379,15 @@ def GenerateTalkingVideo(
     else:
         start_image = f'{os.getcwd()}/{media}'
 
+        duration_sec = min(int(estimate_duration(text)), max_duration)
+
+    if text:
+        audio = CloneVoice(text, audio, 'tmp.wav', duration=15.0, seed=-1)['output_path']
+        input_audio, sample_rate = librosa.load(audio, sr=16000, mono=True, dtype=np.float32)
+        duration_sec = int(math.ceil(librosa.get_duration(y=y, sr=sr)) + 1)
+    else:
+        duration_sec = max_duration
+
     ref_audio = f'{os.getcwd()}/{audio}'
 
     print(f"MEDIA: {start_image}")
@@ -388,7 +397,6 @@ def GenerateTalkingVideo(
     width = int(width)
     height = int(height)
     seed = int(seed)
-    duration_sec = min(int(estimate_duration(text)), max_duration)
     fps = 24
 
     if seed == -1:
