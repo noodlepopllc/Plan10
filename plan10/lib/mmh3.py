@@ -254,6 +254,20 @@ def GenerateTalkingVideo(
     max_duration=10):
     print(f"PROMPT: {prompt}")
 
+    start_image = ''
+    end_image = None
+
+    if not media:
+        GenerateImage(prompt = prompt, output='first_frame.png', width=width, height=height, seed=seed)
+        media='first_frame.png'
+
+    if isinstance(media, list):
+        start_image = media.pop(0)
+        if len(media) > 0:
+            end_image = video_to_img(media.pop(), width, height, True, False)
+    else:
+        start_image = f'{os.getcwd()}/{media}'
+
     transcript = ''
     cam_desc = ''
     if not text:
@@ -284,19 +298,6 @@ f''' overall_soundscape: {audio_desc} ''')
 f''' <Picture 1> is the first frame of [Shot 1] static {cam_desc} Camera focuses on <Subject 1> as they speak, keeping them clearly in frame. <Subject 1> remains stationary as they speak (S1) clearly <d>[English] {text} </d> \n'''
 f''' After speaking, <Subject 1> {prompt} They continue to move naturally for the remainder of the video. \n overall_soundscape: {audio_desc} ''') 
     
-    start_image = ''
-    end_image = None
-
-    if not media:
-        GenerateImage(prompt = prompt, output='first_frame.png', width=width, height=height, seed=seed)
-        media='first_frame.png'
-
-    if isinstance(media, list):
-        start_image = media.pop(0)
-        if len(media) > 0:
-            end_image = video_to_img(media.pop(), width, height, True, False)
-    else:
-        start_image = f'{os.getcwd()}/{media}'
 
     print(f"MEDIA: {start_image}")
 
