@@ -329,7 +329,7 @@ f''' After speaking, <Subject 1> {prompt} They continue to move naturally for th
     print("CURRENT PROMPT: ",prompt)
 
     try:
-        vram_limit = MAX(VRAM, 64)
+        vram_limit = max(VRAM, 64)
         if vram_limit < 32:
             vram_config = {
                 "offload_dtype": "disk",
