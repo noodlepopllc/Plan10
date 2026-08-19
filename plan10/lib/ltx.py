@@ -386,7 +386,7 @@ def GenerateTalkingVideo(
 
     if text:
         audio = CloneVoice(text, audio, 'tmp.wav', duration=15.0, seed=-1)['output_path']
-        input_audio, sample_rate = librosa.load(audio, sr=16000, mono=True, dtype=np.float32)
+        y, sr = librosa.load(audio, sr=None)
         duration_sec = int(math.ceil(librosa.get_duration(y=y, sr=sr)) + 1)
     else:
         duration_sec = max_duration
