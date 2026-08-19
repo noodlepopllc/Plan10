@@ -15,7 +15,7 @@ from plan10.lib.util import video_to_img
 from plan10.lib.image_analysis import AnalyzeImage, EnhancePrompt
 from plan10.lib.image_gen import add_metadata_char
 from plan10.lib.dialog import CloneVoice
-
+import librosa
 import random
 
 WIDTH = int(os.environ.get("WIDTH", "832"))
