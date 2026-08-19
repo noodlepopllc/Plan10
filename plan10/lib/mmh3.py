@@ -277,7 +277,7 @@ def GenerateTalkingVideo(
         segs = transcribe(audio)
         transcript = " ".join(segs)
     else:
-        cam_desc = AnalyzeImage(media, "Briefly describe camera shot framing, return either closeup shot or medium shot")['analysis']
+        cam_desc = AnalyzeImage(start_image, "Briefly describe camera shot framing, return either closeup shot or medium shot")['analysis']
 
     desc = AnalyzeImage(start_image, "Briefly describe this image, background and character, no more than 50 words")['analysis']
     audio_desc = translate_to_audio_prompt(desc)
