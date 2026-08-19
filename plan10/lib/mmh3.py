@@ -329,16 +329,29 @@ f''' After speaking, <Subject 1> {prompt} They continue to move naturally for th
     print("CURRENT PROMPT: ",prompt)
 
     try:
-        vram_config = {
-            "offload_dtype": "disk",
-            "offload_device": "disk",
-            "onload_dtype": torch.bfloat16,
-            "onload_device": "cpu",
-            "preparing_dtype": torch.bfloat16,
-            "preparing_device": "cuda",
-            "computation_dtype": torch.bfloat16,
-            "computation_device": "cuda",
-        }
+        vram_limit = MAX(VRAM, 64)
+        if vram_limit < 32:
+            vram_config = {
+                "offload_dtype": "disk",
+                "offload_device": "disk",
+                "onload_dtype": torch.bfloat16,
+                "onload_device": "cpu",
+                "preparing_dtype": torch.bfloat16,
+                "preparing_device": "cpu",
+                "computation_dtype": torch.bfloat16,
+                "computation_device": "cuda",
+            }
+        else:
+            vram_config = {
+                "offload_dtype": "disk",
+                "offload_device": "disk",
+                "onload_dtype": torch.bfloat16,
+                "onload_device": "cpu",
+                "preparing_dtype": torch.bfloat16,
+                "preparing_device": "cuda",
+                "computation_dtype": torch.bfloat16,
+                "computation_device": "cuda",
+            }
         pipe = MiniMaxH3Pipeline.from_pretrained(
             torch_dtype=torch.bfloat16,
             device="cuda",
@@ -349,7 +362,7 @@ f''' After speaking, <Subject 1> {prompt} They continue to move naturally for th
                 ModelConfig(model_id="DiffSynth-Studio/MiniMax-H3-NF4", origin_file_pattern="audio_vae_nf4.safetensors", **vram_config),
             ],
             processor_config=ModelConfig(model_id="MiniMaxAI/MiniMax-H3", origin_file_pattern="Ref2VA/processor/"),
-            vram_limit=64,
+            vram_limit=vram_limit,
         )
         references = references=[
                 {"type": "image", "image": current_source},
