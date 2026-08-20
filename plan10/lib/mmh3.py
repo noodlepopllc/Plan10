@@ -278,6 +278,7 @@ def GenerateTalkingVideo(
         transcript = " ".join(segs)
     else:
         cam_desc = AnalyzeImage(start_image, "Briefly describe camera shot framing, return either closeup shot or medium shot")['analysis']
+        duration_sec = max_duration
 
     desc = AnalyzeImage(start_image, "Briefly describe this image, background and character, no more than 50 words")['analysis']
     audio_desc = translate_to_audio_prompt(desc)
@@ -306,7 +307,6 @@ f''' After speaking, <Subject 1> {prompt} They continue to move naturally for th
     width = int(width)
     height = int(height)
     seed = int(seed)
-    duration_sec = max_duration
     fps = 24
 
     if seed == -1:
