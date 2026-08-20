@@ -306,7 +306,7 @@ f''' After speaking, <Subject 1> {prompt} They continue to move naturally for th
     width = int(width)
     height = int(height)
     seed = int(seed)
-    duration_sec = 5 
+    duration_sec = max_duration
     fps = 24
 
     if seed == -1:
