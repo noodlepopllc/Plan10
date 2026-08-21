@@ -220,7 +220,8 @@ def GenerateTalkingVideo(
     output='output.mp4',
     width=WIDTH,
     height=HEIGHT,
-    seed=-1):
+    seed=-1,
+    max_duration=7.0):
 
     width = int(width)
     height = int(height)
@@ -238,7 +239,7 @@ def GenerateTalkingVideo(
 
     input_image  = video_to_img(start_image, width, height, True)
     if text:
-        audio = CloneVoice(text, audio, 'tmp.wav', duration=5.0, seed=-1)['output_path']
+        audio = CloneVoice(text, audio, 'tmp.wav', duration=max_duration, seed=-1)['output_path']
     input_audio, sample_rate = librosa.load(audio, sr=16000, mono=True, dtype=np.float32)
     cfg_scale = 2.0 if ANIME else 1.5 
     num_inference_steps = 8 if ANIME else 4
