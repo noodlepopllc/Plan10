@@ -266,6 +266,7 @@ async def s2v_ltx(prompt='', media='', end_image='', audio='', text='', output='
         args['prompt'] = newprompt
         args['image_prompt_type'] =  'S'
         args['image_start'] = media
+        args['guidance_phases'] = 1
         #args['prompt_enhancer'] = 'TI'
         args['audio_prompt_type'] = 'A1OF'
         args['audio_guide'] = audio
