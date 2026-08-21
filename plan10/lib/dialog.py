@@ -282,7 +282,7 @@ def DesignVoice(voice, output, seed=-1, long=False):
         "prompt": final_prompt
     }
 
-class OmniVoiceSession:
+class DialogSession:
     def __init__(self):
         self.model = None
 
