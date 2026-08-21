@@ -130,7 +130,7 @@ def create_audio_and_free_vram(
                 with torch.no_grad():
                     if ref_audio:
                         audio = model.generate(
-                            text=text, voice_clone_prompt=prompt),
+                            text=text, voice_clone_prompt=prompt,
                             duration=max_duration_seconds
                         )
                     else:
