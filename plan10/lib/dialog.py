@@ -44,11 +44,6 @@ def create_audio_and_free_vram(
 
     pt_path = ref_audio.replace('.wav', '.pt')
 
-    # Optional reference transcription
-    if ref_audio and not ref_text:
-        segs = transcribe(ref_audio)
-        ref_text = " ".join(segs)
-
     start_silence_ms = 300
     end_silence_ms = 500
     speed = 0.85
@@ -61,6 +56,10 @@ def create_audio_and_free_vram(
 
         if pt_path:
             if not Path(pt_path).exists():
+                    # Optional reference transcription
+                if ref_audio and not ref_text:
+                    segs = transcribe(ref_audio)
+                    ref_text = " ".join(segs)
                 prompt = model.create_voice_clone_prompt(ref_audio=ref_audio, ref_text=ref_text)
                 prompt.save(pt_path)
 
