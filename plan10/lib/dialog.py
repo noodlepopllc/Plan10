@@ -1,5 +1,5 @@
 import torch, torchaudio, gc, librosa, traceback
-from omnivoice import OmniVoice
+from omnivoice import OmniVoice, VoiceClonePrompt
 import numpy as np
 from faster_whisper import WhisperModel
 from plan10.lib.config import load_environ
@@ -41,14 +41,24 @@ def create_audio_and_free_vram(
     - optional Whisper semantic verification
     """
 
+    pt_path = ref_audio.replace('.wav', '.pt')
 
     # Optional reference transcription
     if ref_audio and not ref_text:
         segs = transcribe(ref_audio)
         ref_text = " ".join(segs)
 
-    if len(ref_text.split(' ')) < 5:
-        ref_text += '... Random words added.'
+    prompt = None
+    if pt_path:
+        if not Path(pt_path).exists():
+            prompt = model.create_voice_clone_prompt(ref_audio=ref_audio, ref_text=ref_text)
+            prompt.save(pt_path)
+
+        else:
+            prompt = VoiceClonePrompt.load(pt_path)
+
+    if len(text.split(' ')) < 5:
+        text += '... Random words added.'
 
     start_silence_ms = 300
     end_silence_ms = 500
@@ -64,7 +74,7 @@ def create_audio_and_free_vram(
         try:
             with torch.no_grad():
                 if ref_audio:
-                    audio = model.generate(text=text, ref_audio=ref_audio, ref_text=ref_text)
+                    audio = model.generate(text=text, voice_clone_prompt=prompt)
                 else:
                     audio = model.generate(text=text, instruct=instruct, speed=speed)
 
