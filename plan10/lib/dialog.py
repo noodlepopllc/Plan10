@@ -296,7 +296,7 @@ def CloneVoice(text, audio, output, duration=5.0, seed=-1, lengthen=True):
         output=output,
         max_duration_seconds=duration,
         seed=seed,
-        use_whisper=True
+        use_whisper=lengthen
     )
 
     actual_duration = len(_audio) / sr
