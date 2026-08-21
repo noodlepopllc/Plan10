@@ -57,8 +57,8 @@ def create_audio_and_free_vram(
         else:
             prompt = VoiceClonePrompt.load(pt_path)
 
-    if len(text.split(' ')) < 5:
-        text += '... Random words added.'
+    #if len(text.split(' ')) < 5:
+    #    text += '... Random words added.'
 
     start_silence_ms = 300
     end_silence_ms = 500
