@@ -3,6 +3,7 @@ from omnivoice import OmniVoice, VoiceClonePrompt
 import numpy as np
 from faster_whisper import WhisperModel
 from plan10.lib.config import load_environ
+from pathlib import Path
 load_environ()
 
 def transcribe(path):
