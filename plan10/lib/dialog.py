@@ -49,11 +49,6 @@ def create_audio_and_free_vram(
         segs = transcribe(ref_audio)
         ref_text = " ".join(segs)
 
-
-
-    #if len(text.split(' ')) < 5:
-    #    text += '... Random words added.'
-
     start_silence_ms = 300
     end_silence_ms = 500
     speed = 0.85
@@ -285,13 +280,13 @@ def DesignVoice(voice, output, seed=-1, long=False):
         "prompt": final_prompt
     }
 
-def CloneVoice(text, audio, output, duration=5.0, seed=-1):
+def CloneVoice(text, audio, output, duration=5.0, seed=-1, lengthen=True):
     # The actual prompt fed into the model
     final_prompt = f"{text} | cloned from: {audio}"
     duration=float(duration)
     seed=int(seed)
 
-    if len(text.split(' ')) < 5:
+    if lengthen and len(text.split(' ')) < 5:
         text = f"{text} ... Random words added for length."
 
     _audio, sr = create_audio_and_free_vram(
