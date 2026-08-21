@@ -32,7 +32,8 @@ def create_audio_and_free_vram(
     max_duration_seconds=5.0,
     target_sr=16000,
     seed=-1,
-    use_whisper=True
+    use_whisper=True,
+    persistent_model = None
 ):
     """
     Generate audio via OmniVoice with robust validation:
@@ -52,7 +53,7 @@ def create_audio_and_free_vram(
 
     for attempt in range(1, max_retries + 1):
         torch.cuda.empty_cache()
-        model = OmniVoice.from_pretrained("k2-fsa/OmniVoice", device_map="cuda:0", dtype=torch.float32)
+        model = persistent_model or OmniVoice.from_pretrained("k2-fsa/OmniVoice", device_map="cuda:0", dtype=torch.float32)
 
         if pt_path:
             if not Path(pt_path).exists():
@@ -155,9 +156,10 @@ def create_audio_and_free_vram(
 
             print(f"✅ Clean audio generated (attempt {attempt})")
 
-            del model, audio
-            gc.collect()
-            torch.cuda.empty_cache()
+            if not persistent_model:
+                del model, audio
+                gc.collect()
+                torch.cuda.empty_cache()
             return input_audio, sr
 
         except Exception as e:
@@ -165,10 +167,11 @@ def create_audio_and_free_vram(
             print(f"❌ Failed (attempt {attempt}): {e}")
 
         finally:
-            try: del model, audio
-            except: pass
-            gc.collect()
-            torch.cuda.empty_cache()
+            if not persistent_model:
+                try: del model, audio
+                except: pass
+                gc.collect()
+                torch.cuda.empty_cache()
 
     raise RuntimeError(f"Failed to generate valid audio ≤{max_duration_seconds}s after {max_retries} retries.")
 
@@ -279,7 +282,27 @@ def DesignVoice(voice, output, seed=-1, long=False):
         "prompt": final_prompt
     }
 
-def CloneVoice(text, audio, output, duration=5.0, seed=-1, lengthen=True):
+class OmniVoiceSession:
+    def __init__(self):
+        self.model = None
+
+    def __enter__(self):
+        self.model = OmniVoice.from_pretrained(
+            "k2-fsa/OmniVoice",
+            device_map="cuda:0",
+            dtype=torch.float32
+        )
+        return self.model
+
+    def __exit__(self, exc_type, exc, tb):
+        try:
+            del self.model
+        except:
+            pass
+        gc.collect()
+        torch.cuda.empty_cache()
+
+def CloneVoice(text, audio, output, duration=5.0, seed=-1, lengthen=True, session=None):
     # The actual prompt fed into the model
     final_prompt = f"{text} | cloned from: {audio}"
     duration=float(duration)
@@ -295,7 +318,8 @@ def CloneVoice(text, audio, output, duration=5.0, seed=-1, lengthen=True):
         output=output,
         max_duration_seconds=duration,
         seed=seed,
-        use_whisper=lengthen
+        use_whisper=lengthen,
+        persistent_model=session
     )
 
     actual_duration = len(_audio) / sr
