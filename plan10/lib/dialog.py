@@ -49,14 +49,7 @@ def create_audio_and_free_vram(
         segs = transcribe(ref_audio)
         ref_text = " ".join(segs)
 
-    prompt = None
-    if pt_path:
-        if not Path(pt_path).exists():
-            prompt = model.create_voice_clone_prompt(ref_audio=ref_audio, ref_text=ref_text)
-            prompt.save(pt_path)
 
-        else:
-            prompt = VoiceClonePrompt.load(pt_path)
 
     #if len(text.split(' ')) < 5:
     #    text += '... Random words added.'
@@ -65,9 +58,19 @@ def create_audio_and_free_vram(
     end_silence_ms = 500
     speed = 0.85
 
+    prompt = None
+
     for attempt in range(1, max_retries + 1):
         torch.cuda.empty_cache()
         model = OmniVoice.from_pretrained("k2-fsa/OmniVoice", device_map="cuda:0", dtype=torch.float32)
+
+        if pt_path:
+            if not Path(pt_path).exists():
+                prompt = model.create_voice_clone_prompt(ref_audio=ref_audio, ref_text=ref_text)
+                prompt.save(pt_path)
+
+            else:
+                prompt = VoiceClonePrompt.load(pt_path)
 
         if seed != -1:
             torch.cuda.manual_seed(seed)
