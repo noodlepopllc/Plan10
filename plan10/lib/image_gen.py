@@ -224,8 +224,8 @@ class ImageGenKlein(object):
         image = self.pipe(
                 prompt=prompt,
                 seed=seed,
-                num_inference_steps=4,
-                cfg_scale=1.0,
+                num_inference_steps=8,
+                cfg_scale=1.2,
                 height=height,
                 width=width
             )
