@@ -24,8 +24,8 @@ dependencies = [
 package = true
 
 [tool.uv.sources]
-#diffsynth = { git = "https://github.com/modelscope/DiffSynth-Studio.git", rev = "03615819a6209a198c7e4020988a18ba64e05fb0" }
-diffsynth = { git = "https://github.com/modelscope/DiffSynth-Studio.git"}
+diffsynth = { git = "https://github.com/modelscope/DiffSynth-Studio.git", rev = "03615819a6209a198c7e4020988a18ba64e05fb0" }
+#diffsynth = { git = "https://github.com/modelscope/DiffSynth-Studio.git"}
 
 
 [tool.setuptools.packages.find]

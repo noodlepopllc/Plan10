@@ -368,7 +368,7 @@ f''' After speaking, <Subject 1> {prompt} They continue to move naturally for th
                 torch_dtype=torch.bfloat16,
                 device="cuda",
                 model_configs=[
-                    ModelConfig(model_id="Comfy-Org/MiniMax-H3", origin_file_pattern="diffusion_models/minimax_h3_ref2va_pruned_int8_convrot.safetensors", **vram_config),
+                    ModelConfig(model_id="Comfy-Org/MiniMax-H3", origin_file_pattern="diffusion_models/minimax_h3_ref2va_int8_convrot.safetensors", **vram_config),
                     ModelConfig(model_id="Comfy-Org/MiniMax-H3", origin_file_pattern="text_encoders/qwen3vl_32b_minimax_h3_int8_convrot.safetensors", **vram_config),
                     ModelConfig(model_id="MiniMaxAI/MiniMax-H3", origin_file_pattern="Ref2VA/video_vae/source/model.safetensors", **vram_config),
                     ModelConfig(model_id="MiniMaxAI/MiniMax-H3", origin_file_pattern="Ref2VA/audio_vae/model.safetensors", **vram_config),
