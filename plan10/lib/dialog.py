@@ -300,7 +300,7 @@ def CloneVoice(text, audio, output, duration=5.0, seed=-1, lengthen=True):
     )
 
     actual_duration = len(_audio) / sr
-    transcription = " ".join(transcribe(output))
+    transcription = " ".join(transcribe(output)) if lengthen else ''
 
     description = (
         f"Cloned voice.\n"
