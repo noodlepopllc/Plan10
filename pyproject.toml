@@ -56,4 +56,5 @@ video_compositor = "plan10.lib.mmh3:main"
 bot = "plan10.bin.bot:main"
 bot_cli = "plan10.bin.bot_cli:main"
 llm = "plan10.lib.qwen_llm:main"
+compose_video = "plan10.lib.mmh3:main"
 
