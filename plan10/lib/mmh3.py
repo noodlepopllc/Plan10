@@ -422,8 +422,10 @@ def compose_video(background='',characters=[], voices=[], text=[], action='', ou
         references.append({"type": "image", "image": Image.open(background)})
     character_assets = []
     for ndx in range(len(characters)):
-        if not len(text):
+        if len(text) <= ndx:
             text.append('')
+        if len(voices) <= ndx:
+            voices.append('')
 
         character_assets.append((characters[ndx], AnalyzeImage(image=characters[ndx], prompt='Briefly describe this character sheet of the front and back of the character. 10 - 15 words')['analysis'], text[ndx], voices[ndx]))
 
