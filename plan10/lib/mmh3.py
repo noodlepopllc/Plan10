@@ -422,9 +422,9 @@ def compose_video(background='',characters=[], voices=[], text=[], action='', ou
         references.append({"type": "image", "image": Image.open(background)})
     character_assets = []
     for ndx in range(len(characters)):
-        if len(text) <= ndx:
+        if len(text) == ndx:
             text.append('')
-        if len(voices) <= ndx:
+        if len(voices) == ndx:
             voices.append('')
 
         character_assets.append((characters[ndx], AnalyzeImage(image=characters[ndx], prompt='Briefly describe this character sheet of the front and back of the character. 10 - 15 words')['analysis'], text[ndx], voices[ndx]))
@@ -460,9 +460,11 @@ def compose_video(background='',characters=[], voices=[], text=[], action='', ou
         for ndx in range(len(character_assets)):
             char = character_assets[ndx]
             references.append({"type": "image", "image": Image.open(char[0])})
-            ref_audio, sample_rate = read_audio(char[-1], duration=5, resample=True, resample_rate=pipe.audio_vae.sample_rate)
-            references.append({"type": "audio", "audio": ref_audio, "sample_rate": sample_rate})
-            tmp = f'''subject_definitions:\n<Subject {ndx+1}> Character sheet displaying the front and back of {char[1]} <Audio {ndx+1}> is the voice timbre reference for <Subject {ndx+1}>'s voice, containing a spoken voiceover. \n'''
+            tmp = f'''subject_definitions:\n<Subject {ndx+1}> Character sheet displaying the front and back of {char[1]} \n"'''
+            if char[-1]:
+                ref_audio, sample_rate = read_audio(char[-1], duration=5, resample=True, resample_rate=pipe.audio_vae.sample_rate)
+                references.append({"type": "audio", "audio": ref_audio, "sample_rate": sample_rate})
+                tmp += f'''<Audio {ndx+1}> is the voice timbre reference for <Subject {ndx+1}>'s voice, containing a spoken voiceover. \n'''
             if ndx == 0 and char[2] and len(character_assets) == 2:
                 tmp += f'''<Subject 1> says <d> [English] {text[0]} </d> to <Subject 2>\n'''
             elif ndx == 1 and char[2] and len(character_assets) == 2:
