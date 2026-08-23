@@ -414,21 +414,7 @@ f''' After speaking, <Subject 1> {prompt} They continue to move naturally for th
         print(f"❌ Error: {e}")
         raise
 
-def compose_video(background='',characters=[], voices=[], text=[], action='', output='output.mp4', height=HEIGHT, width=WIDTH, seed=SEED, duration=5):
-    references = []
-    desc_background = ''
-    if background:
-        desc_background = AnalyzeImage(image=background, prompt='Describe image background in 10 - 15 words')['analysis']
-        references.append({"type": "image", "image": Image.open(background)})
-    character_assets = []
-    for ndx in range(len(characters)):
-        if len(text) == ndx:
-            text.append('')
-        if len(voices) == ndx:
-            voices.append('')
-
-        character_assets.append((characters[ndx], AnalyzeImage(image=characters[ndx], prompt='Briefly describe this character sheet of the front and back of the character. 10 - 15 words')['analysis'], text[ndx], voices[ndx]))
-
+def compose_video(prompt, images, audio, output='output.mp4', width=768, height=448, duration=5.0):
     try:
         vram_config = {
             "offload_dtype": "disk",
@@ -436,7 +422,7 @@ def compose_video(background='',characters=[], voices=[], text=[], action='', ou
             "onload_dtype": torch.bfloat16,
             "onload_device": "cpu",
             "preparing_dtype": torch.bfloat16,
-            "preparing_device": "cuda",
+            "preparing_device": "cpu" if VRAM < 24 else "cuda",
             "computation_dtype": torch.bfloat16,
             "computation_device": "cuda",
         }
@@ -455,28 +441,17 @@ def compose_video(background='',characters=[], voices=[], text=[], action='', ou
         frames = duration * 24
         frames = int(((frames // 17) * 17) + 5) 
 
-        cprompt = []
-        cprompt.append(f'''<Picture 1> is {desc_background}. This will be the background for [Shot 1] \n''')
-        for ndx in range(len(character_assets)):
-            char = character_assets[ndx]
-            references.append({"type": "image", "image": Image.open(char[0])})
-            tmp = f'''subject_definitions:\n<Subject {ndx+1}> Character sheet displaying the front and back of {char[1]} \n"'''
-            if char[-1]:
-                ref_audio, sample_rate = read_audio(char[-1], duration=5, resample=True, resample_rate=pipe.audio_vae.sample_rate)
-                references.append({"type": "audio", "audio": ref_audio, "sample_rate": sample_rate})
-                tmp += f'''<Audio {ndx+1}> is the voice timbre reference for <Subject {ndx+1}>'s voice, containing a spoken voiceover. \n'''
-            if ndx == 0 and char[2] and len(character_assets) == 2:
-                tmp += f'''<Subject 1> says <d> [English] {text[0]} </d> to <Subject 2>\n'''
-            elif ndx == 1 and char[2] and len(character_assets) == 2:
-                tmp += f'''<Subject 2> responds  "{text[1]}." to <Subject 1>\n'''
-            elif char[2]:
-                tmp += f'''<Subject 1> says "{text}." \n'''
-            cprompt.append(tmp)
-        cprompt.append(action)
-        print("FINAL PROMPT: ",''.join(cprompt))
+        references = []
+        for image in images:
+            references.append({"type": "image", "image": Image.open(image)})
+        for aud in audio:
+            ref_audio, sample_rate = read_audio(aud, duration=5, resample=True, resample_rate=pipe.audio_vae.sample_rate)
+            references.append({"type": "audio", "audio": ref_audio, "sample_rate": sample_rate})
+
+        print("FINAL PROMPT: ", prompt)
         video, audio = pipe(
-            prompt=''.join(cprompt),
-            height=height, width=width, num_frames=frames, num_inference_steps=20, seed=seed,
+            prompt=prompt,
+            height=height, width=width, num_frames=frames, num_inference_steps=20, #seed=seed,
             references=references,
         )
         write_video_audio(
@@ -503,6 +478,8 @@ def compose_video(background='',characters=[], voices=[], text=[], action='', ou
         print(f"❌ Error: {e}")
         raise
 
+
+
 def main():
     import argparse
     parser = argparse.ArgumentParser()
@@ -511,14 +488,11 @@ def main():
     parser.add_argument('-E', '--seed', type=int, default=SEED)
     parser.add_argument('-D', '--duration', type=int, default=DURATION)
     parser.add_argument('-O', '--output', type=str, default='output.mp4')
-    parser.add_argument('-B', '--background', type=str, help='Background path')
-    parser.add_argument('-A', '--action', type=str, default='', help='Action to complete')
-    parser.add_argument('-C', '--chars', action='append', default=[], help='Character paths (1-2)')
-    parser.add_argument('-V', '--voices', action='append', default=[], help='Voice reference paths (1-2)')
-    parser.add_argument('-T', '--texts', action='append', default=[], help='Spoken dialog (1-2)')
+    parser.add_argument('-I', '--images', action='append', default=[], help='Input images')
+    parser.add_argument('-A', '--audio', action='append', default=[], help='Input audio')
+    parser.add_argument('-P', '--prompt', type=str, default='remove text', help='Edit prompt')
     args = parser.parse_args()
     print(args)
-    print(compose_video(background=args.background,characters=args.chars, voices=args.voices, text=args.texts, action=args.action, output=args.output, height=args.height, width=args.width, seed=args.seed, duration=args.duration))
-
+    print(compose_video(args.prompt,args.images, args.audio, args.output, args.width, args.output, args.height, args.duration))
 if __name__ == '__main__':
     main()

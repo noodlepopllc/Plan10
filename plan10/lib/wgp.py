@@ -199,8 +199,9 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         print(f"\n🎬 Generating {total_frames/fps:.1f}s video ({total_frames} frames)")
         print(f"   Resolution: {width}x{height}")
 
-        current_source = video_to_img(start_image, width, height, True, True)
-        current_source.save(f'{os.getcwd()}/tmp.png')
+        if start_image:
+            current_source = video_to_img(start_image, width, height, True, True)
+            current_source.save(f'{os.getcwd()}/tmp.png')
 
         last = None
         if end_image:
@@ -319,7 +320,6 @@ async def s2v_h3(prompt='', media='', end_image='', audio='', text='', output='o
 "and distinctive accessories.\n <Audio 1> provides the voice timbre, delivery, and lip-sync mapping. summary:\n"
 f"spoken_text: \nThe narration spoken in <Audio 1> is: \"{transcript}\""
 f''' <Picture 1> is the first frame of [Shot 1] static. The first frame of the video must match <Picture 1> exactly, including identical pose, head angle, hand position, body orientation, facial expression, and clothing folds, with zero deviation. \n'''
-#f'''{cam_desc} Camera focuses on <Subject 1> as they speak with initial framing, keeping them clearly in frame.  '''
 f''' The character faces the camera and speaks, with precise lip movements, jaw adjustments, and subtle facial micro-expressions perfectly synchronized to the cadence and dialogue of <Audio 1>.  \n'''
 f''' After speaking, <Subject 1> {prompt} '''
 f'''{"They continue to move naturally for the remainder of the video transitioning into <Picture 2> is the last frame of [Shot 1] static. After transitioning fully into <Picture 2>, the subject holds completely still with no additional motion for the remainder of the clip." if end_image else ''} \n'''
