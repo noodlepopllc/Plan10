@@ -504,6 +504,10 @@ def main():
         else:
             print(CreateCharacterSheet(args.prompt, args.output, args.seed))
     elif args.location:
+        if args.reset_meta:
+            print(add_metadata_loc(args.output, args.prompt))
+        elif args.info:
+            print(Image.open(args.output).info.get('Description'))
         print(CreateBackground(args.prompt, args.output,args.seed))
     else:
         print(GenerateImage(args.prompt, args.output, args.width, args.height, args.seed))
