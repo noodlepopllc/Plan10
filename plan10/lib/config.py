@@ -78,8 +78,8 @@ def load_environ(replace_env=False):
 def setconfig(mmh3=False, ltx2=False, hires=False, sdres=False, portrait=False, wangp=False, hivram=False, lovram=False, verbose=False):
     cfg_original = load_config()
     tmp_cfg = cfg_original.copy()
-    high_resolution = ("1280", "720") 
-    standard_resolution = ("768", "448")
+    high_resolution = ["1280", "720"] 
+    standard_resolution = ["768", "448"]
     
     if wangp:
         tmp_cfg['WGP'] = 'True'
@@ -95,13 +95,10 @@ def setconfig(mmh3=False, ltx2=False, hires=False, sdres=False, portrait=False, 
     else:
         tmp_cfg['LTX'] = 'False'
         tmp_cfg['MMH3'] = 'False'
-        tmp_cfg['WIDTH'] = standard_resolution[0]
-        tmp_cfg['HEIGHT'] = standard_resolution[1]
     if portrait:
-        w, h = high_resolution
-        high_resolution = (h, w)
-        w, h = standard_resolution
-        standard_resolution = (h, w)
+        high_resolution.reverse()
+        standard_resolution.reverse()
+        cfg_original['WIDTH'], cfg_original['HEIGHT'] = cfg_original['HEIGHT'], cfg_original['WIDTH']
     if hires:
         tmp_cfg["WIDTH"]  = high_resolution[0]
         tmp_cfg["HEIGHT"] = high_resolution[1]
