@@ -12,6 +12,8 @@ from PIL import Image
 from plan10.lib.image_edit import EditImage
 
 ANIME = os.environ.get("ANIME", "False") != "False"
+WIDTH = int(os.environ.get("WIDTH", "832"))
+HEIGHT = int(os.environ.get("HEIGHT", "480"))
 SEED = int(os.environ.get("SEED", "-1"))
 
 if ANIME:
@@ -273,9 +275,11 @@ def main():
     parser.add_argument('-S', '--seed', type=int, default=42, help="Random seed")
     
     args = parser.parse_args()
+
+    _, image = extract_frame(args.input, WIDTH, HEIGHT, 'last_frame.png')
     
     decompose_scene(
-        input_image=args.input,
+        input_image=image,
         output_dir=args.output,
         seed=args.seed
     )
