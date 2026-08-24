@@ -75,7 +75,7 @@ def load_environ(replace_env=False):
                     fp.write(f'export {k}="{v}"\n')
             #fp.write(additional)
 
-def setconfig(mmh3=False, ltx2=False, hires=False, sdres=False, portrait=False, wangp=False, hivram=False, lovram=False):
+def setconfig(mmh3=False, ltx2=False, hires=False, sdres=False, portrait=False, wangp=False, hivram=False, lovram=False, verbose=False):
     cfg_original = load_config()
     tmp_cfg = cfg_original.copy()
     high_resolution = ("1280", "720") 
@@ -112,6 +112,10 @@ def setconfig(mmh3=False, ltx2=False, hires=False, sdres=False, portrait=False, 
         tmp_cfg["VRAM"] = 64
     if lovram:
         tmp_cfg["VRAM"] = 14
+    if verbose:
+        tmp_cfg['VERBOSE'] = 'True'
+    else:
+        tmp_cfg['VERBOSE'] = 'False'
 
     # Fixed: Return None if NOTHING changed, return config if something DID change
     if cfg_original == tmp_cfg:
@@ -131,9 +135,10 @@ def main():
     parser.add_argument('--portrait', action='store_true', help='Set to portrait mode')
     parser.add_argument('--hivram', action='store_true', help='Set vram mode to high vram')
     parser.add_argument('--lovram', action='store_true', help='Set vram mode to low vram')
+    parser.add_argument('--verbose', action='store_true', help='Make wangp output more verbose, useful when models aren\'t downloaded to get status')
     args = parser.parse_args()
 
-    update = setconfig(args.mmh3, args.ltx2, args.hires, args.sdres, args.portrait, args.wangp, args.hivram, args.lovram)
+    update = setconfig(args.mmh3, args.ltx2, args.hires, args.sdres, args.portrait, args.wangp, args.hivram, args.lovram, args.verbose)
     if update:
         load_config(True, update)
 
