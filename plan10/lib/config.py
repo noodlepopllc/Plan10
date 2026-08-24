@@ -83,15 +83,18 @@ def setconfig(mmh3=False, ltx2=False, hires=False, sdres=False, portrait=False, 
     
     if wangp:
         tmp_cfg['WGP'] = 'True'
-        tmp_cfg['LTX'] = 'DISTILLED'
+        tmp_cfg['LTX'] = 'False'
+        tmp_cfg['MMH3'] = 'False'
     else:
         tmp_cfg['WGP'] = 'False'
     if mmh3:
         tmp_cfg['MMH3'] = 'True'
+        tmp_cfg['LTX'] = 'False'
         high_resolution = ("1344", "768") 
         standard_resolution = ("864", "480")
     elif ltx2:
         tmp_cfg["LTX"] = "DISTILLED"  # Fixed: missing = operator
+        tmp_cfg['MMH3'] = 'False'
     else:
         tmp_cfg['LTX'] = 'False'
         tmp_cfg['MMH3'] = 'False'
