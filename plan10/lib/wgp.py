@@ -86,6 +86,7 @@ async def i2v_ltx(prompt='', media='', end='', output='output.mp4',
 
         args['resolution'] = f'{width}x{height}'
         args['video_length'] = (duration_sec * 24) + 1 
+        args["multi_prompts_gen_type"] = "FG"
         print(args)
         r = await client.call_tool("wangp_generate", {"source": args})
         print(r.data['job_id'])
@@ -148,6 +149,7 @@ async def i2v_h3(prompt='', media='', end='', output='output.mp4',
         args["loras_multipliers"] = "1.0|"
         args["guidance_scale"] = 1
         args["num_inference_steps"] = 4
+        args["multi_prompts_gen_type"] = "FG"
         print(args)
         r = await client.call_tool("wangp_generate", {"source": args})
         print(r.data['job_id'])
@@ -290,6 +292,7 @@ async def s2v_ltx(prompt='', media='', end_image='', audio='', text='', output='
         args['audio_prompt_type'] = 'A1OF'
         args['audio_guide'] = audio
         args['activated_loras'] = ["id-lora-celebvhq-ltx2.3.safetensors"]
+        args["multi_prompts_gen_type"] = "FG"
 
         #args['audio_source'] = None
         #args['audio_prompt_type'] = 'A'
@@ -367,7 +370,7 @@ f''' After speaking, <Subject 1> {prompt} They continue to move naturally for th
         args["audio_guide"] = fixed_audio
         args["audio_prompt_type"] = "A"
         args["video_prompt_type"] = "I"
-        args["multi_prompts_gen_type"] = "PG"
+        args["multi_prompts_gen_type"] = "FG"
         args["num_inference_steps"] = 8
         args["guidance_scale"] = 1
         args["guidance2_scale"] = 5
