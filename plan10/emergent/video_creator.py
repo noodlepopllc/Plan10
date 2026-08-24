@@ -9,6 +9,7 @@ from plan10.emergent.state_manager import StateManager
 from plan10.emergent.character import CharacterProfile
 from plan10.emergent.pipeline import Pipeline
 from plan10.lib.scene_analyzer import analyze_scene
+from plan10.lib.util import 
 
 from plan10.lib.decomposer import decompose_scene
 
@@ -76,8 +77,9 @@ def main():
             initial = f'{args.output}/improv.png'
             current_media = initial
         else:
-            current_media = args.initial
-            initial = args.initial
+            _, image = extract_frame(args.initial, WIDTH, HEIGHT, 'last_frame.png')
+            current_media = image
+            initial = image
 
         if not refs:
             decompose_scene(
