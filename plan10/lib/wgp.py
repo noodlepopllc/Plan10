@@ -96,7 +96,7 @@ async def i2v_ltx(prompt='', media='', end='', output='output.mp4',
         if VERBOSE:
             print("VERBOSE MODE")
         while not r.data['done']:
-            sleep(10)
+            sleep(5)
             this = '' 
             if r.data.get('events',[]):
                 for event in r.data['events']:
@@ -158,7 +158,7 @@ async def i2v_h3(prompt='', media='', end='', output='output.mp4',
         if VERBOSE:
             print("VERBOSE MODE")
         while not r.data['done']:
-            sleep(10)
+            sleep(5)
             this = '' 
             if r.data.get('events',[]):
                 for event in r.data['events']:
@@ -304,7 +304,7 @@ async def s2v_ltx(prompt='', media='', end_image='', audio='', text='', output='
         r = await client.call_tool("wangp_get_job", {"job_id": job_id})
         last = ''
         while not r.data['done']:
-            sleep(10)
+            sleep(5)
             this = '' 
             for event in r.data['events']:
                 if event['data'] and 'text' in event['data']:
@@ -390,7 +390,7 @@ f''' After speaking, <Subject 1> {prompt} They continue to move naturally for th
         r = await client.call_tool("wangp_get_job", {"job_id": job_id})
         last = ''
         while r.data and not r.data['done']:
-            sleep(10)
+            sleep(5)
             this = '' 
             if 'events' not in r.data:
                 continue
