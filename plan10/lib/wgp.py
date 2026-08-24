@@ -21,6 +21,7 @@ SEED = int(os.environ.get("SEED", "-1"))
 ANIME = "_anime" if os.environ.get("ANIME","False") != "False" else ""
 ARC = os.environ.get("LTX","False") == "ARC"
 MMH3 = os.environ.get('MMH3','False') != 'False'
+VERBOSE = os.environ.get('VERBOSE','False') != 'False'
 
 MAX_DURATION = 5 if MMH3 else 10
 
@@ -46,7 +47,10 @@ async def i2v_ltx(prompt='', media='', end='', output='output.mp4',
         r = await client.call_tool("wangp_get_default_settings", {"model_type":tool})
         results = json.dumps(r.data, indent=4)
 
-        desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
+        if media:
+            desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
+        else:
+            desc = prompt
         audio_desc = translate_to_audio_prompt(desc)
 
         # Force explicit SFX and ban melody structure in the positive prompt
@@ -74,10 +78,11 @@ async def i2v_ltx(prompt='', media='', end='', output='output.mp4',
         args = r.data
         args['output_filename'] = output
         args['prompt'] = final_prompt
-        args['image_prompt_type'] =  'SE' if end else 'S'
-        args['image_start'] = media
-        if end:
-            args['image_end'] = end
+        if media:
+            args['image_prompt_type'] =  'SE' if end else 'S'
+            args['image_start'] = media
+            if end:
+                args['image_end'] = end
 
         args['resolution'] = f'{width}x{height}'
         args['video_length'] = (duration_sec * 24) + 1 
@@ -111,8 +116,10 @@ async def i2v_h3(prompt='', media='', end='', output='output.mp4',
         r = await client.call_tool("wangp_get_default_settings", {"model_type":tool})
         results = json.dumps(r.data, indent=4)
 
-
-        desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
+        if media:
+            desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
+        else:
+            desc = prompt
         audio_desc = translate_to_audio_prompt(desc)
 
         # Force explicit SFX and ban melody structure in the positive prompt
@@ -126,16 +133,17 @@ async def i2v_h3(prompt='', media='', end='', output='output.mp4',
         args = r.data
         args['output_filename'] = output
         args['prompt'] = final_prompt
-        args['image_prompt_type'] =  'SE' if end else 'S'
-        args['image_start'] = media
+        if media:
+            args['image_start'] = media
+            args['image_prompt_type'] =  'SE' if end else 'S'
+            if end:
+                args['image_end'] = end
         args['resolution'] = f'{width}x{height}'
         args['video_length'] = frames
         args["activated_loras"] = ["minimax_h3_larryvrh_v4_step600_ema.safetensors"]
         args["loras_multipliers"] = "1.0|"
         args["guidance_scale"] = 1
         args["num_inference_steps"] = 4
-        if end:
-            args['image_end'] = end
         print(args)
         r = await client.call_tool("wangp_generate", {"source": args})
         print(r.data['job_id'])
@@ -149,7 +157,9 @@ async def i2v_h3(prompt='', media='', end='', output='output.mp4',
             if r.data.get('events',[]):
                 for event in r.data['events']:
                     if event and event.get('data') and 'text' in event.get('data',''):
-                        if '%|' in event['data']['text']:
+                        if VERBOSE:
+                            this = event['data']['text']
+                        elif '%|' in event['data']['text']:
                             this = event['data']['text']
             if this != last:
                 last = this
@@ -170,9 +180,11 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         start_image = ''
         end_image = None
 
+        '''
         if not media:
             GenerateImage(prompt = prompt, output='first_frame.png', width=width, height=height, seed=seed)
             media='first_frame.png'
+        '''
 
         if isinstance(media, list):
             start_image = media.pop(0)
@@ -211,7 +223,7 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         if not prompt:
             prompt = "The characters stand and act naturally. "
 
-        if enhance:
+        if enhance and media:
             eprompt = EnhancePrompt('tmp.png', prompt, enhance_path)
         else:
             eprompt = prompt
@@ -290,7 +302,9 @@ async def s2v_ltx(prompt='', media='', end_image='', audio='', text='', output='
             this = '' 
             for event in r.data['events']:
                 if event['data'] and 'text' in event['data']:
-                    if '%|' in event['data']['text']:
+                    if VERBOSE:
+                        this = event['data']['text']
+                    elif '%|' in event['data']['text']:
                         this = event['data']['text']
             if this != last:
                 last = this
@@ -376,7 +390,9 @@ f''' After speaking, <Subject 1> {prompt} They continue to move naturally for th
                 continue
             for event in r.data['events']:
                 if event['data'] and 'text' in event['data']:
-                    if '%|' in event['data']['text']:
+                    if VERBOSE:
+                        this = event['data']['text']
+                    elif '%|' in event['data']['text']:
                         this = event['data']['text']
             if this != last:
                 last = this
