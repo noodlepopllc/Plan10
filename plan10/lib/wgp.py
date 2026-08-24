@@ -231,7 +231,7 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         print("CURRENT PROMPT: ",eprompt)
 
         try:
-            asyncio.run(i2v(eprompt, f'{os.getcwd()}/tmp.png', last, Path(output).name, 
+            asyncio.run(i2v(eprompt, f'{os.getcwd()}/tmp.png' if start_image else '', last, Path(output).name, 
                     duration_sec, width, height, seed))
             description = ''
                 
