@@ -86,7 +86,7 @@ def setconfig(mmh3=False, ltx2=False, hires=False, sdres=False, portrait=False, 
         tmp_cfg['LTX'] = 'False'
         tmp_cfg['MMH3'] = 'False'
     else:
-        tmp_cfg['WGP'] = 'False'
+        tmp_cfg['WGP'] = cfg_original['WGP']
     if mmh3:
         tmp_cfg['MMH3'] = 'True'
         tmp_cfg['LTX'] = 'False'
@@ -96,8 +96,8 @@ def setconfig(mmh3=False, ltx2=False, hires=False, sdres=False, portrait=False, 
         tmp_cfg["LTX"] = "DISTILLED"  # Fixed: missing = operator
         tmp_cfg['MMH3'] = 'False'
     else:
-        tmp_cfg['LTX'] = 'False'
-        tmp_cfg['MMH3'] = 'False'
+        tmp_cfg['LTX'] = cfg_original['LTX']
+        tmp_cfg['MMH3'] = cfg_original['MMH3']
     if portrait:
         high_resolution.reverse()
         standard_resolution.reverse()
