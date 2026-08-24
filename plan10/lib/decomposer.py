@@ -23,7 +23,6 @@ else:
 
 from plan10.lib.compositor import CompositeScene
 
-import argparse
 import json
 from pathlib import Path
 from plan10.lib.image_analysis import AnalyzeImage
@@ -269,6 +268,8 @@ def extract_environment_description(analysis):
     return ' '.join(env_lines)
 
 def main():
+    from plan10.lib.util import extract_frame
+    import argparse
     parser = argparse.ArgumentParser(description="Decompose scene into characters and background")
     parser.add_argument('-I', '--input', type=str, required=True, help="Input scene image")
     parser.add_argument('-O', '--output', type=str, required=True, help="Output directory")
