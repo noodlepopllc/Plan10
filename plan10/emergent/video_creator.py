@@ -9,7 +9,7 @@ from plan10.emergent.state_manager import StateManager
 from plan10.emergent.character import CharacterProfile
 from plan10.emergent.pipeline import Pipeline
 from plan10.lib.scene_analyzer import analyze_scene
-from plan10.lib.util import 
+from plan10.lib.util import extract_frame
 
 from plan10.lib.decomposer import decompose_scene
 
