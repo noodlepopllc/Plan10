@@ -93,13 +93,17 @@ async def i2v_ltx(prompt='', media='', end='', output='output.mp4',
 
         r = await client.call_tool("wangp_get_job", {"job_id": job_id})
         last = ''
+        if VERBOSE:
+            print("VERBOSE MODE")
         while not r.data['done']:
             sleep(5)
             this = '' 
             if r.data.get('events',[]):
                 for event in r.data['events']:
                     if event and event.get('data') and 'text' in event.get('data',''):
-                        if '%|' in event['data']['text']:
+                        if VERBOSE:
+                            this = event['data']['text']
+                        elif '%|' in event['data']['text']:
                             this = event['data']['text']
             if this != last:
                 last = this
@@ -151,6 +155,8 @@ async def i2v_h3(prompt='', media='', end='', output='output.mp4',
 
         r = await client.call_tool("wangp_get_job", {"job_id": job_id})
         last = ''
+        if VERBOSE:
+            print("VERBOSE MODE")
         while not r.data['done']:
             sleep(5)
             this = '' 
