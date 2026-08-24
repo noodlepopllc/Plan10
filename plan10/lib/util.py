@@ -118,13 +118,13 @@ def cleanup():
     if torch.cuda.is_available():
         torch.cuda.empty_cache()
 
-def extract_frame(media_path, width, height, output_path=None):
+def extract_frame(media_path, width, height, output_path=None, last_frame=True):
     """Extracts a frame from video or loads image, returns PIL Image and path."""
     media_path = str(media_path)
     ext = media_path.split('.')[-1].lower()
     
     if ext in ['mp4', 'avi', 'mov', 'mkv', 'webm']:
-        frame = video_to_img(media_path, width, height, True, True)
+        frame = video_to_img(media_path, width, height, True, last_frame)
         if output_path:
             frame.save(str(output_path))
             return frame, str(output_path)

@@ -277,7 +277,7 @@ def main():
     
     args = parser.parse_args()
 
-    _, image = extract_frame(args.input, WIDTH, HEIGHT, 'last_frame.png')
+    _, image = extract_frame(args.input, WIDTH, HEIGHT, 'first_frame.png', False)
     
     decompose_scene(
         input_image=image,
