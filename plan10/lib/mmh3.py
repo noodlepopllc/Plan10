@@ -34,8 +34,7 @@ else:
 
 BRIEF = os.environ.get("BRIEF","False") != "False"
 
-#enhance_path = f'./system/ltx_enhancer{ANIME}.txt'
-enhance_path = f'./system/ltx_enhancer_minimal{ANIME}.txt' if BRIEF else f'./system/ltx_enhancer{ANIME}.txt'
+enhance_path = f'./system/mmh3_enhancer.txt'
 
 
 def i2v_diffsynth(prompt='', media='', output='output.mp4', 
