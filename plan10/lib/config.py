@@ -75,11 +75,12 @@ def load_environ(replace_env=False):
                     fp.write(f'export {k}="{v}"\n')
             #fp.write(additional)
 
-def setconfig(mmh3=False, ltx2=False, hires=False, sdres=False, portrait=False, wangp=False, hivram=False, lovram=False, verbose=False, anime=False):
+def setconfig(mmh3=False, ltx2=False, hires=False, sdres=False, portrait=False, wangp=False, hivram=False, lovram=False, verbose=False, anime=False, minres=False):
     cfg_original = load_config()
     tmp_cfg = cfg_original.copy()
     high_resolution = ["1280", "720"] 
-    standard_resolution = ["768", "448"]
+    standard_resolution = ["832", "480"]
+    minimal_resolution = ["768", "448"]
     tmp_cfg['ANIME'] = 'True' if anime else 'False'
     
     if wangp:
@@ -93,22 +94,27 @@ def setconfig(mmh3=False, ltx2=False, hires=False, sdres=False, portrait=False, 
         tmp_cfg['LTX'] = 'False'
         high_resolution = ("1344", "768") 
         standard_resolution = ("864", "480")
+        minimal_resolution = standard_resolution
     elif ltx2:
         tmp_cfg["LTX"] = "DISTILLED"  # Fixed: missing = operator
         tmp_cfg['MMH3'] = 'False'
+        high_resolution = ["1280", "704"] 
     else:
         tmp_cfg['LTX'] = cfg_original['LTX']
         tmp_cfg['MMH3'] = cfg_original['MMH3']
-    if portrait:
-        high_resolution.reverse()
-        standard_resolution.reverse()
-        cfg_original['WIDTH'], cfg_original['HEIGHT'] = cfg_original['HEIGHT'], cfg_original['WIDTH']
     if hires:
         tmp_cfg["WIDTH"]  = high_resolution[0]
         tmp_cfg["HEIGHT"] = high_resolution[1]
     if sdres:  # Fixed: was duplicate 'if hires'
         tmp_cfg["WIDTH"]  = standard_resolution[0]
         tmp_cfg["HEIGHT"] = standard_resolution[1]
+    if minres:
+        tmp_cfg["WIDTH"]  = standard_resolution[0]
+        tmp_cfg["HEIGHT"] = standard_resolution[1]
+    if portrait:
+        high_resolution.reverse()
+        standard_resolution.reverse()
+        cfg_original['WIDTH'], cfg_original['HEIGHT'] = cfg_original['HEIGHT'], cfg_original['WIDTH']
     if hivram:
         tmp_cfg["VRAM"] = 64
     if lovram:
@@ -133,6 +139,7 @@ def main():
     parser.add_argument('--wangp', action='store_true', help='Use wangp MCP server as renderer')
     parser.add_argument('--hires', action='store_true', help='Set to hires mode')
     parser.add_argument('--sdres', action='store_true', help='Set to standard res mode')
+    parser.add_argument('--minres', action='store_true', help='Set to lowest resolution')
     parser.add_argument('--portrait', action='store_true', help='Set to portrait mode')
     parser.add_argument('--hivram', action='store_true', help='Set vram mode to high vram')
     parser.add_argument('--lovram', action='store_true', help='Set vram mode to low vram')
@@ -140,7 +147,7 @@ def main():
     parser.add_argument('--anime', action='store_true', help='Set to anime mode')
     args = parser.parse_args()
 
-    update = setconfig(args.mmh3, args.ltx2, args.hires, args.sdres, args.portrait, args.wangp, args.hivram, args.lovram, args.verbose, args.anime)
+    update = setconfig(args.mmh3, args.ltx2, args.hires, args.sdres, args.portrait, args.wangp, args.hivram, args.lovram, args.verbose, args.anime, args.minres)
     if update:
         load_config(True, update)
 
