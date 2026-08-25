@@ -75,11 +75,12 @@ def load_environ(replace_env=False):
                     fp.write(f'export {k}="{v}"\n')
             #fp.write(additional)
 
-def setconfig(mmh3=False, ltx2=False, hires=False, sdres=False, portrait=False, wangp=False, hivram=False, lovram=False, verbose=False):
+def setconfig(mmh3=False, ltx2=False, hires=False, sdres=False, portrait=False, wangp=False, hivram=False, lovram=False, verbose=False, anime=False):
     cfg_original = load_config()
     tmp_cfg = cfg_original.copy()
     high_resolution = ["1280", "720"] 
     standard_resolution = ["768", "448"]
+    tmp_cfg['ANIME'] = 'True' if anime else 'False'
     
     if wangp:
         tmp_cfg['WGP'] = 'True'
@@ -136,9 +137,10 @@ def main():
     parser.add_argument('--hivram', action='store_true', help='Set vram mode to high vram')
     parser.add_argument('--lovram', action='store_true', help='Set vram mode to low vram')
     parser.add_argument('--verbose', action='store_true', help='Make wangp output more verbose, useful when models aren\'t downloaded to get status')
+    parser.add_argument('--anime', action='store_true', help='Set to anime mode')
     args = parser.parse_args()
 
-    update = setconfig(args.mmh3, args.ltx2, args.hires, args.sdres, args.portrait, args.wangp, args.hivram, args.lovram, args.verbose)
+    update = setconfig(args.mmh3, args.ltx2, args.hires, args.sdres, args.portrait, args.wangp, args.hivram, args.lovram, args.verbose, args.anime)
     if update:
         load_config(True, update)
 
