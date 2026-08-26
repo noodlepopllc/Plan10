@@ -138,11 +138,14 @@ async def i2v_h3(prompt='', media='', end='', output='output.mp4',
         args = r.data
         args['output_filename'] = output
         args['prompt'] = final_prompt
-        if media:
-            args['image_start'] = media
-            args['image_prompt_type'] =  'SE' if end else 'S'
+        if media or end:
+            args['image_prompt_type'] = ''
+            if media:
+                args['image_start'] = media
+            args['image_prompt_type'] +=  'S'
             if end:
                 args['image_end'] = end
+                args['image_prompt_type'] +=  'E'
         args['resolution'] = f'{width}x{height}'
         args['video_length'] = frames
         args["activated_loras"] = ["minimax_h3_larryvrh_v4_step600_ema.safetensors"]
