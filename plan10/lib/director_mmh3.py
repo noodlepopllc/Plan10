@@ -98,18 +98,22 @@ class SmartVideoPromptBuilder:
             with open(image_path + ".desc.txt", "w") as f:
                 f.write(desc)
 
-    def _analyze_image(self, image_path: str) -> str:
-        desc = AnalyzeImage(image_path, 
-            "Provide a single, concise sentence describing the main visual elements, lighting, and key objects in this image. Do not include introductory phrases like 'This image shows' or 'The image features'")['analysis']
+    def _analyze_image(self, image_path: str, is_character: bool = False) -> str:
+        if is_character:
+            prompt = """Provide a single, concise sentence describing ONLY the character's physical appearance, 
+            clothing, and distinguishing features. Ignore the background, setting, props, and other people. 
+            Focus on: face, hair, body type, clothing, accessories. Do not include introductory phrases."""
+        else:
+            prompt = """Provide a single, concise sentence describing the main visual elements, lighting, 
+            atmosphere, and key objects in this environment/scene. Do not include introductory phrases 
+            like 'This image shows' or 'The image features'."""
         
-        # Lowercase the first letter so it reads "<Subject 1> is a rustic..."
+        desc = AnalyzeImage(image_path, prompt)['analysis']
+        
+        # Lowercase the first letter
         if desc:
             desc = desc[0].lower() + desc[1:]
         return desc
-
-    def set_summary(self, text: str):
-        self.summary = text
-        return self
 
     def add_subject(self, image_path: str, label: str, is_character: bool = False):
         self._subject_counter += 1
@@ -117,24 +121,29 @@ class SmartVideoPromptBuilder:
         
         pic_tag = f"<Picture {sub_id}>" if is_character else f"<Picture {sub_id}>"
             
-        # --- NEW: Check cache first ---
-        desc = self._load_metadata(image_path)
+        # Check cache first (include is_character in cache key!)
+        cache_key = f"{image_path}_{'char' if is_character else 'bg'}"
+        desc = self._load_metadata(cache_key)
+        
         if not desc:
-            print(f"Analyzing {image_path}...")
-            desc = self._analyze_image(image_path)
-            self._save_metadata(image_path, desc)
+            print(f"Analyzing {image_path} as {'character' if is_character else 'background'}...")
+            desc = self._analyze_image(image_path, is_character=is_character)
+            self._save_metadata(cache_key, desc)
         else:
             print(f"Loaded cached description for {image_path}.")
-        # -------------------------------
         
         self.entities[label.lower()] = {
             "id": sub_id,
-            "path": image_path,  # <-- ADDED: Track the file path
+            "path": image_path,
             "pic_tag": pic_tag,
             "desc": desc,
             "is_character": is_character,
             "shots": set()
         }
+        return self
+
+    def set_summary(self, text: str):
+        self.summary = text
         return self
 
     # Alias for backgrounds to match your mental model
