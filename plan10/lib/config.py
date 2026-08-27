@@ -112,10 +112,7 @@ def setconfig(mmh3=False, ltx2=False, hires=False, sdres=False, portrait=False, 
         tmp_cfg["WIDTH"]  = minimal_resolution[0]
         tmp_cfg["HEIGHT"] = minimal_resolution[1]
     if portrait:
-        high_resolution.reverse()
-        standard_resolution.reverse()
-        minimal_resolution.reverse()
-        cfg_original['WIDTH'], cfg_original['HEIGHT'] = cfg_original['HEIGHT'], cfg_original['WIDTH']
+        tmp_cfg['WIDTH'], tmp_cfg['HEIGHT'] = tmp_cfg['HEIGHT'], tmp_cfg['WIDTH']
     if hivram:
         tmp_cfg["VRAM"] = 64
     if lovram:
