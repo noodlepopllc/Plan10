@@ -57,4 +57,5 @@ bot = "plan10.bin.bot:main"
 bot_cli = "plan10.bin.bot_cli:main"
 llm = "plan10.lib.qwen_llm:main"
 director = "plan10.lib.director_mmh3:main"
+splicer = "plan10.lib.splicer:main"
 
