@@ -72,6 +72,8 @@ def Splice(prompt='',first='', last='', output='output.mp4', duration_sec=1, wid
             width=width, height=height,
             tiled=True,
             num_frames=total_frames,
+            cfg_scale=1.0,
+            num_inference_steps=8,
             seed=seed,
         )
         for frame in video:
