@@ -99,10 +99,16 @@ def Splice(prompt='',first='', last='', output='output.mp4', duration_sec=1, wid
         gc.collect()
         torch.cuda.empty_cache()
 
+DEFAULT_PROMPT = '''The subject begins in the pose and appearance of the first frame.
+They move naturally and consistently through the scene with stable body orientation and smooth motion.
+Their actions gradually evolve toward the pose and appearance of the last frame.
+The transition is continuous, fluid, and physically plausible, without sudden jumps or erratic changes.
+Maintain consistent lighting, proportions, and identity throughout the entire clip.'''
+
 def main():
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument('-P', '--prompt', type=str, default='transitions smoothly from first to last frame', required=False)
+    parser.add_argument('-P', '--prompt', type=str, default=DEFAULT_PROMPT, required=False)
     parser.add_argument('-F', '--first', type=str, default='', help='First frame')
     parser.add_argument('-L', '--last', type=str, default='', help='Last frame')
     parser.add_argument('-O', '--output', type=str, default='output.mp4')
