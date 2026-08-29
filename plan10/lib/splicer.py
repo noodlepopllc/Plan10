@@ -73,6 +73,8 @@ def Splice(prompt='',first='', last='', output='output.mp4', duration_sec=1, wid
             num_frames=total_frames,
             seed=seed,
         )
+        for frame in video:
+            print(frame)
 
         save_video(video, output, fps=fps, quality=5)
             
