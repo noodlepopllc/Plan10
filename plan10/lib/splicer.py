@@ -44,6 +44,7 @@ def _ensure_pipeline(vrlimit=14):
         tokenizer_config=ModelConfig(model_id="Wan-AI/Wan2.1-T2V-1.3B", origin_file_pattern="google/umt5-xxl/"),
         vram_limit=vrlimit,
     )
+    _pipe.load_lora(_pipe.dit, './loras/loras_accelerators/Wan21_CausVid_bidirect2_T2V_1_3B_lora_rank32.safetensors', alpha=1.0)
     return _pipe
 
 def Splice(prompt='',first='', last='', output='output.mp4', duration_sec=1, width=WIDTH, height=HEIGHT, seed=-1):
@@ -85,7 +86,7 @@ def Splice(prompt='',first='', last='', output='output.mp4', duration_sec=1, wid
             "output_path": output,
             "frames": len(video),
             "description": '',
-            "prompt": eprompt
+            "prompt": prompt
         }
         
     except Exception as e:
