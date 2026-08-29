@@ -48,51 +48,51 @@ def _ensure_pipeline(vrlimit=14):
 
 def Splice(prompt='',first='', last='', output='output.mp4', duration_sec=1, width=WIDTH, height=HEIGHT, seed=-1):
 
-       original_prompt = prompt
+    original_prompt = prompt
 
-        width = int(width)
-        height = int(height)
-        seed = int(seed)
-        duration_sec = int(duration_sec)
-        fps = 16
+    width = int(width)
+    height = int(height)
+    seed = int(seed)
+    duration_sec = int(duration_sec)
+    fps = 16
 
-        if seed == -1:
-            seed = random.randint(0,1000000)
+    if seed == -1:
+        seed = random.randint(0,1000000)
 
-        total_frames = (duration_sec * fps) + 1
-        _pipe = _ensure_pipeline()
+    total_frames = (duration_sec * fps) + 1
+    _pipe = _ensure_pipeline()
 
-        video = None
-        try:
-            video = _pipe(
-                prompt=prompt,
-                input_image=Image.open(first),
-                end_image=Image.open(last),
-                width=width, height=height,
-                tiled=True,
-                num_frames=total_frames,
-                seed=seed,
-            )
+    video = None
+    try:
+        video = _pipe(
+            prompt=prompt,
+            input_image=Image.open(first),
+            end_image=Image.open(last),
+            width=width, height=height,
+            tiled=True,
+            num_frames=total_frames,
+            seed=seed,
+        )
 
-            save_video(video, output, fps=fps, quality=5)
-                
-            # Post-processing
+        save_video(video, output, fps=fps, quality=5)
             
-            return {
-                "status": "success",
-                "output_path": output,
-                "frames": len(video),
-                "description": '',
-                "prompt": eprompt
-            }
-            
-        except Exception as e:
-            print(f"❌ Error: {e}")
-            raise
-        finally:
-            del video
-            gc.collect()
-            torch.cuda.empty_cache()
+        # Post-processing
+        
+        return {
+            "status": "success",
+            "output_path": output,
+            "frames": len(video),
+            "description": '',
+            "prompt": eprompt
+        }
+        
+    except Exception as e:
+        print(f"❌ Error: {e}")
+        raise
+    finally:
+        del video
+        gc.collect()
+        torch.cuda.empty_cache()
 
 def main():
     parser = argparse.ArgumentParser()
