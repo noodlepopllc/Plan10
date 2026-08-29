@@ -95,6 +95,7 @@ def Splice(prompt='',first='', last='', output='output.mp4', duration_sec=1, wid
         torch.cuda.empty_cache()
 
 def main():
+    import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('-P', '--prompt', type=str, default='transitions smoothly from first to last frame', required=False)
     parser.add_argument('-F', '--first', type=str, default='', help='First frame')
