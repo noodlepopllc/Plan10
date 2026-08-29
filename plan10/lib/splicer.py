@@ -44,7 +44,7 @@ def _ensure_pipeline(vrlimit=14):
         tokenizer_config=ModelConfig(model_id="Wan-AI/Wan2.1-T2V-1.3B", origin_file_pattern="google/umt5-xxl/"),
         vram_limit=vrlimit,
     )
-    _pipe.load_lora(_pipe.dit, './loras/loras_accelerators/Wan21_CausVid_bidirect2_T2V_1_3B_lora_rank32.safetensors', alpha=1.0)
+    #_pipe.load_lora(_pipe.dit, './loras/loras_accelerators/Wan21_CausVid_bidirect2_T2V_1_3B_lora_rank32.safetensors', alpha=1.0)
     return _pipe
 
 def Splice(prompt='',first='', last='', output='output.mp4', duration_sec=1, width=WIDTH, height=HEIGHT, seed=-1):
@@ -72,8 +72,8 @@ def Splice(prompt='',first='', last='', output='output.mp4', duration_sec=1, wid
             width=width, height=height,
             tiled=True,
             num_frames=total_frames,
-            cfg_scale=1.0,
-            num_inference_steps=8,
+            #cfg_scale=1.0,
+            #num_inference_steps=8,
             seed=seed,
         )
         for frame in video:
