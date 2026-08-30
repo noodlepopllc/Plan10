@@ -132,6 +132,7 @@ def main():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('-R', '--replace-env', action='store_true', help='Generate reverse-angle background (T2I)')
+    parser.add_argument('-U', '--update', action='store_true', help='Update config')
     parser.add_argument('--mmh3', action='store_true', help='Minimax H3 is renderer')
     parser.add_argument('--ltx2', action='store_true', help='LTX2.3 distilled is renderer')
     parser.add_argument('--wangp', action='store_true', help='Use wangp MCP server as renderer')
@@ -145,13 +146,11 @@ def main():
     parser.add_argument('--anime', action='store_true', help='Set to anime mode')
     args = parser.parse_args()
 
-    if args.replace_env:
-        load_environ(args.replace_env)
-    else:
-        update = setconfig(args.mmh3, args.ltx2, args.hires, args.sdres, args.portrait, args.wangp, args.hivram, args.lovram, args.verbose, args.anime, args.minres)
-        if update:
-            load_config(True, update)
-        load_environ(args.replace_env)
+
+    if args.update and update := setconfig(args.mmh3, args.ltx2, args.hires, args.sdres, args.portrait, args.wangp, args.hivram, args.lovram, args.verbose, args.anime, args.minres)
+        load_config(True, update)
+
+    load_environ(args.replace_env)
 
 if __name__ == '__main__':
     main()
