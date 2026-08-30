@@ -147,8 +147,10 @@ def main():
     args = parser.parse_args()
 
 
-    if args.update and update := setconfig(args.mmh3, args.ltx2, args.hires, args.sdres, args.portrait, args.wangp, args.hivram, args.lovram, args.verbose, args.anime, args.minres):
-        load_config(True, update)
+    if args.update:
+        update = setconfig(args.mmh3, args.ltx2, args.hires, args.sdres, args.portrait, args.wangp, args.hivram, args.lovram, args.verbose, args.anime, args.minres):
+        if update:
+            load_config(True, update)
 
     load_environ(args.replace_env)
 
