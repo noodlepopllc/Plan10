@@ -148,7 +148,7 @@ def main():
 
 
     if args.update:
-        update = setconfig(args.mmh3, args.ltx2, args.hires, args.sdres, args.portrait, args.wangp, args.hivram, args.lovram, args.verbose, args.anime, args.minres):
+        update = setconfig(args.mmh3, args.ltx2, args.hires, args.sdres, args.portrait, args.wangp, args.hivram, args.lovram, args.verbose, args.anime, args.minres)
         if update:
             load_config(True, update)
 
