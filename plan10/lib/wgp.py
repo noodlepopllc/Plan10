@@ -295,6 +295,7 @@ async def s2v_ltx(prompt='', media='', end_image='', audio='', text='', output='
         args['guidance_phases'] = 1 if 'DISTILLED:1' in os.environ['LTX'] else 2
         args['num_inference_steps'] = 8 if DISTILLED else 30
         args['guidance_scale'] = 1.0 if DISTILLED else 3.0
+        args['audio_guidance_scale'] = 3.0
         #args['prompt_enhancer'] = 'TI'
         args['audio_prompt_type'] = 'A1OF'
         args['audio_guide'] = audio
