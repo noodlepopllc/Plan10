@@ -260,7 +260,8 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         '''
 
         if isinstance(media, list):
-            start_image = media.pop(0)
+            if len(media) > 0:
+                start_image = media.pop(0)
             if len(media) > 0:
                 end_image = video_to_img(media.pop(), width, height, True, False)
         else:
