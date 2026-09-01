@@ -209,7 +209,7 @@ def i2v_diffsynth(prompt='', media='', output='output.mp4',
     )
     num_frames = (duration_sec * 24) + 1
 
-    if Path(media).exists():
+    if media:
         image = Image.open(media).convert("RGB").resize((width, height))
     
         # Run core inference pipeline
