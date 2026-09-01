@@ -174,7 +174,6 @@ def i2v_diffsynth(prompt='', media='', output='output.mp4',
     # Your Spark has 128GB. If os.environ["VRAM"] is set to a low value (like 12 or 16),
     # DiffSynth will manually break up the models even if you set the device to "cuda".
     # We override it here to leverage your hardware's full capacity.
-    allocated_vram_limit = min(VRAM, 96)
 
     pipe = LTX2AudioVideoPipeline.from_pretrained(
         torch_dtype=torch.bfloat16,
@@ -254,9 +253,11 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         start_image = ''
         end_image = None
 
+        '''
         if not media:
             GenerateImage(prompt = prompt, output='first_frame.png', width=width, height=height, seed=seed)
             media='first_frame.png'
+        '''
 
         if isinstance(media, list):
             start_image = media.pop(0)
@@ -283,18 +284,22 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         print(f"\n🎬 Generating {total_frames/fps:.1f}s video ({total_frames} frames)")
         print(f"   Resolution: {width}x{height}")
 
-        current_source = video_to_img(start_image, width, height, True, True)
-        current_source.save('tmp.png')
+        if start_image:
+            current_source = video_to_img(start_image, width, height, True, True)
+            current_source.save('tmp.png')
 
         if not prompt:
             prompt = "The characters stand and act naturally. "
 
-        eprompt = EnhancePrompt(start_image, prompt, enhance_path)
+        if start_image:
+            eprompt = EnhancePrompt(start_image, prompt, enhance_path)
+        else:
+            eprompt = prompt
 
         print("CURRENT PROMPT: ",eprompt)
 
         try:
-            i2v(eprompt, 'tmp.png', output, 
+            i2v(eprompt, 'tmp.png' if start_image else '', output, 
                     duration_sec, width, height, seed)
             description = ''
                 
