@@ -413,28 +413,50 @@ f''' After speaking, <Subject 1> {prompt} They continue to move naturally for th
 
 def compose_video(prompt, images, audio, output='output.mp4', width=768, height=448, duration=5.0):
     try:
-        vram_config = {
-            "offload_dtype": "disk",
-            "offload_device": "disk",
-            "onload_dtype": torch.bfloat16,
-            "onload_device": "cpu",
-            "preparing_dtype": torch.bfloat16,
-            "preparing_device": "cpu" if VRAM < 24 else "cuda",
-            "computation_dtype": torch.bfloat16,
-            "computation_device": "cuda",
-        }
-        pipe = MiniMaxH3Pipeline.from_pretrained(
-            torch_dtype=torch.bfloat16,
-            device="cuda",
-            model_configs=[
-                ModelConfig(model_id="DiffSynth-Studio/MiniMax-H3-NF4", origin_file_pattern="minimax-h3-ref2va-pruned-nf4.safetensors", **vram_config),
-                ModelConfig(model_id="DiffSynth-Studio/MiniMax-H3-NF4", origin_file_pattern="minimax-h3-text-encoder-nf4.safetensors", **vram_config),
-                ModelConfig(model_id="DiffSynth-Studio/MiniMax-H3-NF4", origin_file_pattern="video_vae_nf4.safetensors", **vram_config),
-                ModelConfig(model_id="DiffSynth-Studio/MiniMax-H3-NF4", origin_file_pattern="audio_vae_nf4.safetensors", **vram_config),
-            ],
-            processor_config=ModelConfig(model_id="MiniMaxAI/MiniMax-H3", origin_file_pattern="Ref2VA/processor/"),
-            vram_limit=64,
-        )
+        vram_limit = min(VRAM, 64)
+        if vram_limit < 32:
+            vram_config = {
+                "onload_dtype": torch.bfloat16,
+                "onload_device": "cuda",
+                "preparing_dtype": torch.bfloat16,
+                "preparing_device": "cuda",
+                "computation_dtype": torch.bfloat16,
+                "computation_device": "cuda",
+            }
+
+            pipe = MiniMaxH3Pipeline.from_pretrained(
+                torch_dtype=torch.bfloat16,
+                device="cuda",
+                model_configs=[
+                    ModelConfig(model_id="DiffSynth-Studio/MiniMax-H3-NF4", origin_file_pattern="minimax-h3-ref2va-pruned-nf4.safetensors", **vram_config),
+                    ModelConfig(model_id="DiffSynth-Studio/MiniMax-H3-NF4", origin_file_pattern="minimax-h3-text-encoder-nf4.safetensors", **vram_config),
+                    ModelConfig(model_id="DiffSynth-Studio/MiniMax-H3-NF4", origin_file_pattern="video_vae_nf4.safetensors", **vram_config),
+                    ModelConfig(model_id="DiffSynth-Studio/MiniMax-H3-NF4", origin_file_pattern="audio_vae_nf4.safetensors", **vram_config),
+                ],
+                processor_config=ModelConfig(model_id="MiniMaxAI/MiniMax-H3", origin_file_pattern="Ref2VA/processor/"),
+                vram_limit=vram_limit,
+            )
+        else:
+            vram_config = {
+                "onload_dtype": "disk",
+                "onload_device": "disk",
+                "preparing_dtype": torch.bfloat16,
+                "preparing_device": "cuda",
+                "computation_dtype": torch.bfloat16,
+                "computation_device": "cuda",
+            }
+            pipe = MiniMaxH3Pipeline.from_pretrained(
+                torch_dtype=torch.bfloat16,
+                device="cuda",
+                model_configs=[
+                    ModelConfig(model_id="MiniMax/MiniMax-H3", origin_file_pattern="Ref2VA/text_encoder/model*.safetensors", quantize=QuantizeConfig(method="torchao_int8_w8a16"), **vram_config),
+                    ModelConfig(model_id="Comfy-Org/MiniMax-H3", origin_file_pattern="diffusion_models/minimax_h3_ref2va_pruned_bf16.safetensors",  quantize=QuantizeConfig(method="torchao_int8_w8a16"), **vram_config),
+                    ModelConfig(model_id="MiniMax/MiniMax-H3", origin_file_pattern="Ref2VA/video_vae/source/model.safetensors",  quantize=QuantizeConfig(method="torchao_int8_w8a16"), **vram_config),
+                    ModelConfig(model_id="MiniMax/MiniMax-H3", origin_file_pattern="Ref2VA/audio_vae/model.safetensors",  quantize=QuantizeConfig(method="torchao_int8_w8a16"), **vram_config),
+                ],
+                processor_config=ModelConfig(model_id="MiniMaxAI/MiniMax-H3", origin_file_pattern="Ref2VA/processor/"),
+                vram_limit=vram_limit,
+            )
         frames = duration * 24
         frames = int(((frames // 17) * 17) + 5) 
 
