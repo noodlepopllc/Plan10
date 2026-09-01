@@ -146,20 +146,29 @@ def i2v_diffsynth(prompt='', media='', output='output.mp4',
     torch.backends.cudnn.benchmark = True
     torch.backends.cuda.matmul.allow_tf32 = True
 
-    #width, height = (720, 1280) if height > width else (1280, 720)
+    allocated_vram_limit = min(VRAM, 96)
 
-    # 1. FIXED VRAM CONFIG: Lock everything directly inside CUDA space.
-    # By removing "cpu" offloading, we stop the ARM-to-GPU step-by-step page fault loops.
     vram_config = {
         "offload_dtype": torch.float8_e5m2,
         "offload_device": "cpu",
         "onload_dtype": torch.float8_e5m2,
         "onload_device": "cpu",
         "preparing_dtype": torch.float8_e5m2,
-        "preparing_device": "cuda",
+        "preparing_device": "cpu",
         "computation_dtype": torch.bfloat16,
         "computation_device": "cuda",
     }
+    if allocated_vram_limit > 32:
+        vram_config = {
+            "offload_dtype": torch.bfloat16,
+            "offload_device": "cpu",
+            "onload_dtype": torch.bfloat16,
+            "onload_device": "cpu",
+            "preparing_dtype": torch.bfloat16,
+            "preparing_device": "cuda",
+            "computation_dtype": torch.bfloat16,
+            "computation_device": "cuda",
+        }
 
     # 2. INCREASE VRAM LIMIT OR REMOVE STRIP BOUNDARY
     # Your Spark has 128GB. If os.environ["VRAM"] is set to a low value (like 12 or 16),
