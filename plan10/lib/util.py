@@ -103,20 +103,8 @@ def video_to_img(vid, width=832, height=480, resize=False, getlast=True):
 # SENTENCE SEGMENTATION (SpaCy sentencizer)
 # ---------------------------------------------------------
 
-import spacy
-import subprocess
-import importlib.util
-
-def ensure_spacy_model(model_name="en_core_web_sm"):
-    if importlib.util.find_spec(model_name) is None:
-        print(f"Downloading spaCy model: {model_name}...")
-        subprocess.check_call(["python", "-m", "spacy", "download", model_name])
-
-ensure_spacy_model()
-NLP = spacy.load("en_core_web_sm")
-#print("Model loaded successfully!")
-
-#NLP = spacy("en_core_web_sm", exclude=["parser", "tagger"])
+from spacy_download import load_spacy
+NLP = load_spacy("en_core_web_sm", exclude=["parser", "tagger"])
 NLP.add_pipe("sentencizer")
 
 def segment_sentences(text: str):
