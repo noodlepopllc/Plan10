@@ -332,15 +332,14 @@ f''' After speaking, <Subject 1> {prompt} They continue to move naturally for th
         vram_limit = min(VRAM, 64)
         if vram_limit < 32:
             vram_config = {
-                "offload_dtype": "disk",
-                "offload_device": "disk",
                 "onload_dtype": torch.bfloat16,
-                "onload_device": "cpu",
+                "onload_device": "cuda",
                 "preparing_dtype": torch.bfloat16,
-                "preparing_device": "cpu",
+                "preparing_device": "cuda",
                 "computation_dtype": torch.bfloat16,
                 "computation_device": "cuda",
             }
+
             pipe = MiniMaxH3Pipeline.from_pretrained(
                 torch_dtype=torch.bfloat16,
                 device="cuda",
