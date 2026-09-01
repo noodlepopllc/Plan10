@@ -18,6 +18,7 @@ from plan10.lib.image_analysis import AnalyzeImage, EnhancePrompt,translate_to_a
 from plan10.lib.image_gen import add_metadata_char
 import random
 import librosa
+from diffsynth.core.quant import QuantizeConfig
 
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
