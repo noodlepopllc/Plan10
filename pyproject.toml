@@ -14,8 +14,8 @@ dependencies = [
     "omnivoice",
     "librosa",
     "faster-whisper",
-    "spacy_download",
-    "en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1-py3-none-any.whl",
+    "numpy>=2.0.0,<2.1.0".
+    "spacy",
     "fastmcp",
     "num2words",
     "diffsynth[all]",
