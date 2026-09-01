@@ -88,7 +88,7 @@ def setconfig(mmh3=False, ltx2=False, hires=False, sdres=False, portrait=False, 
         tmp_cfg['LTX'] = 'False'
         tmp_cfg['MMH3'] = 'False'
     else:
-        tmp_cfg['WGP'] = cfg_original['WGP']
+        tmp_cfg['WGP'] = 'False'
     if mmh3:
         tmp_cfg['MMH3'] = 'True'
         tmp_cfg['LTX'] = 'False'
