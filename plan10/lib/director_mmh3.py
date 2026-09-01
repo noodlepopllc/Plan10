@@ -12,10 +12,8 @@ from time import sleep
 from plan10.lib.config import load_environ
 load_environ()
 
-WIDTH = ((int(os.environ.get("WIDTH", "864")) // 32) * 32)
-HEIGHT = ((int(os.environ.get("HEIGHT", "480")) // 32) * 32)
 ANIME = os.environ.get("ANIME","False") != "False" 
-WGP = os.environ.get("WGP","False") != "False"
+
 
 
 from plan10.lib.image_analysis import AnalyzeImage
@@ -441,10 +439,21 @@ def main():
         from plan10.lib.image_gen import GenerateImage, CreateCharacterSheet, CreateBackground
     from plan10.lib.dialog import DesignVoice
     parser = argparse.ArgumentParser(description='Cinematic Director')
-    parser.add_argument('-O', '--output', type=str, default='output', help='output directory')
-    parser.add_argument('-I', '--input', type=str, default=None, help='input file')
+    parser.add_argument('-O', '--output', type=str, default='output')
+    parser.add_argument('-I', '--input', type=str, default=None)
     parser.add_argument('-D', '--debug', action='store_true')
+    parser.add_argument('-W', '--width', type=int, default=int(os.environ.get("WIDTH", "864")))
+    parser.add_argument('-H', '--height', type=int, default=int(os.environ.get("HEIGHT", "480")))
+    parser.add_argument('--wangp', action="store_true")
     args = parser.parse_args()
+
+    # Override environment first
+    os.environ['WIDTH'] = str(args.width)
+    os.environ['HEIGHT'] = str(args.height)
+
+    # Recompute WIDTH/HEIGHT cleanly
+    WIDTH = (args.width // 32) * 32
+    HEIGHT = (args.height // 32) * 32
 
     base_dir = f'{os.getcwd()}/{args.output}'
     Path(f"{base_dir}/images").mkdir(parents=True, exist_ok=True)
@@ -503,19 +512,19 @@ def main():
     if args.input:
         Path(args.input.replace('.txt','_prompt.txt')).write_text(final_prompt)
     
-    if WGP:
+    if args.wangp:
         asyncio.run(send(
             final_prompt, 
             img_refs, 
             aud_refs, 
             output=output_filename, 
-            width=WIDTH, 
-            height=HEIGHT, 
+            width=args.width, 
+            height=args.height, 
             duration=builder.duration
         ))
     else:
         from plan10.lib.mmh3 import compose_video
-        print(compose_video(final_prompt, img_refs, aud_refs, output_filename, WIDTH, HEIGHT, builder.duration))
+        print(compose_video(final_prompt, img_refs, aud_refs, output_filename, args.width, args.height, builder.duration))
 
 if __name__ == '__main__':
     main()

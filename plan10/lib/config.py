@@ -73,6 +73,7 @@ def load_environ(replace_env=False):
             for k, v in cfg.items():
                 if isinstance(v, str):
                     fp.write(f'export {k}="{v}"\n')
+            fp.write('export Loaded="True"\n')
             #fp.write(additional)
 
 def setconfig(mmh3=False, ltx2=False, hires=False, sdres=False, portrait=False, wangp=False, hivram=False, lovram=False, verbose=False, anime=False, minres=False):
