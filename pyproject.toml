@@ -7,6 +7,7 @@ dependencies = [
     "torchaudio",
     "torchvision",
     "torchcodec",
+    "torchao",
     "transformers",
     "bitsandbytes", 
     "opencv-python",
@@ -25,8 +26,8 @@ dependencies = [
 package = true
 
 [tool.uv.sources]
-diffsynth = { git = "https://github.com/modelscope/DiffSynth-Studio.git", rev = "1e3527b2eb1cefe98c4202f7fc1a1883b45c7b15" }
-# diffsynth = { git = "https://github.com/modelscope/DiffSynth-Studio.git"}
+#diffsynth = { git = "https://github.com/modelscope/DiffSynth-Studio.git", rev = "1e3527b2eb1cefe98c4202f7fc1a1883b45c7b15" }
+diffsynth = { git = "https://github.com/modelscope/DiffSynth-Studio.git"}
 
 
 [tool.setuptools.packages.find]
