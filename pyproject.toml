@@ -14,7 +14,7 @@ dependencies = [
     "omnivoice",
     "librosa",
     "faster-whisper",
-    "spacy_load",
+    "spacy_download",
     "pip",
     "fastmcp",
     "num2words",
