@@ -10,7 +10,7 @@ dependencies = [
     "torchao",
     "transformers",
     "bitsandbytes", 
-    "opencv-python-headless",
+    "opencv-python-headless==4.10.0.84",
     "uniface",
     "omnivoice",
     "librosa",
@@ -25,6 +25,9 @@ dependencies = [
 [tool.uv]
 package = true
 exclude = ["opencv-python"]
+
+[tool.uv.overrides]
+opencv-python = { replace = "opencv-python-headless" }
 
 
 [tool.uv.sources]
