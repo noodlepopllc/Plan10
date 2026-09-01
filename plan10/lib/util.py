@@ -113,10 +113,10 @@ def ensure_spacy_model(model_name="en_core_web_sm"):
         subprocess.check_call(["python", "-m", "spacy", "download", model_name])
 
 ensure_spacy_model()
-#nlp = spacy.load("en_core_web_sm")
+NLP = spacy.load("en_core_web_sm")
 #print("Model loaded successfully!")
 
-NLP = spacy("en_core_web_sm", exclude=["parser", "tagger"])
+#NLP = spacy("en_core_web_sm", exclude=["parser", "tagger"])
 NLP.add_pipe("sentencizer")
 
 def segment_sentences(text: str):
