@@ -10,7 +10,7 @@ dependencies = [
     "torchao",
     "transformers",
     "bitsandbytes", 
-    "opencv-python",
+    "opencv-python-headless",
     "uniface",
     "omnivoice",
     "librosa",
