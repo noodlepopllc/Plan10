@@ -355,8 +355,6 @@ f''' After speaking, <Subject 1> {prompt} They continue to move naturally for th
             )
         else:
             vram_config = {
-                "offload_dtype": "disk",
-                "offload_device": "disk",
                 "onload_dtype": "disk",
                 "onload_device": "disk",
                 "preparing_dtype": torch.bfloat16,
