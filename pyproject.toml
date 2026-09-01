@@ -15,7 +15,7 @@ dependencies = [
     "librosa",
     "faster-whisper",
     "spacy_download",
-    "pip",
+    "en_core_web_sm @ https://github.com",
     "fastmcp",
     "num2words",
     "diffsynth[all]",
