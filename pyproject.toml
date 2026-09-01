@@ -14,7 +14,7 @@ dependencies = [
     "omnivoice",
     "librosa",
     "faster-whisper",
-    "numpy>=2.0.0,<2.1.0".
+    "numpy>=2.0.0,<2.1.0",
     "spacy",
     "fastmcp",
     "num2words",
