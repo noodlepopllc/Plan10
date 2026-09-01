@@ -209,22 +209,35 @@ def i2v_diffsynth(prompt='', media='', output='output.mp4',
     )
     num_frames = (duration_sec * 24) + 1
 
-    image = Image.open(media).convert("RGB").resize((width, height))
+    if Path(media).exists():
+        image = Image.open(media).convert("RGB").resize((width, height))
     
-    # Run core inference pipeline
-    video, audio = pipe(
-        prompt=final_prompt,
-        negative_prompt=negative_prompt,
-        seed=seed,
-        height=height,
-        width=width,
-        num_frames=num_frames,
-        tiled=True,
-        use_two_stage_pipeline=True,
-        input_images=[image],
-        input_images_indexes=[0],
-        input_images_strength=1.0,
-    )
+        # Run core inference pipeline
+        video, audio = pipe(
+            prompt=final_prompt,
+            negative_prompt=negative_prompt,
+            seed=seed,
+            height=height,
+            width=width,
+            num_frames=num_frames,
+            tiled=True,
+            use_two_stage_pipeline=True,
+            input_images=[image],
+            input_images_indexes=[0],
+            input_images_strength=1.0
+        )
+    else:
+        # Run core inference pipeline
+        video, audio = pipe(
+            prompt=final_prompt,
+            negative_prompt=negative_prompt,
+            seed=seed,
+            height=height,
+            width=width,
+            num_frames=num_frames,
+            tiled=True,
+            use_two_stage_pipeline=True
+        )
     
     write_video_audio_ltx2(
         video=video,
