@@ -490,7 +490,7 @@ def compose_video(prompt, images, audio, output='output.mp4', width=768, height=
             "output_path": output,
             "frames":  frames,
             "description": description,
-            "prompt": ''.join(cprompt)
+            "prompt": ''.join(prompt)
         }
         
     except Exception as e:
