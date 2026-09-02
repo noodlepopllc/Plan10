@@ -1,3 +1,34 @@
+import sys, types, importlib.util
+
+# --- TorchCodec stub that never touches FFmpeg ---
+tc_stub = types.ModuleType("torchcodec")
+tc_stub.__path__ = []
+tc_stub.__package__ = "torchcodec"
+tc_stub.__spec__ = importlib.util.spec_from_loader("torchcodec", loader=None)
+
+core_mod = types.ModuleType("torchcodec._core")
+ops_mod = types.ModuleType("torchcodec._core.ops")
+
+def load_torchcodec_shared_libraries():
+    # Pretend everything is fine; callers get a version + dummy path
+    return 9, "/dev/null"
+
+ops_mod.load_torchcodec_shared_libraries = load_torchcodec_shared_libraries
+ops_mod.AudioStreamMetadata = object
+ops_mod.VideoStreamMetadata = object
+
+core_mod.ops = ops_mod
+
+sys.modules["torchcodec"] = tc_stub
+sys.modules["torchcodec._core"] = core_mod
+sys.modules["torchcodec._core.ops"] = ops_mod
+
+for sub in ("decoders", "encoders", "samplers", "transforms"):
+    sub_mod = types.ModuleType(f"torchcodec.{sub}")
+    sub_mod.__spec__ = importlib.util.spec_from_loader(f"torchcodec.{sub}", loader=None)
+    sys.modules[f"torchcodec.{sub}"] = sub_mod
+
+
 import torch
 from plan10.lib.config import load_environ
 load_environ()
