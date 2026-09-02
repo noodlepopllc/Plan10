@@ -55,39 +55,8 @@ read_audio = read_audio_wav_only
 import av
 import numpy as np
 
-def write_video_audio_safe(video_path, audio_path, output_path):
-    # Open audio
-    audio_data, sr = sf.read(audio_path, dtype='float32')
-    if audio_data.ndim > 1:
-        audio_data = np.mean(audio_data, axis=1)
-
-    # Open video
-    container = av.open(video_path)
-    output = av.open(output_path, mode='w')
-
-    # Copy video stream
-    video_stream = container.streams.video[0]
-    out_video = output.add_stream(template=video_stream)
-
-    # Add audio stream
-    out_audio = output.add_stream("aac", rate=sr)
-    out_audio.channels = 1
-
-    # Write video frames
-    for frame in container.decode(video_stream):
-        output.mux(frame)
-
-    # Write audio frames
-    frame = av.AudioFrame.from_ndarray(audio_data, layout='mono')
-    frame.sample_rate = sr
-    output.mux(frame)
-
-    output.close()
-
-
-
 from diffsynth.pipelines.minimax_h3_audio_video import MiniMaxH3Pipeline, ModelConfig
-#from diffsynth.utils.data.audio_video import write_video_audio
+from diffsynth.utils.data.audio_video import write_video_audio
 from modelscope import dataset_snapshot_download
 from PIL import Image
 
