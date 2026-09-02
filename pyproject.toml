@@ -24,7 +24,6 @@ dependencies = [
 
 [tool.uv]
 package = true
-exclude = ["opencv-python"]
 
 [tool.uv.overrides]
 opencv-python = { replace = "opencv-python-headless" }
