@@ -91,7 +91,8 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         if isinstance(media, list):
             start_image = media.pop(0)
             if len(media) > 0:
-                end_image = video_to_img(media.pop(), width, height, True, False)
+                end_image = media.pop()
+                #end_image = video_to_img(media.pop(), width, height, True, False)
                 enhance_prompt = False
         else:
             start_image = media
@@ -118,6 +119,11 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         current_source = video_to_img(start_image, width, height, True, True)
         current_source.save('tmp.png')
 
+        if end_image:
+            end_source = video_to_img(end_image, width, height, True, True)
+        else:
+            end_source = None
+
         if not prompt:
             prompt = "The characters stand and act naturally. "
 
@@ -136,7 +142,7 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
             video = _pipe(
                 prompt=eprompt,
                 input_image=current_source,
-                end_image=end_image,
+                end_image=end_source,
                 width=width, height=height,
                 tiled=True,
                 num_frames=total_frames,

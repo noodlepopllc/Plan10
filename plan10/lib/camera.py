@@ -20,9 +20,12 @@ from plan10.lib.util import video_to_img, wait_for_file
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
 WGP = os.environ.get("WGP", "False") != "False"
+LTX = os.environ.get("LTX", "False") != "False"
 
 if WGP:
     from plan10.lib.wgp import GenerateVideo
+elif LTX:
+    from plan10.lib.ltx import GenerateVideo
 else:
     from plan10.lib.image_to_video import GenerateVideo
 
