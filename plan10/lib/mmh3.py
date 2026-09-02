@@ -2,32 +2,51 @@ import torch
 from plan10.lib.config import load_environ
 load_environ()
 
-# 1. Force-import the diffsynth audio module into memory
-try:
-    import diffsynth.utils.data.audio as diffsynth_audio
-except ImportError:
-    # Handle paths if running via a nested repository layout
-    diffsynth_audio = None
+#from diffsynth.utils.data.audio import read_audio
 
-if diffsynth_audio:
-    # 2. Define a soundfile fallback function that matches what DiffSynth expects
-    def read_audio_with_soundfile(audio_path, sample_rate=None):
-        data, sr = sf.read(audio_path)
-        # Convert to a PyTorch tensor (Float32 is standard)
-        tensor = torch.tensor(data, dtype=torch.float32)
-        
-        # Reshape if multi-channel (DiffSynth usually wants [channels, samples] or flat)
-        if len(tensor.shape) > 1 and tensor.shape[0] > tensor.shape[1]:
-            tensor = tensor.T
-            
-        # Optional: Handle resampling here if DiffSynth passes a custom sample_rate
-        return tensor, sr
+import soundfile as sf
+import numpy as np
 
-    # 3. Inject BOTH possibilities into DiffSynth to satisfy any internal checks
-    setattr(diffsynth_audio, 'read_audio_with_soundfile', read_audio_with_soundfile)
-    setattr(diffsynth_audio, 'read_audio_with_torchcodec', read_audio_with_soundfile)
+def read_audio_safe(
+    path,
+    start_time=None,
+    duration=None,
+    resample=False,
+    resample_rate=None
+):
+    # Load entire file
+    data, sr = sf.read(path, dtype='float32')
 
-from diffsynth.utils.data.audio import read_audio
+    # Convert stereo → mono
+    if data.ndim > 1:
+        data = np.mean(data, axis=1)
+
+    # Apply start_time
+    if start_time is not None:
+        start_idx = int(start_time * sr)
+        data = data[start_idx:]
+
+    # Apply duration
+    if duration is not None:
+        end_idx = int(duration * sr)
+        data = data[:end_idx]
+
+    # Optional resample
+    if resample and resample_rate and resample_rate != sr:
+        # Simple linear resample (good enough for reference audio)
+        ratio = resample_rate / sr
+        new_len = int(len(data) * ratio)
+        data = np.interp(
+            np.linspace(0, len(data), new_len, endpoint=False),
+            np.arange(len(data)),
+            data
+        )
+        sr = resample_rate
+
+    return data, sr
+
+read_audio = read_audio_safe
+
 
 from diffsynth.pipelines.minimax_h3_audio_video import MiniMaxH3Pipeline, ModelConfig
 from diffsynth.utils.data.audio_video import write_video_audio
