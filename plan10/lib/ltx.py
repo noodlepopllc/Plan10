@@ -36,7 +36,7 @@ BRIEF = os.environ.get("BRIEF","False") != "False"
 #enhance_path = f'./system/ltx_enhancer{ANIME}.txt'
 enhance_path = f'./system/ltx_enhancer_minimal{ANIME}.txt' if BRIEF else f'./system/ltx_enhancer{ANIME}.txt'
 
-def i2v_diffsynth_fast(prompt='', media='', output='output.mp4', 
+def i2v_diffsynth_fast(prompt='', media='', end_image='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
 
     # Enable fast hardware math handling for Blackwell cores
@@ -105,8 +105,16 @@ def i2v_diffsynth_fast(prompt='', media='', output='output.mp4',
         "cinematic oversaturation, stylized filters, or AI artifacts."
     )
     num_frames = (duration_sec * 24) + 1
+    images = []
+    indexes = []
 
-    image = Image.open(media).convert("RGB").resize((width, height))
+    if media:
+        images.append(Image.open(media).convert("RGB").resize((width, height)))
+        indexes.append(0)
+    if end_image:
+        images.append(Image.open(end_image).convert("RGB").resize((width, height)))
+        indexes.append(-1)
+
     
     # Run core inference pipeline
     video, audio = pipe(
@@ -118,8 +126,8 @@ def i2v_diffsynth_fast(prompt='', media='', output='output.mp4',
         num_frames=num_frames,
         tiled=True,
         use_distilled_pipeline=True,
-        input_images=[image],
-        input_images_indexes=[0],
+        input_images=images,
+        input_images_indexes=indexes,
         input_images_strength=1.0,
     )
     
@@ -139,7 +147,7 @@ def i2v_diffsynth_fast(prompt='', media='', output='output.mp4',
     
 
 
-def i2v_diffsynth(prompt='', media='', output='output.mp4', 
+def i2v_diffsynth(prompt='', media='', end_image='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
     
     # Enable fast hardware math handling for Blackwell cores
@@ -208,9 +216,15 @@ def i2v_diffsynth(prompt='', media='', output='output.mp4',
         "cinematic oversaturation, stylized filters, or AI artifacts."
     )
     num_frames = (duration_sec * 24) + 1
+    images = []
+    indexes = []
 
     if media:
-        image = Image.open(media).convert("RGB").resize((width, height))
+        images.append(Image.open(media).convert("RGB").resize((width, height)))
+        indexes.append(0)
+    if end_image:
+        images.append(Image.open(end_image).convert("RGB").resize((width, height)))
+        indexes.append(-1)
     
         # Run core inference pipeline
         video, audio = pipe(
@@ -222,8 +236,8 @@ def i2v_diffsynth(prompt='', media='', output='output.mp4',
             num_frames=num_frames,
             tiled=True,
             use_two_stage_pipeline=True,
-            input_images=[image],
-            input_images_indexes=[0],
+            input_images=images,
+            input_images_indexes=indexes,
             input_images_strength=1.0
         )
     else:
@@ -276,7 +290,8 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
             if len(media) > 0:
                 start_image = media.pop(0)
             if len(media) > 0:
-                end_image = video_to_img(media.pop(), width, height, True, False)
+                end_image = media.pop()
+                #end_image = video_to_img(media.pop(), width, height, True, False)
         else:
             start_image = media
 
@@ -313,7 +328,7 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         print("CURRENT PROMPT: ",eprompt)
 
         try:
-            i2v(eprompt, 'tmp.png' if start_image else '', output, 
+            i2v(eprompt, 'tmp.png' if start_image else '', end_image if end_image else '', output, 
                     duration_sec, width, height, seed)
             description = ''
                 
