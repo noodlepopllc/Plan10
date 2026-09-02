@@ -465,7 +465,7 @@ def main():
         'bg': partial(CreateBackground, override=(768,448)),
         'char': partial(CreateCharacterSheet, override=(512,512)),
         'item': partial(GenerateImage, width=512, height=412),
-        'audio': DesignVoice
+        'audio': partial(DesignVoice, long=True)
     }
 
     output_filename = f"{Path(args.input).name.replace('.txt','.mp4')}" if args.input else f"{base_dir}/output.mp4"
