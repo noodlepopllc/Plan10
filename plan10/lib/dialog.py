@@ -21,6 +21,15 @@ def transcribe(path):
         segs.append(segment.text)
     return segs
 
+# REMOVE this:
+# from omnivoice import OmniVoice, VoiceClonePrompt
+
+# ADD this:
+def _load_omnivoice():
+    from omnivoice import OmniVoice, VoiceClonePrompt
+    return OmniVoice, VoiceClonePrompt
+
+
 def create_audio_and_free_vram(
     text, 
     instruct='female, low pitch, british accent', 
@@ -41,7 +50,7 @@ def create_audio_and_free_vram(
     - voiced-frame check
     - optional Whisper semantic verification
     """
-    from omnivoice import OmniVoice, VoiceClonePromp
+    OmniVoice, VoiceClonePrompt = _load_omnivoice()
 
     pt_path = ref_audio.replace('.wav', '.pt')
 
