@@ -6,6 +6,7 @@ dependencies = [
     "torch",          
     "torchaudio",
     "torchvision",
+    "torchcodec==0.1.0",
     "torchao",
     "transformers",
     "bitsandbytes", 
@@ -23,7 +24,7 @@ dependencies = [
 
 [tool.uv]
 package = true
-exclude = ["opencv-python", "torchcodec"]
+exclude = ["opencv-python"]
 
 [tool.uv.overrides]
 opencv-python = { replace = "opencv-python-headless" }
