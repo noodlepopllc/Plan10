@@ -2,7 +2,8 @@ import torch
 from plan10.lib.config import load_environ
 load_environ()
 
-from diffsynth.utils.data.audio import read_audio
+import diffsynth.utils.data.audio as ds_audio
+ds_audio.read_audio = ds_audio.read_audio_with_soundfile
 
 from diffsynth.pipelines.minimax_h3_audio_video import MiniMaxH3Pipeline, ModelConfig
 from diffsynth.utils.data.audio_video import write_video_audio
