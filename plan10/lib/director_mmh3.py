@@ -482,6 +482,7 @@ def main():
         
         # --- AUDIO REFERENCES (with voice generation prompts) ---
         # audio | label   | path                    | target  | extra_desc                          | voice_prompt
+        # audio | voice_b | audio/voice_sample.wav  | blondie | containing a spoken English vocal layer | female
         audio | voice_r | audio/voice_sample2.wav | red     | containing a spoken English vocal layer | female
         
         # --- SCENE CONTEXT ---
@@ -493,6 +494,7 @@ def main():
         shot | The dog runs into the barn and jumps up to grab the treat from blondie.
         shot | red walks over to blondie, red speaks, [English] You spoil him. | 2
         shot | Closeup shot of blondie | 1
+        # shot | blondie speaks to dog [English] You are such a good boy! | 2.0
         """
 
     # Build and execute
