@@ -191,7 +191,7 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
             prompt = prompt.pop()
         
         start_image = ''
-        end_image = None
+        last_image = None
 
         if not media:
             GenerateImage(prompt = prompt, output='first_frame.png', width=width, height=height, seed=seed)
@@ -202,7 +202,7 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
             if len(media) > 0:
                 img = video_to_img(media.pop(), width, height, True, False)
                 img.save('tmp_last.png')
-                end_image = 'tmp_last.png'
+                last_image = 'tmp_last.png'
                 
         else:
             start_image = media
@@ -236,7 +236,7 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         print("CURRENT PROMPT: ",eprompt)
 
         try:
-            i2v(eprompt, 'tmp.png', output, 
+            i2v(eprompt, 'tmp.png', last_image, output, 
                     duration_sec, width, height, seed)
             description = ''
                 
