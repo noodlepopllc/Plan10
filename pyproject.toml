@@ -1,12 +1,11 @@
 [project]
 name = "plan10"
-version = "0.1.4"
+version = "0.1.5"
 requires-python = "==3.12.*"
 dependencies = [
     "torch",          
     "torchaudio",
     "torchvision",
-    #"torchcodec",
     "torchao",
     "transformers",
     "bitsandbytes", 
@@ -24,7 +23,7 @@ dependencies = [
 
 [tool.uv]
 package = true
-exclude = ["opencv-python"]
+exclude = ["opencv-python", "torchcodec"]
 
 [tool.uv.overrides]
 opencv-python = { replace = "opencv-python-headless" }
