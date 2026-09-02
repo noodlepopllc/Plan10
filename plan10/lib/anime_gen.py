@@ -269,7 +269,11 @@ class ImageGenQwen(object):
                     tokenizer_config=ModelConfig(model_id="Qwen/Qwen-Image", origin_file_pattern="tokenizer/"),
                     vram_limit=self.vrlimit,
                 )
-            self.pipe.load_lora(self.pipe.dit, "./loras/Qwen-Image-2512-Lightning-8steps-V1.0-bf16.safetensors", alpha=1.0)
+            lora = ModelConfig(
+                model_id="lightx2v/Qwen-Image-2512-Lightning",
+                origin_file_pattern="Qwen-Image-2512-Lightning-8steps-V1.0-bf16.safetensors"
+            )
+            self.pipe.load_lora(self.pipe.dit, lora, alpha=1.0)
             self.pipe.scheduler = FlowMatchScheduler("Qwen-Image-Lightning")
 
 
