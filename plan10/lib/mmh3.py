@@ -2,8 +2,35 @@ import torch
 from plan10.lib.config import load_environ
 load_environ()
 
-import diffsynth.utils.data.audio as ds_audio
-ds_audio.read_audio = ds_audio.read_audio_with_soundfile
+import sys
+import soundfile as sf
+import torch
+
+# 1. Force-import the diffsynth audio module into memory
+try:
+    import diffsynth.utils.data.audio as diffsynth_audio
+except ImportError:
+    # Handle paths if running via a nested repository layout
+    diffsynth_audio = None
+
+if diffsynth_audio:
+    # 2. Define a soundfile fallback function that matches what DiffSynth expects
+    def read_audio_with_soundfile(audio_path, sample_rate=None):
+        data, sr = sf.read(audio_path)
+        # Convert to a PyTorch tensor (Float32 is standard)
+        tensor = torch.tensor(data, dtype=torch.float32)
+        
+        # Reshape if multi-channel (DiffSynth usually wants [channels, samples] or flat)
+        if len(tensor.shape) > 1 and tensor.shape[0] > tensor.shape[1]:
+            tensor = tensor.T
+            
+        # Optional: Handle resampling here if DiffSynth passes a custom sample_rate
+        return tensor, sr
+
+    # 3. Inject BOTH possibilities into DiffSynth to satisfy any internal checks
+    setattr(diffsynth_audio, 'read_audio_with_soundfile', read_audio_with_soundfile)
+    setattr(diffsynth_audio, 'read_audio_with_torchcodec', read_audio_with_soundfile)
+
 
 from diffsynth.pipelines.minimax_h3_audio_video import MiniMaxH3Pipeline, ModelConfig
 from diffsynth.utils.data.audio_video import write_video_audio
