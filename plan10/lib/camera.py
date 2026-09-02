@@ -256,7 +256,7 @@ class CameraGimbal:
         return f"<sks> {CameraGimbal.azimuth[self.azimuth]} {CameraGimbal.elevation[self.elevation]} {CameraGimbal.distance[self.distance]}"
 
     def generate(self, image, output, width, height, seed):
-        from image_edit import ImageEditQwen
+        from plan10.lib.image_edit import ImageEditQwen
         editor = ImageEditQwen()
         attach_qwen_lora_runtime(
             editor.get_pipe(),
