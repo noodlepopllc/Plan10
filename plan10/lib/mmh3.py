@@ -60,8 +60,6 @@ from diffsynth.utils.data.audio_video import write_video_audio
 from modelscope import dataset_snapshot_download
 from PIL import Image
 
-write_video_audio = write_video_audio_safe
-
 import logging, os, gc
 import json
 from time import sleep
