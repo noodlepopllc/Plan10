@@ -21,11 +21,14 @@ WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
 WGP = os.environ.get("WGP", "False") != "False"
 LTX = os.environ.get("LTX", "False") != "False"
+MMH3 = os.environ.get("MMH3", "False") != "False"
 
 if WGP:
     from plan10.lib.wgp import GenerateVideo
 elif LTX:
     from plan10.lib.ltx import GenerateVideo
+elif MMH3:
+    from plan10.lib.mmh3 import GenerateVideo
 else:
     from plan10.lib.image_to_video import GenerateVideo
 
