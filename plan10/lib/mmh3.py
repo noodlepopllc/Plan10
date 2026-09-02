@@ -89,7 +89,7 @@ BRIEF = os.environ.get("BRIEF","False") != "False"
 enhance_path = f'./system/mmh3_enhancer.txt'
 
 
-def i2v_diffsynth(prompt='', media='', output='output.mp4', 
+def i2v_diffsynth(prompt='', media='', last_image='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
     
     # Enable fast hardware math handling for Blackwell cores
@@ -152,13 +152,21 @@ def i2v_diffsynth(prompt='', media='', output='output.mp4',
 
     num_frames = (((duration_sec * 24) // 17) * 17) + 5
 
-    image = Image.open(media).convert("RGB").resize((width, height))
+    images = []
+    keyframes = []
+    if media:
+        images.append(Image.open(media).convert("RGB").resize((width, height)))
+        keyframes.append(0)
+    if last_image:
+        images.append(Image.open(last)image).convert("RGB").resize((width, height)))
+        keyframes.append(-1)
+
     
     # Run core inference pipeline
     video, audio = pipe(
         prompt=prompt,
         height=height, width=width, num_frames=num_frames, num_inference_steps=4 if FAST else 20, seed=seed,
-        keyframes=[image], keyframe_indices=[0],
+        keyframes=images, keyframe_indices=keyframes,
     )
     
     write_video_audio(
@@ -192,7 +200,10 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         if isinstance(media, list):
             start_image = media.pop(0)
             if len(media) > 0:
-                end_image = video_to_img(media.pop(), width, height, True, False)
+                img = video_to_img(media.pop(), width, height, True, False)
+                img.save('tmp_last.png')
+                end_image = 'tmp_last.png'
+                
         else:
             start_image = media
 
