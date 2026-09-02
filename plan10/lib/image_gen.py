@@ -415,7 +415,7 @@ def CreateBackground(prompt='', output='location_tmp.png', seed=-1, override=Non
     if isinstance(gen, ImageGenQwen):
         width, height = override if override else (1664,928)
     else:
-        width, height = overide if override else (1920,1080)
+        width, height = override if override else (1920,1080)
     status = gen.generate(prompt, output, width, height, seed)
     del gen
     status['description'] = add_metadata_loc(output, final_prompt, seed)
