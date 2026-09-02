@@ -2,10 +2,6 @@ import torch
 from plan10.lib.config import load_environ
 load_environ()
 
-import sys
-import soundfile as sf
-import torch
-
 # 1. Force-import the diffsynth audio module into memory
 try:
     import diffsynth.utils.data.audio as diffsynth_audio
@@ -31,6 +27,7 @@ if diffsynth_audio:
     setattr(diffsynth_audio, 'read_audio_with_soundfile', read_audio_with_soundfile)
     setattr(diffsynth_audio, 'read_audio_with_torchcodec', read_audio_with_soundfile)
 
+from diffsynth.utils.data.audio import read_audio
 
 from diffsynth.pipelines.minimax_h3_audio_video import MiniMaxH3Pipeline, ModelConfig
 from diffsynth.utils.data.audio_video import write_video_audio
