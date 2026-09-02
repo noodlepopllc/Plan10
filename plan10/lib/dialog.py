@@ -1,3 +1,22 @@
+import sys
+import types
+import importlib.util
+
+# Create a fake torchcodec module so import checks don't crash
+tc_stub = types.ModuleType('torchcodec')
+tc_stub.__path__ = []
+tc_stub.__package__ = 'torchcodec'
+tc_stub.__spec__ = importlib.util.spec_from_loader('torchcodec', loader=None)
+
+# Add submodules and dummy decoders expected by transformers/torchaudio
+for sub in ('decoders', 'encoders', 'samplers', 'transforms', '_core'):
+    sub_mod = types.ModuleType(f'torchcodec.{sub}')
+    sub_mod.__spec__ = importlib.util.spec_from_loader(f'torchcodec.{sub}', loader=None)
+    sys.modules[f'torchcodec.{sub}'] = sub_mod
+
+sys.modules['torchcodec'] = tc_stub
+
+
 import torch, torchaudio, gc, librosa, traceback
 from omnivoice import OmniVoice, VoiceClonePrompt
 import numpy as np
