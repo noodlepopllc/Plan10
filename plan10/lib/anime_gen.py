@@ -579,7 +579,7 @@ def add_metadata_loc(imgpath, prompt='', seed=-1, brief=False, update=True):
         target_image.save(imgpath, pnginfo=metadata)
     return bg_desc
 
-def CreateCharacterSheet(prompt='', output='character_tmp.png', seed=-1, imagegen=None):
+def CreateCharacterSheet(prompt='', output='character_tmp.png', seed=-1, imagegen=None, override=None):
     seed = int(seed)
     prompt = (
         "anime character reference sheet, two side-by-side views "
@@ -589,7 +589,10 @@ def CreateCharacterSheet(prompt='', output='character_tmp.png', seed=-1, imagege
         f"Character: {prompt}"
     )
     gen = imagegen if imagegen else ImageGen()
-    status = gen.generate(prompt, output, 1024, 1024, seed)
+    if override:
+        status = gen.generate(prompt, output, override[0], override[1], seed)
+    else:
+        status = gen.generate(prompt, output, 1024, 1024, seed)
     if not imagegen:
         del gen
     status['description'] = add_metadata_char(output, prompt, seed)
@@ -646,6 +649,7 @@ def CreateBackground(
     prompt='',
     output='location_tmp.png',
     seed=-1,
+    override=None
 ):
     style = os.environ.get('STYLE','default')
     time_of_day=None       # optional: 'dawn', 'morning', 'noon', 'golden_hour', 'sunset', 'twilight', 'night'
@@ -699,7 +703,10 @@ def CreateBackground(
     ).strip()
 
     gen = ImageGen()
-    status = gen.generate(final_prompt, output, 1920, 1080, seed)
+    if override:
+        status = gen.generate(final_prompt, output, override[0], override[1], seed)
+    else:
+        status = gen.generate(final_prompt, output, 1920, 1080, seed)
     del gen
 
     status['description'] = add_metadata_loc(output, final_prompt, seed)

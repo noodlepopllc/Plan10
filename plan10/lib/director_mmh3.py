@@ -8,6 +8,7 @@ import json
 from fastmcp import Client
 import asyncio
 from time import sleep
+from functools import partial
 
 from plan10.lib.config import load_environ
 load_environ()
@@ -461,9 +462,9 @@ def main():
     
     # Pass generation functions to the parser
     generators = {
-        'bg': CreateBackground,
-        'char': CreateCharacterSheet,
-        'item': GenerateImage,
+        'bg': partial(CreateBackground, override=(768,448)),
+        'char': partial(CreateCharacterSheet, override=(512,512)),
+        'item': partial(GenerateImage, width=512, height=412),
         'audio': DesignVoice
     }
 

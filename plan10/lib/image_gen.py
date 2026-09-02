@@ -368,7 +368,7 @@ Keep each field to 1 concise sentence. ABSOLUTELY NO CHARACTERS, NO PEOPLE, NO C
         target_image.save(imgpath, pnginfo=metadata)
     return bg_desc
 
-def CreateCharacterSheet(prompt='', output='character_tmp.png',seed=-1, imagegen=None):
+def CreateCharacterSheet(prompt='', output='character_tmp.png',seed=-1, imagegen=None, override=None):
     seed=int(seed)
     eprompt = (
     "create a character sheet single image with two side by side views "
@@ -378,9 +378,9 @@ def CreateCharacterSheet(prompt='', output='character_tmp.png',seed=-1, imagegen
     f"of {prompt}")
     gen = imagegen if imagegen else ImageGen()
     if isinstance(gen, ImageGenQwen):
-        width, height = (1328,1328)
+        width, height = override if override else (1328,1328)
     else:
-        width, height = (1536,1536)
+        width, height = override if override else (1536,1536)
     status = gen.generate(eprompt, output, width, height, seed)
     if not imagegen:
         del gen
@@ -388,7 +388,7 @@ def CreateCharacterSheet(prompt='', output='character_tmp.png',seed=-1, imagegen
     status['prompt'] = eprompt
     return status
 
-def CreateBackground(prompt='', output='location_tmp.png', seed=-1):
+def CreateBackground(prompt='', output='location_tmp.png', seed=-1, override=None):
     seed = int(seed)
     print("CREATE BACKGROUND")
     
@@ -413,9 +413,9 @@ def CreateBackground(prompt='', output='location_tmp.png', seed=-1):
     
     gen = ImageGen()
     if isinstance(gen, ImageGenQwen):
-        width, height = (1664,928)
+        width, height = override if override else (1664,928)
     else:
-        width, height = (1920,1080)
+        width, height = overide if override else (1920,1080)
     status = gen.generate(prompt, output, width, height, seed)
     del gen
     status['description'] = add_metadata_loc(output, final_prompt, seed)
