@@ -158,7 +158,7 @@ def i2v_diffsynth(prompt='', media='', last_image='', output='output.mp4',
         images.append(Image.open(media).convert("RGB").resize((width, height)))
         keyframes.append(0)
     if last_image:
-        images.append(Image.open(last)image).convert("RGB").resize((width, height)))
+        images.append(Image.open(last_image).convert("RGB").resize((width, height)))
         keyframes.append(-1)
 
     
