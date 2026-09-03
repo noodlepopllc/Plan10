@@ -296,7 +296,7 @@ class DialogSession:
         self.model = None
 
     def __enter__(self):
-        import OmniVoice
+        OmniVoice, VoiceClonePrompt = _load_omnivoice()
         self.model = OmniVoice.from_pretrained(
             "k2-fsa/OmniVoice",
             device_map="cuda:0",
