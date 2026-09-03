@@ -58,14 +58,14 @@ def i2v_diffsynth_fast(prompt='', media='', end_image='', output='output.mp4',
     }
     if allocated_vram_limit > 24:
         vram_config = {
-            "offload_dtype": torch.bfloat16,
-            "offload_device": "cpu",
-            "onload_dtype": torch.bfloat16,
-            "onload_device": "cpu",
-            "preparing_dtype": torch.bfloat16,
+            "offload_dtype": torch.float8_e5m2,  # Compress storage to FP8
+            "offload_device": "cuda",            # Lock storage to GPU VRAM
+            "onload_dtype": torch.float8_e5m2,   # Compress active storage to FP8
+            "onload_device": "cuda",             # Lock active storage to GPU VRAM
+            "preparing_dtype": torch.float8_e5m2,
             "preparing_device": "cuda",
-            "computation_dtype": torch.bfloat16,
-            "computation_device": "cuda",
+            "computation_dtype": torch.bfloat16, # Keep high-precision math
+            "computation_device": "cuda",        # Math runs on CUDA cores
         }
     model_path = "locklight/LTX-2-Repackage-local"
     pipe = LTX2AudioVideoPipeline.from_pretrained(
