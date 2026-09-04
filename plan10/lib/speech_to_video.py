@@ -310,7 +310,7 @@ def main():
     WGP = os.environ.get('WGP','False') != 'False'
     LTX = os.environ.get('LTX','False') != 'False'
     MMH3 = os.environ.get('MMH3', 'False') != 'False'
-    DURATION = -1 LTX else 10
+    DURATION = -1 if LTX else 10
 
     if WGP:
         from plan10.lib.wgp import GenerateTalkingVideo as Speech
