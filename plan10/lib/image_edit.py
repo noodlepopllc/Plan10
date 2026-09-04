@@ -218,7 +218,7 @@ class ImageEditQwen(object):
             torch.cuda.empty_cache()
     
 class ImageEditKlein(object):
-    def __init__(self,vrlimit=14, model_version=4):
+    def __init__(self,vrlimit=14, model_version=9):
         if "VRAM" in os.environ:
             vrlimit = int(os.environ["VRAM"])
         self.vrlimit = vrlimit

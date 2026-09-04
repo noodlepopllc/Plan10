@@ -14,6 +14,7 @@ from plan10.lib.config import load_environ
 load_environ()
 
 ANIME = os.environ.get("ANIME","False") != "False" 
+SEED = int(os.environ.get("SEED", "-1"))
 
 
 
@@ -389,6 +390,7 @@ async def send(prompt, images, audio, output='output.mp4', width=768, height=448
         args['output_filename'] = output
         args['prompt'] = prompt
         args['image_refs'] = images
+        args["seed"] = SEED
         if len(audio):
             args["audio_prompt_type"] = "AB" if len(audio) == 2 else "A"
             args["audio_guide"] = audio.pop()
