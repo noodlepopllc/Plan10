@@ -507,7 +507,7 @@ def GenerateTalkingVideo(
     width = int(width)
     height = int(height)
     seed = int(seed)
-    estimated =  int(estimate_duration(text)) + 1
+    estimated =  int(estimate_duration(text))
     print(f"ESTIMATED DURATION: {estimated} s")
     duration_sec = 5 if estimated < 5 else estimated
     dration_sec = max_duration if max_duration < estimated else estimated
