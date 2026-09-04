@@ -511,7 +511,7 @@ def GenerateTalkingVideo(
     print(f"ESTIMATED DURATION: {estimated} s")
     if max_duration == -1:
         duration_sec = 5 if estimated < 5 else estimated
-        dration_sec = MAX_DURATION if MAX_DURATION < estimated else estimated
+        duration_sec = MAX_DURATION if MAX_DURATION < estimated else estimated
     else:
         duraction_sec = max_duration
     fps = 24
