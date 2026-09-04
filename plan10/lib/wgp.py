@@ -24,7 +24,7 @@ MMH3 = os.environ.get('MMH3','False') != 'False'
 VERBOSE = os.environ.get('VERBOSE','False') != 'False'
 DISTILLED = 'DISTILLED' in  os.environ.get('LTX','False')
 
-MAX_DURATION = 5 if MMH3 else 10
+MAX_DURATION = 5
 
 if ANIME:
     from plan10.lib.anime_gen import GenerateImage
