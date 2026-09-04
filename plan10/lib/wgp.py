@@ -466,7 +466,7 @@ def estimate_duration(text):
     words = text.split()
     total_syllables = sum(count_syllables(w) for w in words)
     duration = (total_syllables * 0.37)
-    duration = len(words) / 3.0
+    duration = len(words) / 2.0
     return math.ceil(duration)
 
 def GenerateTalkingVideo(
