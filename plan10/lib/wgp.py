@@ -478,7 +478,7 @@ def GenerateTalkingVideo(
     width=WIDTH,
     height=HEIGHT,
     seed=-1,
-    max_duration=MAX_DURATION):
+    max_duration=-1):
     print(f"PROMPT: {prompt}")
     
     if isinstance(prompt, list):
@@ -509,8 +509,11 @@ def GenerateTalkingVideo(
     seed = int(seed)
     estimated =  int(estimate_duration(text))
     print(f"ESTIMATED DURATION: {estimated} s")
-    duration_sec = 5 if estimated < 5 else estimated
-    dration_sec = max_duration if max_duration < estimated else estimated
+    if max_duration == -1:
+        duration_sec = 5 if estimated < 5 else estimated
+        dration_sec = MAX_DURATION if MAX_DURATION < estimated else estimated
+    else:
+        duraction_sec = max_duration
     fps = 24
 
     if seed == -1:
