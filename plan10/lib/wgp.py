@@ -283,7 +283,7 @@ async def s2v_ltx(prompt='', media='', end_image='', audio='', text='', output='
         audio_desc = translate_to_audio_prompt(desc)
 
         newprompt = f'''[VISUAL]: {desc} {prompt}
-        [SPEECH]: {text}... 
+        [SPEECH]: {text} 
         [SOUNDS]: {audio_desc}.'''
         print(newprompt)
 
