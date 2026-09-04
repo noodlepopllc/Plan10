@@ -218,9 +218,13 @@ class ImageEditQwen(object):
             torch.cuda.empty_cache()
     
 class ImageEditKlein(object):
-    def __init__(self,vrlimit=14, model_version=9):
+    def __init__(self,vrlimit=14):
         if "VRAM" in os.environ:
             vrlimit = int(os.environ["VRAM"])
+        if "9B" in os.environ.get("IMAGE_EDIT", "KLEIN"):
+            model_version = 9
+        else:
+            model_version = 4
         self.vrlimit = vrlimit
         self.pipe = None
         self.model = f'black-forest-labs/FLUX.2-klein-{model_version}B'
@@ -284,7 +288,7 @@ class ImageEditKlein(object):
         if torch.cuda and torch.cuda.is_available():  # ✅ Was `if torch.cuda:` (always truthy)
             torch.cuda.empty_cache()
 
-if os.environ.get("IMAGE_EDIT", "KLEIN") == "KLEIN":
+if "KLEIN" in os.environ.get("IMAGE_EDIT", "KLEIN"):
     ImageEdit = ImageEditKlein
 else:
     ImageEdit = ImageEditQwen

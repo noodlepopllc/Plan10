@@ -282,9 +282,7 @@ async def s2v_ltx(prompt='', media='', end_image='', audio='', text='', output='
         desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
         audio_desc = translate_to_audio_prompt(desc)
 
-        newprompt = f'''[VISUAL]: {desc} {prompt}
-        [SPEECH]: {text} 
-        [SOUNDS]: {audio_desc}.'''
+        newprompt = f"[VISUAL]: {desc} {prompt} Lips moving in perfect sync with the audio. \n[SPEECH]: {text}.\n[SOUNDS]: {audio_desc}."
         print(newprompt)
 
         args = r.data
