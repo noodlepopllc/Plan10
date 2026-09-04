@@ -285,8 +285,8 @@ async def s2v_ltx(prompt='', media='', end_image='', audio='', text='', output='
         audio_desc = translate_to_audio_prompt(desc)
 
         newprompt = f'''[VISUAL]: {desc} {prompt} Lips moving in perfect sync with the audio. Speaks immediately without pause.
-        [SPEECH]: {text}. mmm...
-        [SOUNDS]: {audio_desc}.'''
+        [SPEECH]: {text}. 
+        [SOUNDS]: {audio_desc}. Soft classical music begins to play as the dialog ends. '''
         print(newprompt)
 
         args = r.data
