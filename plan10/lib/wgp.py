@@ -24,8 +24,6 @@ MMH3 = os.environ.get('MMH3','False') != 'False'
 VERBOSE = os.environ.get('VERBOSE','False') != 'False'
 DISTILLED = 'DISTILLED' in  os.environ.get('LTX','False')
 
-MAX_DURATION = 15
-
 if ANIME:
     from plan10.lib.anime_gen import GenerateImage
 else:
@@ -510,8 +508,7 @@ def GenerateTalkingVideo(
     estimated =  int(estimate_duration(text)) + 1
     print(f"ESTIMATED DURATION: {estimated} s")
     if max_duration == -1:
-        duration_sec = 5 if estimated < 5 else estimated
-        duration_sec = MAX_DURATION if MAX_DURATION < estimated else estimated
+        duration_sec = estimated
     else:
         duration_sec = max_duration
     fps = 24
