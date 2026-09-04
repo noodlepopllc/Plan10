@@ -41,7 +41,7 @@ image_to_video using Alice_Composite_Outside asset, action she is examining a mu
 design_voice, female young woman voice with australian accent Keep the text for the audio as a short intro (8 - 12 words).
 
 >> ALIAS: Alice_Dialog
-dialog_to_video Alice_voice asset with Alice_Closeup asset generate a short dialog of Alice introducing herself (12 - 15 words) 
+dialog_to_video Alice_voice asset with Alice_Closeup asset generate a short dialog of Alice introducing herself (12 - 15 words), Duration: 5 seconds
 
 >> ALIAS: Alice_Dialog_Indoor
-dialog_to_video Alice_Voice asset with Alice_Closeup_Indoor asset, she is surprised by what she sees and expresses it (12 - 15 words) 
+dialog_to_video Alice_Voice asset with Alice_Closeup_Indoor asset, she is surprised by what she sees and expresses it (12 - 15 words), Duration: 5 seconds
