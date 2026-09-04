@@ -284,7 +284,11 @@ async def s2v_ltx(prompt='', media='', end_image='', audio='', text='', output='
         desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
         audio_desc = translate_to_audio_prompt(desc)
 
-        newprompt = f"[VISUAL]: {desc} {prompt} Lips moving in perfect sync with the audio. \n[SPEECH]: {text}.\n[SOUNDS]: {audio_desc}."
+        newprompt = f'''[VISUAL]: {desc} {prompt} Lips moving in perfect sync with the audio. 
+        [SPEECH ACTING]: Starting instantly on frame one, begins speaking fluently. The lips and mouth move in natural, perfect synchronization with the text. Continuous head movements throughout the entire dialogue.
+        [SPEECH]: {text}.
+        [POST-SPEECH CUSHION]: After finishing the speech, they immediately stops moving their lips, holding a silent, blinking naturally until the final frame finishes.
+        [SOUNDS]: {audio_desc}.'''
         print(newprompt)
 
         args = r.data
