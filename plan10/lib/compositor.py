@@ -124,11 +124,24 @@ def CompositeScene(
             "Maintain identical lighting direction and cel-shading between shots. "
             "Flat color fills with minimal gradients, bold outlines preserved."
         )
+        # Add to char_preserve or create a dedicated fix
+        head_proportion_fix = (
+            "Correct head-to-body ratio: head should be 1/6 to 1/7 of total body height for adult characters. "
+            "Avoid chibi or super-deformed proportions unless explicitly requested. "
+            "Standard anime proportions: realistic body with stylized facial features only. "
+            "Keep head size proportional to shoulders and torso."
+        )
+
+        # Enhanced negative prompt suggestions
+        negative_prompt_additions = (
+            "oversized head, big head, chibi proportions, super deformed, "
+            "disproportionate head, large skull, bobblehead, tiny body"
+        )
         char_preserve = (
             "Preserve anime proportions: large expressive eyes, minimal nose (dot or line), "
             "V-line face shape, cel-shaded skin with cel shadows, clean lineart, "
             "stylized hair with gravity-defying volume. "
-            "Maintain exact anime art style from reference images."
+            "Maintain exact anime art style from reference images." + head_proportion_fix
         )
         analysis_style = "anime illustration"
     else:
