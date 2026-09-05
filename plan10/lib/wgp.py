@@ -36,7 +36,7 @@ enhance_path = f'./system/ltx_enhancer_minimal{ANIME}.txt' if BRIEF else f'./sys
 if MMH3:
     enhance_path = './system/mmh3_enhancer.txt'
 
-tool = "ltx2_22B_distilled_1_1" if DISTILLED else "ltx2_22B_1_1"
+tool_dialog = "ltx2_22B_distilled_1_1" if DISTILLED else "ltx2_22B_1_1"
 tool = "ltx2_25_22B_distilled" if DISTILLED else "ltx2_25_22B"
 
 async def i2v_ltx(prompt='', media='', end='', output='output.mp4', 
@@ -269,7 +269,7 @@ async def s2v_ltx(prompt='', media='', end_image='', audio='', text='', output='
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
     async with Client("http://localhost:7866/mcp") as client:
 
-        model = tool
+        model = tool_dialog
 
         r = await client.call_tool("wangp_get_default_settings", {"model_type":model})
         results = json.dumps(r.data, indent=4)
