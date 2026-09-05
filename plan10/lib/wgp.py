@@ -298,7 +298,7 @@ async def s2v_ltx(prompt='', media='', end_image='', audio='', text='', output='
         #args['prompt_enhancer'] = 'TI'
         args['audio_prompt_type'] = 'A1OF'
         args['audio_guide'] = audio
-        args['activated_loras'] = ["id-lora-talkvid-ltx2.3 .safetensors"] #["id-lora-celebvhq-ltx2.3.safetensors"]
+        args['activated_loras'] = ["id-lora-celebvhq-ltx2.3.safetensors"] #["id-lora-talkvid-ltx2.3 .safetensors"] 
         args["multi_prompts_gen_type"] = "FG"
         args['loras_multipliers'] = '1.0|'
         args['seed'] = SEED
