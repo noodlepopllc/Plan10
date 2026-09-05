@@ -573,7 +573,12 @@ def add_metadata_loc(imgpath, prompt='', seed=-1, brief=False, update=True):
         "'cyberpunk_neon', 'cel_shaded', 'watercolor'. "
         "Respond ONLY with the comma-separated string."
     )
-
+    if brief:
+        bg_brief = AnalyzeImage(imgpath, "Description, Style, lighting, weather in <15 words.")['analysis'].strip()
+        metadata.add_text("Brief", bg_brief)
+        if update:
+            target_image.save(imgpath, pnginfo=metadata)
+        return bg_brief
     bg_analysis = AnalyzeImage(imgpath, loc_prompt)
     bg_desc = bg_analysis['analysis'].strip().strip('"').strip("'")
     if update:
