@@ -368,7 +368,7 @@ if __name__ == '__main__':
         seed_text = Path(args.seed).read_text()
         print(f'Using seed from {args.seed}')
 
-    elif args.topical:
+    if args.topical:
         scenario = args.scenario.upper() if args.scenario and args.scenario.upper() in TOPICAL_SCENARIOS else random.choice(TOPICAL_SCENARIOS)
         topic = args.topic if args.topic else random.choice(TOPICS)
 
