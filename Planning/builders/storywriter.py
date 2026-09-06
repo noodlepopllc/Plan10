@@ -375,7 +375,7 @@ if __name__ == '__main__':
 
         seed_path = output_path.with_name(output_path.stem + '_seed.txt')
         inputs = f'Generate a topical seed\nTopic: {topic}\nScenario Type: {scenario}\n'
-        seed_text = run_prompt(inputs, f{topical_seed_generator(scenario, topic)} {seed_text}, str(seed_path), max_tokens=4096)
+        seed_text = run_prompt(inputs, f'{topical_seed_generator(scenario, topic)} {seed_text}', str(seed_path), max_tokens=4096)
         print(f'Generated topical seed: {scenario} / {topic}')
 
     else:
