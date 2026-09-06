@@ -378,8 +378,8 @@ if __name__ == '__main__':
         seed_text = run_prompt(inputs, topical_seed_generator(scenario, topic, seed_text), str(seed_path), max_tokens=4096)
         print(f'Generated topical seed: {scenario} / {topic}')
 
-    else:
-        seed_text = SEED
+    elif not seed_text:
+        seed_text = SEED 
         print('Using default seed')
 
     expander = TOPICAL_EXPANDER if args.topical else ALTERNATIVE
