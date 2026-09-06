@@ -355,7 +355,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     output_path = Path(args.output)
-    seed_text = None
+    seed_text = ''
 
     # Set token budget based on expander type
     if args.max_tokens:
@@ -375,7 +375,7 @@ if __name__ == '__main__':
 
         seed_path = output_path.with_name(output_path.stem + '_seed.txt')
         inputs = f'Generate a topical seed\nTopic: {topic}\nScenario Type: {scenario}\n'
-        seed_text = seed_text if seed_text else run_prompt(inputs, topical_seed_generator(scenario, topic), str(seed_path), max_tokens=4096)
+        seed_text = run_prompt(inputs, f{topical_seed_generator(scenario, topic)} {seed_text}, str(seed_path), max_tokens=4096)
         print(f'Generated topical seed: {scenario} / {topic}')
 
     else:
