@@ -308,7 +308,7 @@ ROLE — Generate structured seeds for educational or debate scenes
 {seed}
 '''
 
-def topical_seed_generator(scenario, topic):
+def topical_seed_generator(scenario, topic, seed):
     return TOPICAL_SEED_GENERATOR_TEMPLATE.format(
         scenario=scenario,
         topic=topic, 
