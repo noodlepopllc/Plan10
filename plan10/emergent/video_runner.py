@@ -105,7 +105,7 @@ def expand_to_shots(prompt: str, bg_label: str, char_labels: list, duration: flo
     
     return "\n".join(lines)
 
-def h3_ref(bg, refs, prompt, duration=10.0):
+def h3_ref(bg, refs, prompt, duration=10):
     script = ""
     
     # --- ASSETS ---
@@ -113,29 +113,26 @@ def h3_ref(bg, refs, prompt, duration=10.0):
     bg_label = "bg"
     script += f"bg | {bg_label} | {bg} | {bg_desc}\n"
     
-    char_labels = []
-    ndx = 1
-    for ref in refs:
+    char_labels = []  # Only character labels
+    for ndx, ref in enumerate(refs, start=1):
         label = f"char{ndx}"
         char_labels.append(label)
         ref_desc = AnalyzeImage(ref)['analysis']
         script += f"char | {label} | {ref} | {ref_desc}\n"
-        ndx += 1
 
-    ndx = 1
-    for ref in refs:
-        label = f"voice_{ndx}"
-        clabel = f"char{ndx}"
-        char_labels.append(label)
+    # Audio refs - don't add to char_labels
+    for ndx, ref in enumerate(refs, start=1):
+        voice_label = f"voice_{ndx}"
+        char_label = f"char{ndx}"
         gender = AnalyzeImage(ref, prompt="Determine if character is male or female and return male or female, if unsure, return female")['analysis']
-        script += f"audio | {label} | {ref.replace('.png', '.wav')} | {clabel} | {gender}\n"
-        ndx += 1
+        wav_path = ref.replace('.png', '.wav').replace('.jpg', '.wav').replace('.jpeg', '.wav')
+        script += f"audio | {voice_label} | {wav_path} | {char_label} | {gender}\n"
     
     # --- CONTEXT ---
     script += f"prompt | {prompt}\n"
     script += f"soundscape | {translate_to_audio_prompt(bg_desc)}\n"
     
-    # --- SHOTS ---
+    # --- SHOTS (now gets clean char_labels) ---
     shots = expand_to_shots(prompt, bg_label, char_labels, duration)
     script += shots + "\n"
     
