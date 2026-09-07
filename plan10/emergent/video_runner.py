@@ -105,7 +105,7 @@ def expand_to_shots(prompt: str, bg_label: str, char_labels: list, duration: flo
     
     return "\n".join(lines)
 
-def h3_ref(bg, refs, prompt, output_dir, duration=10.0):
+def h3_ref(bg, refs, prompt, duration=10.0):
     script = ""
     
     # --- ASSETS ---
@@ -186,8 +186,8 @@ def main():
 
         if MMH3:
             from plan10.lib.director_mmh3 import get_builder
-            script = h3_ref(bg, refs, pending_job['prompt'],  output_dir, duration)
-            builder = get_builder(script, output_dir)
+            script = h3_ref(bg, refs, pending_job['prompt'],  duration)
+            builder = get_builder(script, '')
             final_prompt = builder.generate()
             
             # Extract paths dynamically from the builder instead of hardcoding
