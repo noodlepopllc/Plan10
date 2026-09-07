@@ -84,7 +84,7 @@ def main():
     try:
         prompt = pending_job['prompt']
 
-        if WGP:
+        if WGP and duration > 5:
             prompt = EnhancePrompt(image=pending_job['input_media'], prompt=prompt, enhancer=ENHANCE_Prompt, output=None, backend=None, ispath=False)
 
         # Generate the video
