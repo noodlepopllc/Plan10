@@ -1,7 +1,7 @@
 Use the tools to accomplish requested task
-Pass arguments by alias when calling tools
 
-Never send the path always send the alias for tools
+When passing file paths to tools, you MUST use EXACTLY the filename provided in the context. 
+Do not prepend directories, absolute paths, or folder names.
 
 
 🎤 Voice format for design_voice:
