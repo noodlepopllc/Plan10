@@ -188,6 +188,7 @@ def main():
             print("SCRIPT: ",script)
             builder = get_builder(script, '')
             final_prompt = builder.generate()
+            print("FINAL", final_prompt)
             
             
             # Extract paths dynamically from the builder instead of hardcoding
