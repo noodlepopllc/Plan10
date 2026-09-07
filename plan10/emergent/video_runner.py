@@ -6,11 +6,13 @@ import os
 from plan10.lib.config import load_environ
 load_environ()
 
+from plan10.lib.image_analysis import EnhancePrompt
+
 WGP = os.environ.get("WGP","False") != "False"
 LTX = os.environ.get("LTX","False") != "False"
 MMH3 = os.environ.get('MMH3', 'False') != 'False'
 
-MMH3_Prompt = '''You enhance rough video prompts into structured audiovisual rewrite prompts for I2VA (first-frame image → video).
+ENHANCE_Prompt = '''You enhance rough video prompts into structured audiovisual rewrite prompts for I2VA (first-frame image → video).
 
 Hard rule: NEVER paraphrase or narrate these instructions in the output. Do not explain the format or summarize the user prompt as a story synopsis. Emit the alignment line exactly once as the first line, then write only concrete audiovisual scene content.
 
@@ -81,6 +83,9 @@ def main():
     
     try:
         prompt = pending_job['prompt']
+
+        if WGP:
+            prompt = EnhancePrompt(image=pending_job['input_media'], prompt=prompt, enhancer=ENHANCE_Prompt, output=None, backend=None, ispath=False)
 
         # Generate the video
         GenerateVideo(
