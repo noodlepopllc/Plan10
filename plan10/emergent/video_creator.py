@@ -57,6 +57,7 @@ def main():
         video_queue = state.get('video_queue', [])
         scene_mode = state.get('scene_mode', False) 
         initial = state['initial_media']
+        current_bg = state['current_bg']
         goal = state.get('goal')
         duration = state.get('duration')
     else:
@@ -80,6 +81,7 @@ def main():
             _, image = extract_frame(args.initial, WIDTH, HEIGHT, 'last_frame.png')
             current_media = image
             initial = image
+        current_bg = current_media
 
         if not refs:
             decompose_scene(
@@ -122,15 +124,16 @@ def main():
     pipeline.initial_media = initial
     if first_run and not args.scene_mode:
         background = f'{args.output}/background.png'
+        current_bg = background
         if Path(background).exists():
-            current_media = pipeline.recreate_frame(background, context, 0)
+            current_media = pipeline.recreate_frame(background, background, context, 0)
         else:
-            current_media = pipeline.recreate_frame(current_media, context, 0)
+            current_media = pipeline.recreate_frame(current_media, background, context, 0)
     
     # Execute ONE creative step
     try:
         result = pipeline.execute_step(
-            current_media, context, beat_count, 
+            current_media, current_bg, context, beat_count, 
             history, pending_setup, needs_transition
         )
     except KeyboardInterrupt:
@@ -174,6 +177,7 @@ def main():
         "height": args.height,
         "seed": args.seed,
         "initial_media": initial,
+        "current_bg": result['current_bg'], 
         "goal": goal,
         "duration": args.duration,
     }

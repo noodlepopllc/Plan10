@@ -28,7 +28,7 @@ class Pipeline:
         self.goal = goal
         self.initial_media = None
         
-    def recreate_frame(self, media_path, current_state, beat_num):
+    def recreate_frame(self, media_path, bg_path, current_state, beat_num):
         """Recreate frame by analyzing background, generating description, creating fresh background, then compositing."""
         media_path = Path(media_path)
         ext = media_path.suffix.lower()
@@ -109,12 +109,12 @@ class Pipeline:
             seed=self.seed + beat_num
         )
         
-        return str(composite_path)
+        return str(composite_path), str(clean_bg_path)
 
-    def recreate_frame_passthrough(self, media_path, current_state, beat_num):
+    def recreate_frame_passthrough(self, media_path, bg_path, current_state, beat_num):
         """Scene mode: just return the original image without modification."""
         print(f"  → Scene mode: returning original image")
-        return str(media_path)
+        return str(media_path), str(bg_path)
 
     def generate_transition_frame(self, new_location_prompt, beat_num):
         from image_gen import CreateBackground
@@ -142,9 +142,9 @@ class Pipeline:
             seed=self.seed + beat_num + 2000
         )
         
-        return str(comp_path)
+        return str(comp_path), str(bg_path)
 
-    def execute_step(self, current_media, story_context, beat_count, history, pending_setup, needs_transition):
+    def execute_step(self, current_media, current_bg, story_context, beat_count, history, pending_setup, needs_transition):
         """Executes one creative step. Returns updated state dict with video job queued."""
         
         print(f"\n{'='*60}\nBEAT {beat_count + 1}\n{'='*60}")
@@ -217,7 +217,7 @@ class Pipeline:
                     print("  → Background is empty/black. Generating new background...")
                     # Extract location from history or use generic
                     location_hint = history[-1] if history else "detailed environment, realistic lighting"
-                    current_media = self.generate_transition_frame(location_hint, beat_count)
+                    current_media, current_bg = self.generate_transition_frame(location_hint, beat_count)
                     needs_transition = False
                     
                 elif reason_code == "walking_away":
@@ -227,17 +227,17 @@ class Pipeline:
                 elif reason_code == "turned_away":
                     print("  → Character is turned away. Recreating frame to face camera (same location)...")
                     current_state = f"{' and '.join([x for x in self.visual_ids])} turns around to face the camera in a frontal or 3/4 view, maintaining the exact same environment."
-                    current_media = recreate(current_media, current_state, beat_count)
+                    current_media, current_bg = recreate(current_media, current_bg, current_state, beat_count)
                     needs_transition = False
                     
                 else:
                     print("  → Unintended loss of visibility. Recreating frame...")
                     current_state = f"{' and '.join([x for x in self.visual_ids])} is now visible in the scene, facing the camera in a frontal or 3/4 view."
-                    current_media = recreate(current_media, current_state, beat_count)
+                    current_media, current_bg = recreate(current_media, current_bg, current_state, beat_count)
                     needs_transition = False
 
         else:
-            current_media = recreate(current_media, "", beat_count)
+            current_media, current_bg = recreate(current_media, current_bg, "", beat_count)
 
 
         # 2. Get previous intention
@@ -280,14 +280,14 @@ class Pipeline:
             if "NO" in match or "drift" in issues.lower() or "repeating" in issues.lower():
                 if not needs_transition:
                     print(f"\n⚠️ Major issues detected - rebuilding frame to current state...")
-                    current_media = recreate(current_media, actual_reality, beat_count)
+                    current_media, current_bg = recreate(current_media, actual_reality, beat_count)
         
         # 6. Handle cinematic transition (skip in scene_mode)
         if not self.scene_mode:
             combined_text = f"{next_action} {camera_framing}".upper()
             if needs_transition and "CUT TO" in combined_text:
                 print(f"\n🎬 Executing Cinematic Transition to: {location}")
-                current_media = self.generate_transition_frame(location, beat_count)
+                current_media, current_bg = self.generate_transition_frame(location, beat_count)
                 needs_transition = False
         
         # 7. Format video prompt and queue it
@@ -307,7 +307,7 @@ class Pipeline:
             "output_path": str(output_path),
             "seed": self.seed + beat_count,
             "status": "pending"
-}
+        }
         
         # 8. Update history
         new_history = history + [next_action]
@@ -317,6 +317,7 @@ class Pipeline:
         return {
             "beat_count": beat_count + 1,
             "current_media": current_media,
+            "current_bg": current_bg if current_bg else ,
             "history": new_history,
             "pending_setup": setup,
             "needs_transition": needs_transition,

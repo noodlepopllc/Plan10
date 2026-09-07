@@ -6,11 +6,20 @@ import os
 from plan10.lib.config import load_environ
 load_environ()
 
-from plan10.lib.image_analysis import EnhancePrompt
+from plan10.lib.image_analysis import EnhancePrompt, AnalyzeImage, translate_to_audio_prompt
+from plan10.lib.qwen_llm import llm_analyze_media
+
+if ANIME:
+    from plan10.lib.anime_gen import GenerateImage, CreateCharacterSheet, CreateBackground
+else:
+    from plan10.lib.image_gen import GenerateImage, CreateCharacterSheet, CreateBackground
+from plan10.lib.dialog import DesignVoice
 
 WGP = os.environ.get("WGP","False") != "False"
 LTX = os.environ.get("LTX","False") != "False"
 MMH3 = os.environ.get('MMH3', 'False') != 'False'
+WIDTH = int(os.environ.get('WIDTH', '768'))
+HEIGHT = int(os.environ.get('HEIGHT', '448'))
 
 ENHANCE_Prompt = '''You enhance rough video prompts into structured audiovisual rewrite prompts for I2VA (first-frame image → video).
 
@@ -47,6 +56,90 @@ else:
 
 from plan10.emergent.state_manager import StateManager
 
+SHOT_EXPANSION_PROMPT = """Break this scene into sequential video shots.
+
+Available characters: {char_labels}
+Background: {bg_label}
+Total duration: approximately {duration} seconds.
+
+Scene: {prompt}
+
+Rules:
+- Output ONLY shot lines, nothing else. No JSON, no markdown, no commentary.
+- Each line format: shot | description | duration_seconds
+- Duration per shot: 2-5 seconds. Shorter for reactions, longer for dialogue.
+- Reference characters by their exact label: {char_labels}
+- First shot should establish the scene and background.
+- Include camera framing (wide, medium, closeup) and motion (push in, pan, static, tracking) in each description.
+- Dialogue format: character speaks [Language] "exact words"
+- Dialogue must be woven into the action, never on its own line.
+- Keep visual descriptions minimal — the model already sees the reference images.
+- End with a natural conclusion or emotional beat.
+
+Example output:
+shot | Wide shot of {bg_label}. char1 stands near the doorway holding an object. Static camera. | 3.0
+shot | Medium shot. char2 enters from the right and walks toward char1. Camera tracks slowly. | 2.5
+shot | Closeup of char1. char1 speaks [English] "Hello there." | 2.0
+"""
+
+def expand_to_shots(prompt: str, bg_label: str, char_labels: list, duration: float) -> str:
+    """Returns raw shot lines ready to append to your script."""
+    
+    formatted = SHOT_EXPANSION_PROMPT.format(
+        prompt=prompt,
+        bg_label=bg_label,
+        char_labels=", ".join(char_labels),
+        duration=duration
+    )
+    
+    # Call your LLM here
+    response = llm_analyze_media('',prompt=formatted)['analysis']
+    
+    # Strip any accidental markdown or extra whitespace
+    lines = []
+    for line in response.strip().split("\n"):
+        line = line.strip()
+        if line.startswith("shot |"):
+            lines.append(line)
+    
+    return "\n".join(lines)
+
+def h3_ref(bg, refs, prompt, output_dir, duration=10.0):
+    script = ""
+    
+    # --- ASSETS ---
+    bg_desc = AnalyzeImage(bg)['analysis']
+    bg_label = "bg"
+    script += f"bg | {bg_label} | {bg} | {bg_desc}\n"
+    
+    char_labels = []
+    ndx = 1
+    for ref in refs:
+        label = f"char{ndx}"
+        char_labels.append(label)
+        ref_desc = AnalyzeImage(ref)['analysis']
+        script += f"char | {label} | {ref} | {ref_desc}\n"
+        ndx += 1
+
+        ndx = 1
+    for ref in refs:
+        label = f"voice_{ndx}"
+        clabel = f"char{ndx}"
+        char_labels.append(label)
+        gender = AnalyzeImage(ref, prompt="Determine if character is male or female and return male or female, if unsure, return female")['analysis']
+        script += f"audio | {label} | {ref.replace('.png', '.wav')} | {clabel} | {gender}\n"
+        ndx += 1
+    
+    # --- CONTEXT ---
+    script += f"prompt | {prompt}\n"
+    script += f"soundscape | {translate_to_audio_prompt(bg_desc)}\n"
+    
+    # --- SHOTS ---
+    shots = expand_to_shots(prompt, bg_label, char_labels, duration)
+    script += shots + "\n"
+    
+    return script
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-O', '--output', type=str, default="feedback_output")
@@ -57,10 +150,15 @@ def main():
     if not state_mgr.exists():
         print("No state file found. Nothing to render.")
         sys.exit(0)
+
     
     state = state_mgr.load()
     video_queue = state.get('video_queue', [])
     duration = int(state.get('duration', '5'))
+    refs = state.get('character_refs', [])
+    initial = state.get('initial_media', '')
+    bg = state.get('current_bg')
+    output_dir = state.get('output_dir')
     
     # Find the first pending job
     pending_job = None
@@ -85,21 +183,49 @@ def main():
     try:
         prompt = pending_job['prompt']
 
-        if WGP and duration > 5:
-            prompt = EnhancePrompt(image=pending_job['input_media'], prompt=prompt, enhancer=ENHANCE_Prompt.format(duration=duration), output=None, backend=None, ispath=False)
-            enhance = False
-        else:
-            enhance = True
+        if MMH3:
+            from plan10.lib.director_mmh3 import get_builder
+            script = h3_ref(bg, refs, pending_job['prompt'],  output_dir, duration)
+            builder = get_builder(script, output_dir)
+            final_prompt = builder.generate()
+            
+            # Extract paths dynamically from the builder instead of hardcoding
+            img_refs = [data["path"] for data in builder.entities.values()]
+            aud_refs = [data["path"] for data in builder.audio_refs.values()]
 
-        # Generate the video
-        GenerateVideo(
-            prompt=prompt,
-            media=pending_job['input_media'],
-            output=pending_job['output_path'],
-            duration_sec=duration,
-            seed=pending_job['seed'],
-            enhance=enhance
-        )
+            if WGP:
+                import asyncio
+                from plan10.lib.director_mmh3 import send
+
+                asyncio.run(send(
+                    final_prompt, 
+                    img_refs, 
+                    aud_refs, 
+                    output=pending_job['output_path'], 
+                    width=WIDTH, 
+                    height=HEIGHT, 
+                    duration=builder.duration
+                ))
+            else:
+                from plan10.lib.mmh3 import compose_video
+                print(compose_video(final_prompt, img_refs, aud_refs, pending_job['output_path'], WIDTH, HEIGHT, builder.duration))
+
+        else:
+            if WGP and duration > 5:
+                prompt = EnhancePrompt(image=pending_job['input_media'], prompt=prompt, enhancer=ENHANCE_Prompt.format(duration=duration), output=None, backend=None, ispath=False)
+                enhance = False
+            else:
+                enhance = True
+
+            # Generate the video
+            GenerateVideo(
+                prompt=prompt,
+                media=pending_job['input_media'],
+                output=pending_job['output_path'],
+                duration_sec=duration,
+                seed=pending_job['seed'],
+                enhance=enhance
+            )
         
         # Mark as complete and update current_media
         pending_job['status'] = 'complete'

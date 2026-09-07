@@ -433,6 +433,16 @@ async def send(prompt, images, audio, output='output.mp4', width=768, height=448
             r = await client.call_tool("wangp_get_job", {"job_id": job_id})
         print(r.data['result'])
 
+def get_builder(script, output_dir):
+    base_dir = f'{os.getcwd()}/{output_dir}'
+    generators = {
+        'bg': partial(CreateBackground, override=(768,448)),
+        'char': partial(CreateCharacterSheet, override=(512,512)),
+        'item': partial(GenerateImage, width=512, height=412),
+        'audio': partial(DesignVoice, long=True)
+    }
+    return SmartVideoPromptBuilder().load_script(script, base_dir=base_dir, generators=generators)
+
 def main():
     from pathlib import Path
     import os, argparse, sys
