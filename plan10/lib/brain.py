@@ -40,8 +40,6 @@ def parse_tool_response(response_json={}, raw_content=""):
     """
     # 1️⃣ Try Ollama's structured tool_calls first
     tool_calls = response_json.get("tool_calls", [])
-    print(tool_calls)
-    print(raw_content)
     
     if tool_calls:
         for tc in tool_calls:
@@ -110,7 +108,6 @@ def execute_task(task_description, max_steps=15, target_alias=None, initial_ctx=
         
         # Inject live state (temporary, removed after generation)
         state_msg = f"CURRENT STATE:\n📦 Assets:\n{toolhandler.render_assets(prepare_context_for_llm(ctx))}\n📋 Goal: {task_description}"
-        print(state_msg)
         messages.append({"role": "user", "content": [{"type": "text", "text": state_msg}]})
         
         response = llm_chat(messages, tools=ToolHandler.TOOLS, enable_thinking=False)

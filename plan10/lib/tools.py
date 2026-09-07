@@ -121,21 +121,44 @@ class ToolHandler(object):
         return alias
 
     def resolve_asset(self, ref, ctx):
-        print('REFERENCE: ',ref)
-        OUTPUT_DIR = os.environ['OUTPUT_DIR'] if 'OUTPUT_DIR' in os.environ else 'outputs'
-        if not ref: return None
-        ref = ref.strip('"').strip("'")
-        if os.path.exists(ref): return ref
+        print('REFERENCE: ', ref)
+        OUTPUT_DIR = os.environ.get('OUTPUT_DIR', 'outputs')
         
+        if not ref: 
+            return None
+            
+        # Clean up the reference string
+        ref = ref.strip().strip('"').strip("'")
+        
+        # 1. If it's already a valid absolute/relative path that exists, use it
+        if os.path.exists(ref): 
+            return os.path.abspath(ref)
+            
         assets = ctx.get("assets", {})
+        
+        # 2. Check if ref is an exact alias match (e.g., "BarbarExploring2")
         if ref in assets:
             p = assets[ref].get("path")
-            return p if p and os.path.exists(p) else None
-        elif found_ref := [v['path'] for k, v in assets.items() if ref in v['path']]:
-            return found_ref[0]
-        else: 
-            alt = f'{OUTPUT_DIR}/{ref}'
-            return alt if os.path.exists(alt) else None
+            if p and os.path.exists(p):
+                return p
+                
+        # 3. Search for ref as a filename within asset paths
+        # This handles cases where LLM passes the actual filename
+        for asset_name, asset_data in assets.items():
+            asset_path = asset_data.get("path", "")
+            # Check if ref matches the filename part of any asset path
+            if os.path.basename(asset_path) == ref or ref in asset_path:
+                if os.path.exists(asset_path):
+                    return asset_path
+        
+        # 4. Fallback: If not found in context, assume it's just a filename
+        # and prepend OUTPUT_DIR (but ONLY if it's not already an absolute path)
+        if not os.path.isabs(ref):
+            alt = os.path.join(OUTPUT_DIR, ref)
+            if os.path.exists(alt):
+                return alt
+                
+        # If nothing worked, return None
         return None
 
     def render_assets(self, ctx):
