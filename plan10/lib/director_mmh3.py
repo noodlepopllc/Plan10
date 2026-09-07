@@ -375,7 +375,7 @@ class SmartVideoPromptBuilder:
         
         return "\n".join(sections)
 
-async def send(prompt, images, audio, output='output.mp4', width=768, height=448, duration=5.0):
+async def send(prompt, images, audio, output='output.mp4', width=768, height=448, duration=5.0, steps=4):
     async with Client("http://localhost:7866/mcp") as client:
 
         model = "minimax_h3_ref2va_pruned"
@@ -396,7 +396,7 @@ async def send(prompt, images, audio, output='output.mp4', width=768, height=448
                 args["audio_guide2"] = audio.pop()
         args["video_prompt_type"] = "I"
         args["multi_prompts_gen_type"] = "FG"
-        args["num_inference_steps"] = 8
+        args["num_inference_steps"] = steps
         args["guidance_scale"] = 1
         args["guidance2_scale"] = 5
         args["guidance3_scale"] = 5
@@ -460,6 +460,7 @@ def main():
     parser.add_argument('-D', '--debug', action='store_true')
     parser.add_argument('-W', '--width', type=int, default=int(os.environ.get("WIDTH", "864")))
     parser.add_argument('-H', '--height', type=int, default=int(os.environ.get("HEIGHT", "480")))
+    parser.add_argument('-S', '--steps', type=int, default=4)
     parser.add_argument('--wangp', action="store_true")
     args = parser.parse_args()
 
@@ -536,7 +537,8 @@ def main():
             output=output_filename, 
             width=args.width, 
             height=args.height, 
-            duration=builder.duration
+            duration=builder.duration,
+            steps=args.steps
         ))
     else:
         from plan10.lib.mmh3 import compose_video
