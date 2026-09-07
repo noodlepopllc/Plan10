@@ -40,6 +40,8 @@ def parse_tool_response(response_json={}, raw_content=""):
     """
     # 1️⃣ Try Ollama's structured tool_calls first
     tool_calls = response_json.get("tool_calls", [])
+    print(tool_calls)
+    print(raw_content)
     
     if tool_calls:
         for tc in tool_calls:
