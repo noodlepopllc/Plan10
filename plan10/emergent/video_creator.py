@@ -119,8 +119,8 @@ def main():
     pipeline.initial_media = initial
     if first_run and not args.scene_mode:
         background = f'{args.output}/background.png'
-        current_bg = background
         if Path(background).exists():
+            current_bg = background
             current_media = pipeline.recreate_frame(background, background, context, 0)
         else:
             current_media = pipeline.recreate_frame(current_media, background, context, 0)
@@ -135,6 +135,7 @@ def main():
         print("\n\n⏹️  Manual stop detected. Saving state...")
         state_mgr.save({
             "beat_count": beat_count, "current_media": current_media,
+            "current_bg": current_bg, 
             "story_context": context, "history": history,
             "pending_setup": pending_setup, "needs_transition": needs_transition,
             "character_refs": refs, "visual_ids": visual_ids,
