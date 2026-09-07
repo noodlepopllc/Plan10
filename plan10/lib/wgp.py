@@ -10,7 +10,7 @@ import librosa
 
 from pathlib import Path
 
-from plan10.lib.util import video_to_img, fix_minimax_audio
+from plan10.lib.util import video_to_img, fix_minimax_audio, to_absolute
 from plan10.lib.image_analysis import AnalyzeImage, EnhancePrompt, translate_to_audio_prompt
 
 from plan10.lib.image_gen import add_metadata_char
@@ -203,7 +203,7 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
             if len(media) > 0:
                 end_image = video_to_img(media.pop(), width, height, True, False)
         elif media:
-            start_image = f'{os.getcwd()}/{media}'
+            start_image = to_absolute(media)
 
         print(f"MEDIA: {start_image}")
 
@@ -249,7 +249,7 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
                 
             # Post-processing
             if os.environ.get('BATCH', 'False') == 'False':
-                tmp_img = video_to_img(f'{os.getcwd()}/{output}', width, height)
+                tmp_img = video_to_img(to_absolute(output), width, height)
                 tmp_img.save('tmp.png')
                 description = AnalyzeImage('tmp.png', "Briefly describe this image, no more than 100 words")['analysis']
             
@@ -489,13 +489,13 @@ def GenerateTalkingVideo(
         media='first_frame.png'
 
     if isinstance(media, list):
-        start_image = f'{os.getcwd()}/{media.pop(0)}'
+        start_image = to_absolute(media.pop(0))
         if len(media) > 0:
-            end_image = f'{os.getcwd()}/{media.pop(0)}'
+            end_image = to_absolute(media.pop(0))
     else:
-        start_image = f'{os.getcwd()}/{media}'
+        start_image = to_absolute(media)
 
-    ref_audio = f'{os.getcwd()}/{audio}'
+    ref_audio = to_absolute(audio)
 
     print(f"MEDIA: {start_image}")
 
@@ -546,7 +546,7 @@ def GenerateTalkingVideo(
             
         # Post-processing
         if os.environ.get('BATCH', 'False') == 'False':
-            tmp_img = video_to_img(f'{os.getcwd()}/{output}', width, height)
+            tmp_img = video_to_img(to_absolute(output), width, height)
             tmp_img.save('tmp.png')
             description = AnalyzeImage('tmp.png', "Briefly describe this image, no more than 100 words")['analysis']
         

@@ -5,6 +5,18 @@ import numpy as np
 import librosa
 import soundfile as sf
 
+def to_absolute(path, base_dir=None):
+    """Convert path to absolute, only prepending base_dir if needed"""
+    if base_dir is None:
+        base_dir = os.getcwd()
+    
+    # If already absolute, return as-is
+    if os.path.isabs(path):
+        return path
+    
+    # Otherwise, make it absolute
+    return os.path.join(base_dir, path)
+
 def fix_minimax_audio(input_path, output_path, target_sr=44100, target_duration=11.0):
     # 1. Load, convert to mono, and automatically resample to 44.1 kHz
     # (Setting sr=target_sr forces librosa to resample upon loading)
