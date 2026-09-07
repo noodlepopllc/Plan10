@@ -317,7 +317,7 @@ class Pipeline:
         return {
             "beat_count": beat_count + 1,
             "current_media": current_media,
-            "current_bg": current_bg
+            "current_bg": current_bg,
             "history": new_history,
             "pending_setup": setup,
             "needs_transition": needs_transition,
