@@ -121,7 +121,7 @@ def h3_ref(bg, refs, prompt, output_dir, duration=10.0):
         script += f"char | {label} | {ref} | {ref_desc}\n"
         ndx += 1
 
-        ndx = 1
+    ndx = 1
     for ref in refs:
         label = f"voice_{ndx}"
         clabel = f"char{ndx}"
