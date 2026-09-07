@@ -75,7 +75,7 @@ Rules:
 - Dialogue format: character speaks [Language] <d>"exact words"</d>
 - CRITICAL: Structure each shot as: [ambient sounds] → [action] → [dialogue if any] → [cut]. Ambient sounds come FIRST, dialogue comes LAST. Never put anything after dialogue ends.
 - CRITICAL: If a shot has dialogue, the shot must END immediately after the character finishes speaking and closes their mouth. No sounds, no reactions, no description after </d>.
-- CRITICAL: Never split speaking action from dialogue across multiple shots. If they start talking, the dialogue <d>"..."</d> must be in the SAME shot.
+- CRITICAL: Never split speaking action from dialogue across multiple shots. If they start talking, the dialogue [English]"..." must be in the SAME shot.
 - Include 1-2 ambient sounds at the START of each shot description (wind, footsteps, breathing, etc.).
 - Keep visual descriptions minimal — the model already sees the reference images.
 - End with a natural conclusion or emotional beat.
@@ -83,7 +83,7 @@ Rules:
 Example output:
 shot | Wide shot of {bg_label}. Wind howling, sand shifting. char1 stands near the doorway holding an object. Static camera. | 2.5
 shot | Medium shot. Footsteps crunching, fabric rustling. char2 enters from the right and walks toward char1. Camera tracks slowly. | 2.0
-shot | Closeup of char1. Wind gusting, distant rumble. char1 looks up in panic and speaks <d>"Oh fuck, what do I do now?"</d>. | 2.5
+shot | Closeup of char1. Wind gusting, distant rumble. char1 looks up in panic and speaks [English]"Oh fuck, what do I do now?". | 2.5
 shot | Medium closeup. Slow exhale, low atmospheric hum. char1 looks away, shaking her head. Camera holds static. | 1.5
 """
 
