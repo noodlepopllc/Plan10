@@ -185,8 +185,9 @@ def main():
             from plan10.lib.director_mmh3 import get_builder
             script = h3_ref(bg, refs, pending_job['prompt'],  duration)
             builder = get_builder(script, '')
+            print(script)
             final_prompt = builder.generate()
-            print(final_prompt)
+            
             
             # Extract paths dynamically from the builder instead of hardcoding
             img_refs = [data["path"] for data in builder.entities.values()]
