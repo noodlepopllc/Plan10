@@ -9,17 +9,18 @@ load_environ()
 from plan10.lib.image_analysis import EnhancePrompt, AnalyzeImage, translate_to_audio_prompt
 from plan10.lib.qwen_llm import llm_analyze_media
 
-if ANIME:
-    from plan10.lib.anime_gen import GenerateImage, CreateCharacterSheet, CreateBackground
-else:
-    from plan10.lib.image_gen import GenerateImage, CreateCharacterSheet, CreateBackground
-from plan10.lib.dialog import DesignVoice
-
 WGP = os.environ.get("WGP","False") != "False"
 LTX = os.environ.get("LTX","False") != "False"
 MMH3 = os.environ.get('MMH3', 'False') != 'False'
 WIDTH = int(os.environ.get('WIDTH', '768'))
 HEIGHT = int(os.environ.get('HEIGHT', '448'))
+ANIME = os.enivron.get('ANIME', 'False') != 'False'
+
+if ANIME:
+    from plan10.lib.anime_gen import GenerateImage, CreateCharacterSheet, CreateBackground
+else:
+    from plan10.lib.image_gen import GenerateImage, CreateCharacterSheet, CreateBackground
+from plan10.lib.dialog import DesignVoice
 
 ENHANCE_Prompt = '''You enhance rough video prompts into structured audiovisual rewrite prompts for I2VA (first-frame image → video).
 
