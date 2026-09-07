@@ -90,7 +90,6 @@ def prepare_context_for_llm(raw_context: dict) -> dict:
             asset_data["path"] = p.name
             
     del llm_context['history']
-    print(llm_context)
     return llm_context
 
 # =============================================================================
