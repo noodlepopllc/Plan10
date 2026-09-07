@@ -77,19 +77,23 @@ def parse_tool_response(response_json={}, raw_content=""):
 
 import copy
 
-def prepare_context_for_llm(raw_context: dict) -> dict:
-    # 1. Deep copy the context so you don't mutate your actual application state
+import copy
+
+def prepare_llm_context(raw_context: dict) -> dict:
     llm_context = copy.deepcopy(raw_context)
     
-    # 2. Iterate through assets and replace absolute paths with just the filename
-    for asset_name, asset_data in llm_context.get("assets", {}).items():
-        if "path" in asset_data:
-            p = Path(asset_data["path"])
-            
-            # OPTION A: Just the filename (e.g., "comp_BarbarExploring2_1788791778945.png")
-            asset_data["path"] = p.name
-            
-    del llm_context['history']
+    # Show LLM ONLY what it needs to pass to tools
+    simplified_assets = {}
+    for alias, asset_data in llm_context.get("assets", {}).items():
+        simplified_assets[alias] = {
+            "alias": alias,
+            "filename": os.path.basename(asset_data.get("path", "")),
+            "type": asset_data.get("type"),
+            "description": asset_data.get("description")
+        }
+    
+    llm_context["assets"] = simplified_assets
+    del llm_context["history"]
     return llm_context
 
 # =============================================================================
@@ -107,7 +111,7 @@ def execute_task(task_description, max_steps=15, target_alias=None, initial_ctx=
         print(f"\n━━━ STEP {step}/{max_steps} ━━━")
         
         # Inject live state (temporary, removed after generation)
-        state_msg = f"CURRENT STATE:\n📦 Assets:\n{toolhandler.render_assets(prepare_context_for_llm(ctx))}\n📋 Goal: {task_description}"
+        state_msg = f"CURRENT STATE:\n📦 Assets:\n{toolhandler.render_assets(prepare_llm_context(ctx))}\n📋 Goal: {task_description}"
         messages.append({"role": "user", "content": [{"type": "text", "text": state_msg}]})
         
         response = llm_chat(messages, tools=ToolHandler.TOOLS, enable_thinking=False)
