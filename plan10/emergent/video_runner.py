@@ -86,6 +86,9 @@ def main():
 
         if WGP and duration > 5:
             prompt = EnhancePrompt(image=pending_job['input_media'], prompt=prompt, enhancer=ENHANCE_Prompt, output=None, backend=None, ispath=False)
+            enhance = False
+        else:
+            enhance = True
 
         # Generate the video
         GenerateVideo(
@@ -93,7 +96,8 @@ def main():
             media=pending_job['input_media'],
             output=pending_job['output_path'],
             duration_sec=duration,
-            seed=pending_job['seed']
+            seed=pending_job['seed'],
+            enhance=enhance
         )
         
         # Mark as complete and update current_media
