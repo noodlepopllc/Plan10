@@ -94,12 +94,12 @@ def expand_to_shots(prompt: str, bg_label: str, char_labels: list, duration: flo
     )
     
     # Call your LLM here
-    response = llm_analyze_media('',prompt=formatted)['analysis']
+    response = llm_analyze_media('',prompt=formatted)
     print(response)
     
     # Strip any accidental markdown or extra whitespace
     lines = []
-    for line in response.strip().split("\n"):
+    for line in response['analysis'].strip().split("\n"):
         line = line.strip()
         if line.startswith("shot |"):
             lines.append(line)
