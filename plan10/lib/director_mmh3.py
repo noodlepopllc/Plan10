@@ -16,8 +16,6 @@ load_environ()
 ANIME = os.environ.get("ANIME","False") != "False" 
 SEED = int(os.environ.get("SEED", "-1"))
 
-
-
 from plan10.lib.image_analysis import AnalyzeImage
 
 class SmartVideoPromptBuilder:
@@ -434,6 +432,10 @@ async def send(prompt, images, audio, output='output.mp4', width=768, height=448
         print(r.data['result'])
 
 def get_builder(script, output_dir):
+    if ANIME:
+        from plan10.lib.anime_gen import GenerateImage, CreateCharacterSheet, CreateBackground
+    else:
+        from plan10.lib.image_gen import GenerateImage, CreateCharacterSheet, CreateBackground
     base_dir = f'{os.getcwd()}/{output_dir}'
     generators = {
         'bg': partial(CreateBackground, override=(768,448)),
