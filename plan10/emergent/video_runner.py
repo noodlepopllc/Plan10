@@ -14,7 +14,7 @@ LTX = os.environ.get("LTX","False") != "False"
 MMH3 = os.environ.get('MMH3', 'False') != 'False'
 WIDTH = int(os.environ.get('WIDTH', '768'))
 HEIGHT = int(os.environ.get('HEIGHT', '448'))
-ANIME = os.enivron.get('ANIME', 'False') != 'False'
+ANIME = os.environ.get('ANIME', 'False') != 'False'
 
 if ANIME:
     from plan10.lib.anime_gen import GenerateImage, CreateCharacterSheet, CreateBackground

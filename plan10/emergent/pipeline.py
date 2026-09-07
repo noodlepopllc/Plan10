@@ -186,7 +186,8 @@ class Pipeline:
                 "history": new_history,
                 "pending_setup": setup,
                 "needs_transition": False,
-                "video_job": video_job
+                "video_job": video_job,
+                "current_bg": current_bg,
             }
 
         # SUBSEQUENT BEATS
