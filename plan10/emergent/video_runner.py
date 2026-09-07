@@ -1,7 +1,7 @@
 import sys
 import argparse
 from pathlib import Path
-import os
+import os, traceback
 
 from plan10.lib.config import load_environ
 load_environ()
@@ -235,6 +235,7 @@ def main():
         
     except Exception as e:
         print(f"❌ Video generation failed: {e}")
+        traceback.print_exc()
         pending_job['status'] = 'failed'
         state_mgr.save(state)
         sys.exit(255)
