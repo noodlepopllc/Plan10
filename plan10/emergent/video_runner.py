@@ -95,6 +95,7 @@ def expand_to_shots(prompt: str, bg_label: str, char_labels: list, duration: flo
     
     # Call your LLM here
     response = llm_analyze_media('',prompt=formatted)['analysis']
+    print(response)
     
     # Strip any accidental markdown or extra whitespace
     lines = []
