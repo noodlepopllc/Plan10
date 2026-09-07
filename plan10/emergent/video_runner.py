@@ -110,7 +110,7 @@ def h3_ref(bg, refs, prompt, duration=10.0):
     script = ""
     
     # --- ASSETS ---
-    bg_desc = AnalyzeImage(bg)['analysis']
+    bg_desc = AnalyzeImage(bg, prompt='Brief description of scene, no more than 5 - 10 words')['analysis']
     bg_label = "bg"
     script += f"bg | {bg_label} | {bg} | {bg_desc}\n"
     
@@ -118,7 +118,7 @@ def h3_ref(bg, refs, prompt, duration=10.0):
     for ndx, ref in enumerate(refs, start=1):
         label = f"char{ndx}"
         char_labels.append(label)
-        ref_desc = AnalyzeImage(ref)['analysis']
+        ref_desc = AnalyzeImage(ref, prompt='Brief description of character, no more than 5 - 10 words')['analysis']
         script += f"char | {label} | {ref} | {ref_desc}\n"
 
     # Audio refs - don't add to char_labels
