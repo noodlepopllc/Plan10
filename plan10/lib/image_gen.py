@@ -349,7 +349,7 @@ CRITICAL: This image contains NO PEOPLE. Describe ONLY the environment.
 
 Return ONLY the following fields:
 
-1. CAMERA_GEOMETRY — camera height, angle, lens feel, depth cues.
+1. VIEW_GEOMETRY — view height, angle, lens feel, depth cues.
 2. GLOBAL_LAYOUT — foreground/midground/background partitioning and major planes.
 3. ANCHOR_OBJECTS — fixed, non-movable environmental elements with positions (furniture, fixtures, architecture).
 4. MATERIAL_CUES — environmental surfaces, textures, architectural materials (wood, stone, metal, fabric on furniture). DO NOT describe clothing or people.
