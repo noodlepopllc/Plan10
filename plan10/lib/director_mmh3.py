@@ -436,6 +436,7 @@ def get_builder(script, output_dir):
         from plan10.lib.anime_gen import GenerateImage, CreateCharacterSheet, CreateBackground
     else:
         from plan10.lib.image_gen import GenerateImage, CreateCharacterSheet, CreateBackground
+    from plan10.lib.dialog import DesignVoice
     base_dir = f'{os.getcwd()}/{output_dir}'
     generators = {
         'bg': partial(CreateBackground, override=(768,448)),
