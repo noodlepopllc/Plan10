@@ -92,13 +92,16 @@ def main():
 
     current_alias = None
 
-    # Readline setup
+    import readline
+    from pathlib import Path
+
     try:
-        import readline
-        histfile = Path.home() / f".asset_cli_{ctx_path.stem}_history"
-        if histfile.exists():
+        # Use the current working directory instead of home
+        histfile = Path.cwd() / f".asset_cli_{ctx_path.stem}_history"
+        
+        if histfile.is_file():
             readline.read_history_file(str(histfile))
-    except ImportError:
+    except (ImportError, OSError):
         pass
 
     print("\n" + "="*60)
