@@ -207,7 +207,7 @@ def main():
                     final_prompt, 
                     img_refs, 
                     aud_refs, 
-                    output=pending_job['output_path'], 
+                    output=Path(pending_job['output_path']).name, 
                     width=WIDTH, 
                     height=HEIGHT, 
                     duration=builder.duration
