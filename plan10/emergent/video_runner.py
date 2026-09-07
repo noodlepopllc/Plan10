@@ -68,23 +68,23 @@ Scene: {prompt}
 Rules:
 - Output ONLY shot lines, nothing else. No JSON, no markdown, no commentary.
 - Each line format: shot | description | duration_seconds
-- Duration per shot: 2-5 seconds. Shorter for reactions, longer for dialogue.
+- Duration per shot: 2-4 seconds. Keep shots SHORT and tight.
 - Reference characters by their exact label: {char_labels}
 - First shot should establish the scene and background.
 - Include camera framing (wide, medium, closeup) and motion (push in, pan, static, tracking) in each description.
 - Dialogue format: character speaks [Language] <d>"exact words"</d>
-- CRITICAL: If a character "begins to speak," "opens mouth," or "starts talking," the actual dialogue <d>"..."</d> MUST be in the SAME shot. Never split the speaking action from the dialogue across multiple shots.
-- CRITICAL: After dialogue ends with </d>, you MUST describe the character closing their mouth and returning to a neutral expression. Example: "char1 speaks <d>"Hello"</d>, then closes mouth and smiles."
-- CRITICAL: Every shot MUST include 2-3 specific ambient sounds that fill the audio track throughout that shot. Use POSITIVE descriptions: wind howling, sand shifting, crystals humming, footsteps crunching, fabric rustling, heavy breathing, distant rumble, etc. NEVER use negative instructions like "no speech" or "no music." These ambient sounds prevent the model from hallucinating background chatter.
-- Dialogue must be woven into the action, never on its own line.
+- CRITICAL: Structure each shot as: [ambient sounds] → [action] → [dialogue if any] → [cut]. Ambient sounds come FIRST, dialogue comes LAST. Never put anything after dialogue ends.
+- CRITICAL: If a shot has dialogue, the shot must END immediately after the character finishes speaking and closes their mouth. No sounds, no reactions, no description after </d>.
+- CRITICAL: Never split speaking action from dialogue across multiple shots. If they start talking, the dialogue <d>"..."</d> must be in the SAME shot.
+- Include 1-2 ambient sounds at the START of each shot description (wind, footsteps, breathing, etc.).
 - Keep visual descriptions minimal — the model already sees the reference images.
 - End with a natural conclusion or emotional beat.
 
 Example output:
-shot | Wide shot of {bg_label}. char1 stands near the doorway holding an object. Wind howling through the structure, sand shifting underfoot, distant thunder rumbling. Static camera. | 3.0
-shot | Medium shot. char2 enters from the right and walks toward char1. Heavy footsteps crunching on gravel, fabric rustling, wind whistling. Camera tracks slowly. | 2.5
-shot | Closeup of char1. char1 looks up in panic and speaks <d>"Oh fuck, what do I do now?"</d>, then closes mouth with a defeated expression. Wind gusting, crystals humming faintly, rapid breathing. | 3.5
-shot | Medium closeup. char1 looks away, shaking her head slightly. Slow exhale, sand trickling, low atmospheric rumble. Camera holds static. | 1.0
+shot | Wide shot of {bg_label}. Wind howling, sand shifting. char1 stands near the doorway holding an object. Static camera. | 2.5
+shot | Medium shot. Footsteps crunching, fabric rustling. char2 enters from the right and walks toward char1. Camera tracks slowly. | 2.0
+shot | Closeup of char1. Wind gusting, distant rumble. char1 looks up in panic and speaks <d>"Oh fuck, what do I do now?"</d>. | 2.5
+shot | Medium closeup. Slow exhale, low atmospheric hum. char1 looks away, shaking her head. Camera holds static. | 1.5
 """
 
 def expand_to_shots(prompt: str, bg_label: str, char_labels: list, duration: float) -> str:
