@@ -105,7 +105,7 @@ def expand_to_shots(prompt: str, bg_label: str, char_labels: list, duration: flo
     
     return "\n".join(lines)
 
-def h3_ref(bg, refs, prompt, duration=10):
+def h3_ref(bg, refs, prompt, duration=10.0):
     script = ""
     
     # --- ASSETS ---
@@ -220,7 +220,7 @@ def main():
                 prompt=prompt,
                 media=pending_job['input_media'],
                 output=pending_job['output_path'],
-                duration_sec=duration,
+                duration_sec=float(duration),
                 seed=pending_job['seed'],
                 enhance=enhance
             )
