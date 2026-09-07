@@ -210,7 +210,8 @@ def main():
                     output=Path(pending_job['output_path']).name, 
                     width=WIDTH, 
                     height=HEIGHT, 
-                    duration=builder.duration
+                    duration=builder.duration,
+                    steps=8
                 ))
             else:
                 from plan10.lib.mmh3 import compose_video
