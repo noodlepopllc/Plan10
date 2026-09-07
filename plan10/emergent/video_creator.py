@@ -17,11 +17,6 @@ WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
 SEED = int(os.environ.get("SEED", "-1"))
 
-if os.environ.get('ANIME','False') != 'False':
-    from plan10.lib.anime_gen import GenerateImage, CreateBackground, CreateCharacterSheet
-else:
-    from plan10.lib.image_gen import GenerateImage, CreateBackground, CreateCharacterSheet
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-R', '--ref', type=str, action='append', default=[])
