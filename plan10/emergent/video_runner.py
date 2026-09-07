@@ -86,10 +86,8 @@ def main():
         prompt = pending_job['prompt']
 
         if WGP and duration > 5:
-            print("ORIGINAL PROMPT: ",prompt)
             prompt = EnhancePrompt(image=pending_job['input_media'], prompt=prompt, enhancer=ENHANCE_Prompt.format(duration=duration), output=None, backend=None, ispath=False)
             enhance = False
-            print("NEW PROMPT: ",prompt)
         else:
             enhance = True
 
