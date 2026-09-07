@@ -72,7 +72,9 @@ Rules:
 - Reference characters by their exact label: {char_labels}
 - First shot should establish the scene and background.
 - Include camera framing (wide, medium, closeup) and motion (push in, pan, static, tracking) in each description.
-- Dialogue format: character speaks [Language] "exact words"
+- Dialogue format: character speaks [Language] <d>"exact words"</d>
+- CRITICAL: If a character "begins to speak," "opens mouth," or "starts talking," the actual dialogue <d>"..."</d> MUST be in the SAME shot. Never split the speaking action from the dialogue across multiple shots.
+- CRITICAL: After dialogue ends with </d>, you MUST describe the character closing their mouth and returning to a neutral expression. Example: "char1 speaks <d>"Hello"</d>, then closes mouth and smiles."
 - Dialogue must be woven into the action, never on its own line.
 - Keep visual descriptions minimal — the model already sees the reference images.
 - End with a natural conclusion or emotional beat.
@@ -80,7 +82,8 @@ Rules:
 Example output:
 shot | Wide shot of {bg_label}. char1 stands near the doorway holding an object. Static camera. | 3.0
 shot | Medium shot. char2 enters from the right and walks toward char1. Camera tracks slowly. | 2.5
-shot | Closeup of char1. char1 speaks [English] "Hello there." | 2.0
+shot | Closeup of char1. char1 looks up in panic and speaks <d>"Oh fuck, what do I do now?"</d>, then closes mouth with a defeated expression. | 3.5
+shot | Medium closeup. char1 looks away, shaking her head slightly. Camera holds static. | 1.0
 """
 
 def expand_to_shots(prompt: str, bg_label: str, char_labels: list, duration: float) -> str:
