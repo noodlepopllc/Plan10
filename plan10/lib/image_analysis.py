@@ -51,7 +51,7 @@ def translate_to_audio_prompt(visual_prompt):
     cleaned_string = ", ".join(items)
     
     # Force the strict negative constraints to the tail end of the string
-    final_audio_prompt = f"{cleaned_string}, close microphone perspective, non-verbal, purely physical sound effects, no speech, no music"
+    final_audio_prompt = f"{cleaned_string}, close microphone perspective, non-verbal, purely physical sound effects"
     
     return final_audio_prompt
 
