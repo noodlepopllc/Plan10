@@ -130,7 +130,7 @@ def h3_ref(bg, refs, prompt, duration=10.0):
         script += f"audio | {voice_label} | {wav_path} | {char_label} | {gender}\n"
     
     # --- CONTEXT ---
-    script += f"prompt | {prompt}\n"
+    script += f"prompt | {prompt.replace('\n', ' ')}\n"
     script += f"soundscape | {translate_to_audio_prompt(bg_desc)}\n"
     
     # --- SHOTS (now gets clean char_labels) ---
@@ -184,7 +184,7 @@ def main():
 
         if MMH3:
             from plan10.lib.director_mmh3 import get_builder
-            script = h3_ref(bg, refs, pending_job['prompt'],  duration)
+            script = h3_ref(bg, refs, prompt,  duration)
             print("SCRIPT: ",script)
             builder = get_builder(script, '')
             final_prompt = builder.generate()
