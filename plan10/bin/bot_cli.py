@@ -93,7 +93,6 @@ def main():
     current_alias = None
 
     import readline
-    from pathlib import Path
 
     try:
         # Use the current working directory instead of home
