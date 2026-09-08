@@ -13,7 +13,9 @@ cfg = {
     "QWEN": "Qwen/Qwen3.5-4B", 
     "TRANSFORMERS_OFFLINE": "0", 
     "HF_HUB_OFFLINE": "0", 
-    "HF_HOME": "./models", 
+    "DIFFSYNTH_MODEL_BASE_PATH": "./models",
+    "HF_HOME": "$DIFFSYNTH_MODEL_BASE_PATH", 
+    "TRANSFORMERS_CACHE":"$HF_HOME",
     "WAN21": "14B", # or 1.3B
     "DIFFSYNTH_DOWNLOAD_SOURCE": "huggingface", 
     "DIFFSYNTH_SKIP_DOWNLOAD": "False", 
@@ -27,7 +29,6 @@ cfg = {
     "WIDTH": "768",
     "HEIGHT": "448",
     "SEED": "42",
-    "TRANSFORMERS_CACHE":"$HF_HOME",
     "MMH3": "False",
     "WGP": "False",
     "LTX": "DISTILLED",
