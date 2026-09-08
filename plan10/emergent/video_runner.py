@@ -190,7 +190,7 @@ Rules:
 - Dialogue format: character speaks [Language] <d>"exact words"</d>
 - CRITICAL: Structure each shot as: [ambient sounds] → [action] → [dialogue if any] → [cut]. Ambient sounds come FIRST, dialogue comes LAST. Never put anything after dialogue ends.
 - CRITICAL: If a shot has dialogue, the shot must END immediately after the character finishes speaking and closes their mouth. No sounds, no reactions, no description after </d>.
-- CRITICAL: Never split speaking action from dialogue across multiple shots. If they start talking, the dialogue <d>"..."</d> must be in the SAME shot.
+- CRITICAL: Never split speaking action from dialogue across multiple shots. If they start talking, the dialogue [English]"..." must be in the SAME shot.
 - Include 1-2 ambient sounds at the START of each shot description (wind, footsteps, breathing, etc.).
 - Keep visual descriptions minimal after Shot 1 — the model already sees the reference images.
 - End with a natural conclusion or emotional beat.
@@ -198,7 +198,7 @@ Rules:
 Example output:
 shot | Wide shot. Wind howling, sand shifting. Camera pushes in slowly as {char_list.split(',')[0] if char_list else 'char1'} shifts weight and looks toward the doorway, matching the starting composition. | 2.5
 shot | Medium shot. Footsteps crunching, fabric rustling. {char_list.split(',')[1] if len(char_list) > 1 else 'char2'} enters from the right and walks toward {char_list.split(',')[0] if char_list else 'char1'}. Camera tracks slowly. | 2.0
-shot | Closeup. Wind gusting, distant rumble. {char_list.split(',')[0] if char_list else 'char1'} looks up in panic and speaks <d>"Oh fuck, what do I do now?"</d>. | 2.5
+shot | Closeup. Wind gusting, distant rumble. {char_list.split(',')[0] if char_list else 'char1'} looks up in panic and speaks [English]"Oh fuck, what do I do now?". | 2.5
 shot | Medium closeup. Slow exhale, low atmospheric hum. {char_list.split(',')[0] if char_list else 'char1'} looks away, shaking her head. Camera holds static. | 1.5
 """
 
