@@ -28,7 +28,7 @@ class SmartVideoPromptBuilder:
         # Registry to map user labels to generated IDs and descriptions
         self.entities = {}
         self.audio_refs = {}
-        self._filtered_audio_refs = {} 
+        self.used_audio_refs = {} 
         self.summary = ""
         
         self.shots = []
@@ -289,63 +289,48 @@ class SmartVideoPromptBuilder:
     def generate(self) -> str:
         """Compiles everything into the final structured prompt format."""
         sections = []
-        self._filtered_audio_refs = {} # Reset for safety
+        self.used_audio_refs = {} # Reset for safety
         
-        # 1. Identify which subjects actually have dialogue in any shot
-        subjects_with_dialogue = set()
-        processed_shots = []
+        # 1. PRE-SCAN: Find exactly which subjects are speaking
+        used_subject_ids = set()
+        for shot in self.shots:
+            text = self._substitute_labels(shot["raw_text"])
+            # Find any <Subject X> that is immediately followed by <d> (with no other '<' in between)
+            matches = re.findall(r'<Subject (\d+)>(?=[^<]*<d>)', text)
+            used_subject_ids.update(int(m) for m in matches)
         
-        for i, shot in enumerate(self.shots):
-            processed_text = self._substitute_labels(shot["raw_text"])
-            
-            # Track which entities appear in this shot
-            for label, entity in self.entities.items():
-                tag = f"<Subject {entity['id']}>"
-                if tag in processed_text:
-                    entity["shots"].add(i + 1)
-            
-            # Check if this shot contains dialogue markers
-            has_dialogue = bool(re.search(r'<d>.*?</d>|\[(?:English|Spanish|French|German|Italian)\]', processed_text, re.IGNORECASE))
-            
-            if has_dialogue:
-                # Mark subjects present in this shot as having dialogue
-                for label, entity in self.entities.items():
-                    tag = f"<Subject {entity['id']}>"
-                    if tag in processed_text:
-                        subjects_with_dialogue.add(entity['id'])
-            
-            processed_shots.append(processed_text)
-
-        # 2. Subject & Audio Definitions
+        # 2. Build speaker tags ONLY for subjects who actually speak AND have an audio ref
+        subject_to_speaker = {}
+        speaker_counter = 1
+        
+        for label, data in self.audio_refs.items():
+            target_id = data['target_id']
+            if target_id in used_subject_ids:
+                speaker_tag = f"(S{speaker_counter})"
+                subject_to_speaker[target_id] = speaker_tag
+                data['speaker_tag'] = speaker_tag
+                self.used_audio_refs[label] = data
+                speaker_counter += 1
+        
+        # 3. Subject & Audio Definitions
         sections.append("subject_definitions:")
         sub_defs = []
         for label, data in self.entities.items():
             sub_defs.append(f"<Subject {data['id']}> is {data['desc']} in {data['pic_tag']}.")
         
         audio_defs = []
-        speaker_counter = 0
-        
-        for label, data in self.audio_refs.items():
-            target_id = data['target_id']
-            # CRITICAL FIX: Only include audio ref if the character actually has dialogue
-            if target_id in subjects_with_dialogue:
-                speaker_counter += 1
-                speaker_tag = f"(S{speaker_counter})"
-                data['speaker_tag'] = speaker_tag
-                self._filtered_audio_refs[label] = data
-                
-                extra = f", {data['extra_desc']}" if data['extra_desc'] else ""
-                audio_defs.append(
-                    f"<Audio {data['id']}> is the voice-timbre reference for <Subject {target_id}> {speaker_tag}{extra}."
-                )
-        
+        for label, data in self.used_audio_refs.items():
+            extra = f", {data['extra_desc']}" if data['extra_desc'] else ""
+            audio_defs.append(
+                f"<Audio {data['id']}> is the voice-timbre reference for <Subject {data['target_id']}> {data['speaker_tag']}{extra}."
+            )
         sections.append("\n".join(sub_defs + audio_defs))
         
         if self.summary:
             sections.append("\nsummary:")
             sections.append(self._substitute_labels(self.summary))
         
-        # 3. Process Shots & Build Detailed Description
+        # 4. Process Shots & Build Detailed Description
         sections.append("\ndetailed_description:")
         
         if self.first_frame_label and self.first_frame_label in self.entities:
@@ -359,19 +344,25 @@ However, CHARACTER IDENTITY (facial features, clothing details, body proportions
             sections.append(self.scene_style)
             
         for i, shot in enumerate(self.shots):
-            processed_text = processed_shots[i]
+            processed_text = self._substitute_labels(shot["raw_text"])
             
-            # ONLY add speaker tags to subjects that have dialogue AND are in a shot with dialogue
-            for label, data in self._filtered_audio_refs.items():
-                subject_tag = f"<Subject {data['target_id']}>"
-                speaker_tag = data['speaker_tag']
-                
-                if bool(re.search(r'<d>.*?</d>|\[(?:English|Spanish|French|German|Italian)\]', processed_text, re.IGNORECASE)):
-                    if subject_tag in processed_text:
-                        tagged_subject = f"{subject_tag} {speaker_tag}"
-                        processed_text = processed_text.replace(subject_tag, tagged_subject)
+            # Track which entities appear in this shot for retention analysis
+            for label, entity in self.entities.items():
+                tag = f"<Subject {entity['id']}>"
+                if tag in processed_text:
+                    entity["shots"].add(i + 1)
             
-            # Wrap dialogue in <d> tags if not already wrapped by user
+            # INJECT SPEAKER TAGS: Replace <Subject X> with <Subject X> (S#) ONLY if it precedes <d>
+            def inject_speaker(match):
+                subject_tag = match.group(1)
+                subject_id = int(re.search(r'\d+', subject_tag).group())
+                if subject_id in subject_to_speaker:
+                    return f"{subject_tag} {subject_to_speaker[subject_id]}"
+                return subject_tag
+            
+            processed_text = re.sub(r'(<Subject \d+>)(?=[^<]*<d>)', inject_speaker, processed_text)
+            
+            # Wrap dialogue in <d> tags if not already wrapped
             processed_text = re.sub(
                 r'(\[(?:English|Spanish|French|German|Italian)\]\s*"[^"]*")',
                 r'<d>\1</d>',
@@ -386,7 +377,7 @@ However, CHARACTER IDENTITY (facial features, clothing details, body proportions
             time_str = f" At {shot['timestamp']}," if shot.get("timestamp") else ""
             sections.append(f"[Shot {i+1}]{time_str} {processed_text}")
             
-        # 4. Auto-Generate Retention Analysis
+        # 5. Auto-Generate Retention Analysis
         sections.append("\nretention_analysis:")
         for label, data in self.entities.items():
             shots_list = sorted(list(data["shots"]))
@@ -396,13 +387,13 @@ However, CHARACTER IDENTITY (facial features, clothing details, body proportions
                 f"{data['desc']} is retained."
             )
             
-        # ONLY list audio refs that made it through the filter
-        for label, data in self._filtered_audio_refs.items():
+        # ONLY list audio refs that were actually used
+        for label, data in self.used_audio_refs.items():
             sections.append(
                 f"<Audio {data['id']}>: reference - its vocal timbre guides the dialogue delivery for <Subject {data['target_id']}>."
             )
             
-        # 5. Soundscape & Music
+        # 6. Soundscape & Music
         sections.append("\noverall_soundscape:")
         sections.append(self.soundscape)
         sections.append("\nnon_diegetic_music:")
@@ -560,7 +551,7 @@ def main():
     
     # Extract paths dynamically from the builder instead of hardcoding
     img_refs = [data["path"] for data in builder.entities.values()]
-    aud_refs = [data["path"] for data in builder.audio_refs.values()]
+    aud_refs = [data["path"] for data in builder.used_audio_refs.values()]
 
     #width and height must be multiples of 32, 1344x768, 864x480 minimal
     if args.input:

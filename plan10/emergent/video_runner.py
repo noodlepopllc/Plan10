@@ -257,7 +257,7 @@ def main():
             
             # Extract paths dynamically from the builder instead of hardcoding
             img_refs = [data["path"] for data in builder.entities.values()]
-            aud_refs = [data["path"] for data in builder._filtered_audio_refs.values()]
+            aud_refs = [data["path"] for data in builder.used_audio_refs.values()]
 
             if WGP:
                 import asyncio
