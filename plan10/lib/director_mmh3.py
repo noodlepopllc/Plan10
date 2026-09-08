@@ -266,7 +266,7 @@ class SmartVideoPromptBuilder:
                     if not os.path.exists(path):
                         if 'audio' in generators:
                             print(f"Generating voice {label} at {path}...")
-                            generators['audio'](voice_prompt, path, long=False)
+                            generators['audio'](voice_prompt, path, long=True)
                         else:
                             print(f"[Warning] Audio file not found: {path}")
                     
