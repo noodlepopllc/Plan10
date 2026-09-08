@@ -198,6 +198,7 @@ NOW, generate the shots for the INPUT DATA provided above:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-O', '--output', type=str, default="feedback_output")
+    parser.add_argument('-F', '--fast', action='store_true')
     args, _ = parser.parse_known_args()
     
     state_mgr = StateManager(args.output)
@@ -270,7 +271,7 @@ def main():
                     width=WIDTH, 
                     height=HEIGHT, 
                     duration=builder.duration,
-                    steps=8
+                    steps=4 if args.fast else 8
                 ))
             else:
                 from plan10.lib.mmh3 import compose_video
