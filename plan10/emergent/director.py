@@ -88,6 +88,8 @@ Be factual about what you see, not what was intended."""
     ISSUES: [none, or specific problem]
     LOCATION: [brief location]
     CHARACTERS: [brief descriptions, including key visual identifiers like hair/clothing color]
+    SCENE_TRANSITION: [YES/NO] - Is this an intentional cut to a NEW location/scene?
+    NEW_LOCATION: [if YES, describe the new location in detail for background generation]
     NEXT_ACTION: [1-2 sentences of story action. This CAN AND SHOULD include specific dialogue, comedic timing, or verbal reactions if it serves the goal (e.g., "The woman with red hair in a green shirt delivers a punchline while laughing").]
     CAMERA_FRAMING: [1 sentence of strict visual direction: lens, angle, lighting, movement]
     SETUP: [what this sets up for the next beat]
@@ -153,8 +155,10 @@ Be factual about what you see, not what was intended."""
     MATCH: [YES/PARTIAL/NO]
     ISSUES: [none, or specific problem]
     LOCATION: [brief location]
-    CHARACTERS: [brief descriptions]
-    NEXT_ACTION: [1-2 sentences of pure story action that moves toward the goal]
+    CHARACTERS: [brief descriptions, including key visual identifiers like hair/clothing color]
+    SCENE_TRANSITION: [YES/NO] - Is this an intentional cut to a NEW location/scene?
+    NEW_LOCATION: [if YES, describe the new location in detail for background generation]
+    NEXT_ACTION: [1-2 sentences of story action. This CAN AND SHOULD include specific dialogue, comedic timing, or verbal reactions if it serves the goal (e.g., "The woman with red hair in a green shirt delivers a punchline while laughing").]
     CAMERA_FRAMING: [1 sentence of strict visual direction: lens, angle, lighting, movement]
     SETUP: [what this sets up for the next beat]
     GOAL_PROGRESS: [how this action moves toward completing the goal]
@@ -178,6 +182,8 @@ Be factual about what you see, not what was intended."""
         camera_framing = "static shot, medium framing"
         setup = ""
         goal_progress = ""
+        scene_transition = "NO"
+        new_location = ""
         
         for line in lines:
             line = line.strip()
@@ -189,6 +195,10 @@ Be factual about what you see, not what was intended."""
                 location = line.split(":", 1)[1].strip()
             elif line.upper().startswith("CHARACTERS:"):
                 characters = line.split(":", 1)[1].strip()
+            elif line.upper().startswith("SCENE_TRANSITION:"):
+                scene_transition = line.split(":", 1)[1].strip().upper()
+            elif line.upper().startswith("NEW_LOCATION:"):
+                new_location = line.split(":", 1)[1].strip()
             elif line.upper().startswith("NEXT_ACTION:"):
                 next_action = line.split(":", 1)[1].strip()
             elif line.upper().startswith("CAMERA_FRAMING:"):
@@ -198,7 +208,7 @@ Be factual about what you see, not what was intended."""
             elif line.upper().startswith("GOAL_PROGRESS:"):
                 goal_progress = line.split(":", 1)[1].strip()
         
-        return match, issues, location, characters, next_action, camera_framing, setup, goal_progress
+        return match, issues, location, characters, next_action, camera_framing, setup, goal_progress, scene_transition, new_location
 
     def _clean_analysis(self, raw_analysis):
         lines = raw_analysis.split('\n')

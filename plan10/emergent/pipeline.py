@@ -12,6 +12,7 @@ from plan10.lib.util import video_to_img
 
 WGP = os.environ.get("WGP","False") != "False"
 LTX = os.environ.get("LTX","False") != "False"
+MMH3 = os.environ.get("MMH3", "False") != "False"
 
 from plan10.emergent.vision import VisibilityChecker
 from plan10.emergent.director import Director
@@ -146,6 +147,18 @@ class Pipeline:
         
         return str(comp_path), str(bg_path)
 
+    def verify_location_change(self, current_media, expected_new_location):
+        """Check if the current frame actually shows the new location."""
+        prompt = f"""Does this {"video" if current_media.endswith(('.mp4', '.avi', '.mov')) else "image"} show "{expected_new_location}"?
+        
+    Answer YES if the background/environment clearly matches the new location.
+    Answer NO if it still shows the previous location or is ambiguous.
+
+    Respond with only YES or NO."""
+        
+        result = AnalyzeMedia(current_media, prompt)['analysis']
+        return "YES" in result.upper()
+
     def execute_step(self, current_media, current_bg, story_context, beat_count, history, pending_setup, needs_transition):
         """Executes one creative step. Returns updated state dict with video job queued."""
         
@@ -153,14 +166,14 @@ class Pipeline:
 
         # FIRST BEAT: Store initial media and animate directly
         if not history:
-            self.initial_media = current_media  # Remember the starting image
+            self.initial_media = current_media
             print("🎬 First beat - animating initial scene...")
             
             output_path = self.output_dir / f"beat_{beat_count+1:03d}.mp4"
             
             video_prompt = self._format_video_prompt(
                 location="",
-                characters=f"{' and '.join([x for x in self.visual_ids])} " ,
+                characters=f"{' and '.join([x for x in self.visual_ids])} ",
                 next_action=story_context,
                 camera_framing="maintain current framing, natural movement"
             )
@@ -193,16 +206,64 @@ class Pipeline:
             }
 
         # SUBSEQUENT BEATS
-        # Choose recreate method based on mode
         if self.scene_mode:
             recreate = self.recreate_frame_passthrough
         else:
             recreate = self.recreate_frame
-        
-        # 1. Check visibility (skip in scene_mode)
-        if not self.scene_mode:
-            # Around line 150 in execute_step, update the visibility check handling:
 
+        # 1. Get previous intention
+        intended_action = history[-1]
+
+        # 2. Analyze reality FIRST
+        direct = Director()
+        print(f"\n🔍 Analyzing reality...")
+        raw_reality = direct.analyze_reality(current_media, intended_action, self.width, self.height, self.output_dir)
+        actual_reality = direct._clean_analysis(raw_reality)
+        
+        # 3. Compare and decide (director makes decision including scene transitions)
+        print(f"\n🤔 Comparing intention vs reality...")
+        
+        if self.scene_mode:
+            location_constraint = "Character must remain in the current room/location. All actions must be physically possible within this space. No transitions or location changes."
+        else:
+            location_constraint = None
+        
+        decision = direct.compare_and_decide(
+            intended_action, actual_reality, story_context, 
+            history, pending_setup, goal=self.goal, 
+            force_transition=needs_transition,
+            location_constraint=location_constraint
+        )
+        
+        # 4. Parse decision with NEW 10-value signature
+        match, issues, location, characters, next_action, camera_framing, setup, goal_progress, scene_transition, new_location = direct.parse_decision(decision)
+
+        print(f"Goal Progress: {goal_progress}")
+        print(f"Match: {match}, Issues: {issues}")
+        print(f"Location: {location}")
+        print(f"Scene Transition: {scene_transition}, New Location: {new_location}")
+        print(f"Characters: {characters}")
+        print(f"Next Action: {next_action}")
+        print(f"Camera Framing: {camera_framing}")
+        print(f"Setup for next beat: {setup}")
+        
+        # 5. Check if director planned a scene transition
+        if not self.scene_mode and scene_transition == "YES" and new_location:
+            print(f"\n🎬 Director planned transition to: {new_location}")
+            # Verify it actually happened
+            location_changed = self.verify_location_change(current_media, new_location)
+            
+            if not location_changed:
+                print(f"⚠️ Transition didn't happen. Forcing transition...")
+                current_media, current_bg = self.generate_transition_frame(new_location, beat_count)
+                needs_transition = False
+                history.append(new_location)
+            else:
+                print(f"✓ Scene transition confirmed")
+                history.append(new_location)
+        
+        # 6. Otherwise, check visibility (fallback)
+        elif not self.scene_mode:
             visible = True
             reason_code = ''
             
@@ -218,7 +279,6 @@ class Pipeline:
                 
                 if reason_code == "empty_background":
                     print("  → Background is empty/black. Generating new background...")
-                    # Extract location from history or use generic
                     location_hint = history[-1] if history else "detailed environment, realistic lighting"
                     current_media, current_bg = self.generate_transition_frame(location_hint, beat_count)
                     needs_transition = False
@@ -227,7 +287,7 @@ class Pipeline:
                     print("  → Character is leaving the scene. Forcing cinematic CUT TO new location/angle.")
                     needs_transition = True
                     
-                elif reason_code == "turned_away":
+                elif not MMH3 and reason_code == "turned_away":
                     print("  → Character is turned away. Recreating frame to face camera (same location)...")
                     current_state = f"{' and '.join([x for x in self.visual_ids])} turns around to face the camera in a frontal or 3/4 view, maintaining the exact same environment."
                     current_media, current_bg = recreate(current_media, current_bg, current_state, beat_count)
@@ -240,52 +300,17 @@ class Pipeline:
                     needs_transition = False
 
         else:
+            # scene_mode
             current_media, current_bg = recreate(current_media, current_bg, "", beat_count)
 
-
-        # 2. Get previous intention
-        intended_action = history[-1]
-
-        # 3. Analyze reality
-        direct = Director()
-        print(f"\n🔍 Analyzing reality...")
-        raw_reality = direct.analyze_reality(current_media, intended_action, self.width, self.height, self.output_dir)
-        actual_reality = direct._clean_analysis(raw_reality)
-        
-        # 4. Compare and decide (with location constraint if scene_mode)
-        print(f"\n🤔 Comparing intention vs reality...")
-        
-        if self.scene_mode:
-            location_constraint = "Character must remain in the current room/location. All actions must be physically possible within this space. No transitions or location changes."
-        else:
-            location_constraint = None
-        
-        # When calling compare_and_decide (around line 196)
-        decision = direct.compare_and_decide(
-            intended_action, actual_reality, story_context, 
-            history, pending_setup, goal=self.goal, 
-            force_transition=needs_transition,
-            location_constraint=location_constraint
-        )
-        match, issues, location, characters, next_action, camera_framing, setup, goal_progress = direct.parse_decision(decision)
-
-        print(f"Goal Progress: {goal_progress}")
-
-        print(f"Match: {match}, Issues: {issues}")
-        print(f"Location: {location}")
-        print(f"Characters: {characters}")
-        print(f"Next Action: {next_action}")
-        print(f"Camera Framing: {camera_framing}")
-        print(f"Setup for next beat: {setup}")
-        
-        # 5. Handle major issues (skip in scene_mode)
+        # 7. Handle major issues (skip in scene_mode)
         if not self.scene_mode:
             if "NO" in match or "drift" in issues.lower() or "repeating" in issues.lower():
                 if not needs_transition:
                     print(f"\n⚠️ Major issues detected - rebuilding frame to current state...")
                     current_media, current_bg = recreate(current_media, current_bg, actual_reality, beat_count)
         
-        # 6. Handle cinematic transition (skip in scene_mode)
+        # 8. Handle cinematic transition (skip in scene_mode)
         if not self.scene_mode:
             combined_text = f"{next_action} {camera_framing}".upper()
             if needs_transition and "CUT TO" in combined_text:
@@ -293,14 +318,13 @@ class Pipeline:
                 current_media, current_bg = self.generate_transition_frame(location, beat_count)
                 needs_transition = False
         
-        # 7. Format video prompt and queue it
+        # 9. Format video prompt and queue it
         output_path = self.output_dir / f"beat_{beat_count+1:03d}.mp4"
         video_prompt = self._format_video_prompt(location, characters, next_action, camera_framing)
         
         print(f"\n📝 Queuing video generation...")
         print(f"Prompt preview: {video_prompt[:200]}...")
         
-        # In scene_mode, still use current_media (last frame) but with location constraint
         input_media = current_media
 
         video_job = {
@@ -312,7 +336,7 @@ class Pipeline:
             "status": "pending"
         }
         
-        # 8. Update history
+        # 10. Update history
         new_history = history + [next_action]
         
         print(f"\n✅ Beat {beat_count + 1} planned. Video queued for rendering.")
