@@ -196,7 +196,7 @@ HARD CONSTRAINTS FOR LLM:
 - CRITICAL: Structure each shot as: [ambient sounds] → [action] → [dialogue if any] → [cut]. Ambient sounds come FIRST, dialogue comes LAST. Never put anything after dialogue ends.
 - CRITICAL: If a shot has dialogue, the shot must END immediately after the character finishes speaking and closes their mouth. No description after </d>.
 - CRITICAL: Never split speaking action from dialogue across multiple shots.
-- CRITICAL FOR CONTINUITY: The LAST shot must be a medium or wide shot that shows the full character(s) and environment. This provides maximum visual context for the next video generation. DO NOT end on a closeup or extreme closeup.
+- CRITICAL FOR CONTINUITY: The LAST shot must be a medium shot that shows the character(s) and environment. This provides maximum visual context for the next video generation. DO NOT end on a closeup or extreme closeup.
 
 CRITICAL FOR TEMPORAL CONTINUITY (PREVENTING SCENE SHIFTS):
 - The scene MUST NOT reset between shots. Lighting, shadow direction, and weather must remain identical across all shots.
@@ -206,7 +206,7 @@ CRITICAL FOR TEMPORAL CONTINUITY (PREVENTING SCENE SHIFTS):
 Example output:
 shot | Wide shot. Wind howling, sand shifting. Camera pushes in slowly as char1 shifts weight and looks toward the doorway. | 2.5
 shot | Closeup. Wind gusting, distant rumble. char1 looks up in panic and speaks <d>"Oh fuck, what do I do now?"</d>. | 2.5
-shot | Medium wide shot. Slow exhale, low atmospheric hum. char1 looks away, shaking her head as wind blows across the dunes. Camera holds static. | 2.0
+shot | Medium shot. Slow exhale, low atmospheric hum. char1 looks away, shaking her head as wind blows across the dunes. Camera holds static. | 2.0
 """
 
     response = llm_analyze_media('', prompt=formatted_prompt)['analysis']
