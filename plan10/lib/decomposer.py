@@ -26,7 +26,7 @@ from plan10.lib.compositor import CompositeScene
 import json
 from pathlib import Path
 from plan10.lib.image_analysis import AnalyzeImage
-import partial
+from functools import partial
 
 
 def decompose_scene(input_image, output_dir, seed=42):
