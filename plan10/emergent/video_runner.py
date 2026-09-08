@@ -136,6 +136,8 @@ def h3_ref(bg, ff, refs, prompt, duration=10.0):
     return script
 
 
+import os
+
 def expand_to_shots(prompt: str, bg_label: str, char_labels: list, duration: float, first_frame_path: str = None) -> str:
     """Returns raw shot lines ready to append to your script, grounded in the actual first frame."""
     
@@ -153,39 +155,38 @@ def expand_to_shots(prompt: str, bg_label: str, char_labels: list, duration: flo
     char_list = ", ".join(char_labels)
     duration_hint = f"Total duration: approximately {duration} seconds."
     
-    formatted_prompt = f"""Break this scene into sequential video shots.
+    formatted_prompt = f"""You are an expert video director breaking down a scene into sequential shots.
 
-Available characters: {char_list}
-Background: {bg_label}
-{duration_hint}
-
-Scene description: {prompt}
+INPUT DATA:
+- Available characters: {char_list}
+- Background: {bg_label}
+- {duration_hint}
+- Scene description: {prompt}
 {scene_context}
 
-HARD CONSTRAINTS FOR LLM:
-- The video model ALREADY SEES the reference images. 
-- DO NOT describe static visual attributes (clothing, hair color, environment details, lighting). 
-- ONLY describe what CHANGES: camera movement, character actions, and facial expression shifts.
-- Output ONLY shot lines, nothing else. No JSON, no markdown, no commentary.
-- Each line format: shot | description | duration_seconds
-- Duration per shot: 2-4 seconds. Keep shots SHORT and tight.
-- Reference characters by their exact label: {char_list}
-- CRITICAL for Shot 1: Based on the VISUAL CONTEXT above, describe ONLY the first subtle motion that initiates the scene. DO NOT re-describe the scene.
-- Dialogue format: character speaks [English] "exact words"
-- CRITICAL: Structure each shot as: [ambient sounds] → [action] → [dialogue if any] → [cut]. Ambient sounds come FIRST, dialogue comes LAST. Never put anything after dialogue ends.
-- CRITICAL: If a shot has dialogue, the shot must END immediately after the character finishes speaking and closes their mouth. No description after </d>.
-- CRITICAL: Never split speaking action from dialogue across multiple shots.
-- CRITICAL FOR CONTINUITY: The LAST shot must be a medium shot that shows the character(s) and environment. This provides maximum visual context for the next video generation. DO NOT end on a closeup or extreme closeup.
+TASK:
+Generate a sequence of short video shots (2-4 seconds each) that bring the 'Scene description' to life, starting exactly from the 'VISUAL CONTEXT'.
 
-CRITICAL FOR TEMPORAL CONTINUITY (PREVENTING SCENE SHIFTS):
-- The scene MUST NOT reset between shots. Lighting, shadow direction, and weather must remain identical across all shots.
-- Actions must flow continuously. If a character is walking in Shot 1, they must continue the physical momentum in Shot 2. 
-- Use continuous camera movements or motivated match cuts. DO NOT jump to unmotivated new angles that break the spatial geography.
+HARD CONSTRAINTS:
+1. DO NOT copy the example below. The example is ONLY to demonstrate the required format. Your content must be 100% unique and based strictly on the INPUT DATA above.
+2. The video model ALREADY SEES the reference images. DO NOT describe static visual attributes (clothing, hair color, environment details, lighting). ONLY describe what CHANGES: camera movement, character actions, and facial expression shifts.
+3. Output ONLY shot lines. No JSON, no markdown, no introductory text.
+4. Format: shot | description | duration_seconds
+5. Reference characters by their exact label: {char_list}
+6. Shot 1: Based on the VISUAL CONTEXT, describe ONLY the first subtle motion that initiates the scene. DO NOT re-describe the static scene.
+7. Dialogue format: character speaks [English] "exact words"
+8. Structure: [ambient sounds] -> [action] -> [dialogue if any] -> [cut]. Ambient sounds FIRST, dialogue LAST. Never put anything after dialogue ends.
+9. If a shot has dialogue, it must END immediately after the character finishes speaking.
+10. Never split speaking action from dialogue across multiple shots.
+11. The LAST shot must be a medium shot showing the character(s) and environment to provide visual context for the next generation. DO NOT end on a closeup.
+12. TEMPORAL CONTINUITY: Lighting, shadows, and weather must remain identical. Actions must flow continuously. Use motivated camera movements. DO NOT jump to unmotivated angles.
 
-Example output:
-shot | Wide shot. Wind howling, sand shifting. Camera pushes in slowly as char1 shifts weight and looks toward the doorway. | 2.5
-shot | Closeup. Wind gusting, distant rumble. char1 looks up in panic and speaks [English]"Oh fuck, what do I do now?" | 2.5
-shot | Medium shot. Slow exhale, low atmospheric hum. char1 looks away, shaking her head as wind blows across the dunes. Camera holds static. | 2.0
+EXAMPLE (DO NOT COPY THIS CONTENT, ONLY COPY THE FORMAT):
+shot | Wide shot. Rain pouring, neon lights flickering. Camera pans right as cyborg1 draws a plasma blade and stares at the alley. | 3.0
+shot | Closeup. Sirens wailing in the distance. cyborg1 smirks and speaks [English] "Let's dance." | 2.0
+shot | Medium shot. Heavy breathing, rain hitting metal. cyborg1 lowers the blade and walks into the shadows. Camera holds static. | 2.5
+
+NOW, generate the shots for the INPUT DATA provided above:
 """
 
     response = llm_analyze_media('', prompt=formatted_prompt)['analysis']
