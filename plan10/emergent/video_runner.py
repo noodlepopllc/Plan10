@@ -269,7 +269,7 @@ def main():
                 start_image = media.pop(0)
             elif media:
                 start_image = to_absolute(media)
-            current_source = video_to_img(start_image, WIDTH, HEIGHT, True, True)
+            current_source = video_to_img(start_image, 768, 448, True, True)
             current_source.save('tmp.png')
             current_source_path = f'{os.getcwd()}/tmp.png'
             script = h3_ref(bg, current_source_path, refs, prompt,  duration)
