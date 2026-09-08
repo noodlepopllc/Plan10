@@ -278,7 +278,6 @@ def main():
             final_prompt = builder.generate()
             print("FINAL", final_prompt)
             
-            
             # Extract paths dynamically from the builder instead of hardcoding
             img_refs = [data["path"] for data in builder.entities.values()]
             aud_refs = [data["path"] for data in builder.audio_refs.values()]
