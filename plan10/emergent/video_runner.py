@@ -113,6 +113,31 @@ def expand_to_shots(prompt: str, bg_label: str, char_labels: list, duration: flo
     return "\n".join(lines)
 
 '''
+def voice_prompt(gender, age):
+    import random
+
+    # Define your valid pitch options
+    all_pitches = ['very low pitch', 'low pitch', 'moderate pitch', 'high pitch', 'very high pitch', 'whisper']
+
+    # Set safe boundaries for pitch based on age/gender to prevent MiniMax distortion
+    if age == 'child':
+        # Children sound unnatural with heavy bass
+        valid_pitches_for_char = ['moderate pitch', 'high pitch', 'very high pitch']
+    elif gender == 'male' or age == 'elderly':
+        # Adult males and elderly characters can sound highly robotic if forced into a squeaky register
+        valid_pitches_for_char = ['very low pitch', 'low pitch', 'moderate pitch', 'whisper']
+    else:
+        # Young adult or middle-aged females can handle the full normal range safely
+        valid_pitches_for_char = ['low pitch', 'moderate pitch', 'high pitch', 'very high pitch', 'whisper']
+
+    # Randomly select a valid pitch
+    selected_pitch = random.choice(valid_pitches_for_char)
+
+    # Combine your tags to feed into your OmniVoice/MiniMax voice profile setup
+    voice_profile = [gender, age, selected_pitch]
+    print(f"Generated Profile Tags: {voice_profile}")
+    return voice_profile
+
 
 def h3_ref(bg, ff, refs, prompt, duration=10.0):
     script = ""
@@ -142,9 +167,18 @@ def h3_ref(bg, ff, refs, prompt, duration=10.0):
     for ndx, ref in enumerate(refs, start=1):
         voice_label = f"voice_{ndx}"
         char_label = f"char{ndx}"
-        gender = AnalyzeImage(ref, prompt="Determine if character is male or female. Return only 'male' or 'female'.")['analysis']
+        # Expanded vision call to grab age along with gender
+        analysis_result = AnalyzeImage(
+            ref, 
+            prompt="Identify the character's gender (male, female) and age bracket (child, teenager, young adult, middle-aged, elderly). Return exactly in this format: 'gender, age bracket'. Example: 'female, young adult'."
+        )['analysis']
+
+        # Parse the vision model response
+        gender, age = [item.strip().lower() for item in analysis_result.split(',')]
+        voice_profile = voice_prompt(gender, age)
+
         wav_path = os.path.splitext(ref)[0] + '.wav'
-        script += f"audio | {voice_label} | {wav_path} | {char_label} | {gender}\n"
+        script += f"audio | {voice_label} | {wav_path} | {char_label} | {','.join(voice_profile)}\n"
     
     # --- CONTEXT ---
     script += f"prompt | {prompt.replace('\n', ' ')}\n"
