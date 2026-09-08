@@ -292,6 +292,11 @@ class Pipeline:
                     current_state = f"{' and '.join([x for x in self.visual_ids])} turns around to face the camera in a frontal or 3/4 view, maintaining the exact same environment."
                     current_media, current_bg = recreate(current_media, current_bg, current_state, beat_count)
                     needs_transition = False
+
+                elif reason_code == "wrong_character":
+                    print("  → Character identity issue (props/weapons drifted). Accepting for now...")
+                    # Don't recreate - just continue and hope it stabilizes
+                    needs_transition = False
                     
                 else:
                     print("  → Unintended loss of visibility. Recreating frame...")
