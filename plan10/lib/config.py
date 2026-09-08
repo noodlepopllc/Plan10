@@ -80,7 +80,7 @@ def load_environ(replace_env=False):
 def setconfig(mmh3=False, ltx2=False, hires=False, sdres=False, portrait=False, wangp=False, hivram=False, lovram=False, verbose=False, anime=False, minres=False, ultrawide=False):
     cfg_original = load_config()
     tmp_cfg = cfg_original.copy()
-    high_resolution = ["1280", "720"] 
+    high_resolution = ["1280", "704"] 
     standard_resolution = ["832", "480"]
     minimal_resolution = ["768", "448"]
     ultra_wide = ["1792", "768"]
@@ -102,7 +102,6 @@ def setconfig(mmh3=False, ltx2=False, hires=False, sdres=False, portrait=False, 
     elif ltx2:
         tmp_cfg["LTX"] = "DISTILLED"  # Fixed: missing = operator
         tmp_cfg['MMH3'] = 'False'
-        high_resolution = ["1280", "704"] 
     else:
         tmp_cfg['LTX'] = cfg_original['LTX']
         tmp_cfg['MMH3'] = cfg_original['MMH3']
