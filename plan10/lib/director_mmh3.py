@@ -318,11 +318,13 @@ class SmartVideoPromptBuilder:
         sections.append("\ndetailed_description:")
         
         # --- NEW: Inject strict first-frame rule if defined ---
+        # First frame rule - COMPOSITION LOCK, not identity lock
         if self.first_frame_label and self.first_frame_label in self.entities:
             pic_tag = self.entities[self.first_frame_label]["pic_tag"]
-            ff_rule = f"{pic_tag} is the first frame of [Shot 1] static. The first frame of the video must match {pic_tag} exactly, including identical pose, head angle, hand position, body orientation, facial expression, and clothing folds, with zero deviation."
+            ff_rule = f"""{pic_tag} is the first frame of [Shot 1]. The first frame must match {pic_tag} exactly for SPATIAL COMPOSITION: identical pose, head angle, hand position, body orientation, camera angle, and spatial relationships with zero deviation.
+However, CHARACTER IDENTITY (facial features, clothing details, body proportions, hair texture) must be corrected and overridden by the character reference images (<Picture 3>, etc.) to prevent feature degradation. The character references are the source of truth for identity; the first frame is the source of truth for composition."""
             sections.append(ff_rule)
-            sections.append("") # Blank line for readability
+            sections.append("")
             
         if self.scene_style:
             sections.append(self.scene_style)
