@@ -192,7 +192,7 @@ HARD CONSTRAINTS FOR LLM:
 - Duration per shot: 2-4 seconds. Keep shots SHORT and tight.
 - Reference characters by their exact label: {char_list}
 - CRITICAL for Shot 1: Based on the VISUAL CONTEXT above, describe ONLY the first subtle motion that initiates the scene. DO NOT re-describe the scene.
-- Dialogue format: character speaks [Language] <d>"exact words"</d>
+- Dialogue format: character speaks [English] "exact words"
 - CRITICAL: Structure each shot as: [ambient sounds] → [action] → [dialogue if any] → [cut]. Ambient sounds come FIRST, dialogue comes LAST. Never put anything after dialogue ends.
 - CRITICAL: If a shot has dialogue, the shot must END immediately after the character finishes speaking and closes their mouth. No description after </d>.
 - CRITICAL: Never split speaking action from dialogue across multiple shots.
@@ -205,7 +205,7 @@ CRITICAL FOR TEMPORAL CONTINUITY (PREVENTING SCENE SHIFTS):
 
 Example output:
 shot | Wide shot. Wind howling, sand shifting. Camera pushes in slowly as char1 shifts weight and looks toward the doorway. | 2.5
-shot | Closeup. Wind gusting, distant rumble. char1 looks up in panic and speaks <d>"Oh fuck, what do I do now?"</d>. | 2.5
+shot | Closeup. Wind gusting, distant rumble. char1 looks up in panic and speaks [English]"Oh fuck, what do I do now?" | 2.5
 shot | Medium shot. Slow exhale, low atmospheric hum. char1 looks away, shaking her head as wind blows across the dunes. Camera holds static. | 2.0
 """
 
