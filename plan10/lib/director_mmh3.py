@@ -295,8 +295,9 @@ class SmartVideoPromptBuilder:
         used_subject_ids = set()
         for shot in self.shots:
             text = self._substitute_labels(shot["raw_text"])
-            # Find any <Subject X> that is immediately followed by <d> (with no other '<' in between)
-            matches = re.findall(r'<Subject (\d+)>(?=[^<]*<d>)', text)
+            # CRITICAL FIX: Look for [English], [Spanish], etc. NOT <d> tags
+            # because <d> tags haven't been injected yet at this stage
+            matches = re.findall(r'<Subject (\d+)>(?=[^<]*\[(?:English|Spanish|French|German|Italian)\])', text)
             used_subject_ids.update(int(m) for m in matches)
         
         # 2. Build speaker tags ONLY for subjects who actually speak AND have an audio ref
@@ -353,6 +354,7 @@ However, CHARACTER IDENTITY (facial features, clothing details, body proportions
                     entity["shots"].add(i + 1)
             
             # INJECT SPEAKER TAGS: Replace <Subject X> with <Subject X> (S#) ONLY if it precedes <d>
+            # NOTE: At this point, <d> tags still don't exist, so we look for [English] etc.
             def inject_speaker(match):
                 subject_tag = match.group(1)
                 subject_id = int(re.search(r'\d+', subject_tag).group())
@@ -360,7 +362,7 @@ However, CHARACTER IDENTITY (facial features, clothing details, body proportions
                     return f"{subject_tag} {subject_to_speaker[subject_id]}"
                 return subject_tag
             
-            processed_text = re.sub(r'(<Subject \d+>)(?=[^<]*<d>)', inject_speaker, processed_text)
+            processed_text = re.sub(r'(<Subject \d+>)(?=[^<]*\[(?:English|Spanish|French|German|Italian)\])', inject_speaker, processed_text)
             
             # Wrap dialogue in <d> tags if not already wrapped
             processed_text = re.sub(
