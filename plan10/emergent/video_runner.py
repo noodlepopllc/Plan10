@@ -115,6 +115,7 @@ def expand_to_shots(prompt: str, bg_label: str, char_labels: list, duration: flo
 
 def h3_ref(bg, ff, refs, prompt, duration=10.0):
     script = ""
+    print("First Frame", ff)
     
     # --- ASSETS ---
     # 1. First Frame (The actual starting composition with characters)
