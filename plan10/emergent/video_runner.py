@@ -176,19 +176,25 @@ HARD CONSTRAINTS:
 10. Never split speaking action from dialogue across multiple shots.
 11. The LAST shot must be a medium shot showing the character(s) and environment. DO NOT end on a closeup.
 12. TEMPORAL CONTINUITY: Lighting, shadows, and weather must remain identical. Actions must flow continuously.
-
-HARD CONSTRAINTS FOR LLM:
-...
-- CRITICAL SPEAKER GRAMMAR: When a character speaks, that character MUST be the grammatical subject of the sentence containing the dialogue. 
-  BAD: "char1 leans in close to char2, speaking [English] 'Hello'" (char1 is the subject, but char2 should speak)
-  GOOD: "char1 leans in close to char2, who speaks [English] 'Hello'" (char2 is the subject via relative clause)
-  GOOD: "char1 leans in close to char2. char2 speaks [English] 'Hello'" (char2 is the subject of a new sentence)
-- Never write "X does action to Y, speaking..." if Y is the one who should speak. Always make the speaker the grammatical subject.
+13. CRITICAL DIALOGUE FRAMING: When a character speaks, the shot MUST be a closeup or medium closeup 
+    showing ONLY the speaking character. No other characters may be visible in the frame.
+    
+    SETUP SHOT (no dialogue): Show both characters together. One character turns, reacts, or looks 
+    at the other. Establish the emotional beat.
+    
+    DIALOGUE SHOT (closeup, speaker only): Cut to a closeup of ONLY the character who speaks. 
+    No other characters in frame. The character speaks, then a brief physical action signals 
+    the end of speech (closes mouth, looks away, jaw relaxes).
+    
+    BAD: "Medium shot. char1 looks at char2 and speaks [English] 'Hello'" (two characters in frame = ambiguous speaker)
+    GOOD: 
+      Shot A: "Medium shot. char1 turns to face char2, her expression hardening."
+      Shot B: "Closeup of char1 only. char1 speaks [English] 'Hello' then closes her mouth and looks away."
 
 EXAMPLE (DO NOT COPY THIS CONTENT, ONLY COPY THE FORMAT):
 shot | Wide shot. Absolute silence, then a low mechanical hum. char1 floats upside down and ejects a single glowing object in zero gravity. | 3.0
-shot | Closeup. Distant cosmic radiation crackling. char1's features widen in panic and it speaks [English] "Why is the butter floating?" then closes its mouth and stares at the object. | 2.0
-shot | Medium shot. Muffled rhythmic thumping. char1 catches the object with a mechanical appendage and stares blankly at a passing space-capybara. Camera holds static. | 2.5
+shot | Closeup of char1 only, no other characters in frame. Distant cosmic radiation crackling. char1's features widen in panic and it speaks [English] "Why is the butter floating?" then closes its mouth and stares at the object. | 2.5
+shot | Medium shot. Muffled rhythmic thumping. char1 catches the object with a mechanical appendage and stares blankly at a passing space-capybara. Camera holds static. | 2.0
 
 NOW, generate the shots for the INPUT DATA provided above:
 """
