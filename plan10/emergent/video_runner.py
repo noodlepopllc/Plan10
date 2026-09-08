@@ -258,7 +258,7 @@ def main():
 
         if MMH3:
             from plan10.lib.director_mmh3 import get_builder
-            script = h3_ref(bg, pending_job['input_media'], refs, prompt,  duration)
+            script = h3_ref(bg, pending_job['input_media'][0], refs, prompt,  duration)
             print("SCRIPT: ",script)
             builder = get_builder(script, '')
             final_prompt = builder.generate()
