@@ -17,6 +17,7 @@ WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
 SEED = int(os.environ.get("SEED", "-1"))
 ANIME = os.environ.get('ANIME', 'False') != 'False'
+MMH3 = os.environ.get('MMH3', 'False') != 'False'
 
 if ANIME:
     from plan10.lib.anime_gen import GenerateImage
@@ -88,7 +89,8 @@ def main():
             decompose_scene(
                 input_image=current_media,
                 output_dir=args.output,
-                seed=args.seed
+                seed=args.seed,
+                minimal=MMH3
             )
             for p in ['character_1.png', 'character_2.png']:
                 if Path(f'{args.output}/{p}').exists():

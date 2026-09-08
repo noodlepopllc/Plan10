@@ -91,7 +91,8 @@ class Pipeline:
         CreateBackground(
             prompt=combined_desc,
             output=str(clean_bg_path),
-            seed=self.seed + beat_num + 500
+            seed=self.seed + beat_num + 500,
+            override=(768,448)
         )
         
         # Step 4: Composite characters onto the fresh background
@@ -125,7 +126,8 @@ class Pipeline:
         CreateBackground(
             prompt=new_location_prompt,
             output=str(bg_path),
-            seed=self.seed + beat_num + 1000
+            seed=self.seed + beat_num + 1000,
+            override=(768,448)
         )
         
         comp_path = self.output_dir / f"trans_comp_{beat_num:03d}.png"

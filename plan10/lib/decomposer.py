@@ -29,7 +29,7 @@ from plan10.lib.image_analysis import AnalyzeImage
 from functools import partial
 
 
-def decompose_scene(input_image, output_dir, seed=42):
+def decompose_scene(input_image, output_dir, seed=42, minimal=False):
     """
     Decompose a scene into individual character sheets and background plate.
     
@@ -135,15 +135,25 @@ TOTAL_CHARACTERS: [actual count, maximum 3]"""
             char_desc = extract_character_description(analysis, i)
             
             char_output = output_dir / f"character_{i}.png"
-            
-            # Use CreateCharacterSheet to generate clean reference
-            status = CreateCharacterSheet(
-                prompt=char_desc,
-                output=str(char_output),
-                seed=seed + i,
-                imagegen=igen,
-                override=(512,512)
-            )
+
+            if minimal:
+                # Use CreateCharacterSheet to generate clean reference
+                status = CreateCharacterSheet(
+                    prompt=char_desc,
+                    output=str(char_output),
+                    seed=seed + i,
+                    imagegen=igen,
+                    override=(512,512)
+                )
+            else:
+                status = CreateCharacterSheet(
+                    prompt=char_desc,
+                    output=str(char_output),
+                    seed=seed + i,
+                    imagegen=igen,
+                    override=(512,512)
+                )
+
             
             characters.append({
                 'id': i,
@@ -168,8 +178,8 @@ TOTAL_CHARACTERS: [actual count, maximum 3]"""
         characters=[],
         output=str(bg_tmp),
         seed=seed,
-        width=768,
-        height=448
+        width=768 if minimal else WIDTH,
+        height=448 if minimal else HEIGHT
     )
     
     bg_output = output_dir / "background.png"
@@ -278,6 +288,7 @@ def main():
     parser.add_argument('-I', '--input', type=str, required=True, help="Input scene image")
     parser.add_argument('-O', '--output', type=str, required=True, help="Output directory")
     parser.add_argument('-S', '--seed', type=int, default=42, help="Random seed")
+    parser.add_argument('-M', '--minimal', action='store_true', help="Generate smaller images for minimax references")
     
     args = parser.parse_args()
 
@@ -286,7 +297,8 @@ def main():
     decompose_scene(
         input_image=image,
         output_dir=args.output,
-        seed=args.seed
+        seed=args.seed,
+        minimal=args.minimal
     )
 
 if __name__ == "__main__":
