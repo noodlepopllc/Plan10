@@ -98,6 +98,7 @@ def setconfig(mmh3=False, ltx2=False, hires=False, sdres=False, portrait=False, 
         high_resolution = ("1344", "768") 
         standard_resolution = ("864", "480")
         minimal_resolution = ("768", "512") # will not look good but is good for testing
+        ultra_wide = ["1344", "576"]
     elif ltx2:
         tmp_cfg["LTX"] = "DISTILLED"  # Fixed: missing = operator
         tmp_cfg['MMH3'] = 'False'

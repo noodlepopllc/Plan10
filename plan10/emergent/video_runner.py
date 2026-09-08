@@ -80,7 +80,7 @@ def voice_prompt(gender, age):
 
     # Combine your tags to feed into your OmniVoice/MiniMax voice profile setup
     voice_profile = [gender, age, selected_pitch]
-    print(f"Generated Profile Tags: {voice_profile}")
+    #print(f"Generated Profile Tags: {voice_profile}")
     return voice_profile
 
 
@@ -177,6 +177,14 @@ HARD CONSTRAINTS:
 11. The LAST shot must be a medium shot showing the character(s) and environment. DO NOT end on a closeup.
 12. TEMPORAL CONTINUITY: Lighting, shadows, and weather must remain identical. Actions must flow continuously.
 
+HARD CONSTRAINTS FOR LLM:
+...
+- CRITICAL SPEAKER GRAMMAR: When a character speaks, that character MUST be the grammatical subject of the sentence containing the dialogue. 
+  BAD: "char1 leans in close to char2, speaking [English] 'Hello'" (char1 is the subject, but char2 should speak)
+  GOOD: "char1 leans in close to char2, who speaks [English] 'Hello'" (char2 is the subject via relative clause)
+  GOOD: "char1 leans in close to char2. char2 speaks [English] 'Hello'" (char2 is the subject of a new sentence)
+- Never write "X does action to Y, speaking..." if Y is the one who should speak. Always make the speaker the grammatical subject.
+
 EXAMPLE (DO NOT COPY THIS CONTENT, ONLY COPY THE FORMAT):
 shot | Wide shot. Absolute silence, then a low mechanical hum. char1 floats upside down and ejects a single glowing object in zero gravity. | 3.0
 shot | Closeup. Distant cosmic radiation crackling. char1's features widen in panic and it speaks [English] "Why is the butter floating?" | 2.0
@@ -250,7 +258,7 @@ def main():
             current_source.save('tmp.png')
             current_source_path = f'{os.getcwd()}/tmp.png'
             script = h3_ref(bg, current_source_path, refs, prompt,  duration)
-            print("SCRIPT: ",script)
+            Path(pending_job['output_path'].replace('.mp4', '_script.txt')).write_text(script)
             builder = get_builder(script, '')
             final_prompt = builder.generate()
             print("FINAL", final_prompt)
