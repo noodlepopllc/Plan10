@@ -172,7 +172,7 @@ HARD CONSTRAINTS:
 6. Shot 1: Based on the VISUAL CONTEXT, describe ONLY the first subtle motion that initiates the scene. DO NOT re-describe the static scene.
 7. Dialogue format: character speaks [English] "exact words"
 8. Structure: [ambient sounds] -> [action] -> [dialogue if any] -> [cut]. Ambient sounds FIRST, dialogue LAST.
-9. If a shot has dialogue, it must END immediately after the character finishes speaking.
+9. If a shot has dialogue, describe a brief physical action AFTER the dialogue that signals the character has stopped speaking (e.g., "closes her mouth," "lowers her gaze," "returns to her stance"). This tells the model when to stop generating voice audio.
 10. Never split speaking action from dialogue across multiple shots.
 11. The LAST shot must be a medium shot showing the character(s) and environment. DO NOT end on a closeup.
 12. TEMPORAL CONTINUITY: Lighting, shadows, and weather must remain identical. Actions must flow continuously.
@@ -187,7 +187,7 @@ HARD CONSTRAINTS FOR LLM:
 
 EXAMPLE (DO NOT COPY THIS CONTENT, ONLY COPY THE FORMAT):
 shot | Wide shot. Absolute silence, then a low mechanical hum. char1 floats upside down and ejects a single glowing object in zero gravity. | 3.0
-shot | Closeup. Distant cosmic radiation crackling. char1's features widen in panic and it speaks [English] "Why is the butter floating?" | 2.0
+shot | Closeup. Distant cosmic radiation crackling. char1's features widen in panic and it speaks [English] "Why is the butter floating?" then closes its mouth and stares at the object. | 2.0
 shot | Medium shot. Muffled rhythmic thumping. char1 catches the object with a mechanical appendage and stares blankly at a passing space-capybara. Camera holds static. | 2.5
 
 NOW, generate the shots for the INPUT DATA provided above:
