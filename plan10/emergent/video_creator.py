@@ -40,7 +40,7 @@ def main():
     parser.add_argument('-G', '--goal', type=str, default=None, 
         help='Narrative goal to work toward (e.g., "woman gets ready for work")')
     
-    args = parser.parse_args()
+    args, _ = parser.parse_known_args()
     state_mgr = StateManager(args.output)
     first_run = False
     
