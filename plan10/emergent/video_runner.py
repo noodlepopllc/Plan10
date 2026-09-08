@@ -8,6 +8,7 @@ load_environ()
 
 from plan10.lib.image_analysis import EnhancePrompt, AnalyzeImage, translate_to_audio_prompt
 from plan10.lib.qwen_llm import llm_analyze_media
+from plan10.lib.util import video_to_img, to_absolute
 
 WGP = os.environ.get("WGP","False") != "False"
 LTX = os.environ.get("LTX","False") != "False"
@@ -263,7 +264,15 @@ def main():
 
         if MMH3:
             from plan10.lib.director_mmh3 import get_builder
-            script = h3_ref(bg, pending_job['input_media'][0], refs, prompt,  duration)
+            media = pending_job['input_media']
+            if isinstance(media, list) and len(media):
+                start_image = media.pop(0)
+            elif media:
+                start_image = to_absolute(media)
+            current_source = video_to_img(start_image, width, height, True, True)
+            current_source.save('tmp.png')
+            current_source_path = f'{os.getcwd()}/tmp.png'
+            script = h3_ref(bg, current_source_path, refs, prompt,  duration)
             print("SCRIPT: ",script)
             builder = get_builder(script, '')
             final_prompt = builder.generate()
