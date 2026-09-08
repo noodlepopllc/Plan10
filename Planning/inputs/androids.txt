@@ -1,0 +1,21 @@
+Characters:
+- Amy: an android with Asian facial features, red plastic panels covering cables, blonde hair in a bobcut, exposed wiring and physical damage visible.
+- Blaire: an android with latinx facial features, blue plastic panels covering cables, long black hair, damage front panel with exposed wiring and missing robootic eye.
+- Chad: nerdy guy in the club, wears glasses, suspenders, crew cut and suspenders, red tennis shoes.
+
+Location:
+In a futuristic night club with lasers and a large crowd.
+
+Motivations:
+- Amy is a pleasure robot and needs to make money in order to recharge.
+- Blaire is a pleasure robot and needs to make money for repairs.
+- Chad is trying to take advantage of the androids desperation
+
+Spark:
+The pleasure androids owner has died, they are performing services in public in order to charge and afford repairs while searching for a new owner.
+
+Story Goal:
+The two androids have entered low power mode and worry that if they can't get money for a charge they will shut down permanently.
+
+Initial Situation:
+The two androids in the club approach Chad offering services and interview him as possible new owner.
