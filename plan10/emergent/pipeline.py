@@ -281,7 +281,7 @@ class Pipeline:
             if "NO" in match or "drift" in issues.lower() or "repeating" in issues.lower():
                 if not needs_transition:
                     print(f"\n⚠️ Major issues detected - rebuilding frame to current state...")
-                    current_media, current_bg = recreate(current_media, actual_reality, beat_count)
+                    current_media, current_bg = recreate(current_media, current_bg, actual_reality, beat_count)
         
         # 6. Handle cinematic transition (skip in scene_mode)
         if not self.scene_mode:

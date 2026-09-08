@@ -26,7 +26,6 @@ class SmartVideoPromptBuilder:
         self.model = model
         
         # Registry to map user labels to generated IDs and descriptions
-        # Format: { "barn": {"id": 1, "type": "Picture", "desc": "...", "shots": []} }
         self.entities = {}
         self.audio_refs = {}
         self.summary = ""
@@ -39,9 +38,12 @@ class SmartVideoPromptBuilder:
         self._subject_counter = 0
         self._picture_counter = 0
 
-         # --- NEW: Timeline tracking ---
+        # --- NEW: Timeline tracking ---
         self._current_time_ms = 0
         self._default_shot_duration_ms = 2000  # 2.0 seconds default
+        
+        # --- NEW: First frame tracking ---
+        self.first_frame_label = None
 
     @property
     def duration(self):
@@ -59,10 +61,8 @@ class SmartVideoPromptBuilder:
         try:
             if image_path.lower().endswith('.png'):
                 img = Image.open(image_path)
-                # Check for our custom PNG text chunk
                 return getattr(img, 'text', {}).get("SubjectDescription", "")
             else:
-                # Fallback to sidecar JSON for JPEGs
                 meta_path = image_path.rsplit('.', 1)[0] + '.meta.json'
                 if os.path.exists(meta_path):
                     with open(meta_path, 'r') as f:
@@ -77,22 +77,17 @@ class SmartVideoPromptBuilder:
             if image_path.lower().endswith('.png'):
                 img = Image.open(image_path)
                 metadata = PngInfo()
-                
-                # Preserve any existing metadata (like generation params from ComfyUI/A1111)
                 if hasattr(img, 'text'):
                     for k, v in img.text.items():
                         metadata.add_text(k, v)
-                        
                 metadata.add_text("SubjectDescription", desc)
                 img.save(image_path, pnginfo=metadata)
             else:
-                # Sidecar JSON for non-PNGs
                 meta_path = image_path.rsplit('.', 1)[0] + '.meta.json'
                 with open(meta_path, 'w') as f:
                     json.dump({"SubjectDescription": desc}, f, indent=2)
         except Exception as e:
             print(f"[Warning] Failed to embed metadata in {image_path}: {e}")
-            # Ultimate fallback: write a plain text sidecar
             with open(image_path + ".desc.txt", "w") as f:
                 f.write(desc)
 
@@ -107,8 +102,6 @@ class SmartVideoPromptBuilder:
             like 'This image shows' or 'The image features'."""
         
         desc = AnalyzeImage(image_path, prompt)['analysis']
-        
-        # Lowercase the first letter
         if desc:
             desc = desc[0].lower() + desc[1:]
         return desc
@@ -116,10 +109,8 @@ class SmartVideoPromptBuilder:
     def add_subject(self, image_path: str, label: str, is_character: bool = False):
         self._subject_counter += 1
         sub_id = self._subject_counter
-        
-        pic_tag = f"<Picture {sub_id}>" if is_character else f"<Picture {sub_id}>"
+        pic_tag = f"<Picture {sub_id}>"
             
-        # Check cache first (include is_character in cache key!)
         cache_key = f"{image_path}_{'char' if is_character else 'bg'}"
         desc = self._load_metadata(cache_key)
         
@@ -140,11 +131,16 @@ class SmartVideoPromptBuilder:
         }
         return self
 
+    # --- NEW: Dedicated first frame method ---
+    def add_firstframe(self, image_path: str, label: str):
+        self.add_subject(image_path, label, is_character=False)
+        self.first_frame_label = label.lower()
+        return self
+
     def set_summary(self, text: str):
         self.summary = text
         return self
 
-    # Alias for backgrounds to match your mental model
     def add_background(self, image_path: str, label: str):
         return self.add_subject(image_path, label, is_character=False)
 
@@ -152,14 +148,13 @@ class SmartVideoPromptBuilder:
         return self.add_subject(image_path, label, is_character=True)
 
     def add_audio_reference(self, audio_path: str, label: str, target_subject_label: str, extra_desc: str = ""):
-        """Registers an audio file as a voice timbre reference for a specific subject."""
         target_key = target_subject_label.lower()
         if target_key not in self.entities:
             raise ValueError(f"Target subject '{target_subject_label}' not found. Add it first.")
             
         self.audio_refs[label.lower()] = {
             "id": len(self.audio_refs) + 1,
-            "path": audio_path,    # <-- ADDED: Track the file path
+            "path": audio_path,
             "target_id": self.entities[target_key]["id"],
             "extra_desc": extra_desc
         }
@@ -170,12 +165,6 @@ class SmartVideoPromptBuilder:
         return self
 
     def add_shot(self, raw_text: str, duration: float = None, start_time: float = None):
-        """
-        Adds a shot with automatic timestamp incrementing.
-        :param raw_text: The text description of the shot.
-        :param duration: Duration of this shot in seconds. Defaults to 2.0s if not provided.
-        :param start_time: Optional explicit start time in seconds. Overrides auto-increment.
-        """
         duration_ms = int(duration * 1000) if duration is not None else self._default_shot_duration_ms
         
         if start_time is not None:
@@ -191,7 +180,6 @@ class SmartVideoPromptBuilder:
             "duration_ms": duration_ms
         })
         
-        # Advance the timeline for the next shot
         self._current_time_ms = current_start_ms + duration_ms
         return self
 
@@ -200,7 +188,6 @@ class SmartVideoPromptBuilder:
         return self
 
     def _substitute_labels(self, text: str) -> str:
-        """Replaces all subject labels with their <Subject N> tags."""
         processed_text = text
         sorted_labels = sorted(self.entities.keys(), key=len, reverse=True)
         
@@ -215,19 +202,16 @@ class SmartVideoPromptBuilder:
     def _inject_tags(self, text: str, shot_index: int) -> str:
         processed_text = self._substitute_labels(text)
         
-        # Build a lookup: subject_id -> speaker_tag (if they have an audio ref)
         subject_to_speaker = {}
         for audio_data in self.audio_refs.values():
             subject_to_speaker[audio_data['target_id']] = audio_data['speaker_tag']
         
-        # Track which subjects appear in this shot
         for label in self.entities.keys():
             entity = self.entities[label]
             tag = f"<Subject {entity['id']}>"
             if tag in processed_text:
                 entity["shots"].add(shot_index + 1)
         
-        # Inject speaker tags for any subject with a voice reference
         for subject_id, speaker_tag in subject_to_speaker.items():
             subject_tag = f"<Subject {subject_id}>"
             tagged_subject = f"<Subject {subject_id}> {speaker_tag}"
@@ -248,7 +232,7 @@ class SmartVideoPromptBuilder:
             cmd = parts[0].lower()
             
             try:
-                if cmd in ('bg', 'char', 'item'):
+                if cmd in ('bg', 'char', 'item', 'ff'):
                     label = parts[1]
                     path = os.path.join(base_dir, parts[2])
                     prompt = parts[3] if len(parts) > 3 else ""
@@ -262,13 +246,14 @@ class SmartVideoPromptBuilder:
                     
                     if cmd == 'bg':
                         self.add_background(path, label)
+                    elif cmd == 'ff':
+                        self.add_firstframe(path, label)
                     elif cmd == 'char':
                         self.add_character(path, label)
                     elif cmd == 'item':
                         self.add_subject(path, label, is_character=False)
                         
                 elif cmd == 'summary':
-                    # FIXED: Moved to its own branch
                     self.set_summary(parts[1] if len(parts) > 1 else "")
                         
                 elif cmd == 'audio':
@@ -317,7 +302,7 @@ class SmartVideoPromptBuilder:
         for label, data in self.audio_refs.items():
             speaker_counter += 1
             speaker_tag = f"(S{speaker_counter})"
-            data['speaker_tag'] = speaker_tag  # Store for shot injection
+            data['speaker_tag'] = speaker_tag
             
             extra = f", {data['extra_desc']}" if data['extra_desc'] else ""
             audio_defs.append(
@@ -331,6 +316,14 @@ class SmartVideoPromptBuilder:
         
         # 2. Process Shots & Build Detailed Description
         sections.append("\ndetailed_description:")
+        
+        # --- NEW: Inject strict first-frame rule if defined ---
+        if self.first_frame_label and self.first_frame_label in self.entities:
+            pic_tag = self.entities[self.first_frame_label]["pic_tag"]
+            ff_rule = f"{pic_tag} is the first frame of [Shot 1] static. The first frame of the video must match {pic_tag} exactly, including identical pose, head angle, hand position, body orientation, facial expression, and clothing folds, with zero deviation."
+            sections.append(ff_rule)
+            sections.append("") # Blank line for readability
+            
         if self.scene_style:
             sections.append(self.scene_style)
             
@@ -338,13 +331,11 @@ class SmartVideoPromptBuilder:
             processed_text = self._inject_tags(shot["raw_text"], i)
             
             # Wrap dialogue in <d> tags
-            # Primary: quoted dialogue [Language] "text"
             processed_text = re.sub(
                 r'(\[(?:English|Spanish|French|German|Italian)\]\s*"[^"]*")',
                 r'<d>\1</d>',
                 processed_text
             )
-            # Fallback: unquoted dialogue up to punctuation (only if not already wrapped)
             processed_text = re.sub(
                 r'(?<!<d>)(\[(?:English|Spanish|French|German|Italian)\][^"<.!?]*[.!?])',
                 r'<d>\1</d>',
@@ -441,6 +432,7 @@ def get_builder(script, output_dir):
     generators = {
         'bg': partial(CreateBackground, override=(768,448)),
         'char': partial(CreateCharacterSheet, override=(512,512)),
+        'ff': partial(GenerateImage, width=512, height=512),
         'item': partial(GenerateImage, width=512, height=412),
         'audio': partial(DesignVoice, long=True)
     }
@@ -480,7 +472,8 @@ def main():
     generators = {
         'bg': partial(CreateBackground, override=(768,448)),
         'char': partial(CreateCharacterSheet, override=(512,512)),
-        'item': partial(GenerateImage, width=512, height=412),
+        'ff': partial(GenerateImage, width=512, height=512),
+        'item': partial(GenerateImage, width=512, height=512),
         'audio': partial(DesignVoice, long=True)
     }
 

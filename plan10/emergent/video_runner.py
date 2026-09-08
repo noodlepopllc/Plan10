@@ -57,6 +57,7 @@ else:
 
 from plan10.emergent.state_manager import StateManager
 
+'''
 SHOT_EXPANSION_PROMPT = """Break this scene into sequential video shots.
 
 Available characters: {char_labels}
@@ -70,20 +71,20 @@ Rules:
 - Each line format: shot | description | duration_seconds
 - Duration per shot: 2-4 seconds. Keep shots SHORT and tight.
 - Reference characters by their exact label: {char_labels}
-- First shot should establish the scene and background.
+- CRITICAL for Shot 1: The model already sees the reference image. DO NOT describe static visual details, clothing, or the environment. ONLY describe the first subtle motion, camera movement, or ambient sound that initiates action from this starting frame.
 - Include camera framing (wide, medium, closeup) and motion (push in, pan, static, tracking) in each description.
 - Dialogue format: character speaks [Language] <d>"exact words"</d>
 - CRITICAL: Structure each shot as: [ambient sounds] → [action] → [dialogue if any] → [cut]. Ambient sounds come FIRST, dialogue comes LAST. Never put anything after dialogue ends.
 - CRITICAL: If a shot has dialogue, the shot must END immediately after the character finishes speaking and closes their mouth. No sounds, no reactions, no description after </d>.
-- CRITICAL: Never split speaking action from dialogue across multiple shots. If they start talking, the dialogue [English]"..." must be in the SAME shot.
+- CRITICAL: Never split speaking action from dialogue across multiple shots. If they start talking, the dialogue <d>"..."</d> must be in the SAME shot.
 - Include 1-2 ambient sounds at the START of each shot description (wind, footsteps, breathing, etc.).
-- Keep visual descriptions minimal — the model already sees the reference images.
+- Keep visual descriptions minimal throughout — the model already sees the reference images.
 - End with a natural conclusion or emotional beat.
 
 Example output:
-shot | Wide shot of {bg_label}. Wind howling, sand shifting. char1 stands near the doorway holding an object. Static camera. | 2.5
+shot | Wide shot. Wind howling, sand shifting. Camera pushes in slowly as char1 shifts weight and looks toward the doorway. | 2.5
 shot | Medium shot. Footsteps crunching, fabric rustling. char2 enters from the right and walks toward char1. Camera tracks slowly. | 2.0
-shot | Closeup of char1. Wind gusting, distant rumble. char1 looks up in panic and speaks [English]"Oh fuck, what do I do now?". | 2.5
+shot | Closeup. Wind gusting, distant rumble. char1 looks up in panic and speaks <d>"Oh fuck, what do I do now?"</d>. | 2.5
 shot | Medium closeup. Slow exhale, low atmospheric hum. char1 looks away, shaking her head. Camera holds static. | 1.5
 """
 
@@ -110,38 +111,106 @@ def expand_to_shots(prompt: str, bg_label: str, char_labels: list, duration: flo
     
     return "\n".join(lines)
 
-def h3_ref(bg, refs, prompt, duration=10.0):
+'''
+
+def h3_ref(bg, ff, refs, prompt, duration=10.0):
     script = ""
     
     # --- ASSETS ---
-    bg_desc = AnalyzeImage(bg, prompt='Brief description of scene, no more than 5 - 10 words')['analysis']
+    # 1. First Frame (The actual starting composition with characters)
+    if ff:
+        ff_desc = AnalyzeImage(ff, prompt='Briefly describe the scene composition, character positions, and environment. Max 15 words.')['analysis']
+        ff_label = "ff"
+        script += f"ff | {ff_label} | {ff} | {ff_desc}\n"
+    
+    # 2. Background (Empty environment plate)
+    bg_desc = AnalyzeImage(bg, prompt='Brief description of the empty environment/scene, no characters. Max 10 words.')['analysis']
     bg_label = "bg"
     script += f"bg | {bg_label} | {bg} | {bg_desc}\n"
     
-    char_labels = []  # Only character labels
+    # 3. Characters
+    char_labels = []
     for ndx, ref in enumerate(refs, start=1):
         label = f"char{ndx}"
         char_labels.append(label)
-        ref_desc = AnalyzeImage(ref, prompt='Brief description of character, no more than 5 - 10 words')['analysis']
+        ref_desc = AnalyzeImage(ref, prompt='Brief description of character appearance/clothing. Max 10 words.')['analysis']
         script += f"char | {label} | {ref} | {ref_desc}\n"
 
-    # Audio refs - don't add to char_labels
+    # 4. Audio refs
     for ndx, ref in enumerate(refs, start=1):
         voice_label = f"voice_{ndx}"
         char_label = f"char{ndx}"
-        gender = AnalyzeImage(ref, prompt="Determine if character is male or female and return male or female, if unsure, return female")['analysis']
-        wav_path = ref.replace('.png', '.wav').replace('.jpg', '.wav').replace('.jpeg', '.wav')
+        gender = AnalyzeImage(ref, prompt="Determine if character is male or female. Return only 'male' or 'female'.")['analysis']
+        wav_path = os.path.splitext(ref)[0] + '.wav'
         script += f"audio | {voice_label} | {wav_path} | {char_label} | {gender}\n"
     
     # --- CONTEXT ---
     script += f"prompt | {prompt.replace('\n', ' ')}\n"
     script += f"soundscape | {translate_to_audio_prompt(bg_desc)}\n"
     
-    # --- SHOTS (now gets clean char_labels) ---
-    shots = expand_to_shots(prompt, bg_label, char_labels, duration)
+    # --- SHOTS (Pass the actual First Frame image for Shot 1 grounding) ---
+    shots = expand_to_shots(prompt, bg_label, char_labels, duration, first_frame_path=ff)
     script += shots + "\n"
     
     return script
+
+
+def expand_to_shots(prompt: str, bg_label: str, char_labels: list, duration: float, first_frame_path: str = None) -> str:
+    """Returns raw shot lines ready to append to your script, grounded in the actual first frame."""
+    
+    # Analyze the First Frame to get TRUE starting conditions (characters + environment)
+    scene_context = ""
+    if first_frame_path and os.path.exists(first_frame_path):
+        analysis = AnalyzeImage(first_frame_path, prompt="""
+            Describe this exact frame in detail for video generation: 
+            Where are the characters positioned relative to each other and the environment? 
+            What are their poses, expressions, and what are they holding/doing? 
+            What is the lighting and camera angle? Be specific about spatial relationships.
+        """)['analysis']
+        scene_context = f"\n\nVISUAL CONTEXT (This is the EXACT starting frame at 00:00.000):\n{analysis}\n"
+    
+    char_list = ", ".join(char_labels)
+    duration_hint = f"Total duration: approximately {duration} seconds."
+    
+    formatted_prompt = f"""Break this scene into sequential video shots.
+
+Available characters: {char_list}
+Background: {bg_label}
+{duration_hint}
+
+Scene description: {prompt}
+{scene_context}
+Rules:
+- Output ONLY shot lines, nothing else. No JSON, no markdown, no commentary.
+- Each line format: shot | description | duration_seconds
+- Duration per shot: 2-4 seconds. Keep shots SHORT and tight.
+- Reference characters by their exact label: {char_list}
+- CRITICAL for Shot 1: Based on the VISUAL CONTEXT above, describe the opening composition and the first subtle motion that initiates the scene. Reference the specific character positions and props from the first frame. DO NOT invent new static details.
+- Include camera framing (wide, medium, closeup) and motion (push in, pan, static, tracking) in each description.
+- Dialogue format: character speaks [Language] <d>"exact words"</d>
+- CRITICAL: Structure each shot as: [ambient sounds] → [action] → [dialogue if any] → [cut]. Ambient sounds come FIRST, dialogue comes LAST. Never put anything after dialogue ends.
+- CRITICAL: If a shot has dialogue, the shot must END immediately after the character finishes speaking and closes their mouth. No sounds, no reactions, no description after </d>.
+- CRITICAL: Never split speaking action from dialogue across multiple shots. If they start talking, the dialogue <d>"..."</d> must be in the SAME shot.
+- Include 1-2 ambient sounds at the START of each shot description (wind, footsteps, breathing, etc.).
+- Keep visual descriptions minimal after Shot 1 — the model already sees the reference images.
+- End with a natural conclusion or emotional beat.
+
+Example output:
+shot | Wide shot. Wind howling, sand shifting. Camera pushes in slowly as {char_list.split(',')[0] if char_list else 'char1'} shifts weight and looks toward the doorway, matching the starting composition. | 2.5
+shot | Medium shot. Footsteps crunching, fabric rustling. {char_list.split(',')[1] if len(char_list) > 1 else 'char2'} enters from the right and walks toward {char_list.split(',')[0] if char_list else 'char1'}. Camera tracks slowly. | 2.0
+shot | Closeup. Wind gusting, distant rumble. {char_list.split(',')[0] if char_list else 'char1'} looks up in panic and speaks <d>"Oh fuck, what do I do now?"</d>. | 2.5
+shot | Medium closeup. Slow exhale, low atmospheric hum. {char_list.split(',')[0] if char_list else 'char1'} looks away, shaking her head. Camera holds static. | 1.5
+"""
+
+    response = llm_analyze_media('', prompt=formatted_prompt)['analysis']
+    
+    lines = []
+    for line in response.strip().split("\n"):
+        line = line.strip()
+        if line.startswith("shot |"):
+            lines.append(line)
+    
+    return "\n".join(lines)
 
 def main():
     parser = argparse.ArgumentParser()
@@ -188,7 +257,7 @@ def main():
 
         if MMH3:
             from plan10.lib.director_mmh3 import get_builder
-            script = h3_ref(bg, refs, prompt,  duration)
+            script = h3_ref(bg, pending_job['input_media'], refs, prompt,  duration)
             print("SCRIPT: ",script)
             builder = get_builder(script, '')
             final_prompt = builder.generate()
