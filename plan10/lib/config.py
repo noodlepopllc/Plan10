@@ -76,12 +76,13 @@ def load_environ(replace_env=False):
             fp.write('export LOADED="True"\n')
             #fp.write(additional)
 
-def setconfig(mmh3=False, ltx2=False, hires=False, sdres=False, portrait=False, wangp=False, hivram=False, lovram=False, verbose=False, anime=False, minres=False):
+def setconfig(mmh3=False, ltx2=False, hires=False, sdres=False, portrait=False, wangp=False, hivram=False, lovram=False, verbose=False, anime=False, minres=False, ultrawide=False):
     cfg_original = load_config()
     tmp_cfg = cfg_original.copy()
     high_resolution = ["1280", "720"] 
     standard_resolution = ["832", "480"]
     minimal_resolution = ["768", "448"]
+    ultra_wide = ["1792", "768"]
     tmp_cfg['ANIME'] = 'True' if anime else 'False'
     
     if wangp:
@@ -112,6 +113,9 @@ def setconfig(mmh3=False, ltx2=False, hires=False, sdres=False, portrait=False, 
     if minres:
         tmp_cfg["WIDTH"]  = minimal_resolution[0]
         tmp_cfg["HEIGHT"] = minimal_resolution[1]
+    if ultrawide:
+        tmp_cfg["WIDTH"]  = ultra_wide[0]
+        tmp_cfg["HEIGHT"] = ultra_wide[1]
     if portrait:
         tmp_cfg['WIDTH'], tmp_cfg['HEIGHT'] = tmp_cfg['HEIGHT'], tmp_cfg['WIDTH']
     if hivram:
@@ -140,6 +144,7 @@ def main():
     parser.add_argument('--hires', action='store_true', help='Set to hires mode')
     parser.add_argument('--sdres', action='store_true', help='Set to standard res mode')
     parser.add_argument('--minres', action='store_true', help='Set to lowest resolution')
+    parser.add_argument('--ultrawide', action='store_true', help='Set to ultra wide resolution')
     parser.add_argument('--portrait', action='store_true', help='Set to portrait mode')
     parser.add_argument('--hivram', action='store_true', help='Set vram mode to high vram')
     parser.add_argument('--lovram', action='store_true', help='Set vram mode to low vram')
@@ -149,7 +154,7 @@ def main():
 
 
     if args.update:
-        update = setconfig(args.mmh3, args.ltx2, args.hires, args.sdres, args.portrait, args.wangp, args.hivram, args.lovram, args.verbose, args.anime, args.minres)
+        update = setconfig(args.mmh3, args.ltx2, args.hires, args.sdres, args.portrait, args.wangp, args.hivram, args.lovram, args.verbose, args.anime, args.minres, args.ultrawide)
         if update:
             load_config(True, update)
 
