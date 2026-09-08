@@ -58,66 +58,11 @@ else:
 
 from plan10.emergent.state_manager import StateManager
 
-'''
-SHOT_EXPANSION_PROMPT = """Break this scene into sequential video shots.
-
-Available characters: {char_labels}
-Background: {bg_label}
-Total duration: approximately {duration} seconds.
-
-Scene: {prompt}
-
-Rules:
-- Output ONLY shot lines, nothing else. No JSON, no markdown, no commentary.
-- Each line format: shot | description | duration_seconds
-- Duration per shot: 2-4 seconds. Keep shots SHORT and tight.
-- Reference characters by their exact label: {char_labels}
-- CRITICAL for Shot 1: The model already sees the reference image. DO NOT describe static visual details, clothing, or the environment. ONLY describe the first subtle motion, camera movement, or ambient sound that initiates action from this starting frame.
-- Include camera framing (wide, medium, closeup) and motion (push in, pan, static, tracking) in each description.
-- Dialogue format: character speaks [Language] <d>"exact words"</d>
-- CRITICAL: Structure each shot as: [ambient sounds] → [action] → [dialogue if any] → [cut]. Ambient sounds come FIRST, dialogue comes LAST. Never put anything after dialogue ends.
-- CRITICAL: If a shot has dialogue, the shot must END immediately after the character finishes speaking and closes their mouth. No sounds, no reactions, no description after </d>.
-- CRITICAL: Never split speaking action from dialogue across multiple shots. If they start talking, the dialogue <d>"..."</d> must be in the SAME shot.
-- Include 1-2 ambient sounds at the START of each shot description (wind, footsteps, breathing, etc.).
-- Keep visual descriptions minimal throughout — the model already sees the reference images.
-- End with a natural conclusion or emotional beat.
-
-Example output:
-shot | Wide shot. Wind howling, sand shifting. Camera pushes in slowly as char1 shifts weight and looks toward the doorway. | 2.5
-shot | Medium shot. Footsteps crunching, fabric rustling. char2 enters from the right and walks toward char1. Camera tracks slowly. | 2.0
-shot | Closeup. Wind gusting, distant rumble. char1 looks up in panic and speaks <d>"Oh fuck, what do I do now?"</d>. | 2.5
-shot | Medium closeup. Slow exhale, low atmospheric hum. char1 looks away, shaking her head. Camera holds static. | 1.5
-"""
-
-def expand_to_shots(prompt: str, bg_label: str, char_labels: list, duration: float) -> str:
-    """Returns raw shot lines ready to append to your script."""
-    
-    formatted = SHOT_EXPANSION_PROMPT.format(
-        prompt=prompt,
-        bg_label=bg_label,
-        char_labels=", ".join(char_labels),
-        duration=duration
-    )
-    
-    # Call your LLM here
-    response = llm_analyze_media('',prompt=formatted)
-    print(response)
-    
-    # Strip any accidental markdown or extra whitespace
-    lines = []
-    for line in response['analysis'].strip().split("\n"):
-        line = line.strip()
-        if line.startswith("shot |"):
-            lines.append(line)
-    
-    return "\n".join(lines)
-
-'''
 def voice_prompt(gender, age):
     import random
 
     # Define your valid pitch options
-    all_pitches = ['very low pitch', 'low pitch', 'moderate pitch', 'high pitch', 'very high pitch', 'whisper']
+    all_pitches = ['very low pitch', 'low pitch', 'moderate pitch', 'high pitch', 'very high pitch']
 
     # Set safe boundaries for pitch based on age/gender to prevent MiniMax distortion
     if age == 'child':
@@ -125,10 +70,10 @@ def voice_prompt(gender, age):
         valid_pitches_for_char = ['moderate pitch', 'high pitch', 'very high pitch']
     elif gender == 'male' or age == 'elderly':
         # Adult males and elderly characters can sound highly robotic if forced into a squeaky register
-        valid_pitches_for_char = ['very low pitch', 'low pitch', 'moderate pitch', 'whisper']
+        valid_pitches_for_char = ['very low pitch', 'low pitch', 'moderate pitch']
     else:
         # Young adult or middle-aged females can handle the full normal range safely
-        valid_pitches_for_char = ['low pitch', 'moderate pitch', 'high pitch', 'very high pitch', 'whisper']
+        valid_pitches_for_char = ['low pitch', 'moderate pitch', 'high pitch', 'very high pitch']
 
     # Randomly select a valid pitch
     selected_pitch = random.choice(valid_pitches_for_char)
