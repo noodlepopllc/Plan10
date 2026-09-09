@@ -53,7 +53,7 @@ CRITICAL GUIDELINES:
 
 For EACH character (up to 3), provide:
 1. POSITION: Where they are in the frame (left, center, right, foreground, background)
-2. APPEARANCE: Detailed physical description (age, gender, hair color/style, eye color, distinguishing features)
+2. APPEARANCE: Detailed physical description (age, gender, ethnicity (east asian, latinx, south asian, european, south saharan, etc), race (human, android, etc), hair color/style, eye color, distinguishing features)
 3. CLOTHING: COMPLETE outfit description including:
    - Top (color, style, fit, material, pattern)
    - Bottom (color, style, fit, material, pattern - INFER if not visible)
@@ -62,6 +62,7 @@ For EACH character (up to 3), provide:
    - Cleavage, Torn, Burnt, Form Fitting, etc
    - Parts of the body that are exposed
 4. POSE: Current pose and orientation
+5. STYLE: Art style
 
 For the environment:
 - LOCATION: Type of location
