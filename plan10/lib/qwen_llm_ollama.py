@@ -17,6 +17,7 @@ OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen3.5:latest")  # Match your pu
 SEED = os.environ.get("SEED","-1")
 
 SEED = random.randint(0,1000000) if SEED == "-1" else int(SEED)  
+THINKING = os.environ.get("THINKING", "False") != "False"
 
 def _system_prompt(fn="system/bot.txt"):
     if not os.path.exists(fn):
@@ -84,7 +85,7 @@ def _normalize_for_ollama(messages):
         normalized.append(msg_dict)
     return normalized
 
-def _call_ollama(messages, max_tokens=8192, temperature=0.5, top_p=0.9, tools=None, thinking=False):
+def _call_ollama(messages, max_tokens=8192, temperature=0.5, top_p=0.9, tools=None, thinking=THINKING):
     # ✅ Convert to Ollama's expected format
     ollama_messages = _normalize_for_ollama(messages)
     
@@ -101,6 +102,9 @@ def _call_ollama(messages, max_tokens=8192, temperature=0.5, top_p=0.9, tools=No
             "seed": SEED
         }
     }
+    if thinking and '3.8' in OLLAMA_MODEL:
+        payload['options']["reasoning_effort"] = "low"
+        payload['options'][""preserve_thinking"] = True
     if tools:
         payload["tools"] = tools
 
@@ -119,13 +123,13 @@ def _call_ollama(messages, max_tokens=8192, temperature=0.5, top_p=0.9, tools=No
 # ─────────────────────────────────────────
 # 1) Agent / tools chat
 # ─────────────────────────────────────────
-def llm_chat(messages, tools=None, max_tokens=8192, temperature=0.7, enable_thinking=True):
+def llm_chat(messages, tools=None, max_tokens=8192, temperature=0.7, enable_thinking=THINKING):
     sys_msg = next(_system_prompt_gen)
     full_messages = sys_msg + messages
 
     # Note: Ollama doesn't have a native toggle for thinking models.
     # If enable_thinking=False, the model may still output <think> tags depending on the Modelfile.
-    res = _call_ollama(full_messages, max_tokens, temperature, top_p=0.9, tools=tools)
+    res = _call_ollama(full_messages, max_tokens, temperature, top_p=0.9, tools=tools, thinking=enable_thinking)
 
     assistant_msg = res.get("message", {})
     raw_content = assistant_msg.get("content", "")
