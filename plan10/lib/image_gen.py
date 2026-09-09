@@ -8,7 +8,8 @@ import os
 from plan10.lib.image_analysis import AnalyzeImage, EnhancePrompt
 from plan10.lib.config import load_environ
 from PIL import Image
-from PIL.PngImagePlugin import PngInfo
+
+from plan10.lib.util import load_metadata
 
 load_environ()
 WIDTH = int(os.environ.get("WIDTH", "832"))
@@ -276,7 +277,7 @@ def GenerateImage(prompt='', output='tmp.png', width=WIDTH, height=HEIGHT, seed=
 def prompt_metadata(imgpath, prompt=''):
     target_image = Image.open(imgpath)
     if prompt:
-        metadata = PngInfo()
+        metadata = load_metadata(target_image)
         metadata.add_text("GenerationPrompt", prompt)
         target_image.save(imgpath, pnginfo=metadata)
         return prompt
@@ -286,7 +287,7 @@ def prompt_metadata(imgpath, prompt=''):
 
 def add_metadata_char(imgpath, prompt='', seed=-1, generation_prompt=None):
     target_image = Image.open(imgpath)
-    metadata = PngInfo()
+    metadata = load_metadata(target_image)
 
     base_instructions = '''
         Analyze the subject and describe ONLY clearly visible, literal traits. Return a single comma-separated string in this exact order: 
@@ -361,7 +362,7 @@ def add_metadata_char(imgpath, prompt='', seed=-1, generation_prompt=None):
 
 def add_metadata_loc(imgpath, prompt='', seed=-1, brief=False, update=True):
     target_image = Image.open(imgpath)
-    metadata = PngInfo()
+    metadata = load_metadata(target_image)
     analysis_prompt = '''
 Extract a structured spatial description of this BACKGROUND image.
 CRITICAL: This image contains NO PEOPLE. Describe ONLY the environment.

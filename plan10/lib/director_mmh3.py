@@ -3,7 +3,6 @@ import re
 import base64
 import mimetypes
 from PIL import Image
-from PIL.PngImagePlugin import PngInfo
 import json
 from fastmcp import Client
 import asyncio
@@ -12,6 +11,8 @@ from functools import partial
 
 from plan10.lib.config import load_environ
 load_environ()
+
+from plan10.lib.util import load_metadata
 
 ANIME = os.environ.get("ANIME","False") != "False" 
 SEED = int(os.environ.get("SEED", "-1"))
@@ -77,7 +78,7 @@ class SmartVideoPromptBuilder:
         try:
             if image_path.lower().endswith('.png'):
                 img = Image.open(image_path)
-                metadata = PngInfo()
+                metadata = load_metadata(img)
                 if hasattr(img, 'text'):
                     for k, v in img.text.items():
                         metadata.add_text(k, v)

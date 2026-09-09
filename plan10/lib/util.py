@@ -5,6 +5,15 @@ import numpy as np
 import librosa
 import soundfile as sf
 
+from PIL.PngImagePlugin import PngInfo
+
+def load_metadata(img):
+    metadata = PngInfo()
+    for key, value in img.info.items():
+        if isinstance(value, str):
+            metadata.add_text(key, value)
+    return metadata
+
 def to_absolute(path, base_dir=None):
     """Convert path to absolute, only prepending base_dir if needed"""
     if base_dir is None:

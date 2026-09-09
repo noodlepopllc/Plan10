@@ -1,16 +1,17 @@
-from PIL import Image, PngImagePlugin
-from plan10.lib.image_edit import EditImage
-from plan10.lib.image_analysis import AnalyzeImage
+from PIL import Image
 import os
 
 from plan10.lib.config import load_environ
-
+load_environ()
+from plan10.lib.image_edit import EditImage
+from plan10.lib.image_analysis import AnalyzeImage
+from plan10.lib.util import load_metadata
 if os.environ.get('ANIME','False') != 'False':
     from plan10.lib.anime_gen import GenerateImage, add_metadata_char, add_metadata_loc, CreateBackground
 else:
     from plan10.lib.image_gen import GenerateImage, add_metadata_char, add_metadata_loc, CreateBackground
 
-load_environ()
+
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
 
@@ -285,7 +286,7 @@ def _run_generation(task, ref_paths, output, width, height, seed, shot_type, sty
     status = EditImage(task, ref_paths, output, width, height, seed)
     
     img = Image.open(output)
-    meta = PngImagePlugin.PngInfo()
+    meta = load_metadata(img)
     meta.add_text("Prompt", task)
     meta.add_text("Action", action)
     meta.add_text("ShotType", shot_type)
