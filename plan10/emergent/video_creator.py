@@ -191,7 +191,7 @@ def main():
     # Save state
     new_state = {
         "beat_count": result['beat_count'],
-        "current_media": result['current_media'],
+        "current_media": str(result['current_media']),
         "story_context": context,
         "history": result['history'][-3:],
         "pending_setup": result['pending_setup'],
@@ -204,10 +204,10 @@ def main():
         "width": args.width,
         "height": args.height,
         "seed": args.seed,
-        "initial_media": initial,
-        "current_bg": result['current_bg'], 
+        "initial_media": str(initial),
+        "current_bg": str(result['current_bg']), 
         "goal": goal,
-        "duration": args.duration,
+        "duration": args.duration
     }
     state_mgr.save(new_state)
     
