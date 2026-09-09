@@ -209,7 +209,6 @@ def main():
         "goal": goal,
         "duration": args.duration
     }
-    print(new_state)
     state_mgr.save(new_state)
     
     print(f"✅ Beat {result['beat_count']} planned. Video queued for rendering.")
