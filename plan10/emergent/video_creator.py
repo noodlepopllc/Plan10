@@ -19,6 +19,47 @@ SEED = int(os.environ.get("SEED", "-1"))
 ANIME = os.environ.get('ANIME', 'False') != 'False'
 MMH3 = os.environ.get('MMH3', 'False') != 'False'
 
+def cache_scene_analysis(image_path: str, analysis_data: dict):
+    """Cache scene analysis results in image metadata."""
+    img = Image.open(image_path)
+    metadata = PngInfo()
+    
+    # Copy existing metadata
+    for key, value in img.info.items():
+        if isinstance(value, str):
+            metadata.add_text(key, value)
+    
+    # Add cached analysis
+    metadata.add_text("SceneAnalysis", json.dumps(analysis_data))
+    img.save(image_path, pnginfo=metadata)
+
+def get_cached_analysis(image_path: str) -> dict:
+    """Retrieve cached scene analysis from image metadata."""
+    img = Image.open(image_path)
+    cached = img.info.get("SceneAnalysis")
+    if cached:
+        return json.loads(cached)
+    return None
+
+def get_or_create_visual_id(character_image: str) -> str:
+    """Get cached visual ID or generate and cache it."""
+    img = Image.open(character_image)
+    visual_id = img.info.get("VisualID")
+    
+    if not visual_id:
+        profile = CharacterProfile(character_image)
+        visual_id = profile.get_visual_id(0)
+        
+        # Cache it
+        metadata = PngInfo()
+        for key, value in img.info.items():
+            if isinstance(value, str):
+                metadata.add_text(key, value)
+        metadata.add_text("VisualID", visual_id)
+        img.save(character_image, pnginfo=metadata)
+    
+    return visual_id
+
 if ANIME:
     from plan10.lib.anime_gen import GenerateImage, prompt_metadata
 else:
@@ -99,10 +140,10 @@ def main():
                     
         print(f"REFERENCES: {refs}")
         
-        profiles = [CharacterProfile(ref) for ref in refs]
-        visual_ids = []
-        for profile in profiles:
-            visual_ids.append(profile.get_visual_id(0))
+        visual_ids = [get_or_create_visual_id(ref) for ref in refs]
+        #visual_ids = []
+        #for profile in profiles:
+        #    visual_ids.append(profile.get_visual_id(0))
         
         beat_count = 0
         story_context = args.context
@@ -118,7 +159,7 @@ def main():
         print("   Run: python video_runner.py -O", args.output)
         sys.exit(0)  # Exit gracefully, don't proceed until video is ready
 
-    context = args.context
+    context = story_context
     if not context:
         context = analyze_scene(current_media)
     
