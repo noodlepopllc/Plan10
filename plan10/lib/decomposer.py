@@ -55,8 +55,8 @@ For EACH character (up to 3), provide:
 1. POSITION: Where they are in the frame (left, center, right, foreground, background)
 2. APPEARANCE: Detailed physical description (age, gender, hair color/style, eye color, distinguishing features)
 3. CLOTHING: COMPLETE outfit description including:
-   - Top (color, style, fit, material)
-   - Bottom (color, style, fit - INFER if not visible)
+   - Top (color, style, fit, material, pattern)
+   - Bottom (color, style, fit, material, pattern - INFER if not visible)
    - Shoes/footwear (INFER if not visible)
    - Accessories (jewelry, bags, hats, etc.)
    - Cleavage, Torn, Burnt, Form Fitting, etc
