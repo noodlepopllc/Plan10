@@ -202,7 +202,7 @@ class ImageGenKlein(object):
         self.pipe = None
 
     def __enter__(self):
-        model = "black-forest-labs/FLUX.2-klein-4B"
+        model = self.model
         if not self.pipe:
             vram_config = {
                 "offload_dtype": "disk",
