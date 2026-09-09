@@ -374,22 +374,31 @@ Keep each field to 1 concise sentence. ABSOLUTELY NO CHARACTERS, NO PEOPLE, NO C
         target_image.save(imgpath, pnginfo=metadata)
     return bg_desc
 
-def CreateCharacterSheet(prompt='', output='character_tmp.png',seed=-1, imagegen=None, override=None):
-    seed=int(seed)
+def CreateCharacterSheet(prompt='', output='character_tmp.png', seed=-1, imagegen=None, override=None):
+    seed = int(seed)
     eprompt = (
-    "create a character sheet single image with two side by side views "
-    "(3/4 front view, back view) with plain white background, studio lighting. "
-    "Ensure the clothing and garment structure match exactly "
-    "between the front and back views."
-    f"of {prompt}")
+        "Professional character design turnaround sheet, single image with two side-by-side views "
+        "(3/4 front view and back view) of the same character. "
+        "The character is standing on a seamless white cyclorama studio backdrop with soft volumetric "
+        "studio lighting from above, creating subtle soft ground shadows beneath the character. "
+        "Ensure the clothing, garment structure, proportions, and details match exactly between "
+        "the front and back views. Clean crisp edges, professional concept art quality, "
+        "sharp focus, high detail. "
+        f"Character description: {prompt}"
+    )
+    
     gen = imagegen if imagegen else ImageGen()
     if isinstance(gen, ImageGenQwen):
-        width, height = override if override else (1328,1328)
+        width, height = override if override else (1328, 1328)
+    elif isinstance(gen, ImageGenKlein):
+        width, height = overrfide if override else (1024, 1024)
     else:
-        width, height = override if override else (1536,1536)
+        width, height = override if override else (1536, 1536)
+    
     status = gen.generate(eprompt, output, width, height, seed)
     if not imagegen:
         del gen
+    
     status['description'] = add_metadata_char(output, prompt, seed)
     status['prompt'] = eprompt
     return status
