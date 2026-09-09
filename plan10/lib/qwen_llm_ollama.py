@@ -104,7 +104,7 @@ def _call_ollama(messages, max_tokens=8192, temperature=0.5, top_p=0.9, tools=No
     }
     if thinking and '3.8' in OLLAMA_MODEL:
         payload['options']["reasoning_effort"] = "low"
-        payload['options'][""preserve_thinking"] = True
+        payload['options']["preserve_thinking"] = True
     if tools:
         payload["tools"] = tools
 
