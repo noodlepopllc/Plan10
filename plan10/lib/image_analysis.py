@@ -171,7 +171,7 @@ def AnalyzeImage(image='', prompt='Describe this.', output=None, backend=None):
         status = {'analysis': analysis_text}
     else:
         # Default to Qwen
-        status = llm_analyze_media(image, prompt, max_tokens=4096)
+        status = llm_analyze_media(image, prompt, max_tokens=4096, temperature=0.5)
     
     if output:
         Path(output).write_text(status['analysis'])
