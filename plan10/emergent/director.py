@@ -122,7 +122,7 @@ def compare_and_decide(self, intended_action, actual_reality, story_context, his
         
         return result.strip()
 
-    def compare_and_decide_no_dialog(self, intended_action, actual_reality, story_context, history, pending_setup, goal=None, force_transition=False, location_constraint=None, bg_desc=None, ff_desc=None)):
+    def compare_and_decide_no_dialog(self, intended_action, actual_reality, story_context, history, pending_setup, goal=None, force_transition=False, location_constraint=None, bg_desc=None, ff_desc=None):
         history_text = "\n".join([f"- {a}" for a in history[-3:]]) if history else "First beat."
         
         setup_context = ""
