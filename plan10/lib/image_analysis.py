@@ -167,7 +167,7 @@ def AnalyzeImage(image='', prompt='Describe this.', output=None, backend=None):
         backend = os.environ.get("VISION_BACKEND", "qwen").lower()
     
     if backend == "smol":
-        analysis_text = AnalyzeMedia(image, prompt)
+        analysis_text = AnalyzeMedia(image, prompt, max_tokens=4096, temperature=0.5)
         status = {'analysis': analysis_text}
     else:
         # Default to Qwen
