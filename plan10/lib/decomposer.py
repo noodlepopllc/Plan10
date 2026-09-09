@@ -36,7 +36,7 @@ def analyze_scene(input_image: str, anime_mode: bool = False) -> dict:
         dict with keys: 'analysis' (raw text), 'character_count' (int)
     """
     analysis_prompt = build_analysis_prompt(anime_mode)
-    result = AnalyzeImage(input_image, analysis_prompt, backend="smol")
+    result = AnalyzeImage(input_image, analysis_prompt, backend="")
     analysis = result['analysis']
     
     char_count = parse_character_count(analysis)
