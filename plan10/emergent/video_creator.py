@@ -76,7 +76,7 @@ def main():
             sys.exit(-1)
             
         if not args.initial:
-            GenerateImage(prompt=args.prompt, output=f'{args.output}/improv.png', width=args.width, height=args.height, seed=args.seed)
+            GenerateImage(prompt=args.prompt, output=f'{args.output}/improv.png', width=1920, height=1080, seed=args.seed)
             initial = f'{args.output}/improv.png'
             current_media = initial
         else:
