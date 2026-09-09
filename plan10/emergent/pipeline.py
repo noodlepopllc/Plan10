@@ -60,7 +60,7 @@ class Pipeline:
     def recreate_frame(self, media_path, bg_path, current_state, beat_num):
         """Recreate frame by analyzing background, generating description, creating fresh background, then compositing."""
 
-        last_frame_path = create_lastframe(media_path, beat_num)
+        last_frame_path = self.create_lastframe(media_path, beat_num)
         
         # Step 2: Analyze the background/environment to create a description
         print(f"  → Analyzing background environment...")

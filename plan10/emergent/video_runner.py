@@ -28,11 +28,11 @@ def get_or_analyze(image_path: str, prompt: str, cache_key: str, max_words: int 
     
     result = AnalyzeImage(image_path, prompt=prompt)['analysis']
     img.close()
+    from plan10.lib.util import load_metadata
     
     # Cache it
-    from PIL.PngImagePlugin import PngInfo
     img = Image.open(image_path)
-    metadata = PngInfo()
+    metadata = load_metadata(img)
     for key, value in img.info.items():
         if isinstance(value, str):
             metadata.add_text(key, value)

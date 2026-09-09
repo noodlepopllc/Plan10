@@ -9,9 +9,8 @@ from plan10.emergent.state_manager import StateManager
 from plan10.emergent.character import CharacterProfile
 from plan10.emergent.pipeline import Pipeline
 from plan10.lib.scene_analyzer import analyze_scene
-from plan10.lib.util import extract_frame
+from plan10.lib.util import extract_frame, load_metadata
 from PIL import Image
-from PIL.PngImagePlugin import PngInfo
 
 from plan10.lib.decomposer import decompose_scene
 
@@ -32,7 +31,7 @@ def get_or_create_visual_id(character_image: str) -> str:
         visual_id = profile.get_visual_id(0)
         
         # Cache it
-        metadata = PngInfo()
+        metadata = load_metadata(character_image)
         for key, value in img.info.items():
             if isinstance(value, str):
                 metadata.add_text(key, value)
