@@ -28,22 +28,31 @@ from pathlib import Path
 from plan10.lib.image_analysis import AnalyzeImage
 
 
-def decompose_scene(input_image, output_dir, seed=42, minimal=False):
+def analyze_scene(input_image: str, anime_mode: bool = False) -> dict:
     """
-    Decompose a scene into individual character sheets and background plate.
+    Analyze a scene image and return structured character/environment data.
     
-    Args:
-        input_image: Path to scene image
-        output_dir: Directory to save extracted assets
-        seed: Random seed for generation
+    Returns:
+        dict with keys: 'analysis' (raw text), 'character_count' (int)
     """
-    output_dir = Path(output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
+    analysis_prompt = build_analysis_prompt(anime_mode)
+    result = AnalyzeImage(input_image, analysis_prompt, backend="smol")
+    analysis = result['analysis']
     
-    print(f"🔍 Analyzing scene: {input_image}")
+    char_count = parse_character_count(analysis)
     
-    # Step 1: Analyze scene to identify characters and environment
-    analysis_prompt = """Analyze this image and identify up to 3 PRIMARY characters/people present.
+    print(f"✓ Found {char_count} character(s)")
+    print(analysis)
+    
+    return {
+        'analysis': analysis,
+        'character_count': char_count
+    }
+
+
+def build_analysis_prompt(anime_mode: bool = False) -> str:
+    """Build the analysis prompt based on mode."""
+    base_prompt = """Analyze this image and identify up to 3 PRIMARY characters/people present.
 
 CRITICAL GUIDELINES:
 - Focus on FOREGROUND and PROMINENT characters only
@@ -53,7 +62,7 @@ CRITICAL GUIDELINES:
 
 For EACH character (up to 3), provide:
 1. POSITION: Where they are in the frame (left, center, right, foreground, background)
-2. APPEARANCE: Detailed physical description (age, gender, ethnicity (east asian, latinx, south asian, european, south saharan, etc), race (human, android, etc), hair color/style, eye color, distinguishing features)
+2. APPEARANCE: Detailed physical description (age, gender, ethnicity, race, hair color/style, eye color, distinguishing features)
 3. CLOTHING: COMPLETE outfit description including:
    - Top (color, style, fit, material, pattern)
    - Bottom (color, style, fit, material, pattern - INFER if not visible)
@@ -96,66 +105,68 @@ ATMOSPHERE: [description]
 KEY ELEMENTS: [description]
 
 TOTAL_CHARACTERS: [actual count, maximum 3]"""
-
-    if ANIME:
-        analysis_prompt = f"""[ANIME MODE]
-        
-    {analysis_prompt}
-
-    ANIME-SPECIFIC DETECTION:
-    - Characters may share similar art styles but are DISTINCT individuals
-    - Look for differences in hair color, eye color, accessories, clothing patterns
-    - Pay attention to spatial positioning - characters in different locations are separate people
-    - Do NOT merge similar-looking characters into one description
-    - Focus on main characters, ignore background extras"""
-        
-    result = AnalyzeImage(input_image, analysis_prompt, backend="smol")
-    analysis = result['analysis']
-    print(analysis)
     
-    # Parse character count (cap at 2 for compositor compatibility)
-    char_count = 1
+    if anime_mode:
+        return f"""[ANIME MODE]
+        
+{base_prompt}
+
+ANIME-SPECIFIC DETECTION:
+- Characters may share similar art styles but are DISTINCT individuals
+- Look for differences in hair color, eye color, accessories, clothing patterns
+- Pay attention to spatial positioning - characters in different locations are separate people
+- Do NOT merge similar-looking characters into one description
+- Focus on main characters, ignore background extras"""
+    
+    return base_prompt
+
+
+def parse_character_count(analysis: str) -> int:
+    """Extract character count from analysis text, capped at 2."""
     for line in analysis.split('\n'):
         if 'TOTAL_CHARACTERS:' in line:
             try:
                 detected_count = int(line.split(':')[1].strip())
-                char_count = min(detected_count, 2)  # Cap at 2
+                count = min(detected_count, 2)
                 if detected_count > 2:
                     print(f"⚠️ Detected {detected_count} characters, but compositor only supports 2. Using first 2.")
+                return count
             except:
                 pass
+    return 1
+
+
+def generate_character_sheets(
+    analysis: str, 
+    char_count: int, 
+    output_dir: Path, 
+    seed: int, 
+    minimal: bool = False
+) -> list:
+    """
+    Generate character sheets for each detected character.
     
-    print(f"\n✓ Found {char_count} character(s)")
-    
-    # Step 2: Generate character sheets for each character
+    Returns:
+        list of dicts with character metadata
+    """
     characters = []
+    
     with ImageGen() as igen:
         for i in range(1, char_count + 1):
             print(f"\n🎨 Generating character sheet {i}...")
             
-            # Extract character description from analysis
             char_desc = extract_character_description(analysis, i)
-            
             char_output = output_dir / f"character_{i}.png"
-
-            if minimal:
-                # Use CreateCharacterSheet to generate clean reference
-                status = CreateCharacterSheet(
-                    prompt=char_desc,
-                    output=str(char_output),
-                    seed=seed + i,
-                    imagegen=igen,
-                    override=(512,512)
-                )
-            else:
-                status = CreateCharacterSheet(
-                    prompt=char_desc,
-                    output=str(char_output),
-                    seed=seed + i,
-                    imagegen=igen,
-                    override=None#(512,512)
-                )
-
+            
+            override = (512, 512) if minimal else None
+            
+            status = CreateCharacterSheet(
+                prompt=char_desc,
+                output=str(char_output),
+                seed=seed + i,
+                imagegen=igen,
+                override=override
+            )
             
             characters.append({
                 'id': i,
@@ -165,17 +176,29 @@ TOTAL_CHARACTERS: [actual count, maximum 3]"""
             })
             
             print(f"  ✓ Saved: {char_output}")
-        
-    # Step 3: Generate clean background plate
+    
+    return characters
+
+
+def generate_background(
+    input_image: str, 
+    output_dir: Path, 
+    seed: int, 
+    minimal: bool = False
+) -> dict:
+    """
+    Generate a clean background plate by compositing and removing people.
+    
+    Returns:
+        dict with background metadata
+    """
     print(f"\n🏞️ Generating clean background plate...")
     
-    # Extract environment description
-    #env_desc = extract_environment_description(analysis)
-    
     bg_tmp = output_dir / "tmp_background.png"
+    bg_output = output_dir / "background.png"
     
-    # Use CreateBackground to generate clean plate
-    status = CompositeScene(
+    # Composite scene
+    CompositeScene(
         background_path=input_image,
         characters=[],
         output=str(bg_tmp),
@@ -184,21 +207,38 @@ TOTAL_CHARACTERS: [actual count, maximum 3]"""
         height=448 if minimal else HEIGHT
     )
     
-    bg_output = output_dir / "background.png"
-
-    tmp = Image.open(bg_tmp)
-
-    status = EditImage(prompt='remove people from image', images=[str(bg_tmp)], output=str(bg_output), width=tmp.width, height=tmp.height)
-
+    # Remove people
+    tmp_img = Image.open(bg_tmp)
+    EditImage(
+        prompt='remove people from image',
+        images=[str(bg_tmp)],
+        output=str(bg_output),
+        width=tmp_img.width,
+        height=tmp_img.height
+    )
+    
     add_metadata_loc(str(bg_output))
     
     print(f"  ✓ Saved: {bg_output}")
     
-    # Step 4: Save manifest
+    return {
+        'path': str(bg_output),
+        'description': 'Clean background plate with people removed'
+    }
+
+
+def save_manifest(
+    source_image: str,
+    background: dict,
+    characters: list,
+    analysis: str,
+    output_dir: Path
+) -> Path:
+    """Save the decomposition manifest to JSON."""
     manifest = {
-        'source': input_image,
-        'background': str(bg_output),
-        'environment_description': status['description'],
+        'source': source_image,
+        'background': background['path'],
+        'environment_description': background['description'],
         'characters': characters,
         'analysis': analysis
     }
@@ -207,12 +247,71 @@ TOTAL_CHARACTERS: [actual count, maximum 3]"""
     with open(manifest_path, 'w') as f:
         json.dump(manifest, f, indent=2)
     
+    return manifest_path
+
+
+def decompose_scene(input_image: str, output_dir: str, seed: int = 42, minimal: bool = False) -> dict:
+    """
+    Decompose a scene into individual character sheets and background plate.
+    
+    This is the orchestrator function. It coordinates the specialized functions
+    but doesn't do the actual work itself.
+    
+    Args:
+        input_image: Path to scene image
+        output_dir: Directory to save extracted assets
+        seed: Random seed for generation
+        minimal: Use minimal resolution for faster processing
+        
+    Returns:
+        dict with paths to generated assets and metadata
+    """
+    output_dir = Path(output_dir)
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    print(f"🔍 Analyzing scene: {input_image}")
+    
+    # Step 1: Analyze the scene
+    scene_data = analyze_scene(input_image, anime_mode=ANIME)
+    analysis = scene_data['analysis']
+    char_count = scene_data['character_count']
+    
+    # Step 2: Generate character sheets
+    characters = generate_character_sheets(
+        analysis=analysis,
+        char_count=char_count,
+        output_dir=output_dir,
+        seed=seed,
+        minimal=minimal
+    )
+    
+    # Step 3: Generate background
+    background = generate_background(
+        input_image=input_image,
+        output_dir=output_dir,
+        seed=seed,
+        minimal=minimal
+    )
+    
+    # Step 4: Save manifest
+    manifest_path = save_manifest(
+        source_image=input_image,
+        background=background,
+        characters=characters,
+        analysis=analysis,
+        output_dir=output_dir
+    )
+    
     print(f"\n✅ Decomposition complete!")
-    print(f"   Background: {bg_output}")
+    print(f"   Background: {background['path']}")
     print(f"   Characters: {len(characters)}")
     print(f"   Manifest: {manifest_path}")
     
-    return manifest
+    return {
+        'background': background['path'],
+        'characters': characters,
+        'manifest': str(manifest_path)
+    }
 
 
 def extract_character_description(analysis, char_num):
