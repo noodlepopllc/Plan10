@@ -18,6 +18,17 @@ from plan10.emergent.vision import VisibilityChecker
 from plan10.emergent.director import Director
 from plan10.lib.image_analysis import AnalyzeMedia
 
+from PIL import Image
+
+def get_cached_desc(image_path: str, cache_key: str) -> str:
+    """Read cached description from image metadata."""
+    if not image_path or not os.path.exists(image_path):
+        return ""
+    img = Image.open(image_path)
+    cached = img.info.get(cache_key, "")
+    img.close()
+    return cached
+
 class Pipeline:
     def __init__(self, character_refs, output_dir, width, height, seed, visual_ids, scene_mode=False, goal=None):
         self.character_refs = character_refs
@@ -232,12 +243,23 @@ class Pipeline:
             location_constraint = "Character must remain in the current room/location. All actions must be physically possible within this space. No transitions or location changes."
         else:
             location_constraint = None
+
+        # After you have current_media and current_bg:
+        cached_bg_desc = get_cached_desc(current_bg, 'bg_desc')
+        cached_ff_desc = get_cached_desc(current_media, 'ff_desc')
         
-        decision = direct.compare_and_decide(
-            intended_action, actual_reality, story_context, 
-            history, pending_setup, goal=self.goal, 
+        decision = director.compare_and_decide(
+            intended_action=last_action,
+            actual_reality=actual_reality,
+            story_context=story_context,
+            history=history,
+            pending_setup=pending_setup,
+            goal=goal,
             force_transition=needs_transition,
-            location_constraint=location_constraint
+            location_constraint=None,
+            bg_desc=cached_bg_desc,  # <-- Add this
+            ff_desc=cached_ff_desc   # <-- Add this
+        )
         )
         
         # 4. Parse decision with NEW 10-value signature

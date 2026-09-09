@@ -30,13 +30,24 @@ Be factual about what you see, not what was intended."""
         result = AnalyzeMedia(str(media_path), prompt)
         return self._clean_analysis(result)
 
-    def compare_and_decide(self, intended_action, actual_reality, story_context, history, pending_setup, goal=None, force_transition=False, location_constraint=None):
-        if DIALOG_ALLOWED:
-            return self.compare_and_decide_dialog(intended_action, actual_reality, story_context, history, pending_setup, goal, force_transition, location_constraint)
-        return self.compare_and_decide_no_dialog(intended_action, actual_reality, story_context, history, pending_setup, goal, force_transition, location_constraint)
+def compare_and_decide(self, intended_action, actual_reality, story_context, history, 
+                       pending_setup, goal=None, force_transition=False, 
+                       location_constraint=None, bg_desc=None, ff_desc=None):
+    if DIALOG_ALLOWED:
+        return self.compare_and_decide_dialog(
+            intended_action, actual_reality, story_context, history, 
+            pending_setup, goal, force_transition, location_constraint,
+            bg_desc, ff_desc  # <-- Pass through
+        )
+    return self.compare_and_decide_no_dialog(
+        intended_action, actual_reality, story_context, history, 
+        pending_setup, goal, force_transition, location_constraint,
+        bg_desc, ff_desc  # <-- Pass through
+    )
         
 
-    def compare_and_decide_dialog(self, intended_action, actual_reality, story_context, history, pending_setup, goal=None, force_transition=False, location_constraint=None):
+    def compare_and_decide_dialog(self, intended_action, actual_reality, story_context, history, pending_setup, goal=None, force_transition=False, 
+                              location_constraint=None, bg_desc=None, ff_desc=None):
         history_text = "\n".join([f"- {a}" for a in history[-3:]]) if history else "First beat."
         
         setup_context = ""
@@ -51,6 +62,12 @@ Be factual about what you see, not what was intended."""
         constraint_directive = ""
         if location_constraint:
             constraint_directive = f"\nCONSTRAINT: {location_constraint}"
+
+        visual_grounding = ""
+        if bg_desc:
+            visual_grounding += f"\nACTUAL ENVIRONMENT (ground truth): {bg_desc}"
+        if ff_desc:
+            visual_grounding += f"\nCURRENT FRAME LAYOUT: {ff_desc}"
         
         goal_directive = ""
         if goal:
@@ -79,6 +96,7 @@ Be factual about what you see, not what was intended."""
     {goal_directive}
     PREVIOUS INTENTION: {intended_action}
     ACTUAL SCENE STATE: {actual_reality}
+    {visual_grounding}
     RECENT ACTIONS: {history_text}{setup_context}{transition_directive}{constraint_directive}
 
     {task_directive}
@@ -104,7 +122,7 @@ Be factual about what you see, not what was intended."""
         
         return result.strip()
 
-    def compare_and_decide_no_dialog(self, intended_action, actual_reality, story_context, history, pending_setup, goal=None, force_transition=False, location_constraint=None):
+    def compare_and_decide_no_dialog(self, intended_action, actual_reality, story_context, history, pending_setup, goal=None, force_transition=False, location_constraint=None, bg_desc=None, ff_desc=None)):
         history_text = "\n".join([f"- {a}" for a in history[-3:]]) if history else "First beat."
         
         setup_context = ""
@@ -119,6 +137,12 @@ Be factual about what you see, not what was intended."""
         constraint_directive = ""
         if location_constraint:
             constraint_directive = f"\nCONSTRAINT: {location_constraint}"
+
+        visual_grounding = ""
+        if bg_desc:
+            visual_grounding += f"\nACTUAL ENVIRONMENT (ground truth): {bg_desc}"
+        if ff_desc:
+            visual_grounding += f"\nCURRENT FRAME LAYOUT: {ff_desc}"
         
         goal_directive = ""
         if goal:
@@ -147,6 +171,7 @@ Be factual about what you see, not what was intended."""
     {goal_directive}
     PREVIOUS INTENTION: {intended_action}
     ACTUAL SCENE STATE: {actual_reality}
+    {visual_grounding}
     RECENT ACTIONS: {history_text}{setup_context}{transition_directive}{constraint_directive}
 
     {task_directive}
