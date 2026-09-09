@@ -18,6 +18,30 @@ WIDTH = int(os.environ.get('WIDTH', '768'))
 HEIGHT = int(os.environ.get('HEIGHT', '448'))
 ANIME = os.environ.get('ANIME', 'False') != 'False'
 
+def get_or_analyze(image_path: str, prompt: str, cache_key: str, max_words: int = 15) -> str:
+    """Get cached analysis from image metadata, or analyze and cache it."""
+    img = Image.open(image_path)
+    cached = img.info.get(cache_key)
+    if cached:
+        img.close()
+        return cached
+    
+    result = AnalyzeImage(image_path, prompt=prompt)['analysis']
+    img.close()
+    
+    # Cache it
+    from PIL.PngImagePlugin import PngInfo
+    img = Image.open(image_path)
+    metadata = PngInfo()
+    for key, value in img.info.items():
+        if isinstance(value, str):
+            metadata.add_text(key, value)
+    metadata.add_text(cache_key, result)
+    img.save(image_path, pnginfo=metadata)
+    img.close()
+    
+    return result
+
 if ANIME:
     from plan10.lib.anime_gen import GenerateImage, CreateCharacterSheet, CreateBackground
 else:
@@ -87,51 +111,43 @@ def voice_prompt(gender, age):
 
 def h3_ref(bg, ff, refs, prompt, duration=10.0):
     script = ""
-    print("First Frame", ff)
     
-    # --- ASSETS ---
-    # 1. First Frame (The actual starting composition with characters)
+    # 1. First Frame - NO CACHE
     if ff:
         ff_desc = AnalyzeImage(ff, prompt='Briefly describe the scene composition, character positions, and environment. Max 15 words.')['analysis']
-        ff_label = "ff"
-        script += f"ff | {ff_label} | {ff} | {ff_desc}\n"
+        script += f"ff | ff | {ff} | {ff_desc}\n"
     
-    # 2. Background (Empty environment plate)
-    bg_desc = AnalyzeImage(bg, prompt='Brief description of the empty environment/scene, no characters. Max 10 words.')['analysis']
-    bg_label = "bg"
-    script += f"bg | {bg_label} | {bg} | {bg_desc}\n"
+    # 2. Background - CACHED
+    bg_desc = get_or_analyze(bg,
+        'Brief description of the empty environment/scene, no characters. Max 10 words.',
+        'bg_desc')
+    script += f"bg | bg | {bg} | {bg_desc}\n"
     
-    # 3. Characters
+    # 3. Characters - CACHED
     char_labels = []
     for ndx, ref in enumerate(refs, start=1):
         label = f"char{ndx}"
         char_labels.append(label)
-        ref_desc = AnalyzeImage(ref, prompt='Brief description of character appearance/clothing. Max 10 words.')['analysis']
+        
+        ref_desc = get_or_analyze(ref,
+            'Brief description of character appearance/clothing. Max 10 words.',
+            'char_desc')
         script += f"char | {label} | {ref} | {ref_desc}\n"
-
-    # 4. Audio refs
-    for ndx, ref in enumerate(refs, start=1):
-        voice_label = f"voice_{ndx}"
-        char_label = f"char{ndx}"
-        # Expanded vision call to grab age along with gender
-        analysis_result = AnalyzeImage(
-            ref, 
-            prompt="Identify the character's gender (male, female) and age bracket (child, teenager, young adult, middle-aged, elderly). Return exactly in this format: 'gender, age bracket'. Example: 'female, young adult'."
-        )['analysis']
-
-        # Parse the vision model response
-        gender, age = [item.strip().lower() for item in analysis_result.split(',')]
+        
+        voice_data = get_or_analyze(ref,
+            "Identify the character's gender (male, female) and age bracket (child, teenager, young adult, middle-aged, elderly). Return exactly: 'gender, age bracket'.",
+            'voice_profile')
+        
+        gender, age = [item.strip().lower() for item in voice_data.split(',')]
         voice_profile = voice_prompt(gender, age)
-
+        
         wav_path = os.path.splitext(ref)[0] + '.wav'
-        script += f"audio | {voice_label} | {wav_path} | {char_label} | {','.join(voice_profile)}\n"
+        script += f"audio | voice_{ndx} | {wav_path} | {label} | {','.join(voice_profile)}\n"
     
-    # --- CONTEXT ---
-    script += f"prompt | {prompt.replace('\n', ' ')}\n"
+    script += f"prompt | {prompt.replace(chr(10), ' ')}\n"
     script += f"soundscape | {translate_to_audio_prompt(bg_desc)}\n"
     
-    # --- SHOTS (Pass the actual First Frame image for Shot 1 grounding) ---
-    shots = expand_to_shots(prompt, bg_label, char_labels, duration, first_frame_path=ff)
+    shots = expand_to_shots(prompt, bg, char_labels, duration, first_frame_path=ff)
     script += shots + "\n"
     
     return script
