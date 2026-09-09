@@ -109,7 +109,7 @@ TOTAL_CHARACTERS: [actual count, maximum 3]"""
     - Do NOT merge similar-looking characters into one description
     - Focus on main characters, ignore background extras"""
         
-    result = AnalyzeImage(input_image, analysis_prompt)
+    result = AnalyzeImage(input_image, analysis_prompt, backend="smol")
     analysis = result['analysis']
     print(analysis)
     

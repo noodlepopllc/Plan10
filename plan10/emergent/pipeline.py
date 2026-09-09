@@ -16,6 +16,7 @@ MMH3 = os.environ.get("MMH3", "False") != "False"
 
 from plan10.emergent.vision import VisibilityChecker
 from plan10.emergent.director import Director
+from plan10.lib.image_analysis import AnalyzeMedia
 
 class Pipeline:
     def __init__(self, character_refs, output_dir, width, height, seed, visual_ids, scene_mode=False, goal=None):
