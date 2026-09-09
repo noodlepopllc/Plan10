@@ -59,6 +59,8 @@ For EACH character (up to 3), provide:
    - Bottom (color, style, fit - INFER if not visible)
    - Shoes/footwear (INFER if not visible)
    - Accessories (jewelry, bags, hats, etc.)
+   - Cleavage, Torn, Burnt, Form Fitting, etc
+   - Parts of the body that are exposed
 4. POSE: Current pose and orientation
 
 For the environment:
