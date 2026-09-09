@@ -205,7 +205,7 @@ def EnhancePrompt(image='', prompt='a beautiful woman', enhancer='', output=None
         backend = os.environ.get("VISION_BACKEND", "qwen").lower()
     
     if backend == "smol":
-        analysis = analyze_with_smol(image, prompt, temperature=0.5)
+        analysis = AnalyzeMedia(image, prompt, temperature=0.5)
         enhanced = f"{analysis}\n\nEnhancement instructions: {eprompt}"
         status = {'analysis': enhanced}
     else:
