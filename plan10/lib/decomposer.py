@@ -41,7 +41,7 @@ def analyze_scene(input_image: str, original_prompt: str = '', anime_mode: bool 
 
 Use the original prompt to help identify characters and environment details that might be ambiguous."""
     
-    result = AnalyzeImage(input_image, analysis_prompt, backend="smol")
+    result = AnalyzeImage(input_image, analysis_prompt, backend="")
     analysis = result['analysis']
     
     char_count = parse_character_count(analysis)
