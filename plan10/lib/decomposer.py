@@ -226,8 +226,6 @@ def generate_background(
     
     print(f"  ✓ Saved: {bg_output}")
     
-    env_desc = extract_environment_description(analysis)
-    
     return {
         'path': str(bg_output),
         'description': env_desc if env_desc else 'Clean background plate with people removed'
@@ -279,7 +277,7 @@ def decompose_scene(input_image: str, prompt: str, output_dir: str, seed: int = 
     print(f"🔍 Analyzing scene: {input_image}")
     
     # Step 1: Analyze the scene
-    scene_data = analyze_scene(input_image, anime_mode=ANIME)
+    scene_data = analyze_scene(input_image, original_prompt=prompt, anime_mode=ANIME)
     analysis = scene_data['analysis']
     char_count = scene_data['character_count']
     
@@ -403,7 +401,7 @@ def main():
 
     _, image = extract_frame(args.input, WIDTH, HEIGHT, 'first_frame.png', False)
 
-    original_prompt = args.prompt or prompt_metadata(image)
+    original_prompt = prompt_metadata(image)
     
     decompose_scene(
         input_image=image,
