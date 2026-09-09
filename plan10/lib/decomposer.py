@@ -90,18 +90,24 @@ POSITION: [location]
 APPEARANCE: [detailed description]
 CLOTHING: [complete outfit - visible AND inferred]
 POSE: [description]
+ART STYLE: [Art Style]
+THEME: [Theme]
 
 CHARACTER_2:
 POSITION: [location]
 APPEARANCE: [detailed description]
 CLOTHING: [complete outfit - visible AND inferred]
 POSE: [description]
+ART STYLE: [Art Style]
+THEME: [Theme]
 
 CHARACTER_3:
 POSITION: [location]
 APPEARANCE: [detailed description]
 CLOTHING: [complete outfit - visible AND inferred]
 POSE: [description]
+ART STYLE: [Art Style]
+THEME: [Theme]
 
 [Only include CHARACTER_2 and CHARACTER_3 if they exist and are prominent]
 
@@ -109,6 +115,8 @@ ENVIRONMENT:
 LOCATION: [description]
 ATMOSPHERE: [description]
 KEY ELEMENTS: [description]
+ART STYLE: [Art Style]
+THEME: [Theme]
 
 TOTAL_CHARACTERS: [actual count, maximum 3]"""
     
