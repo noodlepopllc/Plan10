@@ -228,7 +228,7 @@ def generate_background(
     
     return {
         'path': str(bg_output),
-        'description': env_desc if env_desc else 'Clean background plate with people removed'
+        'description': 'Clean background plate with people removed'
     }
 
 
