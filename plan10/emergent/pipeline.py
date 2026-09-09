@@ -187,7 +187,7 @@ class Pipeline:
         
         print(f"\n{'='*60}\nBEAT {beat_count + 1}\n{'='*60}")
 
-        current_media = create_lastframe(current_media, beat_count)
+        current_media = self.create_lastframe(current_media, beat_count)
 
         # FIRST BEAT: Store initial media and animate directly
         if not history:
