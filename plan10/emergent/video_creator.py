@@ -90,7 +90,7 @@ def main():
                 input_image=current_media,
                 output_dir=args.output,
                 seed=args.seed,
-                minimal=MMH3
+                minimal=False #MMH3
             )
             for p in ['character_1.png', 'character_2.png']:
                 if Path(f'{args.output}/{p}').exists():

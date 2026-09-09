@@ -26,7 +26,6 @@ from plan10.lib.compositor import CompositeScene
 import json
 from pathlib import Path
 from plan10.lib.image_analysis import AnalyzeImage
-from functools import partial
 
 
 def decompose_scene(input_image, output_dir, seed=42, minimal=False):
@@ -151,7 +150,7 @@ TOTAL_CHARACTERS: [actual count, maximum 3]"""
                     output=str(char_output),
                     seed=seed + i,
                     imagegen=igen,
-                    override=(512,512)
+                    override=None#(512,512)
                 )
 
             
