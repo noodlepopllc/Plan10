@@ -407,13 +407,11 @@ However, CHARACTER IDENTITY (facial features, clothing details, body proportions
 async def send(prompt, images, audio, output='output.mp4', width=768, height=448, duration=5.0, steps=4):
     async with Client("http://localhost:7866/mcp") as client:
 
-        model = "minimax_h3_ref2va_pruned"
+        model = "minimax_h3_ref2va_pruned_pdd"
 
         r = await client.call_tool("wangp_get_default_settings", {"model_type":model})
         results = json.dumps(r.data, indent=4)
         args = r.data
-        args["activated_loras"] = ["minimax_h3_larryvrh_v4_step600_ema.safetensors"]
-        args["loras_multipliers"] = "1.0|"
         args['output_filename'] = output
         args['prompt'] = prompt
         args['image_refs'] = images
@@ -425,7 +423,7 @@ async def send(prompt, images, audio, output='output.mp4', width=768, height=448
                 args["audio_guide2"] = audio.pop()
         args["video_prompt_type"] = "I"
         args["multi_prompts_gen_type"] = "FG"
-        args["num_inference_steps"] = steps
+        args["num_inference_steps"] = 8
         args["guidance_scale"] = 1
         args["guidance2_scale"] = 5
         args["guidance3_scale"] = 5

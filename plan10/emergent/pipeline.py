@@ -257,7 +257,7 @@ class Pipeline:
         cached_bg_desc = get_cached_desc(current_bg, 'bg_desc')
         cached_ff_desc = get_cached_desc(current_media, 'ff_desc')
         
-        decision = director.compare_and_decide(
+        decision = direct.compare_and_decide(
             intended_action=last_action,
             actual_reality=actual_reality,
             story_context=story_context,
