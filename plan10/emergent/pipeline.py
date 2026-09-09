@@ -55,7 +55,7 @@ class Pipeline:
             else:
                 last_frame = Image.open(media_path)
             last_frame.save(str(last_frame_path))
-        return last_frame_path
+        return str(last_frame_path)
         
     def recreate_frame(self, media_path, bg_path, current_state, beat_num):
         """Recreate frame by analyzing background, generating description, creating fresh background, then compositing."""
@@ -209,7 +209,7 @@ class Pipeline:
             video_job = {
                 "beat": beat_count + 1,
                 "prompt": video_prompt,
-                "input_media": current_media,
+                "input_media": str(current_media),
                 "output_path": str(output_path),
                 "seed": self.seed + beat_count,
                 "status": "pending"
@@ -370,7 +370,7 @@ class Pipeline:
         video_job = {
             "beat": beat_count + 1,
             "prompt": video_prompt,
-            "input_media": input_media,
+            "input_media": str(input_media),
             "output_path": str(output_path),
             "seed": self.seed + beat_count,
             "status": "pending"
