@@ -31,7 +31,7 @@ def get_or_create_visual_id(character_image: str) -> str:
         visual_id = profile.get_visual_id(0)
         
         # Cache it
-        metadata = load_metadata(character_image)
+        metadata = load_metadata(img)
         for key, value in img.info.items():
             if isinstance(value, str):
                 metadata.add_text(key, value)
