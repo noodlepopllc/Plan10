@@ -263,7 +263,7 @@ class Pipeline:
             story_context=story_context,
             history=history,
             pending_setup=pending_setup,
-            goal=goal,
+            goal=self.goal,
             force_transition=needs_transition,
             location_constraint=None,
             bg_desc=cached_bg_desc,  # <-- Add this
