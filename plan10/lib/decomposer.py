@@ -76,7 +76,8 @@ For EACH character (up to 3), provide:
    - Cleavage, Torn, Burnt, Form Fitting, etc
    - Parts of the body that are exposed
 4. POSE: Current pose and orientation
-5. STYLE: Art style (photorealistic, anime, etc)
+5. ART STYLE: (photorealistic, anime, etc)
+6. THEME: (gothic, cyber punk, sci-fi, western, modern, etc.)
 
 For the environment:
 - LOCATION: Type of location
