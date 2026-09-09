@@ -17,6 +17,7 @@ MMH3 = os.environ.get("MMH3", "False") != "False"
 from plan10.emergent.vision import VisibilityChecker
 from plan10.emergent.director import Director
 from plan10.lib.image_analysis import AnalyzeMedia
+from plan10.lib.util import video_to_img
 
 from PIL import Image
 
@@ -24,6 +25,7 @@ def get_cached_desc(image_path: str, cache_key: str) -> str:
     """Read cached description from image metadata."""
     if not image_path or not os.path.exists(image_path):
         return ""
+    
     img = Image.open(image_path)
     cached = img.info.get(cache_key, "")
     img.close()
@@ -40,20 +42,25 @@ class Pipeline:
         self.scene_mode = scene_mode
         self.goal = goal
         self.initial_media = None
+
+    def create_lastframe(self, media_path, beat_num):
+        last_frame_path = self.output_dir / f"last_frame_{beat_num:03d}.png"
+        if not Path(last_frame_path).exists():
+            media_path = Path(media_path)
+            ext = media_path.suffix.lower()
+            
+            # Step 1: Extract last frame if video
+            if ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm']:
+                last_frame = video_to_img(str(media_path), self.width, self.height, True, True)
+            else:
+                last_frame = Image.open(media_path)
+            last_frame.save(str(last_frame_path))
+        return last_frame_path
         
     def recreate_frame(self, media_path, bg_path, current_state, beat_num):
         """Recreate frame by analyzing background, generating description, creating fresh background, then compositing."""
-        media_path = Path(media_path)
-        ext = media_path.suffix.lower()
-        
-        # Step 1: Extract last frame if video
-        if ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm']:
-            last_frame = video_to_img(str(media_path), self.width, self.height, True, True)
-        else:
-            last_frame = Image.open(media_path)
-        
-        last_frame_path = self.output_dir / f"last_frame_{beat_num:03d}.png"
-        last_frame.save(str(last_frame_path))
+
+        last_frame_path = create_lastframe(media_path, beat_num)
         
         # Step 2: Analyze the background/environment to create a description
         print(f"  → Analyzing background environment...")
@@ -179,6 +186,8 @@ class Pipeline:
         """Executes one creative step. Returns updated state dict with video job queued."""
         
         print(f"\n{'='*60}\nBEAT {beat_count + 1}\n{'='*60}")
+
+        current_media = create_lastframe(current_media, beat_count)
 
         # FIRST BEAT: Store initial media and animate directly
         if not history:
