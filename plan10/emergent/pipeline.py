@@ -260,7 +260,6 @@ class Pipeline:
             bg_desc=cached_bg_desc,  # <-- Add this
             ff_desc=cached_ff_desc   # <-- Add this
         )
-        )
         
         # 4. Parse decision with NEW 10-value signature
         match, issues, location, characters, next_action, camera_framing, setup, goal_progress, scene_transition, new_location = direct.parse_decision(decision)
