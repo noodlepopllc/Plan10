@@ -44,7 +44,23 @@ def compare_and_decide(self, intended_action, actual_reality, story_context, his
         pending_setup, goal, force_transition, location_constraint,
         bg_desc, ff_desc  # <-- Pass through
     )
+
+    def _clean_analysis(self, raw_analysis):
+        lines = raw_analysis.split('\n')
+        clean_lines = []
         
+        skip_keywords = ['analysis', 'discrepancies', 'issues', 'unexpected', 'summary', 'based on image', 'based on video']
+        
+        for line in lines:
+            line = line.strip()
+            if not line:
+                continue
+            if any(keyword in line.lower() for keyword in skip_keywords):
+                continue
+            clean_lines.append(line)
+        
+        return ' '.join(clean_lines)
+            
 
     def compare_and_decide_dialog(self, intended_action, actual_reality, story_context, history, pending_setup, goal=None, force_transition=False, 
                               location_constraint=None, bg_desc=None, ff_desc=None):
