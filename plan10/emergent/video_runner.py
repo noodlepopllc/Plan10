@@ -2,6 +2,7 @@ import sys
 import argparse
 from pathlib import Path
 import os, traceback
+from PIL import Image  # Added for image resizing
 
 from plan10.lib.config import load_environ
 load_environ()
@@ -228,8 +229,38 @@ def main():
     refs = state.get('character_refs', [])
     initial = state.get('initial_media', '')
     bg = state.get('current_bg')
-    output_dir = state.get('output_dir')
+    output_dir = state.get('output_dir') or args.output
     
+    # --- MEMORY OPTIMIZATION FOR MMH3 ---
+    if MMH3:
+        os.makedirs(output_dir, exist_ok=True)
+        # Fallback for older Pillow versions that don't have Image.Resampling
+        resample_filter = getattr(Image, 'Resampling', Image).LANCZOS 
+        
+        # Resize background to target video resolution (e.g., 768x448)
+        if bg and os.path.exists(bg):
+            bg_img = Image.open(bg).convert("RGB")
+            bg_img = bg_img.resize((WIDTH, HEIGHT), resample_filter)
+            bg_resized = os.path.join(output_dir, "resized_bg.png")
+            bg_img.save(bg_resized)
+            bg_img.close()
+            bg = bg_resized
+            
+        # Resize character references to 512x512
+        resized_refs = []
+        for i, ref in enumerate(refs):
+            if ref and os.path.exists(ref):
+                ref_img = Image.open(ref).convert("RGB")
+                ref_img = ref_img.resize((512, 512), resample_filter)
+                ref_resized = os.path.join(output_dir, f"resized_ref_{i}.png")
+                ref_img.save(ref_resized)
+                ref_img.close()
+                resized_refs.append(ref_resized)
+            else:
+                resized_refs.append(ref)
+        refs = resized_refs
+    # ------------------------------------
+
     # Find the first pending job
     pending_job = None
     for job in video_queue:
@@ -260,7 +291,7 @@ def main():
                 start_image = media.pop(0)
             elif media:
                 start_image = to_absolute(media)
-            current_source = video_to_img(start_image, 768, 448, True, True)
+            current_source = video_to_img(start_image, WIDTH, HEIGHT, True, True)
             current_source.save('tmp.png')
             current_source_path = f'{os.getcwd()}/tmp.png'
             script = h3_ref(bg, current_source_path, refs, prompt,  duration)

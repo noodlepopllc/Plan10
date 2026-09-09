@@ -62,7 +62,7 @@ For EACH character (up to 3), provide:
    - Cleavage, Torn, Burnt, Form Fitting, etc
    - Parts of the body that are exposed
 4. POSE: Current pose and orientation
-5. STYLE: Art style
+5. STYLE: Art style (photorealistic, anime, etc)
 
 For the environment:
 - LOCATION: Type of location
