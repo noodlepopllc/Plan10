@@ -251,7 +251,7 @@ class ImageGenKlein(object):
         if torch.cuda and torch.cuda.is_available():  # ✅ Was `if torch.cuda:` (always truthy)
             torch.cuda.empty_cache()
 
-if os.environ.get("IMAGE_GEN", "KLEIN") == "KLEIN":
+if "KLEIN" in os.environ.get("IMAGE_GEN", "KLEIN"):
     ImageGen = ImageGenKlein
 elif os.environ.get("IMAGE_GEN", "KLEIN") == "ZIMAGE":
     ImageGen = ImageGenZImage
