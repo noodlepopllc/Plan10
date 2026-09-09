@@ -28,14 +28,19 @@ from pathlib import Path
 from plan10.lib.image_analysis import AnalyzeImage
 
 
-def analyze_scene(input_image: str, anime_mode: bool = False) -> dict:
-    """
-    Analyze a scene image and return structured character/environment data.
-    
-    Returns:
-        dict with keys: 'analysis' (raw text), 'character_count' (int)
-    """
+def analyze_scene(input_image: str, original_prompt: str = '', anime_mode: bool = False) -> dict:
     analysis_prompt = build_analysis_prompt(anime_mode)
+    
+    if original_prompt:
+        analysis_prompt = f"""ORIGINAL IMAGE PROMPT (for context):
+{original_prompt}
+
+---
+
+{analysis_prompt}
+
+Use the original prompt to help identify characters and environment details that might be ambiguous."""
+    
     result = AnalyzeImage(input_image, analysis_prompt, backend="smol")
     analysis = result['analysis']
     
@@ -221,9 +226,11 @@ def generate_background(
     
     print(f"  ✓ Saved: {bg_output}")
     
+    env_desc = extract_environment_description(analysis)
+    
     return {
         'path': str(bg_output),
-        'description': 'Clean background plate with people removed'
+        'description': env_desc if env_desc else 'Clean background plate with people removed'
     }
 
 
@@ -250,7 +257,7 @@ def save_manifest(
     return manifest_path
 
 
-def decompose_scene(input_image: str, output_dir: str, seed: int = 42, minimal: bool = False) -> dict:
+def decompose_scene(input_image: str, prompt: str, output_dir: str, seed: int = 42, minimal: bool = False) -> dict:
     """
     Decompose a scene into individual character sheets and background plate.
     
@@ -384,6 +391,7 @@ def extract_environment_description(analysis):
 
 def main():
     from plan10.lib.util import extract_frame
+    from plan10.lib.image_gen import prompt_metadata
     import argparse
     parser = argparse.ArgumentParser(description="Decompose scene into characters and background")
     parser.add_argument('-I', '--input', type=str, required=True, help="Input scene image")
@@ -394,9 +402,12 @@ def main():
     args = parser.parse_args()
 
     _, image = extract_frame(args.input, WIDTH, HEIGHT, 'first_frame.png', False)
+
+    original_prompt = args.prompt or prompt_metadata(image)
     
     decompose_scene(
         input_image=image,
+        prompt=original_prompt,
         output_dir=args.output,
         seed=args.seed,
         minimal=args.minimal
