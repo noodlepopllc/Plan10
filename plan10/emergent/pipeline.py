@@ -57,6 +57,8 @@ class Pipeline:
     - ATMOSPHERE: Weather, season, time period, overall feel
     - COLORS: Dominant color palette, materials, textures
     - DETAILS: Notable objects, decorations, props, environmental elements
+    - ART STYLE: Realistic, Anime, Illustrated, etc
+    - THEME: Cyberpunk, Western, Dark Ages, Modern, Sci-Fi, etc
 
     Focus on creating a description that could be used to recreate this exact environment without any people in it.
 
@@ -67,6 +69,8 @@ class Pipeline:
     ATMOSPHERE: [detailed description]
     COLORS: [detailed description]
     DETAILS: [detailed description]
+    ART STYLE: [detailed description]
+    THEME: [detailed description]
 
     COMBINED_DESCRIPTION: [combine all above into one flowing paragraph suitable for image generation]"""
         
