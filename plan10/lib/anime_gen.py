@@ -331,7 +331,18 @@ def GenerateImage(prompt='', output='tmp.png', width=WIDTH, height=HEIGHT, seed=
         )
         status['description'] = analysis['analysis']
     status['prompt'] = prompt
+    prompt_metadata(output, prompt)
     return status
+
+def prompt_metadata(imgpath, prompt=''):
+    target_image = Image.open(imgpath)
+    if prompt:
+        metadata = PngInfo()
+        metadata.add_text("GenerationPrompt", prompt)
+        target_image.save(imgpath, pnginfo=metadata)
+        return prompt
+    else:
+        return target_image.info.get("GenerationPrompt", "")
 
 def add_metadata_char(imgpath, prompt='', seed=-1):
     target_image = Image.open(imgpath)

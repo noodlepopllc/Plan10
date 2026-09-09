@@ -20,9 +20,9 @@ ANIME = os.environ.get('ANIME', 'False') != 'False'
 MMH3 = os.environ.get('MMH3', 'False') != 'False'
 
 if ANIME:
-    from plan10.lib.anime_gen import GenerateImage
+    from plan10.lib.anime_gen import GenerateImage, prompt_metadata
 else:
-    from plan10.lib.image_gen import GenerateImage
+    from plan10.lib.image_gen import GenerateImage, prompt_metadata
 
 def main():
     parser = argparse.ArgumentParser()
@@ -88,6 +88,7 @@ def main():
         if not refs:
             decompose_scene(
                 input_image=current_media,
+                prompt=prompt_metadata(current_media),
                 output_dir=args.output,
                 seed=args.seed,
                 minimal=False #MMH3
