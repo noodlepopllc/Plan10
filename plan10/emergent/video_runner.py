@@ -189,24 +189,30 @@ HARD CONSTRAINTS:
 6. Shot 1: Based on the VISUAL CONTEXT, describe ONLY the first subtle motion that initiates the scene. DO NOT re-describe the static scene.
 7. Dialogue format: character speaks [English] "exact words"
 8. Structure: [ambient sounds] -> [action] -> [dialogue if any] -> [cut]. Ambient sounds FIRST, dialogue LAST.
-9. If a shot has dialogue, describe a brief physical action AFTER the dialogue that signals the character has stopped speaking (e.g., "closes her mouth," "lowers her gaze," "returns to her stance"). This tells the model when to stop generating voice audio.
-10. Never split speaking action from dialogue across multiple shots.
-11. The LAST shot must be a medium shot showing the character(s) and environment. DO NOT end on a closeup.
-12. TEMPORAL CONTINUITY: Lighting, shadows, and weather must remain identical. Actions must flow continuously.
-13. CRITICAL DIALOGUE FRAMING: When a character speaks, the shot MUST be a closeup or medium closeup 
-    showing ONLY the speaking character. No other characters may be visible in the frame.
+9. DIALOGUE SHOT BREAKDOWN: Long dialogue MUST be broken into multiple shots. Each dialogue shot should contain NO MORE THAN 10-15 words of spoken text.
     
-    SETUP SHOT (no dialogue): Show both characters together. One character turns, reacts, or looks 
-    at the other. Establish the emotional beat.
+    SHOT STRUCTURE FOR DIALOGUE:
+    - SETUP SHOT: Character prepares to speak (turns, takes breath, expression changes). No dialogue.
+    - DIALOGUE SHOT 1: Closeup of speaker. First 10-15 words. Ends with brief pause action (pauses, blinks, shifts weight).
+    - DIALOGUE SHOT 2: Closeup of speaker. Next 10-15 words. Ends with brief pause action.
+    - REACTION SHOT: Cut to listener's reaction, or back to wider shot showing both characters.
     
-    DIALOGUE SHOT (closeup, speaker only): Cut to a closeup of ONLY the character who speaks. 
-    No other characters in frame. The character speaks, then a brief physical action signals 
-    the end of speech (closes mouth, looks away, jaw relaxes).
+    BAD: "Closeup of char1. char1 speaks [English] 'Then why'd you land in my camp? The ones with the collars? The ones that zap you if you run?'" (too long, no breaks)
     
-    BAD: "Medium shot. char1 looks at char2 and speaks [English] 'Hello'" (two characters in frame = ambiguous speaker)
-    GOOD: 
-      Shot A: "Medium shot. char1 turns to face char2, her expression hardening."
-      Shot B: "Closeup of char1 only. char1 speaks [English] 'Hello' then closes her mouth and looks away."
+    GOOD:
+    shot | Medium shot. char1 turns to face char2, her expression hardening. | 2.0
+    shot | Closeup of char1 only. char1 speaks [English] "Then why'd you land in my camp?" She pauses, jaw tightening. | 2.5
+    shot | Closeup of char1 only. char1 continues [English] "The ones with the collars?" Her voice drops lower. | 2.0
+    shot | Closeup of char1 only. char1 speaks [English] "The ones that zap you if you run?" She spits the words like a curse. | 2.5
+    shot | Medium shot. char2 flinches, eyes flicking to the smoke behind char1. | 2.0
+
+10. Each dialogue shot MUST include a physical action BEFORE the dialogue (prepares to speak) and AFTER the dialogue (pauses, blinks, shifts weight, looks away). This creates natural breathing room.
+
+11. Never put more than 15 words of dialogue in a single shot. If the dialogue is longer, break it into multiple shots with physical actions between each segment.
+
+12. The LAST shot must be a medium shot showing the character(s) and environment. DO NOT end on a closeup.
+
+13. TEMPORAL CONTINUITY: Lighting, shadows, and weather must remain identical. Actions must flow continuously between shots.
 
 EXAMPLE (DO NOT COPY THIS CONTENT, ONLY COPY THE FORMAT):
 shot | Wide shot. Absolute silence, then a low mechanical hum. char1 floats upside down and ejects a single glowing object in zero gravity. | 3.0
