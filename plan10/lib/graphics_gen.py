@@ -1,4 +1,5 @@
 from diffsynth.pipelines.ernie_image import ErnieImagePipeline, ModelConfig
+from diffsynth.pipelines.sensenova_u1_image import SenseNovaU1ImagePipeline, ModelConfig
 import torch, os, gc, random
 from typing import Dict, Any, Tuple
 from PIL import Image, ImageFilter
@@ -70,7 +71,7 @@ def _pad_to_video_frame(src_path: str, target_w: int, target_h: int, style: str 
 # ─────────────────────────────────────────────────────────────
 # GRAPHIC GENERATION PIPELINE
 # ─────────────────────────────────────────────────────────────
-class GraphicGen(object):
+class GraphicGenErnie(object):
     def __init__(self, vrlimit=14):
         if "VRAM" in os.environ:
             vrlimit = int(os.environ["VRAM"])
@@ -144,6 +145,69 @@ class GraphicGen(object):
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
 
+class GraphicGenSenseNova(object):
+    def __init__(self, vrlimit=14):
+        if "VRAM" in os.environ:
+            vrlimit = int(os.environ["VRAM"])
+            
+        vram_config = {
+            "offload_dtype": "disk",
+            "offload_device": "disk",
+            "onload_dtype": "disk",
+            "onload_device": "disk",
+            "preparing_dtype": torch.bfloat16,
+            "preparing_device": "cuda",
+            "computation_dtype": torch.bfloat16,
+            "computation_device": "cuda",
+        }
+
+        self.model_id = "SenseNova/SenseNova-U1.5-8B-MoT"
+        #self.model_id = "baidu/ERNIE-Image"
+
+        self.pipe = ErnieImagePipeline.from_pretrained(
+            torch_dtype=torch.bfloat16,
+            device="cuda",
+            model_configs=[
+                ModelConfig(model_id=self.model_id, origin_file_pattern="model*.safetensors", **vram_config),
+            ]
+            tokenizer_config=ModelConfig(model_id=self.model_id, origin_file_pattern="./"),,
+            vram_limit=vrlimit,
+        )
+
+        self.pipe.load_lora(self.pipe.dit, ModelConfig(model_id="SenseNova/SenseNova-U1.5-8B-MoT-LoRAs", origin_file_pattern="SenseNova-U1.5-8B-MoT-LoRA-8step.safetensors"))
+
+    def generate(self, prompt, output, width, height, seed):
+        import json
+        prompt = f'Anime Art Style, {prompt}' if ANIME else prompt
+        if seed == -1: 
+            seed = random.randint(0, 1000000)
+
+        image = self.pipe(
+            prompt=prompt,
+            seed=seed,
+            num_inference_steps=8,
+            cfg_scale=1.0,
+            height=height,
+            width=width,
+            shift=3.0
+        )
+        image.save(output)
+        os.utime(output, None)
+        
+        status = {"status": "success", "output_path": output, "prompt": prompt, "description": ''}
+        if os.environ.get('BATCH', 'True') == 'False':
+            analysis = AnalyzeImage(output, "Briefly describe this image, no more than 100 words")
+            status['description'] = analysis.get('analysis', '')
+            
+        return status
+
+    def __del__(self):
+        del self.pipe
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+
 # ─────────────────────────────────────────────────────────────
 # SCHEMA
 # ─────────────────────────────────────────────────────────────
@@ -182,7 +246,7 @@ def GenerateGraphicSchema():
             }
         }
     }
-
+GraphicGen = GraphicGenSenseNova
 def GenerateGraphic(prompt='', output='tmp_graphic.png', width=1024, height=1024, seed=SEED, target_video_size='', padding_style='blur'):
     # 1. Enforce model constraints
     w, h = _resolve_resolution(width, height)
