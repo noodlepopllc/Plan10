@@ -213,30 +213,16 @@ def generate_background(
     bg_output = output_dir / "background.png"
 
     env_desc = extract_environment_description(analysis)
-    
-    '''
-    # Composite scene
-    CompositeScene(
-        background_path=input_image,
-        characters=[],
-        output=str(bg_tmp),
-        seed=seed,
-        width=768 if minimal else WIDTH,
-        height=448 if minimal else HEIGHT
-    )
-    '''
 
     # Inject the environment description so the model knows what to draw in the gaps
     edit_prompt = f"remove people from image. preserve the background environment exactly: {env_desc}. clean background plate, highly detailed background, no people."
     
-    # Remove people
-    tmp_img = Image.open(bg_tmp)
     EditImage(
         prompt=edit_prompt,
-        images=[str(input_image)],
+        images=[input_image],
         output=str(bg_output),
-        width=tmp_img.width,
-        height=tmp_img.height
+        width=768 if minimal else WIDTH,
+        height=448 if minimal else HEIGHT
     )
     
     add_metadata_loc(str(bg_output))
