@@ -168,10 +168,10 @@ class GraphicGenSenseNova(object):
             torch_dtype=torch.bfloat16,
             device="cuda",
             model_configs=[
-                ModelConfig(model_id=self.model_id, origin_file_pattern="model*.safetensors", **vram_config),
-            ]
-            tokenizer_config=ModelConfig(model_id=self.model_id, origin_file_pattern="./"),,
-            vram_limit=vrlimit,
+                ModelConfig(model_id=self.model_id, origin_file_pattern="model*.safetensors", **vram_config)
+            ],
+            tokenizer_config=ModelConfig(model_id=self.model_id, origin_file_pattern="./"),
+            vram_limit=vrlimit
         )
 
         self.pipe.load_lora(self.pipe.dit, ModelConfig(model_id="SenseNova/SenseNova-U1.5-8B-MoT-LoRAs", origin_file_pattern="SenseNova-U1.5-8B-MoT-LoRA-8step.safetensors"))
