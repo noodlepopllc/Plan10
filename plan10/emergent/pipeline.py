@@ -213,7 +213,7 @@ class Pipeline:
             video_job = {
                 "beat": beat_count + 1,
                 "prompt": video_prompt,
-                "input_media": str(current_media),
+                "input_media": current_media,
                 "output_path": str(output_path),
                 "seed": self.seed + beat_count,
                 "status": "pending"
@@ -226,7 +226,7 @@ class Pipeline:
             
             return {
                 "beat_count": beat_count + 1,
-                "current_media": str(current_media),
+                "current_media": current_media,
                 "history": new_history,
                 "pending_setup": setup,
                 "needs_transition": False,

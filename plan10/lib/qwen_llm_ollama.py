@@ -102,9 +102,12 @@ def _call_ollama(messages, max_tokens=8192, temperature=0.5, top_p=0.9, tools=No
             "seed": SEED
         }
     }
-    if thinking and '3.8' in OLLAMA_MODEL:
-        payload['options']["reasoning_effort"] = "low"
-        payload['options']["preserve_thinking"] = True
+    if '3.8' in OLLAMA_MODEL:
+        if thinking:
+            payload['think'] = "low"
+            payload['options']["preserve_thinking"] = True
+        if 'mtp' in OLLAMA_MODEL:
+            payload['options']['draft_num_predict'] = 1 if thinking else 2 
     if tools:
         payload["tools"] = tools
 
