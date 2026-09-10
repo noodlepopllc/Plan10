@@ -288,7 +288,91 @@ class ImageEditKlein(object):
         if torch.cuda and torch.cuda.is_available():  # ✅ Was `if torch.cuda:` (always truthy)
             torch.cuda.empty_cache()
 
+class ImageEditSenseNova(object):
+    def __init__(self,vrlimit=14):
+        if "VRAM" in os.environ:
+            vrlimit = int(os.environ["VRAM"])
+        self.vrlimit = vrlimit
+        self.pipe = None
+
+    def __enter__(self):
+        if not self.pipe:
+            vram_config = {
+                "offload_dtype": "disk",
+                "offload_device": "disk",
+                "onload_dtype": "disk",
+                "onload_device": "disk",
+                "preparing_dtype": torch.bfloat16,
+                "preparing_device": "cuda",
+                "computation_dtype": torch.bfloat16,
+                "computation_device": "cuda",
+            }
+
+            self.model_id = "SenseNova/SenseNova-U1.5-8B-MoT"
+            #self.model_id = "baidu/ERNIE-Image"
+
+            self.pipe = SenseNovaU1ImagePipeline.from_pretrained(
+                torch_dtype=torch.bfloat16,
+                device="cuda",
+                model_configs=[
+                    ModelConfig(model_id=self.model_id, origin_file_pattern="model*.safetensors", **vram_config)
+                ],
+                tokenizer_config=ModelConfig(model_id=self.model_id, origin_file_pattern="./"),
+                vram_limit=self.vrlimit
+            )
+
+            self.pipe.load_lora(self.pipe.dit, ModelConfig(model_id="SenseNova/SenseNova-U1.5-8B-MoT-LoRAs", origin_file_pattern="SenseNova-U1.5-8B-MoT-LoRA-8step.safetensors"))
+
+    def generate(self, prompt, output, width, height, seed):
+        if not self.pipe:
+            self.__enter__()
+        if seed == -1: 
+            seed = random.randint(0, 1000000)
+
+        edit_images = []
+
+        for item in images:
+            if isinstance(item, Image.Image):
+                # Already a PIL image → use directly
+                edit_images.append(item)
+            elif isinstance(item, str):
+                # File path → load it
+                edit_images.append(Image.open(item))
+            else:
+                raise TypeError(f"Unsupported image type: {type(item)}")
+
+        image = self.pipe(
+            prompt=prompt,
+            edit_image=edit_images,
+            seed=seed,
+            num_inference_steps=8,
+            cfg_scale=1.0,
+            height=height,
+            width=width,
+            shift=3.0
+        )
+        image.save(output)
+        os.utime(output, None)
+        
+        status = {"status": "success", "output_path": output, "prompt": prompt, "description": ''}
+        if os.environ.get('BATCH', 'True') == 'False':
+            analysis = AnalyzeImage(output, "Briefly describe this image, no more than 100 words")
+            status['description'] = analysis.get('analysis', '')
+            
+        return status
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.__del__()
+
+    def __del__(self):
+        del self.pipe
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
 if "KLEIN" in os.environ.get("IMAGE_EDIT", "KLEIN"):
+    ImageEdit = ImageEditKlein
+elif "SENSENOVA" in os.environ.get("IMAGE_EDIT", "KLEIN"):
     ImageEdit = ImageEditKlein
 else:
     ImageEdit = ImageEditQwen
