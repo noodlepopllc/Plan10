@@ -164,7 +164,7 @@ class GraphicGenSenseNova(object):
         self.model_id = "SenseNova/SenseNova-U1.5-8B-MoT"
         #self.model_id = "baidu/ERNIE-Image"
 
-        self.pipe = ErnieImagePipeline.from_pretrained(
+        self.pipe = SenseNovaU1ImagePipeline.from_pretrained(
             torch_dtype=torch.bfloat16,
             device="cuda",
             model_configs=[
