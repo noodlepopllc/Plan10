@@ -79,6 +79,18 @@ Be factual about what you see, not what was intended."""
     - Choose the next action (physical OR verbal) that logically progresses toward the goal
     - If the characters deviated from the intended path, adapt and find a new route to the goal
     - The goal should be completed within 3-5 beats
+
+    SCENE TRANSITION RULES:
+    - If the NEXT_ACTION describes characters physically moving TOWARD a destination 
+    (walking to the ship, entering a cave, heading east, running away), 
+    you MUST set SCENE_TRANSITION: YES and describe the NEW_LOCATION they arrive at.
+    - "Striding east toward the ship" = SCENE_TRANSITION: YES
+    - "Turns and walks away" = SCENE_TRANSITION: YES  
+    - "Stands still and talks" = SCENE_TRANSITION: NO
+    - "Takes a step forward" = SCENE_TRANSITION: NO (minor movement, same location)
+
+    When SCENE_TRANSITION is YES, NEW_LOCATION must describe the visual environment 
+    the characters arrive at in enough detail for background generation.
     """
         
         if not history:
@@ -108,8 +120,7 @@ Be factual about what you see, not what was intended."""
     CHARACTERS: [brief descriptions, including key visual identifiers like hair/clothing color]
     SCENE_TRANSITION: [YES/NO] - Is this an intentional cut to a NEW location/scene?
     NEW_LOCATION: [if YES, describe the new location in detail for background generation]
-    NEXT_ACTION: [1-2 sentences of story action. This CAN AND SHOULD include specific dialogue, comedic timing, or verbal reactions if it serves the goal (e.g., "The woman with red hair in a green shirt delivers a punchline while laughing").]
-    CAMERA_FRAMING: [1 sentence of strict visual direction: lens, angle, lighting, movement]
+    NEXT_ACTION: [2-3 sentences MAX. Describe the action and any dialogue. Do NOT describe environmental effects, sand textures, or atmospheric details - only character actions and speech. Keep it under 60 words.]
     SETUP: [what this sets up for the next beat]
     GOAL_PROGRESS: [how this action moves toward completing the goal]
     """
@@ -117,7 +128,7 @@ Be factual about what you see, not what was intended."""
         result = llm_analyze_media(
             media="", prompt=prompt,
             system="You are a film director and screenwriter specializing in comedic timing and character interaction. Every action (including dialogue, facial expressions, and physical comedy) must move toward the narrative goal while adapting to what actually happened. Use cinematic cuts to solve visibility issues.",
-            max_tokens=1024, temperature=0.7
+            max_tokens=2048, temperature=0.7
         )['analysis']
 
         print(f"\n=== RAW LLM OUTPUT ===\n{result}\n=== END RAW OUTPUT ===\n")
@@ -194,7 +205,7 @@ Be factual about what you see, not what was intended."""
         result = llm_analyze_media(
             media="", prompt=prompt,
             system="You are a film director and screenwriter. Every action must move toward the narrative goal while adapting to what actually happened. Use cinematic cuts to solve visibility issues.",
-            max_tokens=1024, temperature=0.7
+            max_tokens=2048, temperature=0.7
         )['analysis']
 
         print(f"\n=== RAW LLM OUTPUT ===\n{result}\n=== END RAW OUTPUT ===\n")
