@@ -194,6 +194,8 @@ Be factual about what you see, not what was intended."""
             system="You are a film director and screenwriter. Every action must move toward the narrative goal while adapting to what actually happened. Use cinematic cuts to solve visibility issues.",
             max_tokens=300, temperature=0.7
         )['analysis']
+
+        print(f"\n=== RAW LLM OUTPUT ===\n{result}\n=== END RAW OUTPUT ===\n")
         
         return result.strip()
 
