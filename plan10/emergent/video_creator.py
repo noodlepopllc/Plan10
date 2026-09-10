@@ -155,16 +155,14 @@ def main():
         if Path(background).exists():
             current_bg = background
             tmp = Image.open(current_media)
-            tmp, _ = resize_image(tmp, max(WIDTH, HEIGHT), aspect_ratio=WIDTH/HEIGHT)
+            tmp, _ = resize_image(tmp, max(WIDTH, HEIGHT), aspect_ratio=WIDTH/HEIGHT, return_pil=True)
             current_media = current_media.replace('.png','_resized.png')
             tmp.save(current_media)
-            #current_media = pipeline.recreate_frame(background, background, context, 0)
         else:
             tmp = Image.open(current_media)
-            tmp, _ = resize_image(tmp, max(WIDTH, HEIGHT), aspect_ratio=WIDTH/HEIGHT)
+            tmp, _ = resize_image(tmp, max(WIDTH, HEIGHT), aspect_ratio=WIDTH/HEIGHT, return_pil=True)
             current_media = current_media.replace('.png','_resized.png')
             tmp.save(current_media)
-            #current_media = pipeline.recreate_frame(current_media, background, context, 0)
     
     # Execute ONE creative step
     try:

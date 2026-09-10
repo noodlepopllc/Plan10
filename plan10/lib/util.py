@@ -156,9 +156,10 @@ def extract_frame(media_path, width, height, output_path=None, last_frame=True):
         img = Image.open(media_path)
         return img, media_path
 
-def resize_image(img, max_dim=640, aspect_ratio=None):
+def resize_image(img, max_dim=640, aspect_ratio=None, return_pil=False):
     """Resizes image keeping aspect ratio so the largest side is max_dim.
-    If aspect_ratio is provided (e.g., 16/9), crops to that ratio first."""
+    If aspect_ratio is provided (e.g., 16/9), crops to that ratio first.
+    If return_pil=True, returns PIL Image instead of numpy array."""
     
     if isinstance(img, Image.Image):
         img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
@@ -182,9 +183,16 @@ def resize_image(img, max_dim=640, aspect_ratio=None):
     
     # Resize to max_dim
     if max(h, w) <= max_dim:
-        return img, 1.0
+        result = img
+        scale = 1.0
+    else:
+        scale = max_dim / float(max(h, w))
+        new_w, new_h = int(w * scale), int(h * scale)
+        result = cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_AREA)
     
-    scale = max_dim / float(max(h, w))
-    new_w, new_h = int(w * scale), int(h * scale)
-    return cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_AREA), scale
+    # Convert back to PIL if requested
+    if return_pil:
+        result = Image.fromarray(cv2.cvtColor(result, cv2.COLOR_BGR2RGB))
+    
+    return result, scale
 
