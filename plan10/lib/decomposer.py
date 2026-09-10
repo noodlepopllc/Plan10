@@ -196,6 +196,7 @@ def generate_character_sheets(
 
 def generate_background(
     input_image: str, 
+    analysis: str,
     output_dir: Path, 
     seed: int, 
     minimal: bool = False
@@ -210,6 +211,8 @@ def generate_background(
     
     bg_tmp = output_dir / "tmp_background.png"
     bg_output = output_dir / "background.png"
+
+    env_desc = extract_environment_description(analysis)
     
     # Composite scene
     CompositeScene(
@@ -220,11 +223,14 @@ def generate_background(
         width=768 if minimal else WIDTH,
         height=448 if minimal else HEIGHT
     )
+
+    # Inject the environment description so the model knows what to draw in the gaps
+    edit_prompt = f"remove people from image. preserve the background environment exactly: {env_desc}. clean background plate, highly detailed background, no people."
     
     # Remove people
     tmp_img = Image.open(bg_tmp)
     EditImage(
-        prompt='remove people from image',
+        prompt=edit_prompt,
         images=[str(bg_tmp)],
         output=str(bg_output),
         width=tmp_img.width,
@@ -302,6 +308,7 @@ def decompose_scene(input_image: str, prompt: str, output_dir: str, seed: int = 
     # Step 3: Generate background
     background = generate_background(
         input_image=input_image,
+        analysis=analysis,
         output_dir=output_dir,
         seed=seed,
         minimal=minimal
