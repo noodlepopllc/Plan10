@@ -156,12 +156,31 @@ def extract_frame(media_path, width, height, output_path=None, last_frame=True):
         img = Image.open(media_path)
         return img, media_path
 
-def resize_image(img, max_dim=640):
-    """Resizes image keeping aspect ratio so the largest side is max_dim."""
+def resize_image(img, max_dim=640, aspect_ratio=None):
+    """Resizes image keeping aspect ratio so the largest side is max_dim.
+    If aspect_ratio is provided (e.g., 16/9), crops to that ratio first."""
+    
     if isinstance(img, Image.Image):
         img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-        
+    
     h, w = img.shape[:2]
+    
+    # Crop to target aspect ratio if specified
+    if aspect_ratio is not None:
+        current_ratio = w / h
+        if current_ratio > aspect_ratio:
+            # Too wide, crop width
+            new_w = int(h * aspect_ratio)
+            left = (w - new_w) // 2
+            img = img[:, left:left + new_w]
+        else:
+            # Too tall, crop height
+            new_h = int(w / aspect_ratio)
+            top = (h - new_h) // 2
+            img = img[top:top + new_h, :]
+        h, w = img.shape[:2]
+    
+    # Resize to max_dim
     if max(h, w) <= max_dim:
         return img, 1.0
     

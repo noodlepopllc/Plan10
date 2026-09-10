@@ -150,12 +150,21 @@ def main():
         scene_mode=scene_mode, goal=goal)
     pipeline.initial_media = initial
     if first_run and not args.scene_mode:
+        from plan10.lib.util import resize_image
         background = f'{args.output}/background.png'
         if Path(background).exists():
             current_bg = background
-            current_media = pipeline.recreate_frame(background, background, context, 0)
+            tmp = Image.open(current_media)
+            tmp, _ = resize_image(tmp, max(WIDTH, HEIGHT), aspect_ratio=WIDTH/HEIGHT)
+            current_media = current_media.replace('.png','_resized.png')
+            tmp.save(current_media)
+            #current_media = pipeline.recreate_frame(background, background, context, 0)
         else:
-            current_media = pipeline.recreate_frame(current_media, background, context, 0)
+            tmp = Image.open(current_media)
+            tmp, _ = resize_image(tmp, max(WIDTH, HEIGHT), aspect_ratio=WIDTH/HEIGHT)
+            current_media = current_media.replace('.png','_resized.png')
+            tmp.save(current_media)
+            #current_media = pipeline.recreate_frame(current_media, background, context, 0)
     
     # Execute ONE creative step
     try:
