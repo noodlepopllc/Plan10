@@ -154,8 +154,7 @@ def generate_character_sheets(
     analysis: str, 
     char_count: int, 
     output_dir: Path, 
-    seed: int, 
-    minimal: bool = False
+    seed: int
 ) -> list:
     """
     Generate character sheets for each detected character.
@@ -172,14 +171,11 @@ def generate_character_sheets(
             char_desc = extract_character_description(analysis, i)
             char_output = output_dir / f"character_{i}.png"
             
-            override = (512, 512) if minimal else None
-            
             status = CreateCharacterSheet(
                 prompt=char_desc,
                 output=str(char_output),
                 seed=seed + i,
-                imagegen=igen,
-                override=override
+                imagegen=igen
             )
             
             characters.append({
@@ -198,8 +194,7 @@ def generate_background(
     input_image: str, 
     analysis: str,
     output_dir: Path, 
-    seed: int, 
-    minimal: bool = False
+    seed: int
 ) -> dict:
     """
     Generate a clean background plate by compositing and removing people.
@@ -216,13 +211,15 @@ def generate_background(
 
     # Inject the environment description so the model knows what to draw in the gaps
     edit_prompt = f"remove people from image. preserve the background environment exactly: {env_desc}. clean background plate, highly detailed background, no people."
+
+    tmp = Image.open(input_image)
     
     EditImage(
         prompt=edit_prompt,
         images=[input_image],
         output=str(bg_output),
-        width=768 if minimal else 1920,
-        height=448 if minimal else 1080
+        width=tmp.width,
+        height=tmp.height
     )
     
     add_metadata_loc(str(bg_output))
@@ -258,7 +255,7 @@ def save_manifest(
     return manifest_path
 
 
-def decompose_scene(input_image: str, prompt: str, output_dir: str, seed: int = 42, minimal: bool = False) -> dict:
+def decompose_scene(input_image: str, prompt: str, output_dir: str, seed: int = 42) -> dict:
     """
     Decompose a scene into individual character sheets and background plate.
     
@@ -269,7 +266,6 @@ def decompose_scene(input_image: str, prompt: str, output_dir: str, seed: int = 
         input_image: Path to scene image
         output_dir: Directory to save extracted assets
         seed: Random seed for generation
-        minimal: Use minimal resolution for faster processing
         
     Returns:
         dict with paths to generated assets and metadata
@@ -289,8 +285,7 @@ def decompose_scene(input_image: str, prompt: str, output_dir: str, seed: int = 
         analysis=analysis,
         char_count=char_count,
         output_dir=output_dir,
-        seed=seed,
-        minimal=minimal
+        seed=seed
     )
     
     # Step 3: Generate background
@@ -298,8 +293,7 @@ def decompose_scene(input_image: str, prompt: str, output_dir: str, seed: int = 
         input_image=input_image,
         analysis=analysis,
         output_dir=output_dir,
-        seed=seed,
-        minimal=minimal
+        seed=seed
     )
     
     # Step 4: Save manifest
@@ -399,7 +393,6 @@ def main():
     parser.add_argument('-I', '--input', type=str, required=True, help="Input scene image")
     parser.add_argument('-O', '--output', type=str, required=True, help="Output directory")
     parser.add_argument('-S', '--seed', type=int, default=42, help="Random seed")
-    parser.add_argument('-M', '--minimal', action='store_true', help="Generate smaller images for minimax references")
     
     args = parser.parse_args()
 
@@ -412,7 +405,6 @@ def main():
         prompt=original_prompt,
         output_dir=args.output,
         seed=args.seed,
-        minimal=args.minimal
     )
 
 if __name__ == "__main__":
