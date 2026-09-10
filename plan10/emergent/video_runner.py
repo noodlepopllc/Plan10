@@ -303,8 +303,8 @@ def main():
         if MMH3:
             from plan10.lib.director_mmh3 import get_builder
             media = pending_job['input_media']
-            if isinstance(media, list) and len(media):
-                start_image = media.pop(0)
+            if isinstance(media, (list, tuple)) and len(media):
+                start_image = media[0]
             elif media:
                 start_image = to_absolute(media)
             current_source = video_to_img(start_image, WIDTH, HEIGHT, True, True)
