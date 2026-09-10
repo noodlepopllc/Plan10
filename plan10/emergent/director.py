@@ -120,7 +120,7 @@ Be factual about what you see, not what was intended."""
     CHARACTERS: [brief descriptions, including key visual identifiers like hair/clothing color]
     SCENE_TRANSITION: [YES/NO] - Is this an intentional cut to a NEW location/scene?
     NEW_LOCATION: [if YES, describe the new location in detail for background generation]
-    NEXT_ACTION: [2-3 sentences MAX. Describe the action and any dialogue. Do NOT describe environmental effects, sand textures, or atmospheric details - only character actions and speech. Keep it under 60 words.]
+    NEXT_ACTION: [2-3 sentences describing character actions and dialogue. Dialogue should be vivid and character-specific. DO NOT describe environmental effects, ground textures, atmospheric details, or visual metaphors - only what characters DO and SAY. The video model already sees the environment.]
     SETUP: [what this sets up for the next beat]
     GOAL_PROGRESS: [how this action moves toward completing the goal]
     """
