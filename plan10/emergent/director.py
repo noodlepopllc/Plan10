@@ -238,15 +238,34 @@ Be factual about what you see, not what was intended."""
     def _clean_analysis(self, raw_analysis):
         lines = raw_analysis.split('\n')
         clean_lines = []
+        in_code_block = False
         
-        skip_keywords = ['analysis', 'discrepancies', 'issues', 'unexpected', 'summary', 'based on image', 'based on video']
+        # Removed 'issues' and 'analysis' so we don't delete our own output keys
+        skip_keywords = ['discrepancies', 'unexpected', 'summary', 'based on image', 'based on video']
         
         for line in lines:
-            line = line.strip()
-            if not line:
+            stripped = line.strip()
+            if not stripped:
                 continue
-            if any(keyword in line.lower() for keyword in skip_keywords):
+            
+            # Handle markdown code blocks that LLMs ignore instructions and add anyway
+            if stripped.startswith("```"):
+                in_code_block = not in_code_block
                 continue
-            clean_lines.append(line)
+            
+            if in_code_block:
+                continue
+                
+            # Only skip if it's purely conversational filler, not if it contains our keys
+            is_filler = any(keyword in stripped.lower() for keyword in skip_keywords)
+            is_our_key = stripped.upper().startswith(("MATCH:", "ISSUES:", "LOCATION:", "CHARACTERS:", 
+                                                      "SCENE_TRANSITION:", "NEW_LOCATION:", "NEXT_ACTION:", 
+                                                      "CAMERA_FRAMING:", "SETUP:", "GOAL_PROGRESS:"))
+            
+            if is_filler and not is_our_key:
+                continue
+                
+            clean_lines.append(stripped)
         
-        return ' '.join(clean_lines)
+        # PRESERVE NEWLINES so parse_decision can split them correctly
+        return '\n'.join(clean_lines)

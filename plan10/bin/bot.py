@@ -118,10 +118,12 @@ def main():
         current_assets = ctx.get("assets", {})
         clean_lower = clean_prompt.lower()
         import re
-        relevant_assets = {
-            k: v for k, v in current_assets.items()
-            if re.search(rf'\b{re.escape(k.lower())}\b', clean_lower) or k == target_alias or k.startswith('bg') or k.startswith('char')
-        }
+        # A cleaner, token-safe string boundary check for complex file or asset names
+        relevant_assets = {}
+        for k, v in current_assets.items():
+            pattern = rf'(?:^|[\s$.,;:!?()"-]){re.escape(k.lower())}(?:$|[\s$.,;:!?()"-])'
+            if re.search(pattern, clean_lower) or k == target_alias or k.startswith('bg') or k.startswith('char'):
+                relevant_assets[k] = v
 
         print("RELEVANT ASSETS: ", [x for x in relevant_assets.keys()])
 
