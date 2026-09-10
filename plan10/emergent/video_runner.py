@@ -262,7 +262,10 @@ def main():
         # Resize background to target video resolution (e.g., 768x448)
         if bg and os.path.exists(bg):
             bg_img = Image.open(bg).convert("RGB")
-            bg_img = bg_img.resize((768, 448), resample_filter)
+            if bg.width > bg.height:
+                bg_img = bg_img.resize((768, 448), resample_filter)
+            else:
+                bg_img = bg_img.resize((448, 768), resample_filter)
             bg_resized = os.path.join(output_dir, "resized_bg.png")
             bg_img.save(bg_resized)
             bg_img.close()
