@@ -340,10 +340,11 @@ class Pipeline:
                     needs_transition = False
                     
                 else:
-                    print("  → Unintended loss of visibility. Recreating frame...")
-                    current_state = f"{' and '.join([x for x in self.visual_ids])} is now visible in the scene, facing the camera in a frontal or 3/4 view."
-                    current_media, current_bg = recreate(current_media, current_bg, current_state, beat_count)
-                    needs_transition = False
+                    if not MMH3:
+                        print("  → Unintended loss of visibility. Recreating frame...")
+                        current_state = f"{' and '.join([x for x in self.visual_ids])} is now visible in the scene, facing the camera in a frontal or 3/4 view."
+                        current_media, current_bg = recreate(current_media, current_bg, current_state, beat_count)
+                        needs_transition = False
 
         else:
             # scene_mode
