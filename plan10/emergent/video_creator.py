@@ -97,7 +97,10 @@ def main():
             sys.exit(-1)
             
         if not args.initial:
-            GenerateImage(prompt=args.prompt, output=f'{args.output}/improv.png', width=1920, height=1080, seed=args.seed)
+            if WIDTH > HEIGHT:
+                GenerateImage(prompt=args.prompt, output=f'{args.output}/improv.png', width=1920, height=1080, seed=args.seed)
+            else:
+                GenerateImage(prompt=args.prompt, output=f'{args.output}/improv.png', width=1080, height=1920, seed=args.seed)
             initial = f'{args.output}/improv.png'
             current_media = initial
         else:
