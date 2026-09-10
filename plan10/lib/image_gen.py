@@ -328,7 +328,7 @@ elif os.environ.get("IMAGE_GEN", "KLEIN") == "ZIMAGE":
     ImageGen = ImageGenZImage
 elif os.environ.get("IMAGE_GEN", "KLEIN") == "KREA2":
     ImageGen = ImageGenKrea2
-elif os.environ.get("IMAGE_GET", "KLEING") == "SENSENOVA":
+elif os.environ.get("IMAGE_GET", "KLEIN") == "SENSENOVA":
     ImageGen = ImageGenSenseNova
 else:
     ImageGen = ImageGenQwen
