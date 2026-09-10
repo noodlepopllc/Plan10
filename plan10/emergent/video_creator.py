@@ -172,7 +172,11 @@ def main():
             "pending_setup": pending_setup, "needs_transition": needs_transition,
             "character_refs": refs, "visual_ids": visual_ids,
             "video_queue": video_queue,
-            "output_dir": args.output, "width": args.width, "height": args.height, "seed": args.seed
+            "scene_mode": scene_mode,  # <-- missing
+            "output_dir": args.output, "width": args.width, "height": args.height, "seed": args.seed,
+            "initial_media": str(initial),  # <-- missing
+            "goal": goal,  # <-- missing
+            "duration": args.duration  # <-- missing
         })
         sys.exit(0)
     except Exception as e:
