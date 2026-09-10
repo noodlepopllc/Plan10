@@ -404,7 +404,7 @@ However, CHARACTER IDENTITY (facial features, clothing details, body proportions
         
         return "\n".join(sections)
 
-async def send(prompt, images, audio, output='output.mp4', width=768, height=448, duration=5.0, steps=4):
+async def send(prompt, images, audio, output='output.mp4', width=768, height=448, duration=5.0, steps=4, start_image=True, upscale=True):
     async with Client("http://localhost:7866/mcp") as client:
 
         model = "minimax_h3_ref2va_pruned_pdd"
@@ -414,13 +414,20 @@ async def send(prompt, images, audio, output='output.mp4', width=768, height=448
         args = r.data
         args['output_filename'] = output
         args['prompt'] = prompt
-        args['image_refs'] = images
         args["seed"] = SEED
         if len(audio):
             args["audio_prompt_type"] = "AB" if len(audio) == 2 else "A"
             args["audio_guide"] = audio.pop()
             if len(audio):
                 args["audio_guide2"] = audio.pop()
+        if start_image:
+            args["image_prompt_type"] = "S"
+            args["image_start"] = images[0]
+            args['image_refs'] = images[1:]
+        else:
+            args['image_refs'] = images
+        if upscale:
+            args["spatial_upsampling"] = "ltx25*2"
         args["video_prompt_type"] = "I"
         args["multi_prompts_gen_type"] = "FG"
         args["num_inference_steps"] = 8
