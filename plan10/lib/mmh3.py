@@ -574,6 +574,6 @@ def main():
     parser.add_argument('-P', '--prompt', type=str, default='remove text', help='Edit prompt')
     args = parser.parse_args()
     print(args)
-    print(compose_video(args.prompt,args.images, args.audio, args.output, args.width, args.output, args.height, args.duration))
+    print(compose_video(args.prompt,args.images, args.audio, args.output, args.width, args.height, args.duration))
 if __name__ == '__main__':
     main()
