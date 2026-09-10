@@ -338,7 +338,8 @@ def main():
                     width=WIDTH, 
                     height=HEIGHT, 
                     duration=builder.duration,
-                    steps=4 if args.fast else 8
+                    steps=8, 
+                    upscale=False
                 ))
             else:
                 from plan10.lib.mmh3 import compose_video
