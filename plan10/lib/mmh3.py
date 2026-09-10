@@ -474,7 +474,7 @@ f''' After speaking, <Subject 1> {prompt} They continue to move naturally for th
         raise
 
 def compose_video(prompt, images, audio, output='output.mp4', width=768, height=448, duration=5.0):
- try:
+    try:
         vram_limit = min(VRAM, 64)
         if vram_limit < 32:
             vram_config = {
