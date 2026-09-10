@@ -373,7 +373,7 @@ class ImageEditSenseNova(object):
 if "KLEIN" in os.environ.get("IMAGE_EDIT", "KLEIN"):
     ImageEdit = ImageEditKlein
 elif "SENSENOVA" in os.environ.get("IMAGE_EDIT", "KLEIN"):
-    ImageEdit = ImageEditKlein
+    ImageEdit = ImageEditSenseNova
 else:
     ImageEdit = ImageEditQwen
 
