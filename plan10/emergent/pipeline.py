@@ -182,7 +182,10 @@ class Pipeline:
         try:
             result = AnalyzeMedia(current_media, prompt)
             print("RESULT Location check", result)
-            return "YES" in result['analysis'].upper()
+            if isinstance(result, dict):
+                return "YES" in result['analysis'].upper()
+            else:
+                return "YES" in result.upper()
         except Exception as e:
             print(f"❌ Verify location change failed: {e}")
             traceback.print_exc()
