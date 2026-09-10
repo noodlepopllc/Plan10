@@ -323,7 +323,7 @@ class ImageEditSenseNova(object):
 
             self.pipe.load_lora(self.pipe.dit, ModelConfig(model_id="SenseNova/SenseNova-U1.5-8B-MoT-LoRAs", origin_file_pattern="SenseNova-U1.5-8B-MoT-LoRA-8step.safetensors"))
 
-    def generate(self, prompt, output, width, height, seed):
+    def generate(self, prompt, images, output, width, height, seed):
         if not self.pipe:
             self.__enter__()
         if seed == -1: 
