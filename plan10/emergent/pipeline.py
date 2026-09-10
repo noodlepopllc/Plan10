@@ -1,5 +1,5 @@
 from pathlib import Path
-import os
+import os, traceback
 from PIL import Image
 
 from plan10.lib.config import load_environ
@@ -179,19 +179,23 @@ class Pipeline:
 
     Respond with only YES or NO."""
         
-        result = AnalyzeMedia(current_media, prompt)['analysis']
-        return "YES" in result.upper()
+        try:
+            result = AnalyzeMedia(current_media, prompt)
+            print("RESULT Location check", result)
+            return "YES" in result['analysis'].upper()
+        except Exception as e:
+            print(f"❌ Verify location change failed: {e}")
+            traceback.print_exc()
+
 
     def execute_step(self, current_media, current_bg, story_context, beat_count, history, pending_setup, needs_transition):
         """Executes one creative step. Returns updated state dict with video job queued."""
         
         print(f"\n{'='*60}\nBEAT {beat_count + 1}\n{'='*60}")
 
-        current_media = self.create_lastframe(current_media, beat_count)
-
         # FIRST BEAT: Store initial media and animate directly
         if not history:
-            self.initial_media = current_media
+            self.initial_media = str(current_media)
             print("🎬 First beat - animating initial scene...")
             
             output_path = self.output_dir / f"beat_{beat_count+1:03d}.mp4"
@@ -222,7 +226,7 @@ class Pipeline:
             
             return {
                 "beat_count": beat_count + 1,
-                "current_media": current_media,
+                "current_media": str(current_media),
                 "history": new_history,
                 "pending_setup": setup,
                 "needs_transition": False,
@@ -252,6 +256,8 @@ class Pipeline:
             location_constraint = "Character must remain in the current room/location. All actions must be physically possible within this space. No transitions or location changes."
         else:
             location_constraint = None
+
+        current_media = self.create_lastframe(current_media, beat_count)
 
         # After you have current_media and current_bg:
         cached_bg_desc = get_cached_desc(current_bg, 'bg_desc')
