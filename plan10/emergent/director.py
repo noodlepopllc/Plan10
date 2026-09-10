@@ -117,7 +117,7 @@ Be factual about what you see, not what was intended."""
         result = llm_analyze_media(
             media="", prompt=prompt,
             system="You are a film director and screenwriter specializing in comedic timing and character interaction. Every action (including dialogue, facial expressions, and physical comedy) must move toward the narrative goal while adapting to what actually happened. Use cinematic cuts to solve visibility issues.",
-            max_tokens=300, temperature=0.7
+            max_tokens=1024, temperature=0.7
         )['analysis']
 
         print(f"\n=== RAW LLM OUTPUT ===\n{result}\n=== END RAW OUTPUT ===\n")
@@ -194,7 +194,7 @@ Be factual about what you see, not what was intended."""
         result = llm_analyze_media(
             media="", prompt=prompt,
             system="You are a film director and screenwriter. Every action must move toward the narrative goal while adapting to what actually happened. Use cinematic cuts to solve visibility issues.",
-            max_tokens=300, temperature=0.7
+            max_tokens=1024, temperature=0.7
         )['analysis']
 
         print(f"\n=== RAW LLM OUTPUT ===\n{result}\n=== END RAW OUTPUT ===\n")
