@@ -211,7 +211,7 @@ def generate_portraits(
             char_output = output_dir / f"portrait_{i}.png"
             
             status = GenerateImage(
-                prompt=f'A studio portrait of {char_desc}',
+                prompt=f'Close-up face portrait of {char_desc}, headshot, face only, centered, looking at camera, neutral background',
                 output=str(char_output),
                 width=1024,
                 height=1024,
