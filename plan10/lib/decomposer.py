@@ -189,8 +189,6 @@ def generate_character_sheets(
     
     return characters
 
-from PIL import Image
-
 def create_composite_reference(
     character_sheet_path: str,
     portrait_path: str,
@@ -222,13 +220,6 @@ def create_composite_reference(
     composite.save(output_path, quality=95)
     
     return composite
-
-# Usage
-composite = create_composite_reference(
-    character_sheet_path="output/character_sheet_1.png",
-    portrait_path="output/portrait_1.png",
-    output_path="output/composite_ref_1.png"
-)
 
 def generate_portraits(
     analysis: str, 
