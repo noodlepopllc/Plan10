@@ -359,7 +359,7 @@ def main():
                     width=WIDTH, 
                     height=HEIGHT, 
                     duration=builder.duration,
-                    steps=8, 
+                    steps=4 if args.fast else 8, 
                     upscale=False
                 ))
             else:
