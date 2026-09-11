@@ -671,8 +671,8 @@ def main():
         soundscape  | Ambient wind and soft acoustic guitar music.
         
         # --- SHOTS ---
-        shot | Sound of roosters, as The camera pushes in on blondie holding a treat and red stands beside her with her arms crossed 
-        shot | Sounds of a barking dog, Following shot The dog runs and jumps up to grab the treat from blondie. | 1
+        shot | Sound of roosters, as The camera pushes in on blondie holding a treat and red stands beside her with her arms crossed inside barn environment
+        shot | Sounds of a barking dog, Following shot The dog runs and jumps up to grab the treat from blondie inside barn environment | 1
         shot | Sounds of cows mooing, Camera pushes in on red as she speaks [English] "You spoil him." She finishes speaking standing with her mouth closed for a static shot.
         """
 
