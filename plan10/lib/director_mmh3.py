@@ -533,7 +533,8 @@ However, CHARACTER IDENTITY (facial features, clothing details, body proportions
 async def send(prompt, images, audio, output='output.mp4', width=768, height=448, duration=5.0, steps=4, start_image=True, upscale=False):
     async with Client("http://localhost:7866/mcp") as client:
 
-        model = "minimax_h3_ref2va_pruned_pdd"
+        #model = "minimax_h3_ref2va_pruned_pdd"
+        model = "minimax_h3_ref2va_pruned"
 
         r = await client.call_tool("wangp_get_default_settings", {"model_type":model})
         results = json.dumps(r.data, indent=4)
@@ -541,6 +542,8 @@ async def send(prompt, images, audio, output='output.mp4', width=768, height=448
         args['output_filename'] = output
         args['prompt'] = prompt
         args["seed"] = SEED
+        args["activated_loras"] = ["minimax_h3_larryvrh_v4_step600_ema.safetensors"]
+        args["loras_multipliers"] = "1.0|"
         if len(audio):
             args["audio_prompt_type"] = "AB" if len(audio) == 2 else "A"
             args["audio_guide"] = audio.pop()
@@ -556,7 +559,7 @@ async def send(prompt, images, audio, output='output.mp4', width=768, height=448
             args["spatial_upsampling"] = "ltx25*2"
         args["video_prompt_type"] = "I"
         args["multi_prompts_gen_type"] = "FG"
-        args["num_inference_steps"] = 8
+        args["num_inference_steps"] = steps
         args["guidance_scale"] = 1
         args["guidance2_scale"] = 5
         args["guidance3_scale"] = 5
