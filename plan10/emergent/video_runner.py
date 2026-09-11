@@ -343,7 +343,7 @@ def main():
                     height=HEIGHT, 
                     duration=builder.duration,
                     steps=8, 
-                    upscale=True
+                    upscale=False
                 ))
             else:
                 from plan10.lib.mmh3 import compose_video
