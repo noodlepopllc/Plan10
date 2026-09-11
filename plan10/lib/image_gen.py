@@ -333,9 +333,9 @@ elif os.environ.get("IMAGE_GEN", "KLEIN") == "SENSENOVA":
 else:
     ImageGen = ImageGenQwen
 
-def GenerateImage(prompt='', output='tmp.png', width=WIDTH, height=HEIGHT, seed=SEED):
+def GenerateImage(prompt='', output='tmp.png', width=WIDTH, height=HEIGHT, seed=SEED, imagegen=None):
     #prompt = EnhancePrompt('',prompt,'system/QwenImage.txt')['analysis']
-    gen = ImageGen()
+    gen = imagegen if imagegen else ImageGen()
     status = gen.generate(prompt, output, int(width), int(height), int(seed))
     del gen
     status['description'] = ''

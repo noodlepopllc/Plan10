@@ -311,8 +311,8 @@ elif ANIME == 'KLEIN':
 else:
     ImageGen = ImageGenKrea2
 
-def GenerateImage(prompt='', output='tmp.png', width=WIDTH, height=HEIGHT, seed=42):
-    gen = ImageGen()
+def GenerateImage(prompt='', output='tmp.png', width=WIDTH, height=HEIGHT, seed=42, imagegen=None):
+    gen = imagegen if imagegen else ImageGen()
     style_prefix = (
         "anime illustration, cel-shaded, flat colors, limited palette, "
         "clean lineart, manga-inspired, studio lighting, "

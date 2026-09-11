@@ -17,9 +17,9 @@ HEIGHT = int(os.environ.get("HEIGHT", "480"))
 SEED = int(os.environ.get("SEED", "-1"))
 
 if ANIME:
-    from plan10.lib.anime_gen import CreateCharacterSheet, CreateBackground, ImageGen, add_metadata_loc
+    from plan10.lib.anime_gen import CreateCharacterSheet, CreateBackground, ImageGen, add_metadata_loc, GenerateImage
 else:
-    from plan10.lib.image_gen import CreateCharacterSheet, CreateBackground, ImageGen, add_metadata_loc
+    from plan10.lib.image_gen import CreateCharacterSheet, CreateBackground, ImageGen, add_metadata_loc, GenerateImage
 
 from plan10.lib.compositor import CompositeScene
 
@@ -210,12 +210,13 @@ def generate_portraits(
             char_desc = extract_character_description(analysis, i)
             char_output = output_dir / f"portrait_{i}.png"
             
-            status = status = igen.generate(
+            status = GenerateImage(
                 prompt=f'A studio portrait of {char_desc}',
                 output=str(char_output),
                 width=1024,
                 height=1024,
                 seed=seed + i,
+                imagegen=igen
             )
             
             portraits.append({
