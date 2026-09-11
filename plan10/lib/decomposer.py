@@ -189,38 +189,6 @@ def generate_character_sheets(
     
     return characters
 
-def create_composite_reference(
-    character_sheet_path: str,
-    portrait_path: str,
-    output_path: str
-) -> Image.Image:
-    """
-    Combine character sheet and portrait into a single 1024x512 reference image.
-    Left side: character sheet (front/back views)
-    Right side: portrait
-    """
-    
-    # Create the canvas
-    composite = Image.new('RGB', (1024, 512), color='white')
-    
-    # Load images
-    sheet = Image.open(character_sheet_path)
-    portrait = Image.open(portrait_path)
-    
-    # Resize to fit each half (512x512)
-    # Using LANCZOS for high-quality downscaling
-    sheet_resized = sheet.resize((512, 512), Image.Resampling.LANCZOS)
-    portrait_resized = portrait.resize((512, 512), Image.Resampling.LANCZOS)
-    
-    # Paste into position
-    composite.paste(sheet_resized, (0, 0))      # Left side
-    composite.paste(portrait_resized, (512, 0))  # Right side
-    
-    # Save
-    composite.save(output_path, quality=95)
-    
-    return composite
-
 def generate_portraits(
     analysis: str, 
     char_count: int, 
@@ -309,7 +277,6 @@ def save_manifest(
     background: dict,
     characters: list,
     portraits: list,
-    combined: list,
     analysis: str,
     output_dir: Path
 ) -> Path:
@@ -320,7 +287,6 @@ def save_manifest(
         'environment_description': background['description'],
         'characters': characters,
         'portraits': portraits,
-        'combined': combined,
         'analysis': analysis
     }
     
@@ -379,19 +345,12 @@ def decompose_scene(input_image: str, prompt: str, output_dir: str, seed: int = 
         seed=seed
     )
     
-    combined = []
-    for x in range(len(characters)):
-        output_name = f'combined_{x}.png'
-        create_composite_reference(characters[x], portraits[x], output_name)
-        combined.append(output_name)
-    
     # Step 4: Save manifest
     manifest_path = save_manifest(
         source_image=input_image,
         background=background,
         characters=characters,
         portraits=portraits,
-        combined=combined,
         analysis=analysis,
         output_dir=output_dir
     )

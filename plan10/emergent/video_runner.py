@@ -259,8 +259,8 @@ def main():
     if MMH3:
         os.makedirs(output_dir, exist_ok=True)
         # Fallback for older Pillow versions that don't have Image.Resampling
+        '''
         resample_filter = getattr(Image, 'Resampling', Image).LANCZOS 
-        
         # Resize background to target video resolution (e.g., 768x448)
         if bg and os.path.exists(bg):
             bg_img = Image.open(bg).convert("RGB")
@@ -286,6 +286,7 @@ def main():
             else:
                 resized_refs.append(ref)
         refs = resized_refs
+        '''
     # ------------------------------------
 
     # Find the first pending job
