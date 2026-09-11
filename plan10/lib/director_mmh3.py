@@ -666,7 +666,7 @@ def main():
         shot | Sound of roosters, as The camera pushes on the inside of the barn. blondie is standing near the door holding a treat and red stands beside her with her arms crossed. | 2.0
         shot | Sounds of a barking dog, Following shot The dog runs into the barn and jumps up to grab the treat from blondie. | 2
         shot | Sounds of cows mooing, Camera pushes in on red | 1
-        shot | Closeup shot of red, red speaks, [English] You spoil him. | 2
+        shot | Closeup shot of red, red speaks, [English] "You spoil him." | 2
         """
 
     # Build and execute
