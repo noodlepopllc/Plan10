@@ -210,11 +210,12 @@ def generate_portraits(
             char_desc = extract_character_description(analysis, i)
             char_output = output_dir / f"portrait_{i}.png"
             
-            status = GenerateImage(
+            status = status = igen.generate(
                 prompt=f'A studio portrait of {char_desc}',
                 output=str(char_output),
+                width=1024,
+                height=1024,
                 seed=seed + i,
-                imagegen=igen
             )
             
             portraits.append({
