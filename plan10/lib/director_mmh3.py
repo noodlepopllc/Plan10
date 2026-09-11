@@ -656,7 +656,7 @@ def main():
         # audio | voice_b | audio/voice_sample.wav  | blondie | containing a spoken English vocal layer | female
         audio | voice_r | audio/voice_sample2.wav | red     | containing a spoken English vocal layer | female
 
-        portrait | blondie_port | images/blond_portrait.png | blondie | a blonde haired woman 
+        portrait | red_port | images/red_portrait.png | red | a red haired woman
         
         # --- SCENE CONTEXT ---
         prompt      | The target video uses a realistic cinematic style with warm golden hour lighting.
@@ -664,10 +664,8 @@ def main():
         
         # --- SHOTS ---
         shot | The camera pushes on the inside of the barn. blondie is standing near the door holding a treat. | 2.0
-        shot | The dog runs into the barn and jumps up to grab the treat from blondie.
-        shot | red walks over to blondie, red speaks, [English] You spoil him. | 2
-        shot | Closeup shot of blondie | 1
-        # shot | blondie speaks to dog [English] You are such a good boy! | 2.0
+        shot | The dog runs into the barn and jumps up to grab the treat from blondie. | 2
+        shot | Closeup shot of red, red speaks, [English] You spoil him. | 2
         """
 
     # Build and execute
