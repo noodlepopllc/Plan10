@@ -334,6 +334,60 @@ def GenerateImage(prompt='', output='tmp.png', width=WIDTH, height=HEIGHT, seed=
     prompt_metadata(output, prompt)
     return status
 
+def create_portrait(prompt='', reference='', output='character_tmp.png',
+                          seed=-1, imagegen=None):
+    """
+    Anime-optimized portrait generator.
+    Uses AnalyzeImage(reference) to extract face + hair identity cues
+    from the character sheet, then merges them into an anime-specific
+    headshot prompt.
+    """
+
+    igen = imagegen if imagegen else ImageGen()
+
+    # Analyze the sheet for anime identity cues
+    analysis_text = ""
+    if reference:
+        analysis_prompt = (
+            "Describe in a single, detailed sentence ONLY the anime-style facial "
+            "features, eye shape, eye color, hair style, hair length, and any "
+            "identity-defining details. Focus on stylized proportions, linework, "
+            "and color accents. Ignore background, clothing, and lighting."
+        )
+        result = AnalyzeImage(reference, analysis_prompt)
+        analysis_text = result.get('analysis', '').strip()
+        if analysis_text:
+            analysis_text = analysis_text[0].lower() + analysis_text[1:]
+
+    # Build anime portrait prompt
+    full_prompt = (
+        "Professional anime character reference portrait. Head and shoulders visible. "
+        "Front-facing, symmetrical anime facial proportions. Large expressive eyes with "
+        "sharp highlights. Clean cel-shaded linework. Soft gradient neutral background. "
+        "Studio-style even lighting. Highly detailed hair rendering with clear silhouette. "
+    )
+
+    if analysis_text:
+        full_prompt += (
+            "Match the anime identity described here: "
+            f"{analysis_text}. "
+        )
+
+    if prompt:
+        full_prompt += prompt
+
+    status = GenerateImage(
+        prompt=full_prompt,
+        output=str(output),
+        width=1024,
+        height=1024,
+        seed=seed,
+        imagegen=igen
+    )
+
+    return status
+
+
 def prompt_metadata(imgpath, prompt=''):
     target_image = Image.open(imgpath)
     if prompt:

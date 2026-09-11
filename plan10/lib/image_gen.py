@@ -356,6 +356,59 @@ def prompt_metadata(imgpath, prompt=''):
     else:
         return target_image.info.get("GenerationPrompt", "")
 
+def create_portrait(prompt='', reference='', output='character_tmp.png',
+                    seed=-1, imagegen=None):
+    """
+    Generates a portrait prompt by analyzing the character sheet (reference)
+    for facial features and hair, then integrating that analysis into a
+    detailed headshot prompt.
+    """
+
+    igen = imagegen if imagegen else ImageGen()
+
+    # If we have a reference sheet, analyze it for identity cues
+    analysis_text = ""
+    if reference:
+        analysis_prompt = (
+            "Describe in a single, detailed sentence ONLY the character's "
+            "facial features, hair style, hair length, and any identity-defining "
+            "details (such as scars, freckles, makeup, or distinctive expressions). "
+            "Ignore background, clothing below the shoulders, props, and lighting."
+        )
+        result = AnalyzeImage(reference, analysis_prompt)
+        analysis_text = result.get('analysis', '').strip()
+        if analysis_text:
+            # normalize capitalization a bit
+            analysis_text = analysis_text[0].lower() + analysis_text[1:]
+
+    # Build the final portrait prompt
+    full_prompt = (
+        "Professional character reference headshot. Shoulders and head fully visible. "
+        "Hair completely visible. Front-facing, looking directly at camera. "
+        "Symmetrical face, highly detailed facial features, sharp focus on the face. "
+        "Clean solid neutral background, soft even studio lighting. "
+    )
+
+    if analysis_text:
+        full_prompt += (
+            "The character's face and hair must match the following description: "
+            f"{analysis_text}. "
+        )
+
+    if prompt:
+        full_prompt += prompt
+
+    status = GenerateImage(
+        prompt=full_prompt,
+        output=str(output),
+        width=1024,
+        height=1024,
+        seed=seed,
+        imagegen=igen
+    )
+
+    return status
+
 
 def add_metadata_char(imgpath, prompt='', seed=-1, generation_prompt=None):
     target_image = Image.open(imgpath)

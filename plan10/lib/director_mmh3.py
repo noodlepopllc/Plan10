@@ -19,12 +19,101 @@ SEED = int(os.environ.get("SEED", "-1"))
 
 from plan10.lib.image_analysis import AnalyzeImage
 
+# portrait_manager.py
+
+import os
+from plan10.lib.image_analysis import AnalyzeImage
+
+class PortraitReferenceManager:
+    """
+    Manages portrait references that attach to existing character subjects.
+    Mirrors the structure of audio_refs but for visual identity reinforcement.
+    """
+
+    def __init__(self):
+        # portrait_refs[label] = { id, path, desc, extra_desc, target }
+        self.portrait_refs = {}
+
+    def analyze_portrait(self, image_path: str) -> str:
+        """
+        Uses your existing VLM analysis pipeline to extract a clean identity description.
+        """
+        prompt = """Provide a single, concise sentence describing ONLY the character's
+        facial features, hair, and identity-defining appearance. Ignore background,
+        props, and lighting. Do not include introductory phrases."""
+        desc = AnalyzeImage(image_path, prompt)['analysis']
+        if desc:
+            desc = desc[0].lower() + desc[1:]
+        return desc
+
+    def add_portrait_reference(self, builder, image_path: str, label: str,
+                               target_subject_label: str, extra_desc: str = "",
+                               generator=None):
+        """
+        Adds a portrait reference linked to an existing subject in the builder.
+
+        builder: SmartVideoPromptBuilder instance
+        image_path: path to portrait image
+        label: name of this portrait reference
+        target_subject_label: name of the character this portrait belongs to
+        extra_desc: optional fallback description for generation
+        generator: optional function to generate the portrait if missing
+        """
+
+        target_key = target_subject_label.lower()
+        if target_key not in builder.entities:
+            raise ValueError(f"Target subject '{target_subject_label}' not found. Add it first.")
+
+        # Fallback generation if portrait file doesn't exist
+        if not os.path.exists(image_path):
+            if generator:
+                print(f"Generating portrait {label} at {image_path}...")
+                char_ref = builder.entities.get(target_subject_label.lower(), None)
+                cref_path = char_ref['path'] if char_ref else ''
+                generator(extra_desc, cref_path, image_path)
+            else:
+                print(f"[Warning] Portrait file not found: {image_path}")
+
+        # Analyze portrait identity
+        desc = self.analyze_portrait(image_path)
+
+        target_id = builder.entities[target_key]["id"]
+
+        self.portrait_refs[label.lower()] = {
+            "id": target_id,               # SAME subject ID
+            "path": image_path,
+            "pic_tag": f"<Picture {target_id}>",
+            "desc": desc,
+            "extra_desc": extra_desc,
+            "target": target_subject_label
+        }
+
+    def emit_prompt_definitions(self):
+        """
+        Returns a list of prompt lines describing portrait identity references.
+        Called inside SmartVideoPromptBuilder.generate().
+        """
+        lines = []
+        for label, data in self.portrait_refs.items():
+            extra = f", {data['extra_desc']}" if data['extra_desc'] else ""
+            lines.append(
+                f"<Subject {data['id']}> face identity is reinforced by "
+                f"{data['pic_tag']}, showing {data['desc']}{extra}."
+            )
+        return lines
+
+    def get_paths(self):
+        """
+        Returns all portrait image paths for inclusion in image_refs.
+        """
+        return [data["path"] for data in self.portrait_refs.values()]
+
 class SmartVideoPromptBuilder:
-    def __init__(self, api_key=None, model="gpt-4o"):
+    def __init__(self):
         """
         Initializes the builder with a VLM client for image analysis.
         """
-        self.model = model
+        self.portrait_manager = PortraitReferenceManager()
         
         # Registry to map user labels to generated IDs and descriptions
         self.entities = {}
@@ -273,7 +362,15 @@ class SmartVideoPromptBuilder:
                             print(f"[Warning] Audio file not found: {path}")
                     
                     self.add_audio_reference(path, label, target, extra)
-                    
+                elif cmd == 'portrait':
+                    label = parts[1]
+                    path = os.path.join(base_dir, parts[2])
+                    target = parts[3]
+                    extra = parts[4] if len(parts) > 4 else ""
+
+                    generator = generators.get('portrait', None)
+                    self.portrait_manager.add_portrait_reference(
+                        self, path, label, target, extra_desc=extra, generator=generator)
                 elif cmd == 'prompt':
                     self.set_scene_style(parts[1] if len(parts) > 1 else "")
                 elif cmd == 'soundscape':
@@ -327,7 +424,9 @@ class SmartVideoPromptBuilder:
                 f"<Audio {data['id']}> is the voice-timbre reference for <Subject {data['target_id']}> {data['speaker_tag']}{extra}."
             )
         sections.append("\n".join(sub_defs + audio_defs))
-        
+        portrait_defs = self.portrait_manager.emit_prompt_definitions()
+        sections.append("\n".join(portrait_defs))
+
         if self.summary:
             sections.append("\nsummary:")
             sections.append(self._substitute_labels(self.summary))
@@ -488,11 +587,14 @@ def get_builder(script, output_dir):
     from plan10.lib.dialog import DesignVoice
     base_dir = f'{os.getcwd()}/{output_dir}'
     generators = {
-        'bg': partial(CreateBackground, override=(768,448)),
-        'char': partial(CreateCharacterSheet, override=(512,512)),
-        'ff': partial(GenerateImage, width=512, height=512),
-        'item': partial(GenerateImage, width=512, height=412),
-        'audio': partial(DesignVoice, long=True)
+        'bg': CreateBackground,
+        'char': CreateCharacterSheet,
+        'ff': GenerateImage,
+        'item': GenerateImage,
+        'audio': partial(DesignVoice, long=True),
+        'portrait': create_portrait}
+}
+
     }
     return SmartVideoPromptBuilder().load_script(script, base_dir=base_dir, generators=generators)
 
@@ -551,6 +653,8 @@ def main():
         # audio | label   | path                    | target  | extra_desc                          | voice_prompt
         # audio | voice_b | audio/voice_sample.wav  | blondie | containing a spoken English vocal layer | female
         audio | voice_r | audio/voice_sample2.wav | red     | containing a spoken English vocal layer | female
+
+        potrait | blondie_port | images/blond_portrait.png | blondie | a blonde haired woman 
         
         # --- SCENE CONTEXT ---
         prompt      | The target video uses a realistic cinematic style with warm golden hour lighting.
@@ -573,7 +677,8 @@ def main():
         sys.exit()
     
     # Extract paths dynamically from the builder instead of hardcoding
-    img_refs = [data["path"] for data in builder.entities.values()]
+    img_refs = (
+        [data["path"] for data in builder.entities.values()] + builder.portrait_manager.get_paths())
     aud_refs = [data["path"] for data in builder.used_audio_refs.values()]
 
     #width and height must be multiples of 32, 1344x768, 864x480 minimal

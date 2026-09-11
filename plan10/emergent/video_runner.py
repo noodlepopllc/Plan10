@@ -109,7 +109,7 @@ def voice_prompt(gender, age):
     return voice_profile
 
 
-def h3_ref(bg, ff, refs, prompt, duration=10.0):
+def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0):
     script = ""
     
     # 1. First Frame - NO CACHE
@@ -251,6 +251,7 @@ def main():
     video_queue = state.get('video_queue', [])
     duration = int(state.get('duration', '5'))
     refs = state.get('character_refs', [])
+    portraits = state.get('portraits', [])
     initial = state.get('initial_media', '')
     bg = state.get('current_bg')
     output_dir = state.get('output_dir') or args.output
@@ -322,7 +323,7 @@ def main():
             current_source = video_to_img(start_image, WIDTH, HEIGHT, True, True)
             current_source.save('tmp.png')
             current_source_path = f'{os.getcwd()}/tmp.png'
-            script = h3_ref(bg, current_source_path, refs, prompt,  duration)
+            script = h3_ref(bg, None, refs, portraits, prompt,  duration)
             Path(pending_job['output_path'].replace('.mp4', '_script.txt')).write_text(script)
             builder = get_builder(script, '')
             final_prompt = builder.generate()

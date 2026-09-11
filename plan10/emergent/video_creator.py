@@ -48,6 +48,7 @@ else:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-R', '--ref', type=str, action='append', default=[])
+    parser.add_argument('-P', '--portraits', type=str, action='append', default=[])
     parser.add_argument('-I', '--initial', type=str, default='')
     parser.add_argument('-P', '--prompt', type=str, default='')
     parser.add_argument('-C', '--context', type=str, default='')
@@ -70,6 +71,7 @@ def main():
         print("🔄 Resuming from state file...")
         state = state_mgr.load()
         refs = state['character_refs']
+        portraits = state['portraits']
         visual_ids = state['visual_ids']
         beat_count = state['beat_count']
         current_media = state['current_media']
@@ -90,6 +92,7 @@ def main():
             
         print("🆕 Starting new loop...")
         refs = args.ref
+        portraits = args.portraits
         
         # Handle initial image generation if needed
         if not args.initial and not args.prompt:
@@ -121,11 +124,6 @@ def main():
                     refs.append(f'{args.output}/{p}')
                     
         print(f"REFERENCES: {refs}")
-        
-        #profiles = [CharacterProfile(ref) for ref in refs]
-        #visual_ids = []
-        #for profile in profiles:
-        #    visual_ids.append(profile.get_visual_id(0))
 
         visual_ids = [get_or_create_visual_id(ref) for ref in refs]
         
@@ -156,15 +154,10 @@ def main():
         background = f'{args.output}/background.png'
         if Path(background).exists():
             current_bg = background
-            tmp = Image.open(current_media)
-            tmp, _ = resize_image(tmp, max(WIDTH, HEIGHT), aspect_ratio=WIDTH/HEIGHT, return_pil=True)
-            current_media = current_media.replace('.png','_resized.png')
-            tmp.save(current_media)
-        else:
-            tmp = Image.open(current_media)
-            tmp, _ = resize_image(tmp, max(WIDTH, HEIGHT), aspect_ratio=WIDTH/HEIGHT, return_pil=True)
-            current_media = current_media.replace('.png','_resized.png')
-            tmp.save(current_media)
+        tmp = Image.open(current_media)
+        tmp, _ = resize_image(tmp, max(WIDTH, HEIGHT), aspect_ratio=WIDTH/HEIGHT, return_pil=True)
+        current_media = current_media.replace('.png','_resized.png')
+        tmp.save(current_media)
     
     # Execute ONE creative step
     try:
@@ -177,6 +170,7 @@ def main():
         state_mgr.save({
             "beat_count": beat_count, "current_media": current_media,
             "current_bg": current_bg, 
+            "portraits": portraits,
             "story_context": context, "history": history,
             "pending_setup": pending_setup, "needs_transition": needs_transition,
             "character_refs": refs, "visual_ids": visual_ids,
@@ -210,6 +204,7 @@ def main():
         "pending_setup": result['pending_setup'],
         "needs_transition": result['needs_transition'],
         "character_refs": refs,
+        "portraits": portraits,
         "visual_ids": visual_ids,
         "video_queue": video_queue,
         "scene_mode": scene_mode,
