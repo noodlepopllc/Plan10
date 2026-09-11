@@ -652,7 +652,7 @@ def main():
         # audio | voice_b | audio/voice_sample.wav  | blondie | containing a spoken English vocal layer | female
         audio | voice_r | audio/voice_sample2.wav | red     | containing a spoken English vocal layer | female
 
-        potrait | blondie_port | images/blond_portrait.png | blondie | a blonde haired woman 
+        portrait | blondie_port | images/blond_portrait.png | blondie | a blonde haired woman 
         
         # --- SCENE CONTEXT ---
         prompt      | The target video uses a realistic cinematic style with warm golden hour lighting.
