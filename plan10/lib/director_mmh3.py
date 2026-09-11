@@ -197,7 +197,7 @@ class SmartVideoPromptBuilder:
             desc = desc[0].lower() + desc[1:]
         return desc
 
-    def add_subject(self, image_path: str, label: str, is_character: bool = False, in_environment: bool = False):
+    def add_subject(self, image_path: str, label: str, is_character: bool = False, is_environment: bool = False):
         self._subject_counter += 1
         sub_id = self._subject_counter
         pic_tag = f"<Picture {sub_id}>"
