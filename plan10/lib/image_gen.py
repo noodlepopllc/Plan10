@@ -536,7 +536,7 @@ def CreateCharacterSheet(prompt='', output='character_tmp.png', seed=-1, imagege
     if isinstance(gen, ImageGenQwen):
         width, height = override if override else (1328, 1328)
     elif isinstance(gen, ImageGenKlein):
-        width, height = overrfide if override else (1024, 1024)
+        width, height = override if override else (1024, 1024)
     else:
         width, height = override if override else (1536, 1536)
     
