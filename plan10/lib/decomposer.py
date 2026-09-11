@@ -207,7 +207,7 @@ def generate_portraits(
         for i in range(1, char_count + 1):
             print(f"\n🎨 Generating character sheet {i}...")
             
-            char_desc = extract_character_description(analysis, i)
+            char_desc = extract_character_appearance(analysis, i)
             char_output = output_dir / f"portrait_{i}.png"
             
             status = GenerateImage(
@@ -400,6 +400,31 @@ def extract_character_description(analysis, char_num):
             elif current_field and line and not line.startswith('POSITION:') and not line.startswith('POSE:'):
                 # Continuation line
                 char_lines.append(line)
+    
+    return ' '.join(char_lines)
+
+def extract_character_appearance(analysis, char_num):
+    """Extract character description from analysis text."""
+    lines = analysis.split('\n')
+    char_lines = []
+    in_char_section = False
+    current_field = None
+    
+    for line in lines:
+        line = line.strip()
+        
+        # Start of target character section
+        if line.startswith(f'CHARACTER_{char_num}:'):
+            in_char_section = True
+            continue
+        
+        # End of character section (next character or environment)
+        if in_char_section and (line.startswith('CHARACTER_') or line.startswith('ENVIRONMENT:') or line.startswith('TOTAL_CHARACTERS:')):
+            break
+        
+        if in_char_section:
+            if line.startswith('APPEARANCE:'):
+                current_field = 'appearance'
     
     return ' '.join(char_lines)
 
