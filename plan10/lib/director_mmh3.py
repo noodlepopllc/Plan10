@@ -595,9 +595,9 @@ async def send(prompt, images, audio, output='output.mp4', width=768, height=448
 
 def get_builder(script, output_dir):
     if ANIME:
-        from plan10.lib.anime_gen import GenerateImage, CreateCharacterSheet, CreateBackground
+        from plan10.lib.anime_gen import GenerateImage, CreateCharacterSheet, CreateBackground, CreatePortrait
     else:
-        from plan10.lib.image_gen import GenerateImage, CreateCharacterSheet, CreateBackground
+        from plan10.lib.image_gen import GenerateImage, CreateCharacterSheet, CreateBackground, CreatePortrait
     from plan10.lib.dialog import DesignVoice
     base_dir = f'{os.getcwd()}/{output_dir}'
     generators = {
