@@ -425,6 +425,7 @@ def extract_character_appearance(analysis, char_num):
         if in_char_section:
             if line.startswith('APPEARANCE:'):
                 current_field = 'appearance'
+                char_lines.append(line.split(':', 1)[1].strip())
     
     return ' '.join(char_lines)
 
