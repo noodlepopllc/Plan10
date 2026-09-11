@@ -230,7 +230,43 @@ NOW, generate the shots for the INPUT DATA provided above:
         if line.startswith("shot |"):
             lines.append(line)
     
-    return "\n".join(lines)
+    return review_and_fix_shots("\n".join(lines), char_labels)
+
+def review_and_fix_shots(raw_shots_text: str, char_labels: list) -> str:
+    """
+    Acts as a film editor/critic. It analyzes the generated shots line-by-line,
+    fixing any rule violations (camera drift during dialogue, word count limits, 
+    and incorrect final shot framing).
+    """
+    char_list = ", ".join(char_labels)
+    
+    critique_prompt = f"""You are an elite automated QA script editor for a generative video pipeline.
+Your job is to strictly review a raw shot list and fix any logical or formatting mistakes.
+
+CRITICAL CHECKS & FIXES YOU MUST APPLY:
+1. DIALOGUE CAMERAS MUST BE LOCKED: If a line contains a character speaking (e.g., "char1 speaks"), the camera description MUST include the strict anchors: "Closeup of [character] only, no other characters in frame. Static camera, zero camera movement." Update the description if these anchors are missing.
+2. WORD COUNT LIMITS: Check the text inside the quotation marks. If a character speaks MORE than 15 words in a single shot, you must split that single shot into multiple consecutive shots (e.g., Shot A continues to Shot B), keeping the text per shot under 15 words.
+3. TRANSITION SANITY: Ensure that if a shot is a closeup for dialogue, the text describes the camera returning to a wider framing (like a Medium or Wide Shot) once dialogue stops or when switching characters.
+4. FINAL SHOT FRAMING: The very last shot line in the entire list MUST be a "Medium shot" or "Wide shot" showing the environment. If it is a closeup, rewrite its framing to pull back.
+5. PRESERVE THE FORMAT: Your output must strictly match the exact layout: shot | description | duration_seconds. No other text, markdown, or commentary.
+
+INPUT SHOT LIST TO FIX:
+{raw_shots_text}
+
+OUTPUT THE FIXED, PERFECTLY ALIGNED SHOT LIST NOW:
+"""
+
+    # Run the critic model to verify and clean the text
+    cleaned_response = llm_analyze_media('', prompt=critique_prompt)['analysis']
+    
+    # Standard cleanup loop to ensure only valid data rows return
+    final_lines = []
+    for line in cleaned_response.strip().split("\n"):
+        line = line.strip()
+        if line.startswith("shot |"):
+            final_lines.append(line)
+            
+    return "\n".join(final_lines)
 
 
 def main():
