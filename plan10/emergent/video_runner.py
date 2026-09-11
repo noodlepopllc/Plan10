@@ -231,7 +231,58 @@ NOW, generate the shots for the INPUT DATA provided above:
         if line.startswith("shot |"):
             lines.append(line)
     
-    return "\n".join(lines)
+    return review_and_polish_sequence("\n".join(lines), char_labels)
+
+def review_and_polish_sequence(raw_shots_text: str, char_labels: list) -> str:
+    """
+    Acts as a macro-level Film Editor. It reviews the entire shot list sequence
+    as a cohesive timeline to enforce foley tracks, dialogue boundaries, camera locking, 
+    and a perfect Medium Shot ending.
+    """
+    char_list = ", ".join(char_labels)
+    
+    critique_prompt = f"""You are an elite Film Editor and QA script optimizer for a generative video pipeline.
+Your task is to review the ENTIRE sequence of shots as a single, continuous timeline and rewrite them into a flawless script.
+
+GALVANIZED RULES YOU MUST ENFORCE ACROSS THE TIMELINE:
+
+1. MANDATORY FOLEY INITIATION: Every single shot line MUST explicitly begin with an environmental or physical sound effect marker (e.g., "Low desert wind...", "A sharp gravel crunch...", "Faint metallic ticking..."). If a shot is missing this at the very beginning of its description, add a contextually appropriate foley sound.
+
+2. DIALOGUE CAMERAS MUST BE LOCKED: Any shot where a character speaks (e.g., "char1 speaks...") MUST include the strict camera framing: "Closeup of [character] only, no other characters in frame. Static camera, zero camera movement." Strip out any wide references or multi-character interactions during the speech window.
+
+3. MANDATORY DIALOGUE TERMINATION: Every shot containing dialogue MUST explicitly conclude with a hard token boundary stating that the mouth is closed and the character is silent. (e.g., "...and then she completely closes her mouth and remains silent. No other dialogue occurs."). This is non-negotiable to stop MiniMax token loops.
+
+4. DIALOGUE SEGMENTATION: If a dialogue block inside a single shot exceeds 15 words, you must split it into sequential dialogue shots, inserting physical pauses and foley cues between them.
+
+5. THE CLOSING SHOT RULE: Look at the very last shot line in the entire list. It MUST be a "Medium shot" showing the characters and the environment. 
+   - DO NOT let the sequence end on a closeup.
+   - DO NOT let the sequence end on a wide shot (unless the text explicitly describes a transition to a brand-new location). 
+   - If the last shot is incorrect, rewrite its framing to be a balanced "Medium shot".
+
+6. CONTINUITY SANITY: Ensure that actions flow logically between shots (e.g., if a character raises a hand in Shot 1, they don't magically restart raising it in Shot 2).
+
+OUTPUT FORMAT:
+Return ONLY the clean shot lines. No conversational filler, no markdown blocks, no intro/outro explanations. 
+Format: shot | description | duration_seconds
+
+INPUT RAW SEQUENCE TO REVIEW:
+{raw_shots_text}
+
+OUTPUT THE PERFECTLY ALIGNED, POLISHED SHOT LIST NOW:
+"""
+
+    # Call your pipeline's LLM analyzer to process the global text block
+    polished_response = llm_analyze_media('', prompt=critique_prompt)['analysis']
+    
+    # Strip any potential noise and ensure structural uniformity
+    final_lines = []
+    for line in polished_response.strip().split("\n"):
+        line = line.strip()
+        if line.startswith("shot |"):
+            final_lines.append(line)
+            
+    return "\n".join(final_lines)
+
 
 def main():
     parser = argparse.ArgumentParser()
