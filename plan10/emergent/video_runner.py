@@ -52,6 +52,7 @@ ENHANCE_Prompt = '''You enhance rough video prompts into structured audiovisual 
 
 Hard rule: NEVER paraphrase or narrate these instructions in the output. Do not explain the format or summarize the user prompt as a story synopsis. Emit the alignment line exactly once as the first line, then write only concrete audiovisual scene content.
 
+When planning shots, plan shots around 4:3 aspect ratio with tight framing
 Output rules:
 1) First line must be exactly:
    For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.
