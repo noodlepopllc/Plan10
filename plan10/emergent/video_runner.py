@@ -235,31 +235,33 @@ NOW, generate the shots for the INPUT DATA provided above:
 
 def review_and_polish_sequence(raw_shots_text: str, char_labels: list) -> str:
     """
-    Acts as a macro-level Film Editor. It reviews the entire shot list sequence
-    as a cohesive timeline to enforce foley tracks, dialogue boundaries, camera locking, 
-    and a perfect Medium Shot ending.
+    Acts as a macro-level Film Editor. It reviews the entire shot list sequence,
+    enforcing foley, mouth boundaries, and automatically calculating/verifying
+    optimal shot durations based on word counts and actions.
     """
     char_list = ", ".join(char_labels)
     
     critique_prompt = f"""You are an elite Film Editor and QA script optimizer for a generative video pipeline.
-Your task is to review the ENTIRE sequence of shots as a single, continuous timeline and rewrite them into a flawless script.
+Your task is to review the ENTIRE sequence of shots as a single, continuous timeline, rewrite them into a flawless script, and recalculate precise shot durations.
 
 GALVANIZED RULES YOU MUST ENFORCE ACROSS THE TIMELINE:
 
-1. MANDATORY FOLEY INITIATION: Every single shot line MUST explicitly begin with an environmental or physical sound effect marker (e.g., "Low desert wind...", "A sharp gravel crunch...", "Faint metallic ticking..."). If a shot is missing this at the very beginning of its description, add a contextually appropriate foley sound.
+1. MANDATORY FOLEY INITIATION: Every single shot line MUST explicitly begin with an environmental or physical sound effect marker (e.g., "Low desert wind...", "A sharp gravel crunch..."). 
 
-2. DIALOGUE CAMERAS MUST BE LOCKED: Any shot where a character speaks (e.g., "char1 speaks...") MUST include the strict camera framing: "Closeup of [character] only, no other characters in frame. Static camera, zero camera movement." Strip out any wide references or multi-character interactions during the speech window.
+2. DIALOGUE CAMERAS MUST BE LOCKED: Any shot where a character speaks (e.g., "char1 speaks...") MUST include the strict camera framing: "Closeup of [character] only, no other characters in frame. Static camera, zero camera movement." 
 
-3. MANDATORY DIALOGUE TERMINATION: Every shot containing dialogue MUST explicitly conclude with a hard token boundary stating that the mouth is closed and the character is silent. (e.g., "...and then she completely closes her mouth and remains silent. No other dialogue occurs."). This is non-negotiable to stop MiniMax token loops.
+3. MANDATORY DIALOGUE TERMINATION: Every shot containing dialogue MUST explicitly conclude with: "...and then [character] completely closes their mouth and remains silent. No other dialogue occurs."
 
-4. DIALOGUE SEGMENTATION: If a dialogue block inside a single shot exceeds 15 words, you must split it into sequential dialogue shots, inserting physical pauses and foley cues between them.
+4. THE CLOSING SHOT RULE: The very last shot line in the entire list MUST be a "Medium shot" showing the characters and the environment. No closeups or wide shots at the end.
 
-5. THE CLOSING SHOT RULE: Look at the very last shot line in the entire list. It MUST be a "Medium shot" showing the characters and the environment. 
-   - DO NOT let the sequence end on a closeup.
-   - DO NOT let the sequence end on a wide shot (unless the text explicitly describes a transition to a brand-new location). 
-   - If the last shot is incorrect, rewrite its framing to be a balanced "Medium shot".
-
-6. CONTINUITY SANITY: Ensure that actions flow logically between shots (e.g., if a character raises a hand in Shot 1, they don't magically restart raising it in Shot 2).
+5. AUTOMATED SHOT DURATION CALIBRATION (CRITICAL):
+   - ACTION-ONLY SHOTS (No Dialogue): Calculate duration based on physical scale and camera movements:
+     * Micro-actions (blinks, jaw clenches, finger curls, static camera holds): 1.5 to 2.0 seconds.
+     * Medium actions (turning around, stepping forward, lifting an arm, small camera pans): 2.5 to 3.0 seconds.
+     * Macro actions (walking across a room, grappling, complex camera tracks): 3.5 to 5.0 seconds.
+   - DIALOGUE SHOTS (Speech + Action): You must calculate the time for the physical actions AND the speech together:
+     * [Opening Foley/Action Time] + [Spoken Words / 2.5] + [Closing Mouth-Closed Hold Time]
+     * Never drop below 2.5 seconds for a dialogue shot, even for a single word, because the character needs physical time to transition into and out of the speech pose.
 
 OUTPUT FORMAT:
 Return ONLY the clean shot lines. No conversational filler, no markdown blocks, no intro/outro explanations. 
@@ -268,13 +270,11 @@ Format: shot | description | duration_seconds
 INPUT RAW SEQUENCE TO REVIEW:
 {raw_shots_text}
 
-OUTPUT THE PERFECTLY ALIGNED, POLISHED SHOT LIST NOW:
+OUTPUT THE FIXED, PERFECTLY ALIGNED AND TIMED SHOT LIST NOW:
 """
 
-    # Call your pipeline's LLM analyzer to process the global text block
     polished_response = llm_analyze_media('', prompt=critique_prompt)['analysis']
     
-    # Strip any potential noise and ensure structural uniformity
     final_lines = []
     for line in polished_response.strip().split("\n"):
         line = line.strip()
