@@ -197,7 +197,7 @@ class SmartVideoPromptBuilder:
             desc = desc[0].lower() + desc[1:]
         return desc
 
-    def add_subject(self, image_path: str, label: str, is_character: bool = False):
+    def add_subject(self, image_path: str, label: str, is_character: bool = False, in_environment: bool = False):
         self._subject_counter += 1
         sub_id = self._subject_counter
         pic_tag = f"<Picture {sub_id}>"
@@ -218,6 +218,7 @@ class SmartVideoPromptBuilder:
             "pic_tag": pic_tag,
             "desc": desc,
             "is_character": is_character,
+            "is_environment": is_environment,
             "shots": set()
         }
         return self
@@ -233,7 +234,7 @@ class SmartVideoPromptBuilder:
         return self
 
     def add_background(self, image_path: str, label: str):
-        return self.add_subject(image_path, label, is_character=False)
+        return self.add_subject(image_path, label, is_character=False, is_environment=True)
 
     def add_character(self, image_path: str, label: str):
         return self.add_subject(image_path, label, is_character=True)
@@ -418,8 +419,15 @@ class SmartVideoPromptBuilder:
         sections.append("subject_definitions:")
         sub_defs = []
         for label, data in self.entities.items():
-            sub_defs.append(f"<Subject {data['id']}> is {data['desc']} in {data['pic_tag']}.")
-        
+            if data.get("is_environment"):
+                sub_defs.append(
+                    f"<Subject {data['id']}> is the {label} environment in {data['pic_tag']}, featuring {data['desc']}."
+                )
+            else:
+                sub_defs.append(
+                    f"<Subject {data['id']}> is {data['desc']} in {data['pic_tag']}."
+                )
+
         audio_defs = []
         for label, data in self.used_audio_refs.items():
             extra = f", {data['extra_desc']}" if data['extra_desc'] else ""
