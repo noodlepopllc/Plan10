@@ -646,7 +646,7 @@ def main():
         # --- THE COMPLETE SELF-CONTAINED SCRIPT ---
         script = """
         # --- ASSETS (with generation prompts) ---
-        bg   | barn    | images/rustic_barn.png    | the inside of a rustic barn
+        bg   | barn    | images/rustic_barn.png    | the inside of a rustic barn, with a large double door that is open allowing sunlight to spill in
         char | blondie | images/blonde_woman.png   | a medium shot of a blonde woman, white sundress, white tennis shoes
         char | red     | images/red_woman.png      | a medium shot of a red haired woman, blue jeans, tshirt, cowboy boots
         char | dog     | images/samoyed_dog.png    | a samoyed dog
