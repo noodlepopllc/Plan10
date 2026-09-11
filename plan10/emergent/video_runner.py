@@ -254,14 +254,11 @@ GALVANIZED RULES YOU MUST ENFORCE ACROSS THE TIMELINE:
 
 4. THE CLOSING SHOT RULE: The very last shot line in the entire list MUST be a "Medium shot" showing the characters and the environment. No closeups or wide shots at the end.
 
-5. AUTOMATED SHOT DURATION CALIBRATION (CRITICAL):
-   - ACTION-ONLY SHOTS (No Dialogue): Calculate duration based on physical scale and camera movements:
-     * Micro-actions (blinks, jaw clenches, finger curls, static camera holds): 1.5 to 2.0 seconds.
-     * Medium actions (turning around, stepping forward, lifting an arm, small camera pans): 2.5 to 3.0 seconds.
-     * Macro actions (walking across a room, grappling, complex camera tracks): 3.5 to 5.0 seconds.
-   - DIALOGUE SHOTS (Speech + Action): You must calculate the time for the physical actions AND the speech together:
-     * [Opening Foley/Action Time] + [Spoken Words / 2.5] + [Closing Mouth-Closed Hold Time]
-     * Never drop below 2.5 seconds for a dialogue shot, even for a single word, because the character needs physical time to transition into and out of the speech pose.
+5. TIMING AND OVERRIDE CLASSIFICATION RULE:
+   - By default, set the duration at the end of the shot line to 2.0 seconds.
+   - If a shot involves a long action (e.g., walking across a zone, grappling) or contains a long dialogue sentence, you must change the duration directly to 3.5 seconds.
+   - Format must strictly be: shot | description | 2.0  OR  shot | description | 3.5
+
 
 OUTPUT FORMAT:
 Return ONLY the clean shot lines. No conversational filler, no markdown blocks, no intro/outro explanations. 
