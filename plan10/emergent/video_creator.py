@@ -48,7 +48,7 @@ else:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-R', '--ref', type=str, action='append', default=[])
-    parser.add_argument('-P', '--portraits', type=str, action='append', default=[])
+    parser.add_argument('-p', '--portraits', type=str, action='append', default=[])
     parser.add_argument('-I', '--initial', type=str, default='')
     parser.add_argument('-P', '--prompt', type=str, default='')
     parser.add_argument('-C', '--context', type=str, default='')
