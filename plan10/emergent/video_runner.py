@@ -188,36 +188,37 @@ HARD CONSTRAINTS:
 5. Reference characters by their exact label: {char_list}
 6. Shot 1: Based on the VISUAL CONTEXT, describe ONLY the first subtle motion that initiates the scene. DO NOT re-describe the static scene.
 7. Dialogue format: character speaks [English] "exact words"
-8. Structure: [ambient sounds] -> [action] -> [dialogue if any] -> [cut]. Ambient sounds FIRST, dialogue LAST.
-9. DIALOGUE SHOT BREAKDOWN: Long dialogue MUST be broken into multiple shots. Each dialogue shot should contain NO MORE THAN 10-15 words of spoken text.
+
+8. MANDATORY FOLEY TRACK: EVERY single shot description MUST begin explicitly with a type of foley sound or environmental audio marker (e.g., "Low desert wind...", "Faint click of metal...", "A sharp crunch of gravel...").
+
+9. MANDATORY DIALOGUE TERMINATION: When a character finishes speaking dialogue, the description MUST explicitly end by stating that their mouth is closed and they are silent. (e.g., "...and then she closes her mouth and is silent. No other dialogue occurs."). This is a strict token boundary to prevent audio loops.
+
+10. DIALOGUE SHOT BREAKDOWN: Long dialogue MUST be broken into multiple shots. Each dialogue shot should contain NO MORE THAN 10-15 words of spoken text.
     
     SHOT STRUCTURE FOR DIALOGUE:
-    - SETUP SHOT: Character prepares to speak (turns, takes breath, expression changes). No dialogue.
-    - DIALOGUE SHOT 1: Closeup of speaker only. No other characters or wider environment background details can be mentioned in the description. Camera must be static. Ends with brief pause action.
-    - DIALOGUE SHOT 2: Closeup of speaker only. Next 10-15 words. Camera must remain static with zero perspective shift. Ends with brief pause action.
-    - REACTION/WIDER SHOT: Cut to listener's reaction, or back to a wider medium/wide shot showing the characters and the environment.
+    - SETUP SHOT: Character prepares to speak (turns, takes breath, expression changes). No dialogue. MUST start with foley.
+    - DIALOGUE SHOT: Closeup of speaker only. No other characters in frame. Static camera. Starts with foley. Dialogue text goes here. Ends with the character's mouth closed and completely silent.
+    - REACTION/WIDER SHOT: Cut to listener's reaction, or back to a medium shot showing the characters and environment. Starts with foley.
     
-    BAD: "Closeup of char1. char1 speaks [English] 'Then why'd you land in my camp? The ones with the collars? The ones that zap you if you run?'" (too long, no breaks)
+    BAD: "Closeup of char1. char1 speaks [English] 'Then why'd you land in my camp?'" (missing foley start, missing explicit mouth closed closure rule)
     
     GOOD:
-    shot | Medium shot. char1 turns to face char2, her expression hardening. | 2.0
-    shot | Closeup of char1 only, no other characters in frame. Static camera, zero camera movement. char1 speaks [English] "Then why'd you land in my camp?" She pauses, jaw tightening. | 2.5
-    shot | Closeup of char1 only. Camera remains completely static, keeping focus entirely on char1's face. char1 continues [English] "The ones with the collars?" Her voice drops lower. | 2.0
-    shot | Closeup of char1 only. Fixed frame, zero camera drift. char1 speaks [English] "The ones that zap you if you run?" She spits the words like a curse. | 2.5
-    shot | Medium shot. Camera pulls back to reveal the environment. char2 flinches, eyes flicking to the smoke behind char1. Both characters remain held in their wider positions. | 2.0
+    shot | Low desert wind and the faint hiss of steam. Medium shot. char1 turns to face char2, her expression hardening. | 2.0
+    shot | Distant gravel shifting. Closeup of char1 only, no other characters in frame. Static camera, zero camera movement. char1 speaks [English] "Then why'd you land in my camp?" Immediately after speaking, she completely closes her mouth and remains silent. | 2.5
+    shot | A sharp mechanical click. Medium shot. Camera returns to a mid-range framing of the scene. char2 flinches, eyes flicking to the smoke behind char1. Both figures hold their positions. | 2.0
 
-10. Each dialogue shot MUST include a physical action BEFORE the dialogue (prepares to speak) and AFTER the dialogue (pauses, blinks, shifts weight, looks away). This creates natural breathing room.
+11. Each dialogue shot MUST include a physical action BEFORE the dialogue (prepares to speak) and AFTER the dialogue (pauses, blinks, shifts weight, looks away). This creates natural breathing room.
 
-11. Never put more than 15 words of dialogue in a single shot. If the dialogue is longer, break it into multiple shots with physical actions between each segment.
+12. Never put more than 15 words of dialogue in a single shot. If the dialogue is longer, break it into multiple shots with physical actions and strict mouth-closure terminations between each segment.
 
-12. The LAST shot must be a medium shot or wide shot showing the character(s) and environment to anchor the scene. DO NOT end on a closeup.
+13. FINAL SHOT FRAMING RULE: The LAST shot of the sequence must be a Medium shot showing the characters and environment. DO NOT end on a closeup, and DO NOT end on a wide shot unless the characters are actively transitioning or walking to a brand-new location.
 
-13. TEMPORAL CONTINUITY: Lighting, shadows, and weather must remain identical. Actions must flow continuously between shots.
+14. TEMPORAL CONTINUITY: Lighting, shadows, and weather must remain identical. Actions must flow continuously between shots.
 
 EXAMPLE (DO NOT COPY THIS CONTENT, ONLY COPY THE FORMAT):
-shot | Wide shot. Absolute silence, then a low mechanical hum. char1 floats upside down and ejects a single glowing object in zero gravity. | 3.0
-shot | Closeup of char1 only, no other characters in frame. Static camera. Distant cosmic radiation crackling. char1's features widen in panic and it speaks [English] "Why is the butter floating?" then closes its mouth and stares at the object. | 2.5
-shot | Medium shot. Muffled rhythmic thumping. Camera returns to a wider view of the room. char1 catches the object with a mechanical appendage and stares blankly at a passing space-capybara. Camera holds static. | 2.0
+shot | Absolute silence, then a low mechanical hum. Wide shot. char1 floats upside down and ejects a single glowing object in zero gravity. | 3.0
+shot | Distant cosmic radiation crackling. Closeup of char1 only, no other characters in frame. Static camera. char1's features widen in panic and it speaks [English] "Why is the butter floating?" Then it immediately closes its mouth and is completely silent, staring blankly. | 2.5
+shot | Muffled rhythmic thumping. Medium shot. Camera framing settles on a balanced mid-shot of the room. char1 catches the object with a mechanical appendage and holds its position. | 2.0
 
 NOW, generate the shots for the INPUT DATA provided above:
 """
@@ -230,44 +231,7 @@ NOW, generate the shots for the INPUT DATA provided above:
         if line.startswith("shot |"):
             lines.append(line)
     
-    return review_and_fix_shots("\n".join(lines), char_labels)
-
-def review_and_fix_shots(raw_shots_text: str, char_labels: list) -> str:
-    """
-    Acts as a film editor/critic. It analyzes the generated shots line-by-line,
-    fixing any rule violations (camera drift during dialogue, word count limits, 
-    and incorrect final shot framing).
-    """
-    char_list = ", ".join(char_labels)
-    
-    critique_prompt = f"""You are an elite automated QA script editor for a generative video pipeline.
-Your job is to strictly review a raw shot list and fix any logical or formatting mistakes.
-
-CRITICAL CHECKS & FIXES YOU MUST APPLY:
-1. DIALOGUE CAMERAS MUST BE LOCKED: If a line contains a character speaking (e.g., "char1 speaks"), the camera description MUST include the strict anchors: "Closeup of [character] only, no other characters in frame. Static camera, zero camera movement." Update the description if these anchors are missing.
-2. WORD COUNT LIMITS: Check the text inside the quotation marks. If a character speaks MORE than 15 words in a single shot, you must split that single shot into multiple consecutive shots (e.g., Shot A continues to Shot B), keeping the text per shot under 15 words.
-3. TRANSITION SANITY: Ensure that if a shot is a closeup for dialogue, the text describes the camera returning to a wider framing (like a Medium or Wide Shot) once dialogue stops or when switching characters.
-4. FINAL SHOT FRAMING: The very last shot line in the entire list MUST be a "Medium shot" or "Wide shot" showing the environment. If it is a closeup, rewrite its framing to pull back.
-5. PRESERVE THE FORMAT: Your output must strictly match the exact layout: shot | description | duration_seconds. No other text, markdown, or commentary.
-
-INPUT SHOT LIST TO FIX:
-{raw_shots_text}
-
-OUTPUT THE FIXED, PERFECTLY ALIGNED SHOT LIST NOW:
-"""
-
-    # Run the critic model to verify and clean the text
-    cleaned_response = llm_analyze_media('', prompt=critique_prompt)['analysis']
-    
-    # Standard cleanup loop to ensure only valid data rows return
-    final_lines = []
-    for line in cleaned_response.strip().split("\n"):
-        line = line.strip()
-        if line.startswith("shot |"):
-            final_lines.append(line)
-            
-    return "\n".join(final_lines)
-
+    return "\n".join(lines)
 
 def main():
     parser = argparse.ArgumentParser()
