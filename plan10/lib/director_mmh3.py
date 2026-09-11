@@ -646,7 +646,7 @@ def main():
         # --- THE COMPLETE SELF-CONTAINED SCRIPT ---
         script = """
         # --- ASSETS (with generation prompts) ---
-        bg   | barn    | images/rustic_barn.png    | the inside of a rustic barn, with a large double door that is open allowing sunlight to spill in
+        bg   | barn    | images/rustic_barn.png    | the inside of a rustic barn, with a large open doorway allowing light to spill in
         char | blondie | images/blonde_woman.png   | a medium shot of a blonde woman, white sundress, white tennis shoes
         char | red     | images/red_woman.png      | a medium shot of a red haired woman, blue jeans, tshirt, cowboy boots
         char | dog     | images/samoyed_dog.png    | a samoyed dog
@@ -663,10 +663,9 @@ def main():
         soundscape  | Ambient wind and soft acoustic guitar music.
         
         # --- SHOTS ---
-        shot | Sound of roosters, as The camera pushes on the inside of the barn. blondie is standing near the door holding a treat and red stands beside her with her arms crossed. | 2.0
-        shot | Sounds of a barking dog, Following shot The dog runs into the barn and jumps up to grab the treat from blondie. | 2
-        shot | Sounds of cows mooing, Camera pushes in on red | 1
-        shot | Closeup shot of red, red speaks, [English] "You spoil him." | 2
+        shot | Sound of roosters, as The camera pushes in on blondie is standing near the doorway holding a treat and red stands beside her with her arms crossed.
+        shot | Sounds of a barking dog, Following shot The dog runs into the barn and jumps up to grab the treat from blondie. | 1
+        shot | Sounds of cows mooing, Camera pushes in on red as she speaks [English] "You spoil him." She finishes speaking standing with her mouth closed for a static shot.
         """
 
     # Build and execute
