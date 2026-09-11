@@ -125,6 +125,7 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0):
     
     # 3. Characters - CACHED
     char_labels = []
+    portrait_ndx = 0
     for ndx, ref in enumerate(refs, start=1):
         label = f"char{ndx}"
         char_labels.append(label)
@@ -133,6 +134,19 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0):
             'Brief description of character appearance/clothing. Max 10 words.',
             'char_desc')
         script += f"char | {label} | {ref} | {ref_desc}\n"
+
+        if portraits:
+            portrait_desc = get_or_analyze(portraits[portrait_ndx],
+                'Brief description of characters face and hair, Max 10 words.', 'portrait_desc')
+            script += f"portrait | portrait_{ndx} | {portraits[portrait_ndx]} | {label} | {portrait_desc}"
+            portrait_ndx += 1
+        else:
+            port_path = os.path.splitext(ref)[0] '_portrait.png'
+            portrait_desc = get_or_analyze(ref, ,
+                'Brief description of characters face and hair, Max 10 words.', 'portrait_desc')
+            script += f"portrait | portrait_{ndx} | {port_path} | {label} | {portrait_desc}"
+            portrait_ndx += 1
+
         
         voice_data = get_or_analyze(ref,
             "Identify the character's gender (male, female) and age bracket (child, teenager, young adult, middle-aged, elderly). Return exactly: 'gender, age bracket'.",
