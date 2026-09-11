@@ -404,13 +404,16 @@ class SmartVideoPromptBuilder:
         
         for label, data in self.audio_refs.items():
             target_id = data['target_id']
+            speaker_tag = None
+
             if target_id in used_subject_ids:
                 speaker_tag = f"(S{speaker_counter})"
                 subject_to_speaker[target_id] = speaker_tag
-                data['speaker_tag'] = speaker_tag
-                self.used_audio_refs[label] = data
                 speaker_counter += 1
-        
+
+            data['speaker_tag'] = speaker_tag
+            self.used_audio_refs[label] = data
+
         # 3. Subject & Audio Definitions
         sections.append("subject_definitions:")
         sub_defs = []
@@ -519,7 +522,7 @@ However, CHARACTER IDENTITY (facial features, clothing details, body proportions
         
         return "\n".join(sections)
 
-async def send(prompt, images, audio, output='output.mp4', width=768, height=448, duration=5.0, steps=4, start_image=True, upscale=True):
+async def send(prompt, images, audio, output='output.mp4', width=768, height=448, duration=5.0, steps=4, start_image=True, upscale=False):
     async with Client("http://localhost:7866/mcp") as client:
 
         model = "minimax_h3_ref2va_pruned_pdd"
