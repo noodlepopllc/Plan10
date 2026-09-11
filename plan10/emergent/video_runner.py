@@ -52,7 +52,6 @@ ENHANCE_Prompt = '''You enhance rough video prompts into structured audiovisual 
 
 Hard rule: NEVER paraphrase or narrate these instructions in the output. Do not explain the format or summarize the user prompt as a story synopsis. Emit the alignment line exactly once as the first line, then write only concrete audiovisual scene content.
 
-When planning shots, plan shots around 4:3 aspect ratio with tight framing
 Output rules:
 1) First line must be exactly:
    For the target video, at 0.00 seconds into the target video, <Picture 1> (from [Shot 1]) is fully referenced.
@@ -194,31 +193,31 @@ HARD CONSTRAINTS:
     
     SHOT STRUCTURE FOR DIALOGUE:
     - SETUP SHOT: Character prepares to speak (turns, takes breath, expression changes). No dialogue.
-    - DIALOGUE SHOT 1: Closeup of speaker. First 10-15 words. Ends with brief pause action (pauses, blinks, shifts weight).
-    - DIALOGUE SHOT 2: Closeup of speaker. Next 10-15 words. Ends with brief pause action.
-    - REACTION SHOT: Cut to listener's reaction, or back to wider shot showing both characters.
+    - DIALOGUE SHOT 1: Closeup of speaker only. No other characters or wider environment background details can be mentioned in the description. Camera must be static. Ends with brief pause action.
+    - DIALOGUE SHOT 2: Closeup of speaker only. Next 10-15 words. Camera must remain static with zero perspective shift. Ends with brief pause action.
+    - REACTION/WIDER SHOT: Cut to listener's reaction, or back to a wider medium/wide shot showing the characters and the environment.
     
     BAD: "Closeup of char1. char1 speaks [English] 'Then why'd you land in my camp? The ones with the collars? The ones that zap you if you run?'" (too long, no breaks)
     
     GOOD:
     shot | Medium shot. char1 turns to face char2, her expression hardening. | 2.0
-    shot | Closeup of char1 only. char1 speaks [English] "Then why'd you land in my camp?" She pauses, jaw tightening. | 2.5
-    shot | Closeup of char1 only. char1 continues [English] "The ones with the collars?" Her voice drops lower. | 2.0
-    shot | Closeup of char1 only. char1 speaks [English] "The ones that zap you if you run?" She spits the words like a curse. | 2.5
-    shot | Medium shot. char2 flinches, eyes flicking to the smoke behind char1. | 2.0
+    shot | Closeup of char1 only, no other characters in frame. Static camera, zero camera movement. char1 speaks [English] "Then why'd you land in my camp?" She pauses, jaw tightening. | 2.5
+    shot | Closeup of char1 only. Camera remains completely static, keeping focus entirely on char1's face. char1 continues [English] "The ones with the collars?" Her voice drops lower. | 2.0
+    shot | Closeup of char1 only. Fixed frame, zero camera drift. char1 speaks [English] "The ones that zap you if you run?" She spits the words like a curse. | 2.5
+    shot | Medium shot. Camera pulls back to reveal the environment. char2 flinches, eyes flicking to the smoke behind char1. Both characters remain held in their wider positions. | 2.0
 
 10. Each dialogue shot MUST include a physical action BEFORE the dialogue (prepares to speak) and AFTER the dialogue (pauses, blinks, shifts weight, looks away). This creates natural breathing room.
 
 11. Never put more than 15 words of dialogue in a single shot. If the dialogue is longer, break it into multiple shots with physical actions between each segment.
 
-12. The LAST shot must be a medium shot showing the character(s) and environment. DO NOT end on a closeup.
+12. The LAST shot must be a medium shot or wide shot showing the character(s) and environment to anchor the scene. DO NOT end on a closeup.
 
 13. TEMPORAL CONTINUITY: Lighting, shadows, and weather must remain identical. Actions must flow continuously between shots.
 
 EXAMPLE (DO NOT COPY THIS CONTENT, ONLY COPY THE FORMAT):
 shot | Wide shot. Absolute silence, then a low mechanical hum. char1 floats upside down and ejects a single glowing object in zero gravity. | 3.0
-shot | Closeup of char1 only, no other characters in frame. Distant cosmic radiation crackling. char1's features widen in panic and it speaks [English] "Why is the butter floating?" then closes its mouth and stares at the object. | 2.5
-shot | Medium shot. Muffled rhythmic thumping. char1 catches the object with a mechanical appendage and stares blankly at a passing space-capybara. Camera holds static. | 2.0
+shot | Closeup of char1 only, no other characters in frame. Static camera. Distant cosmic radiation crackling. char1's features widen in panic and it speaks [English] "Why is the butter floating?" then closes its mouth and stares at the object. | 2.5
+shot | Medium shot. Muffled rhythmic thumping. Camera returns to a wider view of the room. char1 catches the object with a mechanical appendage and stares blankly at a passing space-capybara. Camera holds static. | 2.0
 
 NOW, generate the shots for the INPUT DATA provided above:
 """
@@ -232,6 +231,7 @@ NOW, generate the shots for the INPUT DATA provided above:
             lines.append(line)
     
     return "\n".join(lines)
+
 
 def main():
     parser = argparse.ArgumentParser()
