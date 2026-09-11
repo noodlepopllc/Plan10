@@ -592,9 +592,7 @@ def get_builder(script, output_dir):
         'ff': GenerateImage,
         'item': GenerateImage,
         'audio': partial(DesignVoice, long=True),
-        'portrait': create_portrait}
-}
-
+        'portrait': CreatePortrait
     }
     return SmartVideoPromptBuilder().load_script(script, base_dir=base_dir, generators=generators)
 
@@ -602,9 +600,9 @@ def main():
     from pathlib import Path
     import os, argparse, sys
     if ANIME:
-        from plan10.lib.anime_gen import GenerateImage, CreateCharacterSheet, CreateBackground
+        from plan10.lib.anime_gen import GenerateImage, CreateCharacterSheet, CreateBackground, CreatePortrait
     else:
-        from plan10.lib.image_gen import GenerateImage, CreateCharacterSheet, CreateBackground
+        from plan10.lib.image_gen import GenerateImage, CreateCharacterSheet, CreateBackground, CreatePortrait
     from plan10.lib.dialog import DesignVoice
     parser = argparse.ArgumentParser(description='Cinematic Director')
     parser.add_argument('-O', '--output', type=str, default='output')

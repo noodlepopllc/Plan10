@@ -334,7 +334,7 @@ def GenerateImage(prompt='', output='tmp.png', width=WIDTH, height=HEIGHT, seed=
     prompt_metadata(output, prompt)
     return status
 
-def create_portrait(prompt='', reference='', output='character_tmp.png',
+def CreatePortrait(prompt='', reference='', output='character_tmp.png',
                           seed=-1, imagegen=None):
     """
     Anime-optimized portrait generator.

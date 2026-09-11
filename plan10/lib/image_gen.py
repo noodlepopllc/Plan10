@@ -356,7 +356,7 @@ def prompt_metadata(imgpath, prompt=''):
     else:
         return target_image.info.get("GenerationPrompt", "")
 
-def create_portrait(prompt='', reference='', output='character_tmp.png',
+def CreatePortrait(prompt='', reference='', output='character_tmp.png',
                     seed=-1, imagegen=None):
     """
     Generates a portrait prompt by analyzing the character sheet (reference)
