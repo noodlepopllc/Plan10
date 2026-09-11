@@ -174,7 +174,7 @@ def generate_character_sheets(
             status = CreateCharacterSheet(
                 prompt=char_desc,
                 output=str(char_output),
-                seed=seed + i,
+                seed=seed,
                 imagegen=igen
             )
             
@@ -215,7 +215,7 @@ def generate_portraits(
                 output=str(char_output),
                 width=1024,
                 height=1024,
-                seed=seed + i,
+                seed=seed,
                 imagegen=igen
             )
             
