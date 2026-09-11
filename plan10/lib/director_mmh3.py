@@ -364,7 +364,22 @@ However, CHARACTER IDENTITY (facial features, clothing details, body proportions
                 return subject_tag
             
             processed_text = re.sub(r'(<Subject \d+>)(?=[^<]*\[(?:English|Spanish|French|German|Italian)\])', inject_speaker, processed_text)
-            
+
+            # Regex targeting: <Subject 3> speaks [English] "Stay where you are."
+            pattern = r'(<Subject \d+>)([^"\[]*?)\[(?:English|Spanish|French|German|Italian)\]\s*("[^"]*")'
+
+            def strip_lang_only(match):
+                subject_tag = match.group(1)   # e.g., "<Subject 3>"
+                verbs = match.group(2)         # e.g., " speaks " or " says "
+                dialogue = match.group(3)      # e.g., '"Stay where you are."'
+                
+                # Drops the [English] chunk entirely and NEVER inserts <d></d> literal text
+                return f"{subject_tag}{verbs}{dialogue}"
+
+            processed_text = re.sub(pattern, strip_lang_only, processed_text)
+
+            '''
+
             # Wrap dialogue in <d> tags if not already wrapped
             processed_text = re.sub(
                 r'(\[(?:English|Spanish|French|German|Italian)\]\s*"[^"]*")',
@@ -376,6 +391,7 @@ However, CHARACTER IDENTITY (facial features, clothing details, body proportions
                 r'<d>\1</d>',
                 processed_text
             )
+            '''
             
             time_str = f" At {shot['timestamp']}," if shot.get("timestamp") else ""
             sections.append(f"[Shot {i+1}]{time_str} {processed_text}")
@@ -442,7 +458,6 @@ async def send(prompt, images, audio, output='output.mp4', width=768, height=448
         args["embedded_guidance_scale"] = 1.5
         args['resolution'] = f'{width}x{height}'
         args['video_length'] = (((duration * 24) // 17) * 17) + 5
-        args['resolution'] = f'{width}x{height}'
         print(args)
         r = await client.call_tool("wangp_generate", {"source": args})
         print(r.data['job_id'])
