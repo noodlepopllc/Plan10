@@ -189,6 +189,48 @@ def generate_character_sheets(
     
     return characters
 
+def generate_portraits(
+    analysis: str, 
+    char_count: int, 
+    output_dir: Path, 
+    seed: int
+) -> list:
+    """
+    Generate character sheets for each detected character.
+    
+    Returns:
+        list of dicts with character metadata
+    """
+    portraits = []
+    
+    with ImageGen() as igen:
+        for i in range(1, char_count + 1):
+            print(f"\n🎨 Generating character sheet {i}...")
+            
+            char_desc = extract_character_description(analysis, i)
+            char_output = output_dir / f"portrait_{i}.png"
+            
+            status = GenerateImage(
+                prompt=f'A studio portrait of {char_desc}',
+                output=str(char_output),
+                seed=seed + i,
+                imagegen=igen
+            )
+            
+            portraits.append({
+                'id': i,
+                'path': str(char_output),
+                'description': status['description'],
+                'prompt_used': status.get('prompt', '')
+            })
+            
+            print(f"  ✓ Saved: {char_output}")
+    
+    return portraits
+
+
+
+
 
 def generate_background(
     input_image: str, 
@@ -236,6 +278,7 @@ def save_manifest(
     source_image: str,
     background: dict,
     characters: list,
+    portraits: list,
     analysis: str,
     output_dir: Path
 ) -> Path:
@@ -245,6 +288,7 @@ def save_manifest(
         'background': background['path'],
         'environment_description': background['description'],
         'characters': characters,
+        'portraits': portraits,
         'analysis': analysis
     }
     
@@ -287,6 +331,13 @@ def decompose_scene(input_image: str, prompt: str, output_dir: str, seed: int = 
         output_dir=output_dir,
         seed=seed
     )
+
+    portraits = generate_portraits(
+        analysis=analysis,
+        char_count=char_count,
+        output_dir=output_dir,
+        seed=seed
+    )
     
     # Step 3: Generate background
     background = generate_background(
@@ -301,6 +352,7 @@ def decompose_scene(input_image: str, prompt: str, output_dir: str, seed: int = 
         source_image=input_image,
         background=background,
         characters=characters,
+        portraits=portraits,
         analysis=analysis,
         output_dir=output_dir
     )
