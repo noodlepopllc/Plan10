@@ -631,10 +631,10 @@ def main():
     
     # Pass generation functions to the parser
     generators = {
-        'bg': partial(CreateBackground, override=(768,448)),
-        'char': partial(CreateCharacterSheet, override=(512,512)),
-        'ff': partial(GenerateImage, width=512, height=512),
-        'item': partial(GenerateImage, width=512, height=512),
+        'bg': CreateBackground,
+        'char': CreateCharacterSheet,
+        'ff': GenerateImage,
+        'item': GenerateImage,
         'audio': partial(DesignVoice, long=True),
         'portrait': CreatePortrait
     }
