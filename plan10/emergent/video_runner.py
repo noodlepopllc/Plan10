@@ -231,54 +231,7 @@ NOW, generate the shots for the INPUT DATA provided above:
         if line.startswith("shot |"):
             lines.append(line)
     
-    return review_and_polish_sequence("\n".join(lines), char_labels)
-
-def review_and_polish_sequence(raw_shots_text: str, char_labels: list) -> str:
-    """
-    Acts as a macro-level Film Editor. It reviews the entire shot list sequence,
-    enforcing foley, mouth boundaries, and automatically calculating/verifying
-    optimal shot durations based on word counts and actions.
-    """
-    char_list = ", ".join(char_labels)
-    
-    critique_prompt = f"""You are an elite Film Editor and QA script optimizer for a generative video pipeline.
-Your task is to review the ENTIRE sequence of shots as a single, continuous timeline, rewrite them into a flawless script, and recalculate precise shot durations.
-
-GALVANIZED RULES YOU MUST ENFORCE ACROSS THE TIMELINE:
-
-1. MANDATORY FOLEY INITIATION: Every single shot line MUST explicitly begin with an environmental or physical sound effect marker (e.g., "Low desert wind...", "A sharp gravel crunch..."). 
-
-2. DIALOGUE CAMERAS MUST BE LOCKED: Any shot where a character speaks (e.g., "char1 speaks...") MUST include the strict camera framing: "Closeup of [character] only, no other characters in frame. Static camera, zero camera movement." 
-
-3. MANDATORY DIALOGUE TERMINATION: Every shot containing dialogue MUST explicitly conclude with: "...and then [character] completely closes their mouth and remains silent. No other dialogue occurs."
-
-4. THE CLOSING SHOT RULE: The very last shot line in the entire list MUST be a "Medium shot" showing the characters and the environment. No closeups or wide shots at the end.
-
-5. TIMING AND OVERRIDE CLASSIFICATION RULE:
-   - By default, set the duration at the end of the shot line to 2.0 seconds.
-   - If a shot involves a long action (e.g., walking across a zone, grappling) or contains a long dialogue sentence, you must change the duration directly to 3.5 seconds.
-   - Format must strictly be: shot | description | 2.0  OR  shot | description | 3.5
-
-
-OUTPUT FORMAT:
-Return ONLY the clean shot lines. No conversational filler, no markdown blocks, no intro/outro explanations. 
-Format: shot | description | duration_seconds
-
-INPUT RAW SEQUENCE TO REVIEW:
-{raw_shots_text}
-
-OUTPUT THE FIXED, PERFECTLY ALIGNED AND TIMED SHOT LIST NOW:
-"""
-
-    polished_response = llm_analyze_media('', prompt=critique_prompt)['analysis']
-    
-    final_lines = []
-    for line in polished_response.strip().split("\n"):
-        line = line.strip()
-        if line.startswith("shot |"):
-            final_lines.append(line)
-            
-    return "\n".join(final_lines)
+    return "\n".join(lines)
 
 
 def main():
