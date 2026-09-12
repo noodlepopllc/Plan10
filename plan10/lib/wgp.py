@@ -48,14 +48,12 @@ async def i2v_ltx(prompt='', media='', end='', output='output.mp4',
 
         if media:
             desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
+            audio_desc = translate_to_audio_prompt(desc)
+            sfx_modifiers = ", realistic sound effects only, crisp SFX, ambient background noise, completely devoid of music, no BGM, no instruments"
+            final_prompt = f"{prompt} {audio_desc} {sfx_modifiers}" if prompt else "ambient sound effects, SFX, absolute no music"
         else:
-            desc = prompt
-        audio_desc = translate_to_audio_prompt(desc)
-
-        # Force explicit SFX and ban melody structure in the positive prompt
-        sfx_modifiers = ", realistic sound effects only, crisp SFX, ambient background noise, completely devoid of music, no BGM, no instruments"
-        final_prompt = f"{prompt} {audio_desc} {sfx_modifiers}" if prompt else "ambient sound effects, SFX, absolute no music"
-
+            final_prompt = prompt
+        
         # Purged "silent or muted audio" to allow empty spaces, heavily punished music architecture
         negative_prompt = (
             "text, subtitles, lyrics, captions, on-screen text, logo, " # Text
