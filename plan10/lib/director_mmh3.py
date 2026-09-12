@@ -463,6 +463,9 @@ class SmartVideoPromptBuilder:
         
         # 4. Process Shots & Build Detailed Description
         sections.append("\ndetailed_description:")
+        sections.append('''<Subject 1> is the environment anchor and must remain visible in ALL shots,
+including close-ups. Environment background must override portrait background.'''
+
         
         if self.first_frame_label and self.first_frame_label in self.entities:
             pic_tag = self.entities[self.first_frame_label]["pic_tag"]
@@ -471,7 +474,9 @@ However, CHARACTER IDENTITY (facial features, clothing details, body proportions
             sections.append(ff_rule)
             sections.append("")
         sections.append("""Close-up shots must preserve the environment background and lighting from the
-current scene and <PreviousVideo>. Do not switch to portrait background.
+current scene and <PreviousVideo>. Do NOT switch to portrait background. Do NOT
+crop to the portrait reference. Maintain full scene geometry and environmental
+continuity even during close-up framing.
 """)
             
         if self.scene_style:
