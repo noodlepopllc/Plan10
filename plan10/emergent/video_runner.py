@@ -176,77 +176,88 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0):
 
 def expand_to_shots(prompt: str, bg_label: str, char_labels: list, duration: float, first_frame_path: str = None) -> str:
     """Returns raw shot lines ready to append to your script, grounded in the actual first frame."""
-    
+
     scene_context = ""
     if first_frame_path and os.path.exists(first_frame_path):
         analysis = AnalyzeImage(first_frame_path, prompt="""
-            Describe this exact frame for video generation: 
-            Where are the characters positioned? What are their poses and expressions? 
+            Describe this exact frame for video generation:
+            Where are the characters positioned? What are their poses and expressions?
             What is the camera angle? Be specific about spatial relationships.
             DO NOT describe clothing colors or minor details, just the layout and action.
         """)['analysis']
         scene_context = f"\n\nVISUAL CONTEXT (This is the EXACT starting frame at 00:00.000):\n{analysis}\n"
-    
+
     char_list = ", ".join(char_labels)
     duration_hint = f"Total duration: approximately {duration} seconds."
-    
-    formatted_prompt = f"""You are an expert video director breaking down a scene into sequential shots.
+
+    formatted_prompt = f"""You are an expert cinematic video director breaking a scene into sequential shots.
 
 INPUT DATA:
-- Available characters: {char_list}
+- Characters: {char_list}
 - Background: {bg_label}
 - {duration_hint}
 - Scene description: {prompt}
 {scene_context}
 
 TASK:
-Generate a sequence of short video shots (2-4 seconds each) that bring the 'Scene description' to life, starting exactly from the 'VISUAL CONTEXT'.
+Generate a sequence of short cinematic shots (2–4 seconds each) that follow the scene description and maintain visual continuity.
 
-HARD CONSTRAINTS:
-1. DO NOT copy the example below. The example is ONLY to demonstrate the required format. Your content must be 100% unique and based strictly on the INPUT DATA above.
-2. The video model ALREADY SEES the reference images. DO NOT describe static visual attributes. ONLY describe what CHANGES: camera movement, character actions, and facial expression shifts.
-3. Output ONLY shot lines. No JSON, no markdown, no introductory text.
-4. Format: shot | description | duration_seconds
-5. Reference characters by their exact label: {char_list}
-6. Shot 1: Based on the VISUAL CONTEXT, describe ONLY the first subtle motion that initiates the scene. DO NOT re-describe the static scene.
-7. Dialogue format: character speaks [English] "exact words"
+GLOBAL RULES:
+1. Use MEDIUM SHOTS as the default framing for dialogue and action.
+   - Characters visible from waist/chest upward.
+   - Environment must remain visible.
+   - Medium-close is allowed but MUST NOT isolate the speaker.
 
-8. MANDATORY FOLEY TRACK: EVERY single shot description MUST begin explicitly with a type of foley sound or environmental audio marker (e.g., "Low desert wind...", "Faint click of metal...", "A sharp crunch of gravel...").
+2. Camera movement is ONLY allowed in Shot 1 (establishing).
+   - After Shot 1, camera remains static or uses minimal drift.
+   - Do NOT use “pushes in”, “zooms”, “tightens”, or “moves closer”.
 
-9. MANDATORY DIALOGUE TERMINATION: When a character finishes speaking dialogue, the description MUST explicitly end by stating that their mouth is closed and they are silent. (e.g., "...and then she closes her mouth and is silent. No other dialogue occurs."). This is a strict token boundary to prevent audio loops.
+3. Dialogue:
+   - Dialogue shots use medium or medium-close framing.
+   - Speaker MUST direct gaze and speech toward the correct listener.
+   - Listener MUST be referenced (in-frame or off-frame).
+   - Dialogue format: char speaks [English] "text"
+   - After speaking: “they close their mouth and are silent.”
 
-10. DIALOGUE SHOT BREAKDOWN: Long dialogue MUST be broken into multiple shots. Each dialogue shot should contain NO MORE THAN 10-15 words of spoken text.
-    
-SHOT STRUCTURE FOR DIALOGUE:
-- SETUP SHOT: Character prepares to speak (turns, takes breath, expression changes). No dialogue. MUST start with foley.
-- DIALOGUE SHOT: Medium-close framing that emphasizes the speaker while keeping the environment visible. Static camera, zero camera movement. Do NOT describe the speaker as "only" or "alone" in the frame. Starts with foley. Dialogue text goes here. Ends with the character's mouth closed and completely silent.
-- REACTION/WIDER SHOT: Cut to listener's reaction, or back to a medium shot showing the characters and environment. Starts with foley.
+4. Foley:
+   - EVERY shot MUST begin with a foley cue.
 
-11. Each dialogue shot MUST include a physical action BEFORE the dialogue (prepares to speak) and AFTER the dialogue (pauses, blinks, shifts weight, looks away). This creates natural breathing room.
+5. Physicality:
+   - Each dialogue shot MUST include a physical action BEFORE speaking
+     (turns, breath, expression shift)
+     and AFTER speaking (blink, shift weight, glance, pause).
 
-12. Never put more than 15 words of dialogue in a single shot. If the dialogue is longer, break it into multiple shots with physical actions and strict mouth-closure terminations between each segment.
+6. Dialogue length:
+   - Max 15 words per shot. Break long dialogue into multiple shots.
 
-13. FINAL SHOT FRAMING RULE: The LAST shot of the sequence must be a Medium shot showing the characters and environment. DO NOT end on a closeup, and DO NOT end on a wide shot unless the characters are actively transitioning or walking to a brand-new location.
+7. Final shot:
+   - MUST be a medium shot showing characters + environment.
 
-14. TEMPORAL CONTINUITY: Lighting, shadows, and weather must remain identical. Actions must flow continuously between shots.
+8. Continuity:
+   - Lighting, shadows, and weather remain identical.
+   - Actions flow continuously between shots.
 
-EXAMPLE (DO NOT COPY THIS CONTENT, ONLY COPY THE FORMAT):
-shot | Absolute silence, then a low mechanical hum. Wide shot. char1 floats upside down and ejects a single glowing object in zero gravity. | 3.0
-shot | Distant cosmic radiation crackling. Closeup of char1 only, no other characters in frame. Static camera. char1's features widen in panic and it speaks [English] "Why is the butter floating?" Then it immediately closes its mouth and is completely silent, staring blankly. | 2.5
-shot | Muffled rhythmic thumping. Medium shot. Camera framing settles on a balanced mid-shot of the room. char1 catches the object with a mechanical appendage and holds its position. | 2.0
+FORMAT:
+shot | foley + description | duration_seconds
+
+EXAMPLE (FORMAT ONLY — DO NOT COPY CONTENT):
+shot | Low wind through rafters. Medium shot. char1 shifts her stance, glancing toward char2. | 2.0
+shot | Soft creak of wood. Medium-close shot of char1 facing char2. Static camera. char1 speaks [English] "Why is the butter floating?" She closes her mouth and is silent. | 2.5
+shot | Distant hoofbeats. Medium shot. char2 reacts with a quick blink, eyes flicking toward char1. | 2.0
 
 NOW, generate the shots for the INPUT DATA provided above:
 """
 
     response = llm_analyze_media('', prompt=formatted_prompt)['analysis']
-    
+
     lines = []
     for line in response.strip().split("\n"):
         line = line.strip()
         if line.startswith("shot |"):
             lines.append(line)
-    
+
     return "\n".join(lines)
+
 
 
 def main():
