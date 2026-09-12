@@ -81,7 +81,6 @@ class ImageGenSenseNova(object):
         self.__del__()
 
     def __del__(self):
-        del self.pipe
         gc.collect()
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
