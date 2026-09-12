@@ -183,7 +183,7 @@ async def i2v_h3(prompt='', media='', end='', output='output.mp4',
 i2v = i2v_h3 if MMH3 else i2v_ltx
 
 def GenerateVideo(prompt='', media='', output='output.mp4', 
-                  duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1, enhance=True):
+                  duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1, enhance=False):
 
         print(f"PROMPT: {prompt}")
         
