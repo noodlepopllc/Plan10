@@ -7,6 +7,7 @@ load_environ()
 
 # Read at module import time
 BACKEND = os.environ.get("LLM_BACKEND", "transformers").lower().strip()
+THINKING = os.environ.get("THINKING","False") != "False"
 
 if BACKEND == "ollama":
     from plan10.lib.qwen_llm_ollama import (
@@ -17,9 +18,6 @@ elif BACKEND == "transformers":
     import gc, json, re, torch
     from pathlib import Path
     from transformers import AutoProcessor, Qwen3_5ForConditionalGeneration, BitsAndBytesConfig
-    from plan10.lib.config import load_environ
-    load_environ()
-
 
     def get_bnb_config():
         return BitsAndBytesConfig(
@@ -145,7 +143,7 @@ elif BACKEND == "transformers":
             add_generation_prompt=True,
             return_dict=True,       # ← Returns dict with input_ids, pixel_values, etc.
             return_tensors="pt",     # ← Returns PyTorch tensors
-            enable_thinking=False
+            enable_thinking=THINKING
         )
         inputs = inputs.to(model.device)
         

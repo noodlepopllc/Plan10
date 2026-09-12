@@ -259,7 +259,7 @@ shot | Distant hoofbeats. Medium shot. char2 reacts with a quick blink, eyes fli
 NOW, generate the shots for the INPUT DATA provided above:
 """
 
-    response = llm_analyze_media('', prompt=formatted_prompt)['analysis']
+    response = llm_analyze_media('', prompt=formatted_prompt, max_tokens=32000, temperature=0.4)['analysis']
 
     lines = []
     for line in response.strip().split("\n"):
