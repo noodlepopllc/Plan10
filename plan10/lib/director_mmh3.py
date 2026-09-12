@@ -79,6 +79,7 @@ class PortraitReferenceManager:
 
         target_id = builder.entities[target_key]["id"]
 
+        # Picture index: subjects first, then portraits in append order
         picture_index = len(builder.entities) + len(self.portrait_refs) + 1
 
         self.portrait_refs[label.lower()] = {
@@ -88,7 +89,8 @@ class PortraitReferenceManager:
             "desc": desc,
             "extra_desc": extra_desc,
             "target": target_subject_label
-}
+        }
+
 
 
     def emit_prompt_definitions(self):

@@ -133,6 +133,7 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0):
     # 3. Characters - CACHED
     char_labels = []
     portrait_ndx = 0
+    portrait_entries = ''
     for ndx, ref in enumerate(refs, start=1):
         label = f"char{ndx}"
         char_labels.append(label)
@@ -145,7 +146,7 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0):
         if portraits:
             portrait_desc = get_or_analyze(portraits[portrait_ndx],
                 'Brief description of characters face and hair, Max 10 words.', 'portrait_desc')
-            script += f"portrait | portrait_{ndx} | {portraits[portrait_ndx]} | {label} | {portrait_desc}"
+            portrait_entries += f"portrait | portrait_{ndx} | {portraits[portrait_ndx]} | {label} | {portrait_desc}"
             portrait_ndx += 1
         else:
             port_path = os.path.splitext(ref)[0] + '_portrait.png'
@@ -163,6 +164,7 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0):
         
         wav_path = os.path.splitext(ref)[0] + '.wav'
         script += f"audio | voice_{ndx} | {wav_path} | {label} | {','.join(voice_profile)}\n"
+    script += portrait_entries
     
     script += f"prompt | {prompt.replace(chr(10), ' ')}\n"
     script += f"soundscape | {translate_to_audio_prompt(bg_desc)}\n"
