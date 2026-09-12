@@ -464,7 +464,7 @@ class SmartVideoPromptBuilder:
         # 4. Process Shots & Build Detailed Description
         sections.append("\ndetailed_description:")
         sections.append('''<Subject 1> is the environment anchor and must remain visible in ALL shots,
-including close-ups. Environment background must override portrait background.'''
+including close-ups. Environment background must override portrait background.''')
 
         
         if self.first_frame_label and self.first_frame_label in self.entities:
