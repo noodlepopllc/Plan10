@@ -145,7 +145,7 @@ class LTXPipeline:
                 f'{timestamp:.2}-{end_timestamp:.2} ( Shot {i+1} ) : {description}'
             )
             timestamp = end_timestamp
-        self.length = math.ceil(end_timestamp)
+        self.run_length = math.ceil(end_timestamp)
 
         return '\n'.join(shot_lines)
 
