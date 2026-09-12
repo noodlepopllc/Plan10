@@ -65,6 +65,7 @@ CRITICAL GUIDELINES:
 - If there are more than 3 people, select only the 3 most prominent/foreground characters
 - Count carefully - look for different positions, features, clothing, accessories
 
+
 For EACH character (up to 3), provide:
 1. POSITION: Where they are in the frame (left, center, right, foreground, background)
 2. APPEARANCE: Detailed physical description (age, gender, ethnicity, race, hair color/style, eye color, distinguishing features)
@@ -118,7 +119,7 @@ KEY ELEMENTS: [description]
 ART STYLE: [Art Style]
 THEME: [Theme]
 
-TOTAL_CHARACTERS: [actual count, maximum 3]"""
+"""
     
     if anime_mode:
         return f"""[ANIME MODE]
@@ -136,19 +137,12 @@ ANIME-SPECIFIC DETECTION:
 
 
 def parse_character_count(analysis: str) -> int:
-    """Extract character count from analysis text, capped at 2."""
+    """Count characters based on CHARACTER_X blocks, capped at 2."""
+    count = 0
     for line in analysis.split('\n'):
-        if 'TOTAL_CHARACTERS:' in line:
-            try:
-                detected_count = int(line.split(':')[1].strip())
-                count = min(detected_count, 2)
-                if detected_count > 2:
-                    print(f"⚠️ Detected {detected_count} characters, but compositor only supports 2. Using first 2.")
-                return count
-            except:
-                pass
-    return 1
-
+        if line.strip().startswith("CHARACTER_"):
+            count += 1
+    return min(count, 2)
 
 def generate_character_sheets(
     analysis: str, 
