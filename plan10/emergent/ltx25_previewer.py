@@ -213,7 +213,7 @@ def main():
     if not output:
         output = args.beat.replace('.txt', '_ltx.txt')
     converter = LTXPipeline()
-    converted = converter.run(args.beat)
+    converted = converter.run(args.beat, args.use_descriptions)
     print(converted)
     Path(output).write_text(f'RUNLENGTH (s):{converter.run_length}\n{converted}')
 
