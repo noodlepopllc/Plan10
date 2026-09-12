@@ -26,7 +26,7 @@ def get_or_analyze(image_path: str, prompt: str, cache_key: str, max_words: int 
         img.close()
         return cached
     
-    result = AnalyzeImage(image_path, prompt=prompt)['analysis']
+    result = AnalyzeImage(image_path, prompt=prompt, backend='smol')['analysis']
     img.close()
     from plan10.lib.util import load_metadata
     
