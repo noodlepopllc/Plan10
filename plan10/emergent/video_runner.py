@@ -196,7 +196,7 @@ def expand_to_shots(prompt: str, bg_label: str, char_labels: list, duration: flo
 
     duration_hint = f"Total duration: approximately {duration} seconds."
 
-f   ormatted_prompt = f"""You are an expert cinematic video director breaking a scene into sequential shots.
+    formatted_prompt = f"""You are an expert cinematic video director breaking a scene into sequential shots.
 
 INPUT DATA:
 - Characters: {char_list}

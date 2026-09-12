@@ -107,7 +107,7 @@ def AnalyzeMedia(media='', prompt="Describe this", max_tokens=512, temperature=0
             do_sample=temperature > 0,
             temperature=temperature if temperature > 0 else 1.0,
             max_new_tokens=max_tokens,
-            use_cache=False,   # <-- IMPORTANT
+            use_cache=True,   # <-- RESTORED
         )
 
     generated_text = processor.batch_decode(
@@ -115,15 +115,12 @@ def AnalyzeMedia(media='', prompt="Describe this", max_tokens=512, temperature=0
         skip_special_tokens=True,
     )[0]
 
-    # Explicit cleanup
-    import gc
+    # Cleanup
     del inputs
     del generated_ids
-    gc.collect()
     torch.cuda.empty_cache()
 
     return generated_text.strip()
-
 
 def AnalyzeImageSchema():
     return  {
