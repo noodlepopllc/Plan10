@@ -1,8 +1,8 @@
 from plan10.lib.config import load_config
 load_config()
 
-from plan10.lib.image_analysis import AnalyzeMedia, AnalyzeImage
-import re, os
+from plan10.lib.image_analysis import AnalyzeImage
+import re, os, math
 
 BG_PROMPT = """
 Describe only what is visible in the image in 80–120 words.
@@ -44,6 +44,7 @@ class LTXPipeline:
         self.backend = backend
         self.temperature = temperature
         self.max_tokens = max_tokens
+        self.run_length = 10.0
 
     # -----------------------------
     # Parsing
@@ -144,6 +145,7 @@ class LTXPipeline:
                 f'{timestamp:.2}-{end_timestamp:.2} ( Shot {i+1} ) : {description}'
             )
             timestamp = end_timestamp
+        self.length = math.ceil(end_timestamp)
 
         return '\n'.join(shot_lines)
 
@@ -207,7 +209,7 @@ def main():
     converter = LTXPipeline()
     converted = converter.run(args.beat)
     print(converted)
-    Path(output).write_text(converted)
+    Path(output).write_text(f'RUNLENGTH (s):{converter.run_length}\n{converted}')
 
 if __name__ == '__main__':
     main()
