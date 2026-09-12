@@ -142,7 +142,7 @@ class LTXPipeline:
                 description = description.replace(k, f'{k} ({v})')
 
             shot_lines.append(
-                f'{timestamp:.2}-{end_timestamp:.2} ( Shot {i+1} ) : {description}'
+                f'{timestamp:05.2f}-{end_timestamp:05.2f} ( Shot {i+1} ) : {description}'
             )
             timestamp = end_timestamp
         self.run_length = math.ceil(end_timestamp)
