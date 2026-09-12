@@ -79,14 +79,17 @@ class PortraitReferenceManager:
 
         target_id = builder.entities[target_key]["id"]
 
+        picture_index = len(builder.entities) + len(self.portrait_refs) + 1
+
         self.portrait_refs[label.lower()] = {
-            "id": target_id,               # SAME subject ID
+            "id": target_id,               # subject ID stays the same
             "path": image_path,
-            "pic_tag": f"<Picture {target_id}>",
+            "pic_tag": f"<Picture {picture_index}>",  # correct picture ID
             "desc": desc,
             "extra_desc": extra_desc,
             "target": target_subject_label
-        }
+}
+
 
     def emit_prompt_definitions(self):
         """
@@ -622,8 +625,8 @@ def main():
     parser.add_argument('-O', '--output', type=str, default='output')
     parser.add_argument('-I', '--input', type=str, default=None)
     parser.add_argument('-D', '--debug', action='store_true')
-    parser.add_argument('-W', '--width', type=int, default=int(os.environ.get("WIDTH", "864")))
-    parser.add_argument('-H', '--height', type=int, default=int(os.environ.get("HEIGHT", "480")))
+    parser.add_argument('-W', '--width', type=int, default=int(os.environ.get("WIDTH", "768")))
+    parser.add_argument('-H', '--height', type=int, default=int(os.environ.get("HEIGHT", "576")))
     parser.add_argument('-S', '--steps', type=int, default=4)
     parser.add_argument('--wangp', action="store_true")
     args = parser.parse_args()
