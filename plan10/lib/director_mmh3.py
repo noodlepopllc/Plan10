@@ -101,11 +101,22 @@ class PortraitReferenceManager:
         lines = []
         for label, data in self.portrait_refs.items():
             extra = f", {data['extra_desc']}" if data['extra_desc'] else ""
+            '''
             lines.append(
                 f"<Subject {data['id']}> face identity is reinforced by {data['pic_tag']}, "
                 f"showing {data['desc']}{extra}. "
                 f"The portrait reference is for facial identity only and must not override "
                 f"scene background, lighting, camera framing, or spatial continuity."
+            )
+            '''
+            lines.append(
+                f"<Subject {data['id']}> face identity is reinforced by {data['pic_tag']}, "
+                f"showing {data['desc']}{extra}. "
+                f"The portrait reference is for facial identity only. "
+                f"Do NOT use the portrait reference for camera framing, cropping, background inference, "
+                f"lighting inference, or shot composition. Portrait reference must NOT override the "
+                f"environment background or continuity from <PreviousVideo>. "
+
             )
         return lines
 
