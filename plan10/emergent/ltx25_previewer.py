@@ -168,7 +168,7 @@ SHOTS:
     # -----------------------------
     # Main Execution
     # -----------------------------
-    def run(self, beat_path: str):
+    def run(self, beat_path: str, use_descriptions=False):
         from pathlib import Path
 
         raw_beats = Path(beat_path).read_text()
@@ -180,10 +180,15 @@ SHOTS:
 
         for asset in beatdata:
             if asset['type'] == 'bg':
-                bg_desc = self.analyze_background(asset['path'])
-
+                if not use_descriptions:
+                    bg_desc = self.analyze_background(asset['path'])
+                else:
+                    bg_desc = asset['description']
             elif asset['type'] == 'char':
-                char_descs[asset['id']] = self.analyze_character(asset['path'])
+                if not use_descriptions:
+                    char_descs[asset['id']] = self.analyze_character(asset['path'])
+                else:
+                    char_descs[asset['id']] = asset['description']
                 briefs[asset['id']] = self.analyze_brief(asset['path'])
 
         shots = self.extract_shots(raw_beats)
@@ -198,6 +203,7 @@ def main():
     parser = argparse.ArgumentParser(description='Convert beats to videos using LTX2.5')
     parser.add_argument('-B', '--beat', type=str, default='', help='Story beat to render')
     parser.add_argument('-O', '--output', type=str, default=None, help='file to output')
+    parser.add_argument('-U', '--use-descriptions', action='store_true')
     args = parser.parse_args()
     output = args.output
 
