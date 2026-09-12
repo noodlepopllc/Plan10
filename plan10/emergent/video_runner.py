@@ -277,11 +277,11 @@ def main():
     bg = state.get('current_bg')
     output_dir = state.get('output_dir') or args.output
     
+    '''
     # --- MEMORY OPTIMIZATION FOR MMH3 ---
-    if MMH3 or args.debug:
+    if MMH3:
         os.makedirs(output_dir, exist_ok=True)
         # Fallback for older Pillow versions that don't have Image.Resampling
-        '''
         resample_filter = getattr(Image, 'Resampling', Image).LANCZOS 
         # Resize background to target video resolution (e.g., 768x448)
         if bg and os.path.exists(bg):
@@ -308,7 +308,7 @@ def main():
             else:
                 resized_refs.append(ref)
         refs = resized_refs
-        '''
+    '''
     # ------------------------------------
 
     # Find the first pending job
@@ -334,7 +334,7 @@ def main():
     try:
         prompt = pending_job['prompt']
 
-        if MMH3:
+        if MMH3 or args.debug:
             from plan10.lib.director_mmh3 import get_builder
             media = pending_job['input_media']
             if isinstance(media, (list, tuple)) and len(media):
