@@ -108,6 +108,13 @@ def voice_prompt(gender, age):
     #print(f"Generated Profile Tags: {voice_profile}")
     return voice_profile
 
+CHAR_PROMPT = '''
+Return ONE sentence in this exact format:
+
+"The {race/ethnicity} {gender} with {hair style} {hair color} hair is wearing {clothing list} and {accessory list}."
+
+Use ONLY these slots. Do not reorder them.
+'''
 
 def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0):
     script = ""
@@ -131,7 +138,7 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0):
         char_labels.append(label)
         
         ref_desc = get_or_analyze(ref,
-            'Brief description of character appearance/clothing. Max 10 words.',
+            CHAR_PROMPT,
             'char_desc')
         script += f"char | {label} | {ref} | {ref_desc}\n"
 
@@ -251,6 +258,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-O', '--output', type=str, default="feedback_output")
     parser.add_argument('-F', '--fast', action='store_true')
+    parser.add_argument('-D', '--debug', action='store_true')
     args, _ = parser.parse_known_args()
     
     state_mgr = StateManager(args.output)
@@ -338,6 +346,14 @@ def main():
             current_source_path = f'{os.getcwd()}/tmp.png'
             script = h3_ref(bg, None, refs, portraits, prompt,  duration)
             Path(pending_job['output_path'].replace('.mp4', '_script.txt')).write_text(script)
+            if args.debug:
+                # Mark as complete and update current_media
+                pending_job['status'] = 'complete'
+                state['current_media'] = pending_job['output_path']
+                state_mgr.save(state)
+                
+                print(f"✅ Beat {pending_job['beat']} rendered successfully.")
+                sys.exit(pending_job['beat'])  # Positive = success
             builder = get_builder(script, '')
             final_prompt = builder.generate()
             print("FINAL", final_prompt)
