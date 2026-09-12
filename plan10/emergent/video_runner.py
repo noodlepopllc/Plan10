@@ -151,7 +151,7 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0):
         else:
             port_path = os.path.splitext(ref)[0] + '_portrait.png'
             portrait_desc = get_or_analyze(ref,'Brief description of characters face and hair, Max 10 words.', 'portrait_desc')
-            script += f"portrait | portrait_{ndx} | {port_path} | {label} | {portrait_desc}"
+            portrait_entries += f"portrait | portrait_{ndx} | {port_path} | {label} | {portrait_desc}"
             portrait_ndx += 1
 
         

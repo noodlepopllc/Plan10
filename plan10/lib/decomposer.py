@@ -297,7 +297,7 @@ def save_manifest(
     return manifest_path
 
 
-def decompose_scene(input_image: str, prompt: str, output_dir: str, seed: int = 42) -> dict:
+def decompose_scene(input_image: str, prompt: str, output_dir: str, seed: int = 42, generate_portraits=False) -> dict:
     """
     Decompose a scene into individual character sheets and background plate.
     
@@ -330,12 +330,14 @@ def decompose_scene(input_image: str, prompt: str, output_dir: str, seed: int = 
         seed=seed
     )
 
-    portraits = generate_portraits(
-        analysis=analysis,
-        char_count=char_count,
-        output_dir=output_dir,
-        seed=seed
-    )
+    portraits = None
+    if generate_portraits:
+        portraits = generate_portraits(
+            analysis=analysis,
+            char_count=char_count,
+            output_dir=output_dir,
+            seed=seed
+        )
     
     # Step 3: Generate background
     background = generate_background(
