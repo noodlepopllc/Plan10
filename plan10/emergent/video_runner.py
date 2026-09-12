@@ -217,17 +217,10 @@ HARD CONSTRAINTS:
 
 10. DIALOGUE SHOT BREAKDOWN: Long dialogue MUST be broken into multiple shots. Each dialogue shot should contain NO MORE THAN 10-15 words of spoken text.
     
-    SHOT STRUCTURE FOR DIALOGUE:
-    - SETUP SHOT: Character prepares to speak (turns, takes breath, expression changes). No dialogue. MUST start with foley.
-    - DIALOGUE SHOT: Closeup of speaker only. No other characters in frame. Static camera. Starts with foley. Dialogue text goes here. Ends with the character's mouth closed and completely silent.
-    - REACTION/WIDER SHOT: Cut to listener's reaction, or back to a medium shot showing the characters and environment. Starts with foley.
-    
-    BAD: "Closeup of char1. char1 speaks [English] 'Then why'd you land in my camp?'" (missing foley start, missing explicit mouth closed closure rule)
-    
-    GOOD:
-    shot | Low desert wind and the faint hiss of steam. Medium shot. char1 turns to face char2, her expression hardening. | 2.0
-    shot | Distant gravel shifting. Closeup of char1 only, no other characters in frame. Static camera, zero camera movement. char1 speaks [English] "Then why'd you land in my camp?" Immediately after speaking, she completely closes her mouth and remains silent. | 2.5
-    shot | A sharp mechanical click. Medium shot. Camera returns to a mid-range framing of the scene. char2 flinches, eyes flicking to the smoke behind char1. Both figures hold their positions. | 2.0
+SHOT STRUCTURE FOR DIALOGUE:
+- SETUP SHOT: Character prepares to speak (turns, takes breath, expression changes). No dialogue. MUST start with foley.
+- DIALOGUE SHOT: Medium-close framing that emphasizes the speaker while keeping the environment visible. Static camera, zero camera movement. Do NOT describe the speaker as "only" or "alone" in the frame. Starts with foley. Dialogue text goes here. Ends with the character's mouth closed and completely silent.
+- REACTION/WIDER SHOT: Cut to listener's reaction, or back to a medium shot showing the characters and environment. Starts with foley.
 
 11. Each dialogue shot MUST include a physical action BEFORE the dialogue (prepares to speak) and AFTER the dialogue (pauses, blinks, shifts weight, looks away). This creates natural breathing room.
 
