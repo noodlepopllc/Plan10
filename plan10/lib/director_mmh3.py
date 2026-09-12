@@ -102,10 +102,13 @@ class PortraitReferenceManager:
         for label, data in self.portrait_refs.items():
             extra = f", {data['extra_desc']}" if data['extra_desc'] else ""
             lines.append(
-                f"<Subject {data['id']}> face identity is reinforced by "
-                f"{data['pic_tag']}, showing {data['desc']}{extra}."
+                f"<Subject {data['id']}> face identity is reinforced by {data['pic_tag']}, "
+                f"showing {data['desc']}{extra}. "
+                f"The portrait reference is for facial identity only and must not override "
+                f"scene background, lighting, camera framing, or spatial continuity."
             )
         return lines
+
 
     def get_paths(self):
         """
@@ -456,6 +459,9 @@ class SmartVideoPromptBuilder:
 However, CHARACTER IDENTITY (facial features, clothing details, body proportions, hair texture) must be corrected and overridden by the character reference images to prevent feature degradation. The character references are the source of truth for identity; the first frame is the source of truth for composition."""
             sections.append(ff_rule)
             sections.append("")
+        sections.append("""Close-up shots must preserve the environment background and lighting from the
+current scene and <PreviousVideo>. Do not switch to portrait background.
+""")
             
         if self.scene_style:
             sections.append(self.scene_style)
