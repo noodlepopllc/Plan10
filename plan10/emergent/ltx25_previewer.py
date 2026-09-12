@@ -155,6 +155,8 @@ class LTXPipeline:
             characters.append(f'{k} - {v}')
 
         return f'''
+STYLE:
+{style}
 ENVIRONMENT:
 {bg_desc}
         
@@ -168,7 +170,7 @@ SHOTS:
     # -----------------------------
     # Main Execution
     # -----------------------------
-    def run(self, beat_path: str, use_descriptions=False):
+    def run(self, beat_path: str, style: str, use_descriptions=False):
         from pathlib import Path
 
         raw_beats = Path(beat_path).read_text()
@@ -204,6 +206,7 @@ def main():
     parser.add_argument('-B', '--beat', type=str, default='', help='Story beat to render')
     parser.add_argument('-O', '--output', type=str, default=None, help='file to output')
     parser.add_argument('-U', '--use-descriptions', action='store_true')
+    parser.add_argument('-S', '--style', type=str, help='art style')
     args = parser.parse_args()
     output = args.output
 
@@ -213,7 +216,7 @@ def main():
     if not output:
         output = args.beat.replace('.txt', '_ltx.txt')
     converter = LTXPipeline()
-    converted = converter.run(args.beat, args.use_descriptions)
+    converted = converter.run(args.beat, style=args.style, use_descriptions=args.use_descriptions)
     print(converted)
     Path(output).write_text(f'RUNLENGTH (s):{converter.run_length}\n{converted}')
 

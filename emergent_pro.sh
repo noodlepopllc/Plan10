@@ -21,7 +21,7 @@ source .env
 
 while true; do
     # Run creative step (ignores --fast safely)
-    uv run video_creator -P "$(tail -n +2 $OUTPUT_DIR/prompt.txt)" -C "$(tail -n + $OUTPUT_DIR/actions.txt)" -G "$(cat $INPUT_FILE)" -O $OUTPUT_DIR -D $DURATION
+    uv run video_creator -P "$(tail -n +2 $OUTPUT_DIR/prompt.txt)" -C "$(tail -n +2 $OUTPUT_DIR/actions.txt)" -G "$(cat $INPUT_FILE)" -O $OUTPUT_DIR -D $DURATION
     CLI_EXIT=$?
     
     if [ $CLI_EXIT -eq 255 ]; then
