@@ -157,6 +157,7 @@ class LTXPipeline:
         return f'''
 STYLE:
 {style}
+
 ENVIRONMENT:
 {bg_desc}
         
