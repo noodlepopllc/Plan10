@@ -155,7 +155,7 @@ class LTXPipeline:
             characters.append(f'{k} - {v}')
 
         return f'''
-STYLE:
+ART STYLE/THEME:
 {style}
 
 ENVIRONMENT:
