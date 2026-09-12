@@ -91,34 +91,42 @@ class PortraitReferenceManager:
             "target": target_subject_label
         }
 
-
-
-    def emit_prompt_definitions(self):
+    def rewrite_with_portraits(self, sub_defs):
         """
-        Returns a list of prompt lines describing portrait identity references.
-        Called inside SmartVideoPromptBuilder.generate().
+        sub_defs: list of strings from emit_subject_definitions()
+        portrait_refs: dict keyed by subject id or label
         """
-        lines = []
-        for label, data in self.portrait_refs.items():
-            extra = f", {data['extra_desc']}" if data['extra_desc'] else ""
-            '''
-            lines.append(
-                f"<Subject {data['id']}> face identity is reinforced by {data['pic_tag']}, "
-                f"showing {data['desc']}{extra}. "
-                f"The portrait reference is for facial identity only and must not override "
-                f"scene background, lighting, camera framing, or spatial continuity."
-            )
-            '''
-            lines.append(
-                f"<Subject {data['id']}> face identity is reinforced by {data['pic_tag']}, "
-                f"showing {data['desc']}{extra}. "
-                f"The portrait reference is for facial identity only. "
-                f"Do NOT use the portrait reference for camera framing, cropping, background inference, "
-                f"lighting inference, or shot composition. Portrait reference must NOT override the "
-                f"environment background or continuity from <PreviousVideo>. "
+        rewritten = []
+        for line in sub_defs:
+            # Extract subject id, e.g. "<Subject 2>"
+            # Simple parse:
+            # prefix = "<Subject "
+            # id_str = line.split(">")[0].split(prefix)[1]
+            # subj_id = int(id_str)
 
+            prefix = "<Subject "
+            id_part = line.split(">")[0]
+            subj_id = int(id_part.split(prefix)[1])
+
+            portrait = self.portrait_refs.get(subj_id)
+            if not portrait:
+                rewritten.append(line)
+                continue
+
+            # Base subject stays, portrait is added as identity-only
+            base_line = line.rstrip(".")
+            portrait_line = (
+                f"{base_line}. Facial identity is reinforced by {portrait['pic_tag']}. "
+                f"{portrait['desc']}. "
+                f"{portrait['pic_tag']} is an identity-only reference containing facial "
+                f"features ONLY. Ignore any background, lighting, framing, or spatial cues "
+                f"present in the portrait. Do NOT use the portrait for camera distance, "
+                f"cropping, or background inference."
             )
-        return lines
+            rewritten.append(portrait_line)
+
+        return rewritten
+
 
 
     def get_paths(self):
@@ -446,6 +454,7 @@ class SmartVideoPromptBuilder:
                 sub_defs.append(
                     f"<Subject {data['id']}> is {data['desc']} in {data['pic_tag']}."
                 )
+        sub_defs = self.portrait_manager.rewrite_with_portraits(sub_defs)
 
         audio_defs = []
         for label, data in self.used_audio_refs.items():
@@ -454,8 +463,6 @@ class SmartVideoPromptBuilder:
                 f"<Audio {data['id']}> is the voice-timbre reference for <Subject {data['target_id']}> {data['speaker_tag']}{extra}."
             )
         sections.append("\n".join(sub_defs + audio_defs))
-        portrait_defs = self.portrait_manager.emit_prompt_definitions()
-        sections.append("\n".join(portrait_defs))
 
         if self.summary:
             sections.append("\nsummary:")
