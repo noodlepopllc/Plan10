@@ -90,6 +90,11 @@ def AnalyzeMedia(media='', prompt="Describe this", max_tokens=512, temperature=0
             {"type": "video", "path": media_path},
             {"type": "text", "text": prompt}
         ]
+    elif not media:
+        content = [
+            {"type": "text", "text": prompt}
+        ]
+
     else:
         content = [
             {"type": "image", "path": media_path},
