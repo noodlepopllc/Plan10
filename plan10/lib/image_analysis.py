@@ -150,7 +150,7 @@ def AnalyzeImageSchema():
         }
     }
 
-def AnalyzeImage(image='', prompt='Describe this.', output=None, backend=None):
+def AnalyzeImage(image='', prompt='Describe this.', output=None, backend=None, max_tokens=4096, temperature=0.5):
     """
     Analyze an image or video using either Qwen-VL or SmolVLM2.
     
@@ -167,11 +167,11 @@ def AnalyzeImage(image='', prompt='Describe this.', output=None, backend=None):
         backend = os.environ.get("VISION_BACKEND", "qwen").lower()
     
     if backend == "smol":
-        analysis_text = AnalyzeMedia(image, prompt, max_tokens=4096, temperature=0.5)
+        analysis_text = AnalyzeMedia(image, prompt, max_tokens=max_tokens, temperature=temperature)
         status = {'analysis': analysis_text}
     else:
         # Default to Qwen
-        status = llm_analyze_media(image, prompt, max_tokens=4096, temperature=0.5)
+        status = llm_analyze_media(image, prompt, max_tokens=max_tokens, temperature=temperature)
     
     if output:
         Path(output).write_text(status['analysis'])
