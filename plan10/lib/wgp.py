@@ -88,6 +88,7 @@ async def i2v_ltx(prompt='', media='', end='', output='output.mp4',
         args["multi_prompts_gen_type"] = "FG"
         args['num_inference_steps'] = 8 if DISTILLED else 30
         args['guidance_scale'] = 1.0 if DISTILLED else 3.0
+        args['seed'] = SEED
         print(args)
         r = await client.call_tool("wangp_generate", {"source": args})
         print(r.data['job_id'])
