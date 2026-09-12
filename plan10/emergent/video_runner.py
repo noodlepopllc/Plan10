@@ -26,7 +26,7 @@ def get_or_analyze(image_path: str, prompt: str, cache_key: str, max_words: int 
         img.close()
         return cached
     
-    result = AnalyzeImage(image_path, prompt=prompt, backend='')['analysis']
+    result = AnalyzeImage(image_path, prompt=prompt, backend='smol')['analysis']
     img.close()
     from plan10.lib.util import load_metadata
     
@@ -188,21 +188,32 @@ def expand_to_shots(prompt: str, bg_label: str, char_labels: list, duration: flo
         scene_context = f"\n\nVISUAL CONTEXT (This is the EXACT starting frame at 00:00.000):\n{analysis}\n"
 
     char_list = ", ".join(char_labels)
+
+    char_tokens = [f"char{i+1}" for i in range(len(char_labels))]
+    char_list = ", ".join(char_tokens)
+
+    mapping = "\n".join([f"- {char_tokens[i]} = {char_labels[i]}" for i in range(len(char_labels))])
+
     duration_hint = f"Total duration: approximately {duration} seconds."
 
-    formatted_prompt = f"""You are an expert cinematic video director breaking a scene into sequential shots.
+f   ormatted_prompt = f"""You are an expert cinematic video director breaking a scene into sequential shots.
 
 INPUT DATA:
 - Characters: {char_list}
 - Background: {bg_label}
 - {duration_hint}
 - Scene description: {prompt}
+
+CHARACTER MAPPING:
+{mapping}
 {scene_context}
 
 TASK:
 Generate a sequence of short cinematic shots (2–4 seconds each) that follow the scene description and maintain visual continuity.
 
 GLOBAL RULES:
+...
+
 1. Use MEDIUM SHOTS as the default framing for dialogue and action.
    - Characters visible from waist/chest upward.
    - Environment must remain visible.
