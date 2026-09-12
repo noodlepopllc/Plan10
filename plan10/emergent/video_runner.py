@@ -278,7 +278,7 @@ def main():
     output_dir = state.get('output_dir') or args.output
     
     # --- MEMORY OPTIMIZATION FOR MMH3 ---
-    if MMH3:
+    if MMH3 or args.debug:
         os.makedirs(output_dir, exist_ok=True)
         # Fallback for older Pillow versions that don't have Image.Resampling
         '''
