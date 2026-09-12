@@ -196,7 +196,7 @@ SHOTS:
         shots = self.extract_shots(raw_beats)
         formatted_shots = self.format_shots(shots, briefs)
 
-        return self.build_ltx_prompt('', bg_desc, char_descs, formatted_shots)
+        return self.build_ltx_prompt(style, bg_desc, char_descs, formatted_shots)
 
 def main():
     import argparse, sys, json
