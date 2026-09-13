@@ -171,12 +171,10 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0, visual_ids=[]):
             portrait_desc = get_or_analyze(portraits[portrait_ndx],
                 FACE_PROMPT, 'portrait_desc')
             portrait_entries += f"portrait | portrait_{ndx} | {portraits[ndx-1]} | {label} | {portrait_desc}\n"
-            portrait_ndx += 1
         else:
             port_path = os.path.splitext(ref)[0] + '_portrait.png'
             portrait_desc = get_or_analyze(ref, FACE_PROMPT, 'portrait_desc')
             portrait_entries += f"portrait | portrait_{ndx} | {port_path} | {label} | {portrait_desc}\n"
-            portrait_ndx += 1
 
         
         voice_data = get_or_analyze(ref,
