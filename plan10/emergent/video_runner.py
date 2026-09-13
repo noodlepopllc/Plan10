@@ -209,21 +209,16 @@ def expand_to_shots(prompt: str, bg_label: str, char_labels: list, duration: flo
         """)['analysis']
         scene_context = f"\n\nVISUAL CONTEXT (This is the EXACT starting frame at 00:00.000):\n{analysis}\n"
 
-    char_list = ", ".join(char_labels)
-
     char_tokens = [f"char{i+1}" for i in range(len(char_labels))]
     char_list = ", ".join(char_tokens)
-
     mapping = "\n".join([f"- {char_tokens[i]} = {char_labels[i]}" for i in range(len(char_labels))])
-
-    duration_hint = f"Total duration: approximately {duration} seconds."
 
     formatted_prompt = f"""You are an expert cinematic video director breaking a scene into sequential shots.
 
 INPUT DATA:
 - Characters: {char_list}
 - Background: {bg_label}
-- {duration_hint}
+- Target duration: {int(duration)} seconds (approximate)
 - Scene description: {prompt}
 
 CHARACTER MAPPING:
@@ -231,52 +226,50 @@ CHARACTER MAPPING:
 {scene_context}
 
 TASK:
-Generate a sequence of short cinematic shots (2–4 seconds each) that follow the scene description and maintain visual continuity.
+Generate a sequence of cinematic shots that follow the scene description and maintain visual continuity. Use as many shots as needed.
+
+SHOT DURATION GUIDELINES (use whole seconds only):
+- Quick dialogue (1-5 words): 1 second
+- Medium dialogue (6-15 words): 2 seconds
+- Simple actions (turn, look, gesture): 2 seconds
+- Complex actions (crawl, stand up, walk): 3-4 seconds
+- Reaction shots: 2 seconds
 
 GLOBAL RULES:
-...
 
 1. Use MEDIUM SHOTS as the default framing for dialogue and action.
    - Characters visible from waist/chest upward.
    - Environment must remain visible.
-   - Medium-close is allowed but MUST NOT isolate the speaker.
 
 2. Camera movement is ONLY allowed in Shot 1 (establishing).
    - After Shot 1, camera remains static or uses minimal drift.
-   - Do NOT use “pushes in”, “zooms”, “tightens”, or “moves closer”.
 
 3. Dialogue:
-   - Dialogue shots use medium or medium-close framing.
-   - Speaker MUST direct gaze and speech toward the correct listener.
-   - Listener MUST be referenced (in-frame or off-frame).
    - Dialogue format: char speaks [English] "text"
-   - After speaking: “they close their mouth and are silent.”
+   - DO NOT add padding like "closes mouth" or "is silent" after speaking
+   - Keep dialogue shots tight and natural
 
-4. Foley:
-   - EVERY shot MUST begin with a foley cue.
+4. Physicality:
+   - Dialogue shots MAY include a brief physical action before speaking (turns, breath)
+   - DO NOT force physical actions after speaking - this creates padding
 
-5. Physicality:
-   - Each dialogue shot MUST include a physical action BEFORE speaking
-     (turns, breath, expression shift)
-     and AFTER speaking (blink, shift weight, glance, pause).
-
-6. Dialogue length:
+5. Dialogue length:
    - Max 15 words per shot. Break long dialogue into multiple shots.
 
-7. Final shot:
-   - MUST be a medium shot showing characters + environment.
+6. Foley:
+   - EVERY shot MUST begin with a foley cue.
 
-8. Continuity:
+7. Continuity:
    - Lighting, shadows, and weather remain identical.
    - Actions flow continuously between shots.
 
 FORMAT:
 shot | foley + description | duration_seconds
 
-EXAMPLE (FORMAT ONLY — DO NOT COPY CONTENT):
-shot | Low wind through rafters. Medium shot. char1 shifts her stance, glancing toward char2. | 2.0
-shot | Soft creak of wood. Medium-close shot of char1 facing char2. Static camera. char1 speaks [English] "Why is the butter floating?" She closes her mouth and is silent. | 2.5
-shot | Distant hoofbeats. Medium shot. char2 reacts with a quick blink, eyes flicking toward char1. | 2.0
+EXAMPLE:
+shot | Low wind through rafters. Medium shot. char1 shifts her stance, glancing toward char2. | 2
+shot | Soft creak of wood. Medium shot of char1 facing char2. char1 speaks [English] "Stay back." | 1
+shot | Distant hoofbeats. Medium shot. char2 reacts with a quick blink. | 2
 
 NOW, generate the shots for the INPUT DATA provided above:
 """
@@ -290,8 +283,6 @@ NOW, generate the shots for the INPUT DATA provided above:
             lines.append(line)
 
     return "\n".join(lines)
-
-
 
 def main():
     parser = argparse.ArgumentParser()
