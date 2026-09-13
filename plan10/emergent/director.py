@@ -15,16 +15,25 @@ class Director:
         """Analyze what actually happened in the video/image."""
         media_path = Path(media_path)
         ext = media_path.suffix.lower()
+        media_type = "video" if ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm'] else "image"
         
-        # SmolVLM2 can analyze videos directly
         prompt = f"""We intended to create this: "{intended_action}"
 
-Analyze what ACTUALLY happened in this {"video" if ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm'] else "image"}:
-1. What is the character doing? (actions, expressions, movement)
-2. What props/objects are visible?
-3. Any issues or unexpected elements?
+Analyze what ACTUALLY happened in this {media_type}. Be factual about what you see, not what was intended.
 
-Be factual about what you see, not what was intended."""
+1. CHARACTER ACTIONS: What is each character doing? (movements, gestures, expressions)
+2. CHARACTER STATES: For each visible character, describe:
+   - Pose/posture (standing, kneeling, sitting, crouching, lying down, leaning, etc.)
+   - Position in frame (left, center, right, foreground, background)
+   - Facing direction (toward camera, away, left, right, 3/4 view)
+   - Any held objects or props in hand
+3. PROPS/ENVIRONMENT: What objects, furniture, or environmental elements are visible?
+4. ISSUES: Any problems? (character cut off, wrong pose, unexpected elements, face not visible)
+
+Format character states clearly, for example:
+"Character 1 (woman in green shirt): kneeling on ground, center-left frame, facing right, holding a map"
+"Character 2 (man in blue jacket): standing upright, right side of frame, 3/4 view toward camera"
+"""
         
         # Use AnalyzeMedia which will use SmolVLM2 for video, Qwen for images
         result = AnalyzeMedia(str(media_path), prompt)
@@ -39,11 +48,11 @@ Be factual about what you see, not what was intended."""
                 pending_setup, goal, force_transition, location_constraint,
                 bg_desc, ff_desc  # <-- Pass through
             )
-            return self.compare_and_decide_no_dialog(
-                intended_action, actual_reality, story_context, history, 
-                pending_setup, goal, force_transition, location_constraint,
-                bg_desc, ff_desc  # <-- Pass through
-            )
+        return self.compare_and_decide_no_dialog(
+            intended_action, actual_reality, story_context, history, 
+            pending_setup, goal, force_transition, location_constraint,
+            bg_desc, ff_desc  # <-- Pass through
+        )
             
 
     def compare_and_decide_dialog(self, intended_action, actual_reality, story_context, history, pending_setup, goal=None, force_transition=False, 
@@ -72,61 +81,47 @@ Be factual about what you see, not what was intended."""
         goal_directive = ""
         if goal:
             goal_directive = f"""
-    NARRATIVE GOAL: {goal}
+NARRATIVE GOAL: {goal}
 
-    CRITICAL: Every action you generate MUST move the characters closer to completing this goal. 
-    - Evaluate what ACTUALLY happened in the video (ACTUAL SCENE STATE)
-    - Choose the next action (physical OR verbal) that logically progresses toward the goal
-    - If the characters deviated from the intended path, adapt and find a new route to the goal
-    - The goal should be completed within 3-5 beats
+Every action MUST move toward completing this goal. If characters deviated from the intended path, adapt and find a new logical route.
 
-    SCENE TRANSITION RULES:
-    - If the NEXT_ACTION describes characters physically moving TOWARD a destination 
-    (walking to the ship, entering a cave, heading east, running away), 
-    you MUST set SCENE_TRANSITION: YES and describe the NEW_LOCATION they arrive at.
-    - "Striding east toward the ship" = SCENE_TRANSITION: YES
-    - "Turns and walks away" = SCENE_TRANSITION: YES  
-    - "Stands still and talks" = SCENE_TRANSITION: NO
-    - "Takes a step forward" = SCENE_TRANSITION: NO (minor movement, same location)
-
-    When SCENE_TRANSITION is YES, NEW_LOCATION must describe the visual environment 
-    the characters arrive at in enough detail for background generation.
-    """
+SCENE TRANSITIONS: If NEXT_ACTION describes characters moving to a NEW location (walking to ship, entering cave, running away), set SCENE_TRANSITION: YES and describe NEW_LOCATION in detail. Minor movements (stepping forward, turning) = NO.
+"""
         
         if not history:
             task_directive = """TASK: This is the FIRST BEAT. 
-    1. The ACTUAL SCENE STATE is the starting visual.
-    2. Your NEXT_ACTION MUST be the specific physical action OR DIALOGUE described in the STORY CONTEXT. 
-    3. Do not just advance the story; EXECUTE the story context as the immediate action. Characters can speak, tell jokes, or react verbally."""
+1. The ACTUAL SCENE STATE is the starting visual.
+2. Your NEXT_ACTION MUST execute the STORY CONTEXT as the immediate action. Characters can speak, react, or interact with the environment."""
         else:
             task_directive = """TASK: Apply "Yes, And..." improv logic with GOAL-DIRECTED PROGRESSION.
-    1. YES: Accept the ACTUAL SCENE STATE as absolute truth (what actually happened, not what was intended).
-    2. AND: Generate the next physical action OR DIALOGUE that moves toward the NARRATIVE GOAL.
-    3. CRITICAL: This action must SET UP the next beat while progressing toward the goal. Include specific character dialogue if it serves the comedic or narrative goal (e.g., "The woman with red hair in a green shirt says...")."""
+1. YES: Accept the ACTUAL SCENE STATE as absolute truth (what actually happened visually, not what was intended).
+2. AND: Generate the next moment-to-moment action that moves toward the NARRATIVE GOAL.
+3. CONTINUITY: Characters maintain their current pose/posture from the ACTUAL SCENE STATE. If a pose must change, explicitly describe the transition (e.g., "stands up from kneeling"). Never repeat a pose they are already in as if it's a new action."""
+
+        # Cleanly join optional context blocks
+        context_blocks = [history_text, setup_context, transition_directive, constraint_directive]
+        recent_context = "\n".join(filter(None, context_blocks))
 
         prompt = f"""STORY CONTEXT: {story_context}
-    {goal_directive}
-    PREVIOUS INTENTION: {intended_action}
-    ACTUAL SCENE STATE: {actual_reality}
-    {visual_grounding}
-    RECENT ACTIONS: {history_text}{setup_context}{transition_directive}{constraint_directive}
+{goal_directive}
+PREVIOUS INTENTION: {intended_action}
+ACTUAL SCENE STATE: {actual_reality}
+{visual_grounding}
+{recent_context}
 
-    {task_directive}
+{task_directive}
 
-    Output format (STRICTLY follow this, no extra text):
-    MATCH: [YES/PARTIAL/NO]
-    ISSUES: [none, or specific problem]
-    LOCATION: [brief location]
-    CHARACTERS: [brief descriptions, including key visual identifiers like hair/clothing color]
-    SCENE_TRANSITION: [YES/NO] - Is this an intentional cut to a NEW location/scene?
-    NEW_LOCATION: [if YES, describe the new location in detail for background generation]
-    NEXT_ACTION: Write 2–4 short sentences. 
-        Break actions and dialogue into separate sentences. 
-        Dialogue is optional. 
-        If dialogue appears, limit it to one short line.
-    SETUP: [what this sets up for the next beat]
-    GOAL_PROGRESS: [how this action moves toward completing the goal]
-    """
+Output format (STRICTLY follow this, no extra text or markdown formatting):
+MATCH: [YES/PARTIAL/NO]
+ISSUES: [none, or specific visual/narrative problem]
+LOCATION: [brief location]
+CHARACTERS: [brief descriptions, including key visual identifiers like hair/clothing color]
+SCENE_TRANSITION: [YES/NO]
+NEW_LOCATION: [if YES, describe the new location in detail for background generation]
+NEXT_ACTION: Describe the moment-to-moment action and dialogue for this 6-15 second beat. Start from the characters' CURRENT physical state. Include natural dialogue, specific movements, and expressions. Provide enough concrete detail for the renderer to execute the shot while advancing the goal.
+SETUP: [what this beat sets up for the next beat]
+GOAL_PROGRESS: [how this action moves toward completing the goal]
+"""
         
         result = llm_analyze_media(
             media="", prompt=prompt,
