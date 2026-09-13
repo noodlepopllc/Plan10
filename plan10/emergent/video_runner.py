@@ -141,7 +141,7 @@ DEFINITIONS:
 - {key visual element} is one notable object, structure, or terrain feature.
 - Keep the entire sentence brief (under ~12 words naturally).
 '''
-def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0):
+def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0, visual_ids=[]):
     script = ""
     
     # 1. First Frame - NO CACHE
@@ -157,21 +157,20 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0):
     
     # 3. Characters - CACHED
     char_labels = []
-    portrait_ndx = 0
     portrait_entries = ''
     for ndx, ref in enumerate(refs, start=1):
         label = f"char{ndx}"
         char_labels.append(label)
         
-        ref_desc = get_or_analyze(ref,
-            CHAR_PROMPT,
-            'char_desc')
-        script += f"char | {label} | {ref} | {ref_desc}\n"
+        #ref_desc = get_or_analyze(ref,
+        #    CHAR_PROMPT,
+        #    'char_desc')
+        script += f"char | {label} | {ref} | {visual_ids[ndx-1]}\n"
 
         if portraits:
             portrait_desc = get_or_analyze(portraits[portrait_ndx],
                 FACE_PROMPT, 'portrait_desc')
-            portrait_entries += f"portrait | portrait_{ndx} | {portraits[portrait_ndx]} | {label} | {portrait_desc}\n"
+            portrait_entries += f"portrait | portrait_{ndx} | {portraits[ndx-1]} | {label} | {portrait_desc}\n"
             portrait_ndx += 1
         else:
             port_path = os.path.splitext(ref)[0] + '_portrait.png'
@@ -316,6 +315,7 @@ def main():
     refs = state.get('character_refs', [])
     portraits = state.get('portraits', [])
     initial = state.get('initial_media', '')
+    visual_ids = state.get('visual_ids',[])
     bg = state.get('current_bg')
     output_dir = state.get('output_dir') or args.output
     
@@ -386,7 +386,7 @@ def main():
             current_source = video_to_img(start_image, WIDTH, HEIGHT, True, True)
             current_source.save('tmp.png')
             current_source_path = f'{os.getcwd()}/tmp.png'
-            script = h3_ref(bg, None, refs, portraits, prompt,  duration)
+            script = h3_ref(bg, None, refs, portraits, prompt,  duration, visual_ids=visual_ids)
             Path(pending_job['output_path'].replace('.mp4', '_script.txt')).write_text(script)
             if args.debug:
                 # Mark as complete and update current_media
