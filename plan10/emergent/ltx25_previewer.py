@@ -28,6 +28,13 @@ Return ONE sentence in this exact format:
 "The {race/ethnicity} {gender} with {hair style} {hair color} hair is wearing {clothing list} and {accessory list}."
 
 Use ONLY these slots. Do not reorder them.
+
+DEFINITIONS:
+- {clothing list} includes the material of each item.
+  Examples: "red satin shirt", "blue denim jeans", "black leather jacket", "tan canvas shorts".
+- {accessory list} includes material when relevant.
+  Examples: "silver metal collar", "brown leather satchel", "chrome visor".
+
 '''
 
 BRIEF_PROMPT = '''
