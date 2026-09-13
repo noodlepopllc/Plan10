@@ -1,7 +1,7 @@
 import sys
 import argparse
 from pathlib import Path
-import os, traceback
+import os, traceback, re
 from PIL import Image  # Added for image resizing
 
 from plan10.lib.config import load_environ
