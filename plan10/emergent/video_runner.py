@@ -43,9 +43,9 @@ def get_or_analyze(image_path: str, prompt: str, cache_key: str, max_words: int 
     return result
 
 if ANIME:
-    from plan10.lib.anime_gen import GenerateImage, CreateCharacterSheet, CreateBackground
+    from plan10.lib.anime_gen import GenerateImage, CreateCharacterSheet, CreateBackground, add_metadata_loc
 else:
-    from plan10.lib.image_gen import GenerateImage, CreateCharacterSheet, CreateBackground
+    from plan10.lib.image_gen import GenerateImage, CreateCharacterSheet, CreateBackground, add_metadata_loc
 from plan10.lib.dialog import DesignVoice
 
 ENHANCE_Prompt = '''You enhance rough video prompts into structured audiovisual rewrite prompts for I2VA (first-frame image → video).
@@ -150,7 +150,7 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0, visual_ids=[]):
         script += f"ff | ff | {ff} | {ff_desc}\n"
     
     # 2. Background - CACHED
-    bg_desc = get_or_analyze(bg, BG_PROMPT, 'Description', max_words=100)
+    bg_desc = add_metadata_loc(bg, prompt='', seed=-1, brief=True, update=False)
     script += f"bg | bg | {bg} | {bg_desc}\n"
     
     # 3. Generate shots FIRST to know who speaks
@@ -177,7 +177,7 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0, visual_ids=[]):
     portrait_entries = ''
     for ndx, ref in enumerate(refs, start=1):
         label = f"char{ndx}"
-        char_desc = get_or_analyze(bg, CHAR_PROMPT, 'Description', max_words=100)
+        char_desc = get_or_analyze(ref, CHAR_PROMPT, 'Description', max_words=100)
         script += f"char | {label} | {ref} | {char_desc}\n"
 
         if portraits:
