@@ -474,7 +474,7 @@ class SmartVideoPromptBuilder:
 However, CHARACTER IDENTITY (facial features, clothing details, body proportions, hair texture) must be corrected and overridden by the character reference images to prevent feature degradation. The character references are the source of truth for identity; the first frame is the source of truth for composition."""
             sections.append(ff_rule)
             sections.append("")
-        sections.append("""Close-up shots must preserve the environment background and lighting from the
+        #sections.append("""Close-up shots must preserve the environment background and lighting from the
 current scene and <PreviousVideo>. Do NOT switch to portrait background. Do NOT
 crop to the portrait reference. Maintain full scene geometry and environmental
 continuity even during close-up framing.
