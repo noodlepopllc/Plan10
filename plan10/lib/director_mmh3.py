@@ -467,13 +467,7 @@ class SmartVideoPromptBuilder:
         if self.summary:
             sections.append("\nsummary:")
             sections.append(self._substitute_labels(self.summary))
-        
-        # 4. Process Shots & Build Detailed Description
-        sections.append("\ndetailed_description:")
-        sections.append('''<Subject 1> is the environment anchor and must remain visible in ALL shots,
-including close-ups. Environment background must override portrait background.''')
-
-        
+                
         if self.first_frame_label and self.first_frame_label in self.entities:
             pic_tag = self.entities[self.first_frame_label]["pic_tag"]
             ff_rule = f"""{pic_tag} is the first frame of [Shot 1]. The first frame must match {pic_tag} exactly for SPATIAL COMPOSITION: identical pose, head angle, hand position, body orientation, camera angle, and spatial relationships with zero deviation.
@@ -488,6 +482,8 @@ continuity even during close-up framing.
             
         if self.scene_style:
             sections.append(self.scene_style)
+
+        scene_shots = []
             
         for i, shot in enumerate(self.shots):
             processed_text = self._substitute_labels(shot["raw_text"])
@@ -538,14 +534,15 @@ continuity even during close-up framing.
             '''
             
             time_str = f" At {shot['timestamp']}," if shot.get("timestamp") else ""
-            sections.append(f"[Shot {i+1}]{time_str} {processed_text}")
+            scene_shots.append(f"[Shot {i+1}]{time_str} {processed_text}")
             
         # 5. Auto-Generate Retention Analysis
         sections.append("\nretention_analysis:")
+        retention = []
         for label, data in self.entities.items():
             shots_list = sorted(list(data["shots"]))
             shots_str = ", ".join([f"[Shot {s}]" for s in shots_list])
-            sections.append(
+            retention.append(
                 f"<Subject {data['id']}> (appears in {shots_str}): fully_preserved - "
                 f"{data['desc']} is retained."
             )
@@ -555,7 +552,14 @@ continuity even during close-up framing.
             sections.append(
                 f"<Audio {data['id']}>: reference - its vocal timbre guides the dialogue delivery for <Subject {data['target_id']}>."
             )
-            
+
+        sections.append("\nretention analysis:")
+        sections.append("\n".join(retention))
+        # 4. Process Shots & Build Detailed Description
+        sections.append("\ndetailed_description:")
+        sections.append('''<Subject 1> is the environment anchor and must remain visible in ALL shots, including close-ups. Environment background must override portrait background.''')
+        sections.append('\n'.join(scene_shots))
+        
         # 6. Soundscape & Music
         sections.append("\noverall_soundscape:")
         sections.append(self.soundscape)

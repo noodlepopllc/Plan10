@@ -201,7 +201,7 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0, visual_ids=[]):
             script += f"audio | voice_{ndx} | {wav_path} | {label} | {','.join(voice_profile)}\n"
     
     script += portrait_entries
-    script += f"prompt | {prompt.replace(chr(10), ' ')}\n"
+    script += f"summary | {[x for x in prompt.split('\n') if 'Action:' in x][0].replace('Action:','').strip()}\n"
     script += f"soundscape | {translate_to_audio_prompt(bg_desc)}\n"
     script += shots + "\n"
     
