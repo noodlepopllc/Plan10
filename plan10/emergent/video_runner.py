@@ -159,6 +159,7 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0, visual_ids=[]):
     
     # Parse shots to find which characters speak (format: charX [verb] [English] "...")
     speaking_chars = set()
+    final_shots = []
     for line in shots.split('\n'):
         # Look for [English] marker
         if '[English]' in line:
@@ -171,6 +172,10 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0, visual_ids=[]):
                 if char in before_english:
                     speaking_chars.add(char)
                     break
+            final_shots.append(line)
+        else:
+            final_shots.append(f'{line} Characters do NOT speak. Mouths remain closed.')
+            
     
     # 4. Characters - CACHED (only generate audio for speakers)
     portrait_entries = ''
