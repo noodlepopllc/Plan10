@@ -196,6 +196,24 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0, visual_ids=[]):
     
     return script
 
+def normalize_shot_characters(self, shot_text: str, char_labels: list) -> str:
+    """Replace character names with char tokens in a single shot."""
+    result = shot_text
+    
+    # Sort by length descending to avoid partial replacements
+    # (e.g., "Sarah" before "Sara" if both exist)
+    sorted_labels = sorted(char_labels, key=len, reverse=True)
+    
+    for i, label in enumerate(sorted_labels, 1):
+        # Find the original index for this label
+        original_index = char_labels.index(label)
+        token = f"char{original_index + 1}"
+        
+        # Case-insensitive word boundary replacement
+        result = re.sub(rf'\b{re.escape(label)}\b', token, result, flags=re.IGNORECASE)
+    
+    return result
+
 def expand_to_shots(prompt: str, bg_label: str, char_labels: list, duration: float, first_frame_path: str = None) -> str:
     """Returns raw shot lines ready to append to your script, grounded in the actual first frame."""
 
@@ -280,6 +298,7 @@ NOW, generate the shots for the INPUT DATA provided above:
     for line in response.strip().split("\n"):
         line = line.strip()
         if line.startswith("shot |"):
+            line = self.normalize_shot_characters(line, char_labels)
             lines.append(line)
 
     return "\n".join(lines)
