@@ -196,7 +196,7 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0, visual_ids=[]):
     
     return script
 
-def normalize_shot_characters(self, shot_text: str, char_labels: list) -> str:
+def normalize_shot_characters(shot_text: str, char_labels: list) -> str:
     """Replace character names with char tokens in a single shot."""
     result = shot_text
     
