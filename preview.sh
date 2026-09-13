@@ -12,8 +12,8 @@ mkdir -p "$OUTDIR"
 PREVIEWS="$OUTDIR/PREVIEWS"
 
 
-WIDTH=${#BEAT}
-LAST_BEAT=$(printf "%0${WIDTH}d" $((10#$BEAT - 1)))
+PAD=${#BEAT}
+LAST_BEAT=$(printf "%0${PAD}d" $((10#$BEAT - 1)))
 FINAL="$OUTDIR/beat_${LAST_BEAT}_script.mp4"
 STANDARD="$OUTDIR/beat_${LAST_BEAT}.mp4"
 
