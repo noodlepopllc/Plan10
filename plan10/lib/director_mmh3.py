@@ -580,7 +580,7 @@ async def send(prompt, images, audio, output='output.mp4', width=768, height=448
         args['output_filename'] = output
         args['prompt'] = prompt
         args["seed"] = SEED
-        if steps <= 8L
+        if steps <= 8:
             args["activated_loras"] = ["minimax_h3_larryvrh_v4_step600_ema.safetensors"]
             args["loras_multipliers"] = "1.0|"
         if len(audio):
