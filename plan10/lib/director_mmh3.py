@@ -645,7 +645,7 @@ def get_builder(script, output_dir):
         'char': CreateCharacterSheet,
         'ff': GenerateImage,
         'item': GenerateImage,
-        'audio': partial(DesignVoice, long=True),
+        'audio': partial(DesignVoice, long=False),
         'portrait': CreatePortrait
     }
     return SmartVideoPromptBuilder().load_script(script, base_dir=base_dir, generators=generators)
