@@ -150,48 +150,57 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0, visual_ids=[]):
         script += f"ff | ff | {ff} | {ff_desc}\n"
     
     # 2. Background - CACHED
-    bg_desc = get_or_analyze(bg,
-        BG_PROMPT,
-        'bg_desc')
+    bg_desc = get_or_analyze(bg, BG_PROMPT, 'bg_desc')
     script += f"bg | bg | {bg} | {bg_desc}\n"
     
-    # 3. Characters - CACHED
-    char_labels = []
+    # 3. Generate shots FIRST to know who speaks
+    char_labels = [f"char{ndx}" for ndx in range(1, len(refs) + 1)]
+    shots = expand_to_shots(prompt, bg, char_labels, duration, first_frame_path=ff)
+    
+    # Parse shots to find which characters speak (format: charX [verb] [English] "...")
+    speaking_chars = set()
+    for line in shots.split('\n'):
+        # Look for [English] marker
+        if '[English]' in line:
+            # Find position of [English]
+            idx = line.find('[English]')
+            # Search backwards for char token
+            before_english = line[:idx]
+            # Find the last char* token before [English]
+            for char in sorted(char_labels, key=len, reverse=True):  # longest first to avoid partial matches
+                if char in before_english:
+                    speaking_chars.add(char)
+                    break
+    
+    # 4. Characters - CACHED (only generate audio for speakers)
     portrait_entries = ''
     for ndx, ref in enumerate(refs, start=1):
         label = f"char{ndx}"
-        char_labels.append(label)
-        
-        #ref_desc = get_or_analyze(ref,
-        #    CHAR_PROMPT,
-        #    'char_desc')
         script += f"char | {label} | {ref} | {visual_ids[ndx-1]}\n"
 
         if portraits:
-            portrait_desc = get_or_analyze(portraits[portrait_ndx],
-                FACE_PROMPT, 'portrait_desc')
+            portrait_desc = get_or_analyze(portraits[ndx-1], FACE_PROMPT, 'portrait_desc')
             portrait_entries += f"portrait | portrait_{ndx} | {portraits[ndx-1]} | {label} | {portrait_desc}\n"
         else:
             port_path = os.path.splitext(ref)[0] + '_portrait.png'
             portrait_desc = get_or_analyze(ref, FACE_PROMPT, 'portrait_desc')
             portrait_entries += f"portrait | portrait_{ndx} | {port_path} | {label} | {portrait_desc}\n"
-
         
-        voice_data = get_or_analyze(ref,
-            "Identify the character's gender (male, female) and age bracket (child, teenager, young adult, middle-aged, elderly). Return exactly: 'gender, age bracket'.",
-            'voice_profile')
-        
-        gender, age = [item.strip().lower() for item in voice_data.split(',')]
-        voice_profile = voice_prompt(gender, age)
-        
-        wav_path = os.path.splitext(ref)[0] + '.wav'
-        script += f"audio | voice_{ndx} | {wav_path} | {label} | {','.join(voice_profile)}\n"
-    script += portrait_entries
+        # Only generate audio if this character speaks
+        if label in speaking_chars:
+            voice_data = get_or_analyze(ref,
+                "Identify the character's gender (male, female) and age bracket (child, teenager, young adult, middle-aged, elderly). Return exactly: 'gender, age bracket'.",
+                'voice_profile')
+            
+            gender, age = [item.strip().lower() for item in voice_data.split(',')]
+            voice_profile = voice_prompt(gender, age)
+            
+            wav_path = os.path.splitext(ref)[0] + '.wav'
+            script += f"audio | voice_{ndx} | {wav_path} | {label} | {','.join(voice_profile)}\n"
     
+    script += portrait_entries
     script += f"prompt | {prompt.replace(chr(10), ' ')}\n"
     script += f"soundscape | {translate_to_audio_prompt(bg_desc)}\n"
-    
-    shots = expand_to_shots(prompt, bg, char_labels, duration, first_frame_path=ff)
     script += shots + "\n"
     
     return script
