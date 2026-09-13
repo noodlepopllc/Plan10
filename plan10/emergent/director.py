@@ -11,33 +11,37 @@ LTX = os.environ.get("LTX", "False") != "False"
 MMH3 = os.environ.get("MMH3","False") != "False"
 DIALOG_ALLOWED = WGP or LTX or MMH3
 class Director:
-    def analyze_reality(self, media_path, intended_action, width, height, output_dir):
-        """Analyze what actually happened in the video/image."""
-        media_path = Path(media_path)
-        ext = media_path.suffix.lower()
-        media_type = "video" if ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm'] else "image"
-        
-        prompt = f"""We intended to create this: "{intended_action}"
+def analyze_reality(self, media_path, intended_action, width, height, output_dir):
+    """Analyze what actually happened in the video/image."""
+    media_path = Path(media_path)
+    ext = media_path.suffix.lower()
+    media_type = "video" if ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm'] else "image"
+    
+    # Stage 1: SmolVLM2 describes what it sees
+    visual_description = AnalyzeMedia(str(media_path), f"Describe what you see in this {media_type}.", max_tokens=1024, temperature=0.4)
+    
+    # Stage 2: Text LLM compares intent vs reality
+    analysis_prompt = f"""We intended: "{intended_action}"
 
-Analyze what ACTUALLY happened in this {media_type}. Be factual about what you see, not what was intended.
+What actually happened:
+{visual_description}
 
-1. CHARACTER ACTIONS: What is each character doing? (movements, gestures, expressions)
-2. CHARACTER STATES: For each visible character, describe:
-   - Pose/posture (standing, kneeling, sitting, crouching, lying down, leaning, etc.)
-   - Position in frame (left, center, right, foreground, background)
-   - Facing direction (toward camera, away, left, right, 3/4 view)
-   - Any held objects or props in hand
-3. PROPS/ENVIRONMENT: What objects, furniture, or environmental elements are visible?
-4. ISSUES: Any problems? (character cut off, wrong pose, unexpected elements, face not visible)
+Extract character states and issues:
 
-Format character states clearly, for example:
-"Character 1 (woman in green shirt): kneeling on ground, center-left frame, facing right, holding a map"
-"Character 2 (man in blue jacket): standing upright, right side of frame, 3/4 view toward camera"
-"""
-        
-        # Use AnalyzeMedia which will use SmolVLM2 for video, Qwen for images
-        result = AnalyzeMedia(str(media_path), prompt)
-        return self._clean_analysis(result)
+CHARACTER STATES:
+- char1: [pose], [position], [facing], [holding]
+- char2: [pose], [position], [facing], [holding]
+
+ISSUES: [problems or "none"]"""
+    
+    result = llm_analyze_media(
+        media="", 
+        prompt=analysis_prompt,
+        max_tokens=2048,
+        temperature=0.2
+    )['analysis']
+    
+    return self._clean_analysis(result)
 
     def compare_and_decide(self, intended_action, actual_reality, story_context, history, 
                         pending_setup, goal=None, force_transition=False, 
