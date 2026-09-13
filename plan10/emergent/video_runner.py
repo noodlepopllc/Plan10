@@ -159,7 +159,6 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0, visual_ids=[]):
     
     # Parse shots to find which characters speak (format: charX [verb] [English] "...")
     speaking_chars = set()
-    final_shots = []
     for line in shots.split('\n'):
         # Look for [English] marker
         if '[English]' in line:
@@ -172,9 +171,6 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0, visual_ids=[]):
                 if char in before_english:
                     speaking_chars.add(char)
                     break
-            final_shots.append(line)
-        else:
-            final_shots.append(f'{line} Characters do NOT speak. Mouths remain closed.')
             
     
     # 4. Characters - CACHED (only generate audio for speakers)
@@ -268,6 +264,13 @@ SHOT DURATION GUIDELINES (use whole seconds only):
 - Reaction shots: 2 seconds
 
 GLOBAL RULES:
+
+SILENCE RULES (when no dialogue is present):
+- Every shot MUST describe the character's mouth/jaw state explicitly:
+  "lips pressed together", "jaw clenched", "mouth shut firmly", "breathing through nose"
+- Focus audio attention on ENVIRONMENT and PHYSICAL EXERTION:
+  heavy breathing, exertion sounds, environmental foley
+- Never describe characters facing each other in neutral medium shot without a physical mouth state
 
 1. Use MEDIUM SHOTS as the default framing for dialogue and action.
    - Characters visible from waist/chest upward.
