@@ -143,7 +143,7 @@ elif BACKEND == "transformers":
             add_generation_prompt=True,
             return_dict=True,       # ← Returns dict with input_ids, pixel_values, etc.
             return_tensors="pt",     # ← Returns PyTorch tensors
-            enable_thinking=THINKING
+            enable_thinking=False
         )
         inputs = inputs.to(model.device)
         

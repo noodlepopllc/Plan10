@@ -3,6 +3,7 @@ from diffsynth.pipelines.flux2_image import Flux2ImagePipeline, ModelConfig
 from diffsynth.pipelines.z_image import ZImagePipeline, ModelConfig
 from diffsynth.pipelines.anima_image import AnimaImagePipeline, ModelConfig
 from diffsynth.pipelines.qwen_image import QwenImagePipeline, ModelConfig, FlowMatchScheduler
+from diffsynth.pipelines.sensenova_u1_image import SenseNovaU1ImagePipeline, ModelConfig
 import gc
 import torch
 import os
@@ -15,6 +16,74 @@ load_environ()
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
 ANIME = os.environ.get('ANIME','KREA2')
+
+class ImageGenSenseNova(object):
+    def __init__(self,vrlimit=14):
+        if "VRAM" in os.environ:
+            vrlimit = int(os.environ["VRAM"])
+        self.vrlimit = vrlimit
+        self.pipe = None
+
+    def __enter__(self):
+        if not self.pipe:
+            vram_config = {
+                "offload_dtype": "disk",
+                "offload_device": "disk",
+                "onload_dtype": "disk",
+                "onload_device": "disk",
+                "preparing_dtype": torch.bfloat16,
+                "preparing_device": "cpu",
+                "computation_dtype": torch.bfloat16,
+                "computation_device": "cuda",
+            }
+
+            self.model_id = "SenseNova/SenseNova-U1.5-8B-MoT"
+            #self.model_id = "baidu/ERNIE-Image"
+
+            self.pipe = SenseNovaU1ImagePipeline.from_pretrained(
+                torch_dtype=torch.bfloat16,
+                device="cuda",
+                model_configs=[
+                    ModelConfig(model_id=self.model_id, origin_file_pattern="model*.safetensors", **vram_config)
+                ],
+                tokenizer_config=ModelConfig(model_id=self.model_id, origin_file_pattern="./"),
+                vram_limit=self.vrlimit
+            )
+
+            self.pipe.load_lora(self.pipe.dit, ModelConfig(model_id="SenseNova/SenseNova-U1.5-8B-MoT-LoRAs", origin_file_pattern="SenseNova-U1.5-8B-MoT-LoRA-8step.safetensors"))
+
+    def generate(self, prompt, output, width, height, seed):
+        if not self.pipe:
+            self.__enter__()
+        if seed == -1: 
+            seed = random.randint(0, 1000000)
+
+        image = self.pipe(
+            prompt=prompt,
+            seed=seed,
+            num_inference_steps=8,
+            cfg_scale=1.0,
+            height=height,
+            width=width,
+            shift=3.0
+        )
+        image.save(output)
+        os.utime(output, None)
+        
+        status = {"status": "success", "output_path": output, "prompt": prompt, "description": ''}
+        if os.environ.get('BATCH', 'True') == 'False':
+            analysis = AnalyzeImage(output, "Briefly describe this image, no more than 100 words")
+            status['description'] = analysis.get('analysis', '')
+            
+        return status
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.__del__()
+
+    def __del__(self):
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
 
 class ImageGenKrea2(object):
     def __init__(self,vrlimit=14):
@@ -308,6 +377,8 @@ elif ANIME == 'QWEN':
     ImageGen = ImageGenQwen
 elif ANIME == 'KLEIN':
     ImageGen = ImageGenKlein
+elif ANIME == 'SENSENOVA':
+    ImageGen = ImageGenSenseNova
 else:
     ImageGen = ImageGenKrea2
 
