@@ -415,9 +415,9 @@ def add_metadata_char(imgpath, prompt='', seed=-1, generation_prompt=None):
 
     base_instructions = '''
         Analyze the subject and describe ONLY clearly visible, literal traits. Return a single comma-separated string in this exact order: 
-        subject_type, age_stage, ethnicity_origin, gender, skin_surface, face_shape, jawline, cheekbones, eyes, eyebrows, nose, lips, 
-        hair_fur_length_color_texture, hair_style, hairline, facial_hair_features, head_accessories, eyewear, clothing, footwear,
-        distinctive_markers.
+        subject_type, age_stage, ethnicity_origin, gender, skin_surface, face_shape, jawline, cheekbones, eyes, eyebrows, nose, lips,
+        hair_fur_length_color_texture, hair_style, hairline, facial_hair_features, head_accessories, neck_accessories, eyewear, clothing,
+        footwear, distinctive_markers.
         
         Rules:
         - Be exhaustive and hyper-accurate. Do NOT guess. If a trait isn't visible, use 'hidden_from_view'. If it doesn't apply, use 'not_applicable'.
@@ -438,6 +438,7 @@ def add_metadata_char(imgpath, prompt='', seed=-1, generation_prompt=None):
         - hairline: straight, widow's peak, rounded, receding, fur-edge, seam-line, masked, hidden_from_view
         - facial_hair_features: clean-shaven, stubble, mustache, beard, goatee, sideburns, fur_muzzle, mechanical_grille, painted, hidden_from_view
         - head_accessories: ribbons, bandana, hats, helmet, mask_partial, mask_full, crown, none, hidden_from_view
+        - neck_accessories: collars, chokers, necklaces, pendants, cybernetic neck devices, glowing gems, OR 'none', OR 'hidden_from_view'
         - eyewear: glasses, sunglasses, visor, goggles, none, hidden_from_view
         - clothing: describe visible items simply (e.g., "yellow sundress", "white tshirt"). Strict Rule: Verify the exact vertical hemline relative to the knee. Explicitly classify as "above-knee shorts" or "ankle-length pants". If the lower body is cut off, use 'hidden_from_view' for those specific missing garments.
         - footwear: white tennis shoes, red heels, mechanical boots, paw-pads, none, hidden_from_view. Strict Rule: If the feet are cut off by the edge of the frame, you MUST write 'hidden_from_view'.

@@ -70,7 +70,7 @@ class PortraitReferenceManager:
                 print(f"Generating portrait {label} at {image_path}...")
                 char_ref = builder.entities.get(target_subject_label.lower(), None)
                 cref_path = char_ref['path'] if char_ref else ''
-                generator(extra_desc, cref_path, image_path)
+                generator('', cref_path, image_path)
             else:
                 print(f"[Warning] Portrait file not found: {image_path}")
 

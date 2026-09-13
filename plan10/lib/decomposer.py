@@ -256,13 +256,13 @@ def generate_background(
         height=tmp.height
     )
     
-    add_metadata_loc(str(bg_output))
+    description = add_metadata_loc(str(bg_output))
     
     print(f"  ✓ Saved: {bg_output}")
     
     return {
         'path': str(bg_output),
-        'description': 'Clean background plate with people removed'
+        'description': description
     }
 
 
@@ -359,6 +359,7 @@ def decompose_scene(input_image: str, prompt: str, output_dir: str, seed: int = 
     return {
         'background': background['path'],
         'characters': characters,
+        'portraits': portraits,
         'manifest': str(manifest_path)
     }
 

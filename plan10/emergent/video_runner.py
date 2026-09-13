@@ -150,7 +150,7 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0, visual_ids=[]):
         script += f"ff | ff | {ff} | {ff_desc}\n"
     
     # 2. Background - CACHED
-    bg_desc = get_or_analyze(bg, BG_PROMPT, 'bg_desc')
+    bg_desc = get_or_analyze(bg, BG_PROMPT, 'description', max_words=100)
     script += f"bg | bg | {bg} | {bg_desc}\n"
     
     # 3. Generate shots FIRST to know who speaks
@@ -177,15 +177,16 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0, visual_ids=[]):
     portrait_entries = ''
     for ndx, ref in enumerate(refs, start=1):
         label = f"char{ndx}"
-        script += f"char | {label} | {ref} | {visual_ids[ndx-1]}\n"
+        char_desc = get_or_analyze(bg, CHAR_PROMPT, 'description', max_words=100)
+        script += f"char | {label} | {ref} | {char_desc}\n"
 
         if portraits:
-            portrait_desc = get_or_analyze(portraits[ndx-1], FACE_PROMPT, 'portrait_desc')
+            portrait_desc = get_or_analyze(portraits[ndx-1], FACE_PROMPT, 'description', max_words=100)
             portrait_entries += f"portrait | portrait_{ndx} | {portraits[ndx-1]} | {label} | {portrait_desc}\n"
         else:
             port_path = os.path.splitext(ref)[0] + '_portrait.png'
-            portrait_desc = get_or_analyze(ref, FACE_PROMPT, 'portrait_desc')
-            portrait_entries += f"portrait | portrait_{ndx} | {port_path} | {label} | {portrait_desc}\n"
+            portrait_desc = get_or_analyze(ref, FACE_PROMPT, 'description', max_words=100)
+            portrait_entries += f"portrait | portrait_{ndx} | {port_path} | {label} | A portrait of {label}\n"
         
         # Only generate audio if this character speaks
         if label in speaking_chars:
