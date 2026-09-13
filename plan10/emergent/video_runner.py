@@ -298,7 +298,7 @@ NOW, generate the shots for the INPUT DATA provided above:
     for line in response.strip().split("\n"):
         line = line.strip()
         if line.startswith("shot |"):
-            line = self.normalize_shot_characters(line, char_labels)
+            line = normalize_shot_characters(line, char_labels)
             lines.append(line)
 
     return "\n".join(lines)
