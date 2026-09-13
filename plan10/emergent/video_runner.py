@@ -116,6 +116,31 @@ Return ONE sentence in this exact format:
 Use ONLY these slots. Do not reorder them.
 '''
 
+FACE_PROMPT = '''
+Return ONE sentence in this exact format:
+
+"The {race/ethnicity} {gender} has {face description} and {hair style} {hair color} hair."
+
+Use ONLY these slots. Do not reorder them.
+
+DEFINITIONS:
+- {face description} includes 1–2 traits such as jawline, eyes, nose, freckles, or expression.
+- {hair style} includes shape or length (short, long, wavy, straight, bob, layered).
+- {hair color} is the observed color.
+'''
+
+BG_PROMPT = '''
+Return ONE sentence in this exact format:
+
+"The scene shows {environment description} with {key visual element}."
+
+Use ONLY these slots. Do not reorder them.
+
+DEFINITIONS:
+- {environment description} is a short phrase describing the empty environment (no characters).
+- {key visual element} is one notable object, structure, or terrain feature.
+- Keep the entire sentence brief (under ~12 words naturally).
+'''
 def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0):
     script = ""
     
@@ -126,7 +151,7 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0):
     
     # 2. Background - CACHED
     bg_desc = get_or_analyze(bg,
-        'Brief description of the empty environment/scene, no characters. Max 10 words.',
+        BG_PROMPT,
         'bg_desc')
     script += f"bg | bg | {bg} | {bg_desc}\n"
     
@@ -145,12 +170,12 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0):
 
         if portraits:
             portrait_desc = get_or_analyze(portraits[portrait_ndx],
-                'Brief description of characters face and hair, Max 10 words.', 'portrait_desc')
+                FACE_PROMPT, 'portrait_desc')
             portrait_entries += f"portrait | portrait_{ndx} | {portraits[portrait_ndx]} | {label} | {portrait_desc}\n"
             portrait_ndx += 1
         else:
             port_path = os.path.splitext(ref)[0] + '_portrait.png'
-            portrait_desc = get_or_analyze(ref,'Brief description of characters face and hair, Max 10 words.', 'portrait_desc')
+            portrait_desc = get_or_analyze(ref, FACE_PROMPT, 'portrait_desc')
             portrait_entries += f"portrait | portrait_{ndx} | {port_path} | {label} | {portrait_desc}\n"
             portrait_ndx += 1
 
