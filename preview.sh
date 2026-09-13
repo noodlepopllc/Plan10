@@ -11,8 +11,11 @@ mkdir -p "$OUTDIR"
 
 PREVIEWS="$OUTDIR/PREVIEWS"
 
-FINAL="$OUTDIR/beat_${BEAT}_script.mp4"
-STANDARD="$OUTDIR/beat_${BEAT}.mp4"
+
+WIDTH=${#BEAT}
+LAST_BEAT=$(printf "%0${WIDTH}d" $((10#$BEAT - 1)))
+FINAL="$OUTDIR/beat_${LAST_BEAT}_script.mp4"
+STANDARD="$OUTDIR/beat_${LAST_BEAT}.mp4"
 
 # If both exist, archive preview and promote final
 if [[ -f "$FINAL" && -f "$STANDARD" ]]; then
