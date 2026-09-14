@@ -39,6 +39,68 @@ if MMH3:
 tool_dialog = "ltx2_22B_distilled_1_1" if DISTILLED else "ltx2_22B_1_1"
 tool = "ltx2_25_22B_distilled" if DISTILLED else "ltx2_25_22B"
 
+async def i2v_ltx2(prompt='', media='', end='', output='output.mp4', 
+                  duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1, output_dir=''):
+
+        local_server = "http://locathost:8080"
+        args = requests.get("http://127.0.0.1:8080/defaults/ltx2_22B_distilled").json()
+
+        if media:
+            desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
+            audio_desc = translate_to_audio_prompt(desc)
+            sfx_modifiers = ", realistic sound effects only, crisp SFX, ambient background noise, completely devoid of music, no BGM, no instruments"
+            final_prompt = f"{prompt} {audio_desc} {sfx_modifiers}" if prompt else "ambient sound effects, SFX, absolute no music"
+        else:
+            final_prompt = prompt
+        
+        # Purged "silent or muted audio" to allow empty spaces, heavily punished music architecture
+        negative_prompt = (
+            "text, subtitles, lyrics, captions, on-screen text, logo, " # Text
+            "music, song, soundtrack, singing, talking, speech, voice, "
+            "blurry, out of focus, overexposed, underexposed, low contrast, washed out colors, excessive noise, "
+            "grainy texture, poor lighting, flickering, motion blur, distorted proportions, unnatural skin tones, "
+            "deformed facial features, asymmetrical face, missing facial features, extra limbs, disfigured hands, "
+            "wrong hand count, artifacts around text, inconsistent perspective, camera shake, incorrect depth of "
+            "field, background too sharp, background clutter, distracting reflections, harsh shadows, inconsistent "
+            "lighting direction, color banding, cartoonish rendering, 3D CGI look, unrealistic materials, uncanny "
+            "valley effect, incorrect ethnicity, wrong gender, exaggerated expressions, wrong gaze direction, "
+            "mismatched lip sync, music, background music, BGM, melody, song, soundtrack, musical instruments, synth, "
+            "singing, vocals, rhythm, beats, distorted voice, robotic voice, echo, background noise, off-sync audio, "
+            "incorrect dialogue, added dialogue, repetitive speech, jittery movement, awkward pauses, incorrect timing, "
+            "unnatural transitions, inconsistent framing, tilted camera, flat lighting, inconsistent tone, "
+            "cinematic oversaturation, stylized filters, or AI artifacts."
+        )
+
+
+       if output_dir:
+            args['output_dir'] = output_dir
+
+        args['output_filename'] = output
+        args['prompt'] = final_prompt
+        if media:
+            args['image_prompt_type'] =  'SE' if end else 'S'
+            args['image_start'] = media
+            if end:
+                args['image_end'] = end
+
+        args['resolution'] = f'{width}x{height}'
+        args['video_length'] = (duration_sec * 24) + 1 
+        args["multi_prompts_gen_type"] = "FG"
+        args['num_inference_steps'] = 8 if DISTILLED else 30
+        args['guidance_scale'] = 1.0 if DISTILLED else 3.0
+        args['seed'] = SEED
+        print(args)
+        job_id = requests.post("http://127.0.0.1:8080/run", json=args).json()
+        print(job_id)
+
+        last = ''
+        if VERBOSE:
+            print("VERBOSE MODE")
+        while requests.get(f"http://127.0.0.1:8080/status/{job_id}").json()[-1] in ("pending","running"):
+            sleep(5)
+            print(requests.get(f"http://127.0.0.1:8080/updates/{job_id}").json()[0])
+        print(r.data['result'])
+
 async def i2v_ltx(prompt='', media='', end='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
     async with Client("http://localhost:7866/mcp") as client:
@@ -178,7 +240,7 @@ async def i2v_h3(prompt='', media='', end='', output='output.mp4',
             r = await client.call_tool("wangp_get_job", {"job_id": job_id})
         print(r.data['result'])
 
-i2v = i2v_h3 if MMH3 else i2v_ltx
+i2v = i2v_h3 if MMH3 else i2v_ltx2
 
 def GenerateVideo(prompt='', media='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1, enhance=False):
@@ -242,8 +304,13 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
         print("CURRENT PROMPT: ",eprompt)
 
         try:
-            asyncio.run(i2v(eprompt, f'{os.getcwd()}/tmp.png' if start_image else '', last, Path(output).name, 
-                    duration_sec, width, height, seed))
+            if MMH3:
+                asyncio.run(i2v(eprompt, f'{os.getcwd()}/tmp.png' if start_image else '', last, Path(output).name, 
+                        duration_sec, width, height, seed))
+            else:
+                i2v(eprompt, f'{os.getcwd()}/tmp.png' if start_image else '', last, Path(output).name, 
+                            duration_sec, width, height, seed, Path(output).parent)
+
             description = ''
                 
             # Post-processing
