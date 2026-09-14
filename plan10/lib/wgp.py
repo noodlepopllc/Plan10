@@ -40,7 +40,7 @@ tool_dialog = "ltx2_22B_distilled_1_1" if DISTILLED else "ltx2_22B_1_1"
 tool = "ltx2_25_22B_distilled" if DISTILLED else "ltx2_25_22B"
 
 async def i2v_ltx2(prompt='', media='', end='', output='output.mp4', 
-                  duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1, output_dir=''):
+                  duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
 
         local_server = "http://locathost:8080"
         args = requests.get("http://127.0.0.1:8080/defaults/ltx2_22B_distilled").json()
@@ -72,10 +72,9 @@ async def i2v_ltx2(prompt='', media='', end='', output='output.mp4',
         )
 
 
-       if output_dir:
-            args['output_dir'] = output_dir
+        args['output_dir'] = Path(output).parent
 
-        args['output_filename'] = output
+        args['output_filename'] = Path(output).name
         args['prompt'] = final_prompt
         if media:
             args['image_prompt_type'] =  'SE' if end else 'S'
@@ -96,10 +95,10 @@ async def i2v_ltx2(prompt='', media='', end='', output='output.mp4',
         last = ''
         if VERBOSE:
             print("VERBOSE MODE")
-        while requests.get(f"http://127.0.0.1:8080/status/{job_id}").json()[-1] in ("pending","running"):
+        while status := requests.get(f"http://127.0.0.1:8080/status/{job_id}").json()[-1] in ("pending","running"):
             sleep(5)
             print(requests.get(f"http://127.0.0.1:8080/updates/{job_id}").json()[0])
-        print(r.data['result'])
+        print(status[-2:])
 
 async def i2v_ltx(prompt='', media='', end='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
@@ -308,8 +307,8 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
                 asyncio.run(i2v(eprompt, f'{os.getcwd()}/tmp.png' if start_image else '', last, Path(output).name, 
                         duration_sec, width, height, seed))
             else:
-                i2v(eprompt, f'{os.getcwd()}/tmp.png' if start_image else '', last, Path(output).name, 
-                            duration_sec, width, height, seed, Path(output).parent)
+                i2v(eprompt, f'{os.getcwd()}/tmp.png' if start_image else '', last, output, 
+                            duration_sec, width, height, seed)
 
             description = ''
                 
