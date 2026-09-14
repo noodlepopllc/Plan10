@@ -73,7 +73,6 @@ async def i2v_ltx2(prompt='', media='', end='', output='output.mp4',
 
 
         args['output_dir'] = Path(output).parent
-
         args['output_filename'] = Path(output).name
         args['prompt'] = final_prompt
         if media:
