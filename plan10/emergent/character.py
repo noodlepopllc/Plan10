@@ -1,5 +1,6 @@
 from plan10.lib.image_analysis import AnalyzeImage
 from plan10.lib.qwen_llm import llm_analyze_media
+import re
 
 class CharacterProfile:
     def __init__(self, character_ref_path, seed_profile=None):
@@ -66,7 +67,6 @@ CHARACTER_2:
         
         return characters
 
-    import re
 
     def parse_seed_characters(self, seed_text):
         """
