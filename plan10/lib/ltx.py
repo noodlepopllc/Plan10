@@ -36,112 +36,6 @@ BRIEF = os.environ.get("BRIEF","False") != "False"
 #enhance_path = f'./system/ltx_enhancer{ANIME}.txt'
 enhance_path = f'./system/ltx_enhancer_minimal{ANIME}.txt' if BRIEF else f'./system/ltx_enhancer{ANIME}.txt'
 
-def i2v_diffsynth_fast25(prompt='', media='', end_image='', output='output.mp4', 
-                  duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
-
-    #width, height = (720, 1280) if height > width else (1280, 720)
-    allocated_vram_limit = min(VRAM, 96)
-
-    vram_config = {
-        "offload_dtype": "disk",
-        "offload_device": "disk",
-        "onload_dtype": "disk",
-        "onload_device": "disk",
-        "preparing_dtype": torch.bfloat16,
-        "preparing_device": "cpu",
-        "computation_dtype": torch.bfloat16,
-        "computation_device": "cuda",
-    }
-    if allocated_vram_limit > 24:
-        vram_config = {
-            "offload_dtype": "disk",
-            "offload_device": "disk",
-            "onload_dtype": "disk",
-            "onload_device": "disk",
-            "preparing_dtype": torch.bfloat16,
-            "preparing_device": "cpu",
-            "computation_dtype": torch.bfloat16,
-            "computation_device": "cuda",
-        }
-    model_path = "locklight/LTX-2-Repackage-local"
-    pipe = LTX2AudioVideoPipeline.from_pretrained(
-        torch_dtype=torch.bfloat16,
-        device="cuda",
-        tokenizer_config=ModelConfig(path="./models/DiffSynth-Studio/LTX-2.5-Repackage/tokenizer"),
-        model_configs=[
-            ModelConfig(model_id="Lightricks/LTX-2.5", origin_file_pattern="text_encoders/gemma4-12b-with-proj-ltx-2.5-comfy-int8-convrot.safetensors", **vram_config),
-            ModelConfig(model_id="DiffSynth-Studio/LTX-2.5-Repackage", origin_file_pattern="text_encoder_post_modules.safetensors", **vram_config),
-            ModelConfig(model_id="Lightricks/LTX-2.5", origin_file_pattern="diffusion_models/ltx-2.5-22b-distilled-transformer-comfy-int8-convrot.safetensors", **vram_config),
-            # ModelConfig(model_id="Lightricks/LTX-2.5", origin_file_pattern="vae/ltx-2.5-video-vae-bf16.safetensors", **vram_config),
-            # For lower VRAM and faster decoding, replace the line above with the conv vae decoder:
-            ModelConfig(model_id="Lightricks/LTX-2.5", origin_file_pattern="vae/ltx-2.5-video-vae-conv-bf16.safetensors", **vram_config),
-            ModelConfig(model_id="Lightricks/LTX-2.5", origin_file_pattern="vae/ltx-2.5-audio-vae-bf16.safetensors", **vram_config),
-            ModelConfig(model_id="Lightricks/LTX-2.5", origin_file_pattern="latent_upscale_models/ltx-2.5-latent-spatial-upscaler-x2-bf16-1.0.safetensors", **vram_config),
-        ],
-        vram_limit=allocated_vram_limit,
-    )
-
-    # Force explicit SFX and ban melody structure in the positive prompt
-    sfx_modifiers = ", realistic sound effects only, crisp SFX, ambient background noise, completely devoid of music, no BGM, no instruments"
-    final_prompt = f"{prompt}{sfx_modifiers}" if prompt else "ambient sound effects, SFX, absolute no music"
-
-    # Purged "silent or muted audio" to allow empty spaces, heavily punished music architecture
-    negative_prompt = (
-        "blurry, out of focus, overexposed, underexposed, low contrast, washed out colors, excessive noise, "
-        "grainy texture, poor lighting, flickering, motion blur, distorted proportions, unnatural skin tones, "
-        "deformed facial features, asymmetrical face, missing facial features, extra limbs, disfigured hands, "
-        "wrong hand count, artifacts around text, inconsistent perspective, camera shake, incorrect depth of "
-        "field, background too sharp, background clutter, distracting reflections, harsh shadows, inconsistent "
-        "lighting direction, color banding, cartoonish rendering, 3D CGI look, unrealistic materials, uncanny "
-        "valley effect, incorrect ethnicity, wrong gender, exaggerated expressions, wrong gaze direction, "
-        "mismatched lip sync, music, background music, BGM, melody, song, soundtrack, musical instruments, synth, "
-        "singing, vocals, rhythm, beats, distorted voice, robotic voice, echo, background noise, off-sync audio, "
-        "incorrect dialogue, added dialogue, repetitive speech, jittery movement, awkward pauses, incorrect timing, "
-        "unnatural transitions, inconsistent framing, tilted camera, flat lighting, inconsistent tone, "
-        "cinematic oversaturation, stylized filters, or AI artifacts."
-    )
-    num_frames = (duration_sec * 24) + 1
-    images = []
-    indexes = []
-
-    if media:
-        images.append(Image.open(media).convert("RGB").resize((width, height)))
-        indexes.append(0)
-    if end_image:
-        images.append(Image.open(end_image).convert("RGB").resize((width, height)))
-        indexes.append(-1)
-
-    video, audio = pipe(
-        prompt=final_prompt,
-        negative_prompt=negative_prompt,
-        seed=seed,
-        height=height,
-        width=width,
-        num_frames=num_frames,
-        frame_rate=24,
-        cfg_scale=1.0,
-        num_inference_steps=8,
-        use_distilled_pipeline=True,
-        use_two_stage_pipeline=True,
-        tiled=True,
-        tile_size_in_frames=80
-    )
-
-    
-    write_video_audio_ltx2(
-        video=video,
-        audio=audio,
-        output_path=output,
-        fps=24,
-        audio_sample_rate=pipe.audio_vocoder.output_sampling_rate,
-    )
-    
-    # Clean up memory cleanly
-    del pipe
-    gc.collect()
-    if torch.cuda.is_available():  
-        torch.cuda.empty_cache()
-
 def i2v_diffsynth_fast(prompt='', media='', end_image='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
 
@@ -373,7 +267,7 @@ def i2v_diffsynth(prompt='', media='', end_image='', output='output.mp4',
     if torch.cuda.is_available():  
         torch.cuda.empty_cache()
 
-i2v = i2v_diffsynth_fast25 if DISTILLED else i2v_diffsynth
+i2v = i2v_diffsynth_fast if DISTILLED else i2v_diffsynth
 
 def GenerateVideo(prompt='', media='', output='output.mp4', 
                   duration_sec=DURATION, width=WIDTH, height=HEIGHT, seed=-1, enhance=True):
