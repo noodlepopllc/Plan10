@@ -92,13 +92,15 @@ def i2v_ltx2(prompt='', media='', end='', output='output.mp4',
         print(job_id)
 
         last = ''
-        if VERBOSE:
-            print("VERBOSE MODE")
+        dedupe_updates = set([])
         while status := requests.get(f"http://127.0.0.1:8080/status/{job_id}").json()[-1] in ("pending","running"):
             sleep(5)
             update = requests.get(f"http://127.0.0.1:8080/updates/{job_id}").json()
             if update:
-                print(update[0])
+                update = update[0].strip()
+                if update not in dedupe_updates:
+                    dedupe_udpates.add(update)
+                    print(update)
         print(status[-2:])
 
 async def i2v_ltx(prompt='', media='', end='', output='output.mp4', 
