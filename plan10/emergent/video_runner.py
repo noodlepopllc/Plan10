@@ -156,14 +156,9 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0, visual_ids=[], char_n
     # 3. Generate shots FIRST to know who speaks
     char_labels = [f"char{ndx}" for ndx in range(1, len(refs) + 1)]
     shots = expand_to_shots(prompt, bg, char_labels, duration, first_frame_path=ff)
-    cndx = 1
-    for char_name in char_names:
-        shots = shots.replace(char_name.lower(), f'char{cndx}')
-        shots = shots.replace(char_name.capitalize(), f'char{cndx}' )
-        cndx += 1
 
+    shots = replace_character_names(shots, char_names)
 
-    
     # Parse shots to find which characters speak (format: charX [verb] [English] "...")
     speaking_chars = set()
     for line in shots.split('\n'):
@@ -212,13 +207,26 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0, visual_ids=[], char_n
     script += f"soundscape | {translate_to_audio_prompt(bg_desc)}\n"
     script += shots + "\n"
 
-    cndx = 1
-    for char_name in char_names:
-        script = script.replace(char_name.lower(), f'char{cndx}')
-        script = script.replace(char_name.capitalize(), f'char{cndx}' )
-        cndx += 1
+    script = replace_character_names(script, char_names)
     
     return script
+
+
+def replace_character_names(script, char_names):
+    cndx = 1
+    for name in char_names:
+        # Match whole words only, case-insensitive
+        pattern = re.compile(rf"\b{name}\b", re.IGNORECASE)
+        script = pattern.sub(f"char{cndx}", script)
+
+        # Also match possessive forms: Sora's, Lindsy's
+        pattern_possessive = re.compile(rf"\b{name}'s\b", re.IGNORECASE)
+        script = pattern_possessive.sub(f"char{cndx}'s", script)
+
+        cndx += 1
+
+    return script
+
 
 def normalize_shot_characters(shot_text: str, char_labels: list) -> str:
     """Replace character names with char tokens in a single shot."""
