@@ -1,6 +1,6 @@
 from plan10.lib.image_analysis import AnalyzeImage
 from plan10.lib.qwen_llm import llm_analyze_media
-import re
+import re, json
 
 class CharacterProfile:
     def __init__(self, character_ref_path, seed_profile=None):
@@ -118,7 +118,7 @@ CHARACTER_2:
         for char in self.characters:
             vid = char.get("visual_id", "")
 
-            prompt = f"""
+        prompt = f"""
 You are a character‑matching assistant.
 
 You are given:
@@ -128,9 +128,12 @@ You are given:
 Your task:
 Determine which SEED CHARACTER the VISUAL_ID most closely matches.
 
-Return ONLY:
-character_name: <name>
-confidence: <0–1>
+Return ONLY valid JSON in this exact format:
+
+{{
+  "character_name": "<name>",
+  "confidence": <float between 0 and 1>
+}}
 
 SEED CHARACTERS:
 {seed_text}
@@ -138,7 +141,9 @@ SEED CHARACTERS:
 VISUAL_ID:
 "{vid}"
 """
+
             response = llm_analyze_media('', prompt=prompt, max_tokens=1024, temperature=0.4)['analysis']
+            response = json.loads(response)
             char["character_name"] = response.get("character_name", "unknown")
             char["confidence"] = response.get("confidence", 0.0)
 
