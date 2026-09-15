@@ -118,7 +118,7 @@ CHARACTER_2:
         for char in self.characters:
             vid = char.get("visual_id", "")
 
-        prompt = f"""
+            prompt = f"""
 You are a character‑matching assistant.
 
 You are given:
@@ -131,8 +131,8 @@ Determine which SEED CHARACTER the VISUAL_ID most closely matches.
 Return ONLY valid JSON in this exact format:
 
 {{
-  "character_name": "<name>",
-  "confidence": <float between 0 and 1>
+"character_name": "<name>",
+"confidence": <float between 0 and 1>
 }}
 
 SEED CHARACTERS:
