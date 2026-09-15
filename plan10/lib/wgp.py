@@ -3,7 +3,7 @@ load_environ()
 
 from PIL import Image
 
-import asyncio, logging, os, random, json, math
+import asyncio, logging, os, random, json, math, requests
 from fastmcp import Client
 from time import sleep
 import librosa

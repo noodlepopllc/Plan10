@@ -511,6 +511,8 @@ Keep each field to 1 concise sentence. ABSOLUTELY NO CHARACTERS, NO PEOPLE, NO C
             metadata.add_text("Brief", bg_brief)
             if update:
                 target_image.save(imgpath, pnginfo=metadata)
+        else:
+            bg_brief = target_image.info.get('Brief','')
         return bg_brief
     bg_analysis = AnalyzeImage(imgpath, analysis_prompt)
     bg_desc = bg_analysis['analysis'].strip()
