@@ -687,7 +687,7 @@ def main():
         'portrait': CreatePortrait
     }
 
-    output_filename = f"{Path(args.output).name.replace('.txt','.mp4')}" if args.input else f"{base_dir}/output.mp4"
+    output_filename = f"{Path(args.input).name.replace('.txt','.mp4')}" if args.input else f"{base_dir}/output.mp4"
     if args.input:
         script = Path(args.input).read_text()
     else:
