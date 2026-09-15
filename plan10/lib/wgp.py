@@ -39,7 +39,7 @@ if MMH3:
 tool_dialog = "ltx2_22B_distilled_1_1" if DISTILLED else "ltx2_22B_1_1"
 tool = "ltx2_25_22B_distilled" if DISTILLED else "ltx2_25_22B"
 
-async def i2v_ltx2(prompt='', media='', end='', output='output.mp4', 
+def i2v_ltx2(prompt='', media='', end='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
 
         local_server = "http://locathost:8080"
@@ -72,7 +72,7 @@ async def i2v_ltx2(prompt='', media='', end='', output='output.mp4',
         )
 
 
-        args['output_dir'] = Path(output).parent
+        args['output_dir'] = f'{os.getcwd()}/{Path(output).parent}'
         args['output_filename'] = Path(output).name
         args['prompt'] = final_prompt
         if media:
