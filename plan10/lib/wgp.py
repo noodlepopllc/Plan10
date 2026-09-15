@@ -43,7 +43,7 @@ def i2v_ltx2(prompt='', media='', end='', output='output.mp4',
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
 
         local_server = "http://locathost:8080"
-        args = requests.get("http://127.0.0.1:8080/defaults/ltx2_22B_distilled").json()
+        args = requests.get(f"http://127.0.0.1:8080/defaults/{tool}").json()
 
         if media:
             desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
@@ -96,7 +96,9 @@ def i2v_ltx2(prompt='', media='', end='', output='output.mp4',
             print("VERBOSE MODE")
         while status := requests.get(f"http://127.0.0.1:8080/status/{job_id}").json()[-1] in ("pending","running"):
             sleep(5)
-            print(requests.get(f"http://127.0.0.1:8080/updates/{job_id}").json()[0])
+            update = requests.get(f"http://127.0.0.1:8080/updates/{job_id}").json()
+            if update:
+                print(update[0])
         print(status[-2:])
 
 async def i2v_ltx(prompt='', media='', end='', output='output.mp4', 
