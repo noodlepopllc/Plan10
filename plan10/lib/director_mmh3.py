@@ -579,7 +579,7 @@ async def send(prompt, images, audio, output='output.mp4', width=768, height=448
         args = requests.get(f"http://127.0.0.1:8080/defaults/{model}").json()
         args['output_dir'] = f'{os.getcwd()}/{Path(output).parent}'
 
-        args['output_filename'] = output
+        args['output_filename'] = f'{os.getcwd()}/{Path(output).name}'
         args['prompt'] = prompt
         args["seed"] = SEED
         if steps <= 8:
@@ -685,7 +685,7 @@ def main():
         'portrait': CreatePortrait
     }
 
-    output_filename = f"{Path(args.input).name.replace('.txt','.mp4')}" if args.input else f"{base_dir}/output.mp4"
+    output_filename = f"{output.replace('.txt','.mp4')}" if args.input else f"{base_dir}/output.mp4"
     if args.input:
         script = Path(args.input).read_text()
     else:
