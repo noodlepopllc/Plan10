@@ -158,7 +158,7 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0, visual_ids=[], char_n
     shots = expand_to_shots(prompt, bg, char_labels, duration, first_frame_path=ff)
     cndx = 1
     for char_name in char_names:
-        shots = shots.replace(char_name, f'char{cndx}')
+        shots = shots.replace(char_name.lower(), f'char{cndx}')
         shots = shots.replace(char_name.capitalize(), f'char{cndx}' )
         cndx += 1
 
