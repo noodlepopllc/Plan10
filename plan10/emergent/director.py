@@ -19,7 +19,7 @@ class Director:
         
         if "video" in media_type:
         # Stage 1: SmolVLM2 describes what it sees
-            visual_description = AnalyzeMedia(str(media_path), f"Describe what you see in this video in detail with timestamps.", max_tokens=4096, temperature=0.4)
+            visual_description = AnalyzeMedia(str(media_path), f"Describe second by second with timestamps in great detail what is happening in the video.", max_tokens=8192, temperature=0.4)
         else:
             visual_description = AnalyzeMedia(str(media_path), f"Describe what you see in this {media_type}.", max_tokens=1024, temperature=0.4)
 
