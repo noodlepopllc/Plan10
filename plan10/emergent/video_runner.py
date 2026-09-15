@@ -458,6 +458,7 @@ def main():
             print(converted)
             Path(beat_out.replace('.txt', '_ltx.txt')).write_text(f'RUNLENGTH (s):{converter.run_length}\n{converted}')
 
+            '''
             # Generate the video
             GenerateVideo(
                 prompt=converted,
@@ -467,6 +468,7 @@ def main():
                 seed=pending_job['seed'],
                 enhance=False
             )
+            '''
         
         # Mark as complete and update current_media
         pending_job['status'] = 'complete'
