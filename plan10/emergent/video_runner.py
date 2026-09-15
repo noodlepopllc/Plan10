@@ -453,7 +453,7 @@ def main():
         else:
             from plan10.emergent.ltx25_previewer import LTXPipeline
             converter = LTXPipeline()
-            converted = converter.run(pending_job['output_path'].replace('.mp4', '_script.txt', style='', use_descriptions=True)
+            converted = converter.run(pending_job['output_path'].replace('.mp4', '_script.txt'), style='', use_descriptions=True)
             print(converted)
             Path(output).write_text(f'RUNLENGTH (s):{converter.run_length}\n{converted}')
 
