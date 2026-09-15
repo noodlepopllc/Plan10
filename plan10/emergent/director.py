@@ -19,6 +19,8 @@ class Director:
         
         # Stage 1: SmolVLM2 describes what it sees
         visual_description = AnalyzeMedia(str(media_path), f"Describe what you see in this {media_type}.", max_tokens=1024, temperature=0.4)
+
+        print(f"VISUAL DESCRIPTION: {visual_description}")
         
         # Stage 2: Text LLM compares intent vs reality
         analysis_prompt = f"""We intended: "{intended_action}"
