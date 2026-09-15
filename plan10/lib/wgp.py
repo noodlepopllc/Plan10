@@ -101,7 +101,7 @@ def i2v_ltx2(prompt='', media='', end='', output='output.mp4',
                 if update not in dedupe_updates:
                     dedupe_udpates.add(update)
                     print(update)
-        print(status[-2:])
+        print(requests.get(f"http://127.0.0.1:8080/status/{job_id}").json()[-2:])
 
 async def i2v_ltx(prompt='', media='', end='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
