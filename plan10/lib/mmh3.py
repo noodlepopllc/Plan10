@@ -476,7 +476,7 @@ f''' After speaking, <Subject 1> {prompt} They continue to move naturally for th
 def compose_video(prompt, images, audio, output='output.mp4', width=768, height=448, duration=5.0):
     try:
         vram_limit = min(VRAM, 64)
-        quant = "torchao_nvfp4_w4a16"
+        quant = "comfy_kitchen_fp8_w8a8"
         if vram_limit < 32:
             vram_config = {
                 "onload_dtype": torch.bfloat16,
