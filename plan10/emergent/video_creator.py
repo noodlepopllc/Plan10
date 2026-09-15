@@ -126,7 +126,7 @@ def main():
                     
         print(f"REFERENCES: {refs}")
 
-        char_ids = [get_or_create_visual_id(ref) for ref in refs]
+        char_ids = [get_or_create_visual_id(ref, goal) for ref in refs]
         visual_ids = [x[0] for x in char_ids]
         char_names = [x[1] for x in char_ids]
         
