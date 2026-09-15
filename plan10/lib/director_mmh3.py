@@ -581,7 +581,7 @@ def send(prompt, images, audio, output='output.mp4', width=768, height=448, dura
     if args['output_dir'][-1] == '.':
         args['output_dir'] = args['output_dir'][:-1]
 
-    args['output_filename'] = f'{os.getcwd()}/{Path(output).name}'
+    args['output_filename'] = Path(output).name
     args['prompt'] = prompt
     args["seed"] = SEED
     if steps <= 8:
