@@ -349,7 +349,7 @@ def main():
     portraits = state.get('portraits', [])
     initial = state.get('initial_media', '')
     visual_ids = state.get('visual_ids',[])
-    char_names = state.get('char_names'.[])
+    char_names = state.get('char_names', [])
     bg = state.get('current_bg')
     output_dir = state.get('output_dir') or args.output
     
