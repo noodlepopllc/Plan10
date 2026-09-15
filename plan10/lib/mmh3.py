@@ -477,7 +477,7 @@ def compose_video(prompt, images, audio, output='output.mp4', width=768, height=
     try:
         vram_limit = min(VRAM, 64)
         quant = "comfy_kitchen_int8_w8a8"
-        if False and vram_limit < 32:
+        if vram_limit < 100:
             vram_config = {
                 "onload_dtype": torch.bfloat16,
                 "onload_device": "cuda",
