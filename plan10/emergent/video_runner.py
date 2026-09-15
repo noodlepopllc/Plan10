@@ -141,7 +141,7 @@ DEFINITIONS:
 - {key visual element} is one notable object, structure, or terrain feature.
 - Keep the entire sentence brief (under ~12 words naturally).
 '''
-def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0, visual_ids=[]):
+def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0, visual_ids=[], char_names=[]):
     script = ""
     
     # 1. First Frame - NO CACHE
@@ -156,6 +156,13 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0, visual_ids=[]):
     # 3. Generate shots FIRST to know who speaks
     char_labels = [f"char{ndx}" for ndx in range(1, len(refs) + 1)]
     shots = expand_to_shots(prompt, bg, char_labels, duration, first_frame_path=ff)
+    cndx = 1
+    for char_name in char_names:
+        shots = shots.replace(char_name, f'char{cndx}')
+        shots = shots.replace(char_name.capitalize(), f'char{cndx}' )
+        cndx += 1
+
+
     
     # Parse shots to find which characters speak (format: charX [verb] [English] "...")
     speaking_chars = set()
@@ -342,6 +349,7 @@ def main():
     portraits = state.get('portraits', [])
     initial = state.get('initial_media', '')
     visual_ids = state.get('visual_ids',[])
+    char_names = state.get('char_names'.[])
     bg = state.get('current_bg')
     output_dir = state.get('output_dir') or args.output
     
