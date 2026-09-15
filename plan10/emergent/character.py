@@ -1,5 +1,5 @@
 from plan10.lib.image_analysis import AnalyzeImage
-from plan10.lib.llm import Qwen  # or whatever your wrapper is
+from plan10.lib.qwen_llm import llm_analyze_media
 
 class CharacterProfile:
     def __init__(self, character_ref_path, seed_profile=None):
@@ -98,8 +98,7 @@ SEED CHARACTERS:
 VISUAL_ID:
 "{vid}"
 """
-
-            response = Qwen(prompt)
+            response = llm_analyze_media('', prompt=prompt, max_tokens=1024, temperature=0.4)['analysis']
             char["character_name"] = response.get("character_name", "unknown")
             char["confidence"] = response.get("confidence", 0.0)
 
