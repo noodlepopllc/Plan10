@@ -16,10 +16,21 @@ class Director:
         media_path = Path(media_path)
         ext = media_path.suffix.lower()
         media_type = "video" if ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm'] else "image"
+        improved_prompt = (
+            "Analyze this video and provide a meticulous, frame-by-frame style chronological breakdown. "
+            "For every single second where a visual change, action, motion, or transition occurs, "
+            "output exactly one block in the following format:\n\n"
+            "[MM:SS] - [Subject/Action]: Detailed description of visual elements, movements, camera angles, and text/objects present.\n\n"
+            "Guidelines:\n"
+            "1. Be objective and literal. Describe what is physically visible.\n"
+            "2. Do not skip chunks of time; maintain strict second-by-second continuity.\n"
+            "3. Keep descriptions concise but dense with visual facts (e.g., color, direction of movement, lighting shifts)."
+        )
+
         
         if "video" in media_type:
         # Stage 1: SmolVLM2 describes what it sees
-            visual_description = AnalyzeMedia(str(media_path), f"Describe second by second with timestamps in great detail what is happening in the video.", max_tokens=8192, temperature=0.4)
+            visual_description = AnalyzeMedia(str(media_path), f"{improved_prompt}, max_tokens=8192, temperature=0.4)
         else:
             visual_description = AnalyzeMedia(str(media_path), f"Describe what you see in this {media_type}.", max_tokens=1024, temperature=0.4)
 
