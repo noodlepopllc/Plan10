@@ -14,59 +14,59 @@ LTX = os.environ.get("LTX", "False") != "False"
 MMH3 = os.environ.get("MMH3","False") != "False"
 DIALOG_ALLOWED = WGP or LTX or MMH3
 class Director:
-def analyze_reality(self, media_path, intended_action, width, height, output_dir):
-    media_path = Path(media_path)
-    ext = media_path.suffix.lower()
-    media_type = "video" if ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm'] else "image"
+    def analyze_reality(self, media_path, intended_action, width, height, output_dir):
+        media_path = Path(media_path)
+        ext = media_path.suffix.lower()
+        media_type = "video" if ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm'] else "image"
 
-    # --- Stage 0: ASR pass ---
-    transcript = ""
-    if media_type == "video":
-        transcript = transcribe(str(media_path))  # <-- Whisper handles mp4 directly
+        # --- Stage 0: ASR pass ---
+        transcript = ""
+        if media_type == "video":
+            transcript = transcribe(str(media_path))  # <-- Whisper handles mp4 directly
 
-    # --- Stage 1: Visual description ---
-    if media_type == "video":
-        visual_description = AnalyzeMedia(
-            str(media_path),
-            "Describe this video in detail",
+        # --- Stage 1: Visual description ---
+        if media_type == "video":
+            visual_description = AnalyzeMedia(
+                str(media_path),
+                "Describe this video in detail",
+                max_tokens=2048,
+                temperature=0.4
+            )
+        else:
+            visual_description = AnalyzeMedia(
+                str(media_path),
+                f"Describe what you see in this {media_type}.",
+                max_tokens=1024,
+                temperature=0.4
+            )
+
+        # --- Stage 2: Merge transcript + visuals ---
+        analysis_prompt = f"""
+    We intended: "{intended_action}"
+
+    VISUAL EVENTS:
+    {visual_description}
+
+    DIALOGUE (ASR):
+    {transcript}
+
+    Extract character states and issues:
+
+    CHARACTER STATES:
+    - char1: [pose], [position], [facing], [holding]
+    - char2: [pose], [position], [facing], [holding]
+
+    ISSUES: [problems or "none"]
+    """
+
+        result = llm_analyze_media(
+            media="", 
+            prompt=analysis_prompt,
             max_tokens=2048,
-            temperature=0.4
-        )
-    else:
-        visual_description = AnalyzeMedia(
-            str(media_path),
-            f"Describe what you see in this {media_type}.",
-            max_tokens=1024,
-            temperature=0.4
-        )
+            temperature=0.2
+        )['analysis']
 
-    # --- Stage 2: Merge transcript + visuals ---
-    analysis_prompt = f"""
-We intended: "{intended_action}"
-
-VISUAL EVENTS:
-{visual_description}
-
-DIALOGUE (ASR):
-{transcript}
-
-Extract character states and issues:
-
-CHARACTER STATES:
-- char1: [pose], [position], [facing], [holding]
-- char2: [pose], [position], [facing], [holding]
-
-ISSUES: [problems or "none"]
-"""
-
-    result = llm_analyze_media(
-        media="", 
-        prompt=analysis_prompt,
-        max_tokens=2048,
-        temperature=0.2
-    )['analysis']
-
-    return self._clean_analysis(result)
+        return self._clean_analysis(result)
 
 
     def compare_and_decide(self, intended_action, actual_reality, story_context, history, 
