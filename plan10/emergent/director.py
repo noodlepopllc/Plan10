@@ -17,8 +17,11 @@ class Director:
         ext = media_path.suffix.lower()
         media_type = "video" if ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm'] else "image"
         
+        if video:
         # Stage 1: SmolVLM2 describes what it sees
-        visual_description = AnalyzeMedia(str(media_path), f"Describe what you see in this {media_type}.", max_tokens=1024, temperature=0.4)
+            visual_description = AnalyzeMedia(str(media_path), f"Describe what you see in this video in detail with timestamps.", max_tokens=4096, temperature=0.4)
+        else:
+            visual_description = AnalyzeMedia(str(media_path), f"Describe what you see in this {media_type}.", max_tokens=1024, temperature=0.4)
 
         print(f"VISUAL DESCRIPTION: {visual_description}")
         
