@@ -402,26 +402,27 @@ def main():
     try:
         prompt = pending_job['prompt']
 
-        if MMH3 or args.debug:
-            from plan10.lib.director_mmh3 import get_builder
-            media = pending_job['input_media']
-            if isinstance(media, (list, tuple)) and len(media):
-                start_image = media[0]
-            elif media:
-                start_image = to_absolute(media)
-            current_source = video_to_img(start_image, WIDTH, HEIGHT, True, True)
-            current_source.save('tmp.png')
-            current_source_path = f'{os.getcwd()}/tmp.png'
-            script = h3_ref(bg, None, refs, portraits, prompt,  duration, visual_ids=visual_ids)
-            Path(pending_job['output_path'].replace('.mp4', '_script.txt')).write_text(script)
-            if args.debug:
-                # Mark as complete and update current_media
-                pending_job['status'] = 'complete'
-                state['current_media'] = pending_job['output_path']
-                state_mgr.save(state)
-                
-                print(f"✅ Beat {pending_job['beat']} rendered successfully.")
-                sys.exit(pending_job['beat'])  # Positive = success
+        from plan10.lib.director_mmh3 import get_builder
+        media = pending_job['input_media']
+        if isinstance(media, (list, tuple)) and len(media):
+            start_image = media[0]
+        elif media:
+            start_image = to_absolute(media)
+        current_source = video_to_img(start_image, WIDTH, HEIGHT, True, True)
+        current_source.save('tmp.png')
+        current_source_path = f'{os.getcwd()}/tmp.png'
+        script = h3_ref(bg, None, refs, portraits, prompt,  duration, visual_ids=visual_ids)
+        Path(pending_job['output_path'].replace('.mp4', '_script.txt')).write_text(script)
+        if args.debug:
+            # Mark as complete and update current_media
+            pending_job['status'] = 'complete'
+            state['current_media'] = pending_job['output_path']
+            state_mgr.save(state)
+            
+            print(f"✅ Beat {pending_job['beat']} rendered successfully.")
+            sys.exit(pending_job['beat'])  # Positive = success
+
+        if MMH3:
             builder = get_builder(script, '')
             final_prompt = builder.generate()
             print("FINAL", final_prompt)
@@ -450,20 +451,20 @@ def main():
                 print(compose_video(final_prompt, img_refs, aud_refs, pending_job['output_path'], WIDTH, HEIGHT, builder.duration))
 
         else:
-            if WGP and duration > 5:
-                prompt = EnhancePrompt(image=pending_job['input_media'], prompt=prompt, enhancer=ENHANCE_Prompt.format(duration=duration), output=None, backend=None, ispath=False)
-                enhance = False
-            else:
-                enhance = True
+            from plan10.emergent.ltx25_previewer import LTXPipeline
+            converter = LTXPipeline()
+            converted = converter.run(script, style=''args.style'', use_descriptions=True)
+            print(converted)
+            Path(output).write_text(f'RUNLENGTH (s):{converter.run_length}\n{converted}')
 
             # Generate the video
             GenerateVideo(
-                prompt=prompt,
+                prompt=converted,
                 media=pending_job['input_media'],
                 output=pending_job['output_path'],
-                duration_sec=float(duration),
+                duration_sec=float(converter.run_length),
                 seed=pending_job['seed'],
-                enhance=enhance
+                enhance=False
             )
         
         # Mark as complete and update current_media
