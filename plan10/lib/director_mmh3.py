@@ -578,6 +578,8 @@ def send(prompt, images, audio, output='output.mp4', width=768, height=448, dura
     local_server = "http://locathost:8080"
     args = requests.get(f"http://127.0.0.1:8080/defaults/{model}").json()
     args['output_dir'] = f'{os.getcwd()}/{Path(output).parent}'
+    if args['output_dir'][-1] == '.':
+        args['output_dir'] = args['output_dir'][:-1]
 
     args['output_filename'] = f'{os.getcwd()}/{Path(output).name}'
     args['prompt'] = prompt
