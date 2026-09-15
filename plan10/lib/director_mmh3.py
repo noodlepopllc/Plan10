@@ -2,10 +2,10 @@ import os
 import re
 import base64
 import mimetypes
+import requests
 from PIL import Image
 import json
 from fastmcp import Client
-import asyncio
 from time import sleep
 from functools import partial
 
