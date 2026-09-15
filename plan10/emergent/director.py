@@ -1,45 +1,54 @@
-from plan10.lib.image_analysis import AnalyzeMedia
-from plan10.lib.qwen_llm import llm_analyze_media
+
 from pathlib import Path
 from plan10.lib.config import load_config
 load_config()
 
 import os
 
+from plan10.lib.image_analysis import AnalyzeMedia
+from plan10.lib.qwen_llm import llm_analyze_media
+from plan10.lib.dialog import transcribe
+
 WGP = os.environ.get("WGP","False") != "False"
 LTX = os.environ.get("LTX", "False") != "False"
 MMH3 = os.environ.get("MMH3","False") != "False"
 DIALOG_ALLOWED = WGP or LTX or MMH3
 class Director:
-    def analyze_reality(self, media_path, intended_action, width, height, output_dir):
-        """Analyze what actually happened in the video/image."""
-        media_path = Path(media_path)
-        ext = media_path.suffix.lower()
-        media_type = "video" if ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm'] else "image"
-        summary_prompt = (
-            "Identify the major events that occur in this video from start to finish. "
-            "For each distinct event, provide a single, high-quality summary sentence.\n\n"
-            "Format exactly like this:\n"
-            "- [Approximate Time]: [One sentence summarizing what happens]\n\n"
-            "Keep descriptions concise, literal, and focused strictly on the core action."
+def analyze_reality(self, media_path, intended_action, width, height, output_dir):
+    media_path = Path(media_path)
+    ext = media_path.suffix.lower()
+    media_type = "video" if ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm'] else "image"
+
+    # --- Stage 0: ASR pass ---
+    transcript = ""
+    if media_type == "video":
+        transcript = transcribe(str(media_path))  # <-- Whisper handles mp4 directly
+
+    # --- Stage 1: Visual description ---
+    if media_type == "video":
+        visual_description = AnalyzeMedia(
+            str(media_path),
+            "Describe this video in detail",
+            max_tokens=2048,
+            temperature=0.4
+        )
+    else:
+        visual_description = AnalyzeMedia(
+            str(media_path),
+            f"Describe what you see in this {media_type}.",
+            max_tokens=1024,
+            temperature=0.4
         )
 
+    # --- Stage 2: Merge transcript + visuals ---
+    analysis_prompt = f"""
+We intended: "{intended_action}"
 
-
-        
-        if "video" in media_type:
-        # Stage 1: SmolVLM2 describes what it sees
-            visual_description = AnalyzeMedia(str(media_path), f"Describe this video in detail", max_tokens=2048, temperature=0.4)
-        else:
-            visual_description = AnalyzeMedia(str(media_path), f"Describe what you see in this {media_type}.", max_tokens=1024, temperature=0.4)
-
-        print(f"PATH: {media_path}, MEDIA TYPE: {media_type}, VISUAL DESCRIPTION: {visual_description}")
-        
-        # Stage 2: Text LLM compares intent vs reality
-        analysis_prompt = f"""We intended: "{intended_action}"
-
-What actually happened:
+VISUAL EVENTS:
 {visual_description}
+
+DIALOGUE (ASR):
+{transcript}
 
 Extract character states and issues:
 
@@ -47,16 +56,18 @@ CHARACTER STATES:
 - char1: [pose], [position], [facing], [holding]
 - char2: [pose], [position], [facing], [holding]
 
-ISSUES: [problems or "none"]"""
-        
-        result = llm_analyze_media(
-            media="", 
-            prompt=analysis_prompt,
-            max_tokens=2048,
-            temperature=0.2
-        )['analysis']
-        
-        return self._clean_analysis(result)
+ISSUES: [problems or "none"]
+"""
+
+    result = llm_analyze_media(
+        media="", 
+        prompt=analysis_prompt,
+        max_tokens=2048,
+        temperature=0.2
+    )['analysis']
+
+    return self._clean_analysis(result)
+
 
     def compare_and_decide(self, intended_action, actual_reality, story_context, history, 
                         pending_setup, goal=None, force_transition=False, 
