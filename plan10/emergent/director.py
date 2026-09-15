@@ -17,15 +17,18 @@ class Director:
         ext = media_path.suffix.lower()
         media_type = "video" if ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm'] else "image"
         improved_prompt = (
-            "Analyze this video and provide a meticulous, frame-by-frame style chronological breakdown. "
-            "For every single second where a visual change, action, motion, or transition occurs, "
-            "output exactly one block in the following format:\n\n"
-            "[MM:SS] - [Subject/Action]: Detailed description of visual elements, movements, camera angles, and text/objects present.\n\n"
+            "Analyze the provided video clip step-by-step. "
+            "Do not repeat yourself. Describe the chronological sequence of events as they unfold "
+            "from the beginning to the end of the video.\n\n"
+            "Format your output as a numbered list of events:\n"
+            "1. [Initial Scene]: Detailed description of what starts at the absolute beginning.\n"
+            "2. [Next Action/Transition]: What happens next and how the scene changes.\n"
+            "3. [Subsequent Event]: Continue mapping the progress objectively.\n\n"
             "Guidelines:\n"
-            "1. Be objective and literal. Describe what is physically visible.\n"
-            "2. Do not skip chunks of time; maintain strict second-by-second continuity.\n"
-            "3. Keep descriptions concise but dense with visual facts (e.g., color, direction of movement, lighting shifts)."
+            "- Move forward linearly in time; do not circle back to the start.\n"
+            "- Describe only visual facts (movements, objects, text, color shifts)."
         )
+
 
         
         if "video" in media_type:
