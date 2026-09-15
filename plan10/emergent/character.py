@@ -68,7 +68,7 @@ CHARACTER_2:
 
     import re
 
-    def parse_seed_characters(seed_text):
+    def parse_seed_characters(self, seed_text):
         """
         Extracts character name + description pairs from the Characters: section
         of the seed profile.
