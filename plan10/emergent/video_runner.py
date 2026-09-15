@@ -211,6 +211,12 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0, visual_ids=[], char_n
     script += f"summary | {[x for x in prompt.split('\n') if 'Action:' in x][0].replace('Action:','').strip()}\n"
     script += f"soundscape | {translate_to_audio_prompt(bg_desc)}\n"
     script += shots + "\n"
+
+    cndx = 1
+    for char_name in char_names:
+        script = script.replace(char_name.lower(), f'char{cndx}')
+        script = script.replace(char_name.capitalize(), f'char{cndx}' )
+        cndx += 1
     
     return script
 
