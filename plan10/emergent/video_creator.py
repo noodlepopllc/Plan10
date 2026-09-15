@@ -21,13 +21,13 @@ ANIME = os.environ.get('ANIME', 'False') != 'False'
 MMH3 = os.environ.get('MMH3', 'False') != 'False'
 
 
-def get_or_create_visual_id(character_image: str) -> str:
+def get_or_create_visual_id(character_image: str, goal: str) -> str:
     """Get cached visual ID or generate and cache it."""
     img = Image.open(character_image)
     visual_id = img.info.get("VisualID")
     
     if not visual_id:
-        profile = CharacterProfile(character_image)
+        profile = CharacterProfile(character_image, goal)
         visual_id = profile.get_visual_id(0)
         
         # Cache it
@@ -38,7 +38,7 @@ def get_or_create_visual_id(character_image: str) -> str:
         metadata.add_text("VisualID", visual_id)
         img.save(character_image, pnginfo=metadata)
     
-    return visual_id
+    return visual_id, profile.get_character_name(0)
 
 if ANIME:
     from plan10.lib.anime_gen import GenerateImage, prompt_metadata
@@ -73,6 +73,7 @@ def main():
         refs = state['character_refs']
         portraits = state['portraits']
         visual_ids = state['visual_ids']
+        char_names = state['char_names']
         beat_count = state['beat_count']
         current_media = state['current_media']
         story_context = state['story_context']
@@ -125,7 +126,9 @@ def main():
                     
         print(f"REFERENCES: {refs}")
 
-        visual_ids = [get_or_create_visual_id(ref) for ref in refs]
+        char_ids = [get_or_create_visual_id(ref) for ref in refs]
+        visual_ids = [x[0] for x in char_ids]
+        char_names = [x[1] for x in char_ids]
         
         beat_count = 0
         story_context = args.context
@@ -173,7 +176,7 @@ def main():
             "portraits": portraits,
             "story_context": context, "history": history,
             "pending_setup": pending_setup, "needs_transition": needs_transition,
-            "character_refs": refs, "visual_ids": visual_ids,
+            "character_refs": refs, "visual_ids": visual_ids, "char_names": char_names,
             "video_queue": video_queue,
             "scene_mode": scene_mode,  # <-- missing
             "output_dir": args.output, "width": args.width, "height": args.height, "seed": args.seed,
@@ -206,6 +209,7 @@ def main():
         "character_refs": refs,
         "portraits": portraits,
         "visual_ids": visual_ids,
+        "char_names": char_names,
         "video_queue": video_queue,
         "scene_mode": scene_mode,
         "output_dir": args.output,

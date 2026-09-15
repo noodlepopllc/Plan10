@@ -1,9 +1,12 @@
 from plan10.lib.image_analysis import AnalyzeImage
+from plan10.lib.llm import Qwen  # or whatever your wrapper is
 
 class CharacterProfile:
-    def __init__(self, character_ref_path):
+    def __init__(self, character_ref_path, seed_profile=None):
         self.ref_path = character_ref_path
+        self.seed_profile = seed_profile or {}
         self.characters = self._extract_all_characters()
+        self._match_seed_characters_llm()
     
     def _extract_all_characters(self):
         prompt = """Analyze this image and extract a complete profile for the 1 to 3 MOST PROMINENT FOREGROUND characters ONLY.
@@ -15,26 +18,18 @@ CRITICAL RULES:
 
 For EACH prominent character, provide:
 1. VISUAL_ID: 15-25 word description including ethnicity, exact age range, hair color and style (length, texture), skin tone, face shape, distinctive facial features, and main clothing items with specific colors
-2. APPEARANCE: Physical details (ethnicity, age, gender, face shape, eye shape, hair, body type, distinctive features)
-3. CLOTHING: Detailed clothing (top color/style/fit, bottom color/style/fit, shoes, accessories, hair details)
+2. APPEARANCE: Physical details
+3. CLOTHING: Detailed clothing
 
-Output format (use this EXACT structure):
+Output format:
 CHARACTER_1:
-VISUAL_ID: [15-25 word detailed description]
-APPEARANCE: [description]
-CLOTHING: [description]
+VISUAL_ID: ...
+APPEARANCE: ...
+CLOTHING: ...
 
-CHARACTER_2: (ONLY if a second prominent foreground character exists)
-VISUAL_ID: [15-25 word detailed description]
-APPEARANCE: [description]
-CLOTHING: [description]
-
-CHARACTER_3: (ONLY if a third prominent foreground character exists)
-VISUAL_ID: [15-25 word detailed description]
-APPEARANCE: [description]
-CLOTHING: [description]
-
-Be extremely specific about colors, styles, and physical features. This will be used to maintain consistency across camera angles."""
+CHARACTER_2:
+...
+"""
         
         result = AnalyzeImage(self.ref_path, prompt)['analysis'].strip()
         return self._parse_character_data(result)
@@ -50,9 +45,8 @@ Be extremely specific about colors, styles, and physical features. This will be 
                 continue
             
             if line.startswith('CHARACTER_'):
-                if current_char:
-                    if current_char.get('visual_id'):
-                        characters.append(current_char)
+                if current_char.get('visual_id'):
+                    characters.append(current_char)
                 current_char = {}
                 current_field = None
             elif line.startswith('VISUAL_ID:'):
@@ -64,14 +58,51 @@ Be extremely specific about colors, styles, and physical features. This will be 
             elif line.startswith('CLOTHING:'):
                 current_field = 'clothing'
                 current_char['clothing'] = line.split(':', 1)[1].strip()
-            elif current_field and current_char:
+            elif current_field:
                 current_char[current_field] += ' ' + line
         
-        if current_char and current_char.get('visual_id'):
+        if current_char.get('visual_id'):
             characters.append(current_char)
         
         return characters
+
+    def _match_seed_characters_llm(self):
+        if not self.seed_profile:
+            return
         
+        seed_text = "\n".join(
+            f"{name}: {desc}"
+            for name, desc in self.seed_profile.items()
+        )
+
+        for char in self.characters:
+            vid = char.get("visual_id", "")
+
+            prompt = f"""
+You are a character‑matching assistant.
+
+You are given:
+1. A list of SEED CHARACTERS with names and detailed descriptions.
+2. A VISUAL_ID description extracted from an image.
+
+Your task:
+Determine which SEED CHARACTER the VISUAL_ID most closely matches.
+
+Return ONLY:
+character_name: <name>
+confidence: <0–1>
+
+SEED CHARACTERS:
+{seed_text}
+
+VISUAL_ID:
+"{vid}"
+"""
+
+            response = Qwen(prompt)
+            char["character_name"] = response.get("character_name", "unknown")
+            char["confidence"] = response.get("confidence", 0.0)
+
     def get_character(self, index):
         if 0 <= index < len(self.characters):
             return self.characters[index]
@@ -80,3 +111,7 @@ Be extremely specific about colors, styles, and physical features. This will be 
     def get_visual_id(self, index=0):
         char = self.get_character(index)
         return char['visual_id'] if char else "unknown character"
+
+    def get_character_name(self, index=0):
+        char = self.get_character(index)
+        return char.get("character_name", "unknown") if char else "unknown"
