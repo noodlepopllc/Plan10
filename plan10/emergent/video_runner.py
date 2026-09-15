@@ -430,6 +430,7 @@ def main():
             # Extract paths dynamically from the builder instead of hardcoding
             img_refs = [data["path"] for data in builder.entities.values()]
             aud_refs = [data["path"] for data in builder.used_audio_refs.values()]
+            '''
 
             if WGP:
                 import asyncio
@@ -449,6 +450,7 @@ def main():
             else:
                 from plan10.lib.mmh3 import compose_video
                 print(compose_video(final_prompt, img_refs, aud_refs, pending_job['output_path'], WIDTH, HEIGHT, builder.duration))
+            '''
 
         else:
             from plan10.emergent.ltx25_previewer import LTXPipeline
