@@ -43,7 +43,7 @@ def i2v_ltx2(prompt='', media='', end='', output='output.mp4',
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
 
         local_server = "http://locathost:8080"
-        args = requests.get(f"http://127.0.0.1:8080/defaults/{tool}").json()
+        args = requests.get("http://127.0.0.1:8080/defaults/ltx2_25_22B_distilled").json()
 
         if media:
             desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
