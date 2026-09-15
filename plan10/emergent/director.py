@@ -16,24 +16,20 @@ class Director:
         media_path = Path(media_path)
         ext = media_path.suffix.lower()
         media_type = "video" if ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm'] else "image"
-        improved_prompt = (
-            "Analyze the provided video clip step-by-step. "
-            "Do not repeat yourself. Describe the chronological sequence of events as they unfold "
-            "from the beginning to the end of the video.\n\n"
-            "Format your output as a numbered list of events:\n"
-            "1. [Initial Scene]: Detailed description of what starts at the absolute beginning.\n"
-            "2. [Next Action/Transition]: What happens next and how the scene changes.\n"
-            "3. [Subsequent Event]: Continue mapping the progress objectively.\n\n"
-            "Guidelines:\n"
-            "- Move forward linearly in time; do not circle back to the start.\n"
-            "- Describe only visual facts (movements, objects, text, color shifts)."
+        summary_prompt = (
+            "Identify the major events that occur in this video from start to finish. "
+            "For each distinct event, provide a single, high-quality summary sentence.\n\n"
+            "Format exactly like this:\n"
+            "- [Approximate Time]: [One sentence summarizing what happens]\n\n"
+            "Keep descriptions concise, literal, and focused strictly on the core action."
         )
+
 
 
         
         if "video" in media_type:
         # Stage 1: SmolVLM2 describes what it sees
-            visual_description = AnalyzeMedia(str(media_path), f"{improved_prompt}", max_tokens=8192, temperature=0.4)
+            visual_description = AnalyzeMedia(str(media_path), f"{summary_prompt}", max_tokens=8192, temperature=0.4)
         else:
             visual_description = AnalyzeMedia(str(media_path), f"Describe what you see in this {media_type}.", max_tokens=1024, temperature=0.4)
 
