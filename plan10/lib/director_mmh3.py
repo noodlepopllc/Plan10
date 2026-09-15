@@ -575,9 +575,10 @@ async def send(prompt, images, audio, output='output.mp4', width=768, height=448
         #model = "minimax_h3_ref2va_pruned_pdd"
         model = "minimax_h3_ref2va_pruned"
 
-        r = await client.call_tool("wangp_get_default_settings", {"model_type":model})
-        results = json.dumps(r.data, indent=4)
-        args = r.data
+        local_server = "http://locathost:8080"
+        args = requests.get(f"http://127.0.0.1:8080/defaults/{model}").json()
+        args['output_dir'] = f'{os.getcwd()}/{Path(output).parent}'
+
         args['output_filename'] = output
         args['prompt'] = prompt
         args["seed"] = SEED
@@ -612,26 +613,20 @@ async def send(prompt, images, audio, output='output.mp4', width=768, height=448
         args['resolution'] = f'{width}x{height}'
         args['video_length'] = (((duration * 24) // 17) * 17) + 5
         print(args)
-        r = await client.call_tool("wangp_generate", {"source": args})
-        print(r.data['job_id'])
-        job_id = r.data['job_id']
+        job_id = requests.post("http://127.0.0.1:8080/run", json=args).json()
+        print(job_id)
 
-        r = await client.call_tool("wangp_get_job", {"job_id": job_id})
         last = ''
-        while r.data and not r.data['done']:
+        dedupe_updates = set([])
+        while status := requests.get(f"http://127.0.0.1:8080/status/{job_id}").json()[-1] in ("pending","running"):
             sleep(5)
-            this = '' 
-            if 'events' not in r.data:
-                continue
-            for event in r.data['events']:
-                if event['data'] and 'text' in event['data']:
-                    if '%|' in event['data']['text']:
-                        this = event['data']['text']
-            if this != last:
-                last = this
-                print(this)
-            r = await client.call_tool("wangp_get_job", {"job_id": job_id})
-        print(r.data['result'])
+            update = requests.get(f"http://127.0.0.1:8080/updates/{job_id}").json()
+            if update:
+                update = update[0].strip()
+                if update not in dedupe_updates:
+                    dedupe_updates.add(update)
+                    print(update)
+        print(requests.get(f"http://127.0.0.1:8080/status/{job_id}").json()[-2:])
 
 def get_builder(script, output_dir):
     if ANIME:
