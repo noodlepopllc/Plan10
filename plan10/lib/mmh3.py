@@ -476,6 +476,7 @@ f''' After speaking, <Subject 1> {prompt} They continue to move naturally for th
 def compose_video(prompt, images, audio, output='output.mp4', width=768, height=448, duration=5.0):
     try:
         vram_limit = min(VRAM, 64)
+        quant = "torchao_nvfp4_w4a16"
         if vram_limit < 32:
             vram_config = {
                 "onload_dtype": torch.bfloat16,
@@ -511,10 +512,10 @@ def compose_video(prompt, images, audio, output='output.mp4', width=768, height=
                 torch_dtype=torch.bfloat16,
                 device="cuda",
                 model_configs=[
-                    ModelConfig(model_id="MiniMax/MiniMax-H3", origin_file_pattern="Ref2VA/text_encoder/model*.safetensors", quantize=QuantizeConfig(method="torchao_int8_w8a16"), **vram_config),
-                    ModelConfig(model_id="Comfy-Org/MiniMax-H3", origin_file_pattern="diffusion_models/minimax_h3_ref2va_pruned_bf16.safetensors",  quantize=QuantizeConfig(method="torchao_int8_w8a16"), **vram_config),
-                    ModelConfig(model_id="MiniMax/MiniMax-H3", origin_file_pattern="Ref2VA/video_vae/source/model.safetensors",  quantize=QuantizeConfig(method="torchao_int8_w8a16"), **vram_config),
-                    ModelConfig(model_id="MiniMax/MiniMax-H3", origin_file_pattern="Ref2VA/audio_vae/model.safetensors",  quantize=QuantizeConfig(method="torchao_int8_w8a16"), **vram_config),
+                    ModelConfig(model_id="MiniMax/MiniMax-H3", origin_file_pattern="Ref2VA/text_encoder/model*.safetensors", quantize=QuantizeConfig(method="quant"), **vram_config),
+                    ModelConfig(model_id="Comfy-Org/MiniMax-H3", origin_file_pattern="diffusion_models/minimax_h3_ref2va_pruned_bf16.safetensors",  quantize=QuantizeConfig(method="quant"), **vram_config),
+                    ModelConfig(model_id="MiniMax/MiniMax-H3", origin_file_pattern="Ref2VA/video_vae/source/model.safetensors",  quantize=QuantizeConfig(method="quant"), **vram_config),
+                    ModelConfig(model_id="MiniMax/MiniMax-H3", origin_file_pattern="Ref2VA/audio_vae/model.safetensors",  quantize=QuantizeConfig(method="quant"), **vram_config),
                 ],
                 processor_config=ModelConfig(model_id="MiniMaxAI/MiniMax-H3", origin_file_pattern="Ref2VA/processor/"),
                 vram_limit=vram_limit,
