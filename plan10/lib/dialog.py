@@ -351,6 +351,7 @@ def CloneVoice(text, audio, output, duration=5.0, seed=-1, lengthen=True, sessio
 
 def main():
     import argparse, math
+    import sys
     from pathlib import Path
     parser = argparse.ArgumentParser(
                     prog='GenerateDialog',
@@ -371,6 +372,9 @@ def main():
     elif args.transcribe and args.ref_audio:
         output = ' '.join(transcribe(args.ref_audio))
         if args.output.endswith('.txt'):
+            if args.ref_audio.endswith('.mp4'):
+                Path(args.output).write_text(f'{output.strip()}')
+                sys.exit()
             y, sr = librosa.load(args.ref_audio, sr=None)
             dur = librosa.get_duration(y=y, sr=sr)
             Path(args.output).write_text(f'{math.ceil(dur)}|{output.strip()}')
