@@ -4,7 +4,7 @@ from plan10.lib.qwen_llm import llm_analyze_media
 class CharacterProfile:
     def __init__(self, character_ref_path, seed_profile=None):
         self.ref_path = character_ref_path
-        self.seed_profile = seed_profile or {}
+        self.seed_profile = seed_profile or ""
         self.characters = self._extract_all_characters()
         self._match_seed_characters_llm()
     
@@ -66,13 +66,53 @@ CHARACTER_2:
         
         return characters
 
+    import re
+
+    def parse_seed_characters(seed_text):
+        """
+        Extracts character name + description pairs from the Characters: section
+        of the seed profile.
+        Returns a dict: { "Sora": "...", "Lindsy": "..." }
+        """
+
+        characters_section = []
+        in_characters = False
+
+        for line in seed_text.splitlines():
+            line = line.strip()
+
+            if line.lower().startswith("characters"):
+                in_characters = True
+                continue
+
+            if in_characters:
+                # Stop when we hit the next section
+                if re.match(r"^(location|motivations|spark|story goal|initial situation)", line.lower()):
+                    break
+                characters_section.append(line)
+
+        # Now parse lines like:
+        # - Sora: description...
+        # - Lindsy: description...
+        char_dict = {}
+
+        for line in characters_section:
+            if line.startswith("- "):
+                line = line[2:].strip()  # remove "- "
+            if ":" in line:
+                name, desc = line.split(":", 1)
+                char_dict[name.strip()] = desc.strip()
+
+        return char_dict
+
+
     def _match_seed_characters_llm(self):
         if not self.seed_profile:
             return
         
         seed_text = "\n".join(
             f"{name}: {desc}"
-            for name, desc in self.seed_profile.items()
+            for name, desc in self.parse_seed_characters(self.seed_profile).items()
         )
 
         for char in self.characters:
