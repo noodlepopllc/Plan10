@@ -453,9 +453,10 @@ def main():
         else:
             from plan10.emergent.ltx25_previewer import LTXPipeline
             converter = LTXPipeline()
-            converted = converter.run(pending_job['output_path'].replace('.mp4', '_script.txt'), style='', use_descriptions=True)
+            beat_out = pending_job['output_path'].replace('.mp4', '_script.txt')
+            converted = converter.run(beat_out, style='', use_descriptions=True)
             print(converted)
-            Path(output).write_text(f'RUNLENGTH (s):{converter.run_length}\n{converted}')
+            Path(beat_out.replace('.txt', '_ltx.txt')).write_text(f'RUNLENGTH (s):{converter.run_length}\n{converted}')
 
             # Generate the video
             GenerateVideo(
