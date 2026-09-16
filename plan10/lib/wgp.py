@@ -333,70 +333,57 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
             print(f"❌ Error: {e}")
             raise
 
-async def s2v_ltx(prompt='', media='', end_image='', audio='', text='', output='output.mp4', 
+def s2v_ltx(prompt='', media='', end_image='', audio='', text='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
-    async with Client("http://localhost:7866/mcp") as client:
 
-        model = tool_dialog
+    model = tool_dialog
 
-        r = await client.call_tool("wangp_get_default_settings", {"model_type":model})
-        results = json.dumps(r.data, indent=4)
+    local_server = "http://locathost:8080"
+    args = requests.get("http://127.0.0.1:8080/defaults/ltx2_25_22B_distilled").json()
 
-        '''
-        desc = Image.open(media).info.get('Description')
-        if not desc:
-            desc = add_metadata_char(media, '', seed)
-        '''
+    desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
+    audio_desc = translate_to_audio_prompt(desc)
 
-        desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
-        audio_desc = translate_to_audio_prompt(desc)
+    newprompt = f"[VISUAL]: {desc} {prompt} Lips moving in perfect sync with the audio. Character begins speaking immediately on the first frame of the video. \n[SPEECH]: {text}.\n[SOUNDS]: {audio_desc}."
+    print(newprompt)
 
-        newprompt = f"[VISUAL]: {desc} {prompt} Lips moving in perfect sync with the audio. Character begins speaking immediately on the first frame of the video. \n[SPEECH]: {text}.\n[SOUNDS]: {audio_desc}."
-        print(newprompt)
+    args['output_dir'] = f'{os.getcwd()}/{Path(output).parent}'
+    args['output_filename'] = Path(output).name
+    args['prompt'] = newprompt
+    args['image_prompt_type'] =  'S'
+    args['image_start'] = media
+    args['guidance_phases'] = 1 if 'DISTILLED:1' in os.environ['LTX'] else 2
+    args['num_inference_steps'] = 8 if DISTILLED else 30
+    args['guidance_scale'] = 1.0 if DISTILLED else 3.0
+    args['audio_guidance_scale'] = 3.0
+    #args['prompt_enhancer'] = 'TI'
+    args['audio_prompt_type'] = 'A1OF'
+    args['audio_guide'] = audio
+    args['activated_loras'] = ["id-lora-celebvhq-ltx2.3.safetensors"] #["id-lora-talkvid-ltx2.3 .safetensors"] 
+    args["multi_prompts_gen_type"] = "FG"
+    args['loras_multipliers'] = '1.0|'
+    args['seed'] = SEED
 
-        args = r.data
-        args['output_filename'] = output
-        args['prompt'] = newprompt
-        args['image_prompt_type'] =  'S'
-        args['image_start'] = media
-        args['guidance_phases'] = 1 if 'DISTILLED:1' in os.environ['LTX'] else 2
-        args['num_inference_steps'] = 8 if DISTILLED else 30
-        args['guidance_scale'] = 1.0 if DISTILLED else 3.0
-        args['audio_guidance_scale'] = 3.0
-        #args['prompt_enhancer'] = 'TI'
-        args['audio_prompt_type'] = 'A1OF'
-        args['audio_guide'] = audio
-        args['activated_loras'] = ["id-lora-celebvhq-ltx2.3.safetensors"] #["id-lora-talkvid-ltx2.3 .safetensors"] 
-        args["multi_prompts_gen_type"] = "FG"
-        args['loras_multipliers'] = '1.0|'
-        args['seed'] = SEED
+    #args['audio_source'] = None
+    #args['audio_prompt_type'] = 'A'
 
-        #args['audio_source'] = None
-        #args['audio_prompt_type'] = 'A'
+    args['resolution'] = f'{width}x{height}' #'720x1280' if height > width else '1280x720'
+    args['video_length'] = (duration_sec * 24) + 1 
+    print(args)
+    job_id = requests.post("http://127.0.0.1:8080/run", json=args).json()
+    print(job_id)
 
-        args['resolution'] = f'{width}x{height}' #'720x1280' if height > width else '1280x720'
-        args['video_length'] = (duration_sec * 24) + 1 
-        print(args)
-        r = await client.call_tool("wangp_generate", {"source": args})
-        print(r.data['job_id'])
-        job_id = r.data['job_id']
-
-        r = await client.call_tool("wangp_get_job", {"job_id": job_id})
-        last = ''
-        while not r.data['done']:
-            sleep(5)
-            this = '' 
-            for event in r.data['events']:
-                if event['data'] and 'text' in event['data']:
-                    if VERBOSE:
-                        this = event['data']['text']
-                    elif '%|' in event['data']['text']:
-                        this = event['data']['text']
-            if this != last:
-                last = this
-                print(this)
-            r = await client.call_tool("wangp_get_job", {"job_id": job_id})
-        print(r.data['result'])
+    last = ''
+    dedupe_updates = set([])
+    while status := requests.get(f"http://127.0.0.1:8080/status/{job_id}").json()[-1] in ("pending","running"):
+        sleep(5)
+        update = requests.get(f"http://127.0.0.1:8080/updates/{job_id}").json()
+        if update:
+            update = update[0].strip()
+            if update not in dedupe_updates:
+                dedupe_updates.add(update)
+                print(update)
+    print(requests.get(f"http://127.0.0.1:8080/status/{job_id}").json()[-2:])
 
 async def s2v_h3(prompt='', media='', end_image='', audio='', text='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
@@ -608,8 +595,13 @@ def GenerateTalkingVideo(
     print("CURRENT PROMPT: ",eprompt)
 
     try:
-        asyncio.run(s2v(eprompt, current_source_path, end_image, ref_audio, text, Path(output).name, 
-                duration_sec, width, height, seed))
+        if MMH3:
+            asyncio.run(s2v(eprompt, current_source_path, end_image, ref_audio, text, Path(output).name, 
+                    duration_sec, width, height, seed))
+            else:
+            s2v(eprompt, current_source_path, end_image, ref_audio, text, output, 
+                    duration_sec, width, height, seed)
+
         description = ''
             
         # Post-processing
