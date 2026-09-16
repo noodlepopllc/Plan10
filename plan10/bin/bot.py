@@ -120,12 +120,21 @@ def main():
         import re
         # A cleaner, token-safe string boundary check for complex file or asset names
         relevant_assets = {}
+
         for k, v in current_assets.items():
-            pattern = rf'(?:^|[\s$.,;:!?()"-]){re.escape(k.lower())}(?:$|[\s$.,;:!?()"-])'
-            if re.search(pattern, clean_lower) or k == target_alias or k.startswith('bg') or k.startswith('char') or k.startswith('comp') or k.startswith('design'):
+            k_lower = k.lower()
+
+            # Simple substring match instead of fragile boundary regex
+            if (
+                k_lower in clean_lower
+                or k == target_alias
+                or k_lower.startswith('bg')
+                or k_lower.startswith('char')
+            ):
                 relevant_assets[k] = v
 
-        print("RELEVANT ASSETS: ", [x for x in relevant_assets.keys()])
+        print("RELEVANT ASSETS: ", list(relevant_assets.keys()))
+
 
         # Inject available list + scoped assets into temp context
         task_ctx["assets"] = relevant_assets
