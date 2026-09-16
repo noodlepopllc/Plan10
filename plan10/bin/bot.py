@@ -122,7 +122,7 @@ def main():
         relevant_assets = {}
         for k, v in current_assets.items():
             pattern = rf'(?:^|[\s$.,;:!?()"-]){re.escape(k.lower())}(?:$|[\s$.,;:!?()"-])'
-            if re.search(pattern, clean_lower) or k == target_alias or k.startswith('bg') or k.startswith('char'):
+            if re.search(pattern, clean_lower) or k == target_alias or k.startswith('bg') or k.startswith('char') or k.startswith('comp') or k.startswith('design'):
                 relevant_assets[k] = v
 
         print("RELEVANT ASSETS: ", [x for x in relevant_assets.keys()])
