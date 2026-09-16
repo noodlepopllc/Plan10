@@ -115,8 +115,7 @@ class Pipeline:
         CreateBackground(
             prompt=combined_desc,
             output=str(clean_bg_path),
-            seed=self.seed + beat_num + 500,
-            override=(768,448)
+            seed=self.seed
         )
         
         # Step 4: Composite characters onto the fresh background
@@ -131,7 +130,7 @@ class Pipeline:
             output=str(composite_path),
             width=self.width,
             height=self.height,
-            seed=self.seed + beat_num
+            seed=self.seed
         )
         
         return str(composite_path), str(clean_bg_path)
@@ -150,8 +149,7 @@ class Pipeline:
         CreateBackground(
             prompt=new_location_prompt,
             output=str(bg_path),
-            seed=self.seed + beat_num + 1000,
-            override=(768,448)
+            seed=self.seed
         )
         
         comp_path = self.output_dir / f"trans_comp_{beat_num:03d}.png"
@@ -165,7 +163,7 @@ class Pipeline:
             output=str(comp_path),
             width=self.width,
             height=self.height,
-            seed=self.seed + beat_num + 2000
+            seed=self.seed
         )
         
         return str(comp_path), str(bg_path)
@@ -215,7 +213,7 @@ class Pipeline:
                 "prompt": video_prompt,
                 "input_media": current_media,
                 "output_path": str(output_path),
-                "seed": self.seed + beat_count,
+                "seed": self.seed,
                 "status": "pending"
             }
             
@@ -379,7 +377,7 @@ class Pipeline:
             "prompt": video_prompt,
             "input_media": str(input_media),
             "output_path": str(output_path),
-            "seed": self.seed + beat_count,
+            "seed": self.seed,
             "status": "pending"
         }
         

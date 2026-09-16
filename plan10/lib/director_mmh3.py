@@ -559,7 +559,7 @@ continuity even during close-up framing.
         sections.append("\n".join(retention))
         # 4. Process Shots & Build Detailed Description
         sections.append("\ndetailed_description:")
-        sections.append('''<Subject 1> is the environment anchor and must remain visible in ALL shots, including close-ups. Environment background must override portrait background.''')
+        #sections.append('''<Subject 1> is the environment anchor and must remain visible in ALL shots, including close-ups. Environment background must override portrait background.''')
         sections.append('\n'.join(scene_shots))
         
         # 6. Soundscape & Music
