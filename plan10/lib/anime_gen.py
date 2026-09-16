@@ -714,6 +714,8 @@ def add_metadata_loc(imgpath, prompt='', seed=-1, brief=False, update=True):
             metadata.add_text("Brief", bg_brief)
             if update:
                 target_image.save(imgpath, pnginfo=metadata)
+        else:
+            bg_brief = target_image.info.get('Brief','')
         return bg_brief
     bg_analysis = AnalyzeImage(imgpath, loc_prompt)
     bg_desc = bg_analysis['analysis'].strip().strip('"').strip("'")
