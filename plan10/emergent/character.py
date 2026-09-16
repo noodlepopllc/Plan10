@@ -105,6 +105,7 @@ CHARACTER_2:
 
         return char_dict
 
+
     def _match_seed_characters_llm(self):
         if not self.seed_profile:
             return
@@ -117,41 +118,39 @@ CHARACTER_2:
         for char in self.characters:
             vid = char.get("visual_id", "")
             
-            # Keep instructions clean and simple
-            base_prompt = f"""You are a character‑matching assistant.
-
-    You are given:
-    1. A list of SEED CHARACTERS with names and detailed descriptions.
-    2. A VISUAL_ID description extracted from an image.
-
-    Your task:
-    Determine which SEED CHARACTER the VISUAL_ID most closely matches.
-
-    SEED CHARACTERS:
-    {seed_text}
-
-    VISUAL_ID:
-    "{vid}"
-    """
+            # Base prompt setup
+            base_prompt = (
+                "You are a character‑matching assistant.\n\n"
+                "You are given:\n"
+                "1. A list of SEED CHARACTERS with names and detailed descriptions.\n"
+                "2. A VISUAL_ID description extracted from an image.\n\n"
+                "Your task:\n"
+                "Determine which SEED CHARACTER the VISUAL_ID most closely matches.\n\n"
+                "Return ONLY valid JSON in this exact format:\n"
+                "{\n"
+                '  "character_name": "<name>",\n'
+                '  "confidence": <float between 0 and 1>\n'
+                "}\n\n"
+                f"SEED CHARACTERS:\n{seed_text}\n\n"
+                f'VISUAL_ID:\n"{vid}"'
+            )
 
             current_prompt = base_prompt
             max_retries = 2
 
             for attempt in range(max_retries):
                 try:
-                    # FIX 1: Explicitly pass format="json" if your framework supports it 
-                    # to force the LLM engine to strictly constrain tokens to JSON structures.
+                    # Execute API Call
                     response_data = llm_analyze_media(
                         '', 
                         prompt=current_prompt, 
                         max_tokens=1024, 
-                        temperature=0.2, # Slightly dropped to reduce formatting variance
-                        format="json"     # Enforces JSON output constraint
+                        temperature=0.2
                     )
                     
                     raw_response = response_data.get('analysis', '').strip()
                     
-                    # Clean up potential text wrapper spillages safely
+                    # Safely isolate the JSON boundary blocks
                     start_idx = raw_response.find('{')
                     end_idx = raw_response.rfind('}')
                     
@@ -161,34 +160,39 @@ CHARACTER_2:
                     clean_json_str = raw_response[start_idx:end_idx + 1]
                     parsed_json = json.loads(clean_json_str)
                     
-                    # Populate data
+                    # Apply parameters safely
                     char["character_name"] = parsed_json.get("character_name", "unknown")
-                    char["confidence"] = float(parsed_json.get("confidence", 0.0))
-                    break 
+                    
+                    try:
+                        char["confidence"] = float(parsed_json.get("confidence", 0.0))
+                    except (ValueError, TypeError):
+                        char["confidence"] = 0.0
+                        
+                    break  # Successful pass! Exit the retry loop
                     
                 except (json.JSONDecodeError, ValueError, TypeError) as e:
                     if attempt < max_retries - 1:
-                        # FIX 2: Restructure the retry prompt to cleanly segregate instructions 
-                        # from the broken payload data so the model doesn't loop your chat log.
-                        current_prompt = f"""Return ONLY a valid JSON dictionary in this exact format:
-    {{
-    "character_name": "<name>",
-    "confidence": <float>
-    }}
-
-    CRITICAL CORRECTION TASK:
-    Your last attempt failed parsing with error: "{str(e)}"
-    Do NOT repeat conversation logs or text history. Fix your syntax error immediately.
-
-    BROKEN TEXT PAYLOAD TO REWRITE:
-    \"\"\"
-    {raw_response[:500]} ... [truncated data]
-    \"\"\"
-    """
+                        # Safe concatenation string to prevent Python f-string bracket compilation crashes
+                        truncated_error_payload = raw_response[:500] if raw_response else "Empty string payload"
+                        
+                        retry_prompt = (
+                            "Return ONLY a valid JSON dictionary in this exact format:\n"
+                            "{\n"
+                            '  "character_name": "<name>",\n'
+                            '  "confidence": <float>\n'
+                            "}\n\n"
+                            "CRITICAL CORRECTION TASK:\n"
+                            f"Your last attempt failed parsing with error: \"{str(e)}\"\n"
+                            "Do NOT repeat conversation logs or text history. Fix your syntax error immediately.\n\n"
+                            "BROKEN TEXT PAYLOAD TO REWRITE:\n"
+                            '"""\n' + truncated_error_payload + '\n"""\n'
+                        )
+                        current_prompt = retry_prompt
                     else:
-                        # Permanent safety fallbacks
+                        # Hard failure fallback assignments
                         char["character_name"] = "unknown"
                         char["confidence"] = 0.0
+
 
 
 
