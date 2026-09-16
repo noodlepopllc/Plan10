@@ -16,3 +16,5 @@ All valid voice values are listed below
     'american accent', 'british accent', 'australian accent', 'canadian accent',
     'chinese accent', 'indian accent', 'japanese accent', 'korean accent',
     'portuguese accent', 'russian accent'
+
+image_to_video have a minimum duration of 5 seconds with a preference for longer videos up to 10 seconds 
