@@ -115,8 +115,9 @@ def dummy_request():
         traceback.print_exc()
 
 def _call_ollama(messages, max_tokens=8192, temperature=0.5, top_p=0.9, tools=None, thinking=THINKING):
-    #dummy_request()
     ollama_messages = _normalize_for_ollama(messages)
+    
+    # Map max_tokens to num_predict
     if max_tokens <= 4096:
         num_predict = 512
     elif max_tokens <= 8192:
@@ -130,32 +131,28 @@ def _call_ollama(messages, max_tokens=8192, temperature=0.5, top_p=0.9, tools=No
         "model": OLLAMA_MODEL,
         "messages": ollama_messages,
         "stream": False,
-        "think": thinking,
         "keep_alive": "1m",
         "options": {
-            "num_ctx": max_tokens,
+            "num_ctx": max_tokens,  # ← Output + room for input
             "num_predict": num_predict,
             "temperature": temperature,
             "top_p": top_p,
             "seed": SEED
         }
     }
-    if '3.8' in OLLAMA_MODEL:
-        if thinking:
-            payload['think'] = "low"
-            payload['options']["preserve_thinking"] = True
-        if 'mtp' in OLLAMA_MODEL:
-            payload['options']['draft_num_predict'] = 1 if thinking else 2 
+    
+    # Set thinking parameters correctly
+    if '3.8' in OLLAMA_MODEL and thinking:
+        payload['think'] = "low"
+        payload['options']["preserve_thinking"] = True
+    
+    if 'mtp' in OLLAMA_MODEL:
+        payload['options']['draft_num_predict'] = 1 if thinking else 2 
+    
     if tools:
         payload["tools"] = tools
 
-    # 🔍 Debug: uncomment to see exactly what Ollama receives
-    # print(json.dumps(payload, indent=2))
-    
-    # Attempt up to 3 times. 
-    # Attempt 1 warms the OS page cache (may fail with 500).
-    # Attempt 2 reads from RAM cache and succeeds.
-
+    # Retry up to 3 times
     for attempt in range(3):
         try:
             response = requests.post(
@@ -164,26 +161,24 @@ def _call_ollama(messages, max_tokens=8192, temperature=0.5, top_p=0.9, tools=No
                 timeout=(10, 600),
                 proxies={"http": None, "https": None}
             )
+            
+            # Handle 400 errors immediately
+            if response.status_code == 400:
+                print("❌ Ollama 400 Error Response:", response.text)
+                raise ValueError(f"Bad request to Ollama: {response.text}")
+            
             response.raise_for_status()
             return response.json()
             
         except requests.exceptions.HTTPError as e:
-            if response.status_code == 500 and attempt == 0:
-                print("Warning: First attempt failed (USB I/O bottleneck). Warming cache and retrying...")
-                time.sleep(0.5) # Brief pause to ensure OS finishes caching
+            if response.status_code == 500 and attempt < 2:  # ← Retry on attempts 0 and 1
+                print(f"Warning: Attempt {attempt + 1} failed (USB I/O bottleneck). Warming cache and retrying...")
+                time.sleep(0.5)
                 continue
             else:
-                # If it is not a 500, or it fails on the second attempt, raise it
                 raise
         except Exception as e:
             raise
-    
-    if response.status_code == 400:
-        print("❌ Ollama 400 Error Response:", response.text)
-        raise ValueError(f"Bad request to Ollama: {response.text}")
-        
-    response.raise_for_status()
-    return response.json()
 
 # ─────────────────────────────────────────
 # 1) Agent / tools chat
