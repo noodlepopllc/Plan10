@@ -98,8 +98,7 @@ def _call_ollama(messages, max_tokens=8192, temperature=0.5, top_p=0.9, tools=No
             "num_predict": max_tokens,
             "temperature": temperature,
             "top_p": top_p,
-            "seed": SEED,
-            'timeout': 120
+            "seed": SEED
         }
     }
     if '3.8' in OLLAMA_MODEL:
@@ -119,7 +118,7 @@ def _call_ollama(messages, max_tokens=8192, temperature=0.5, top_p=0.9, tools=No
         json=payload, 
         timeout=(10, 600),  # 10s to connect, 10 min to wait for response
         proxies={"http": None, "https": None}
-)
+    )
     
     if response.status_code == 400:
         print("❌ Ollama 400 Error Response:", response.text)
