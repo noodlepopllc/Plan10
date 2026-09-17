@@ -433,7 +433,7 @@ def main():
         current_source = video_to_img(start_image, WIDTH, HEIGHT, True, True)
         current_source.save('tmp.png')
         current_source_path = f'{os.getcwd()}/tmp.png'
-        script = h3_ref(bg, None, refs, portraits, prompt,  duration, visual_ids=visual_ids)
+        script = h3_ref(bg, None, refs, portraits, prompt,  duration, visual_ids=visual_ids, char_names=char_names)
         Path(pending_job['output_path'].replace('.mp4', '_script.txt')).write_text(script)
         if args.debug:
             # Mark as complete and update current_media
