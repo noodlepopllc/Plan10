@@ -114,14 +114,15 @@ def dummy_request():
         import traceback
         traceback.print_exc()
 
-def _call_ollama(messages, context_size=8192, temperature=0.5, top_p=0.9, tools=None, thinking=THINKING):
+def _call_ollama(messages, max_tokens=8192, temperature=0.5, top_p=0.9, tools=None, thinking=THINKING):
     ollama_messages = _normalize_for_ollama(messages)
-
-    if context_size <= 4096:
+    
+    # Map max_tokens to num_predict
+    if max_tokens <= 4096:
         num_predict = 512
-    elif context_size <= 8192:
+    elif max_tokens <= 8192:
         num_predict = 2048
-    elif context_size <= 16384:
+    elif max_tokens <= 16384:
         num_predict = 4096
     else:
         num_predict = 8192
@@ -132,7 +133,7 @@ def _call_ollama(messages, context_size=8192, temperature=0.5, top_p=0.9, tools=
         "stream": False,
         "keep_alive": "1m",
         "options": {
-            "num_ctx": context_size,  # ← Output + room for input
+            "num_ctx": max_tokens,  # ← Output + room for input
             "num_predict": num_predict,
             "temperature": temperature,
             "top_p": top_p,
@@ -182,13 +183,13 @@ def _call_ollama(messages, context_size=8192, temperature=0.5, top_p=0.9, tools=
 # ─────────────────────────────────────────
 # 1) Agent / tools chat
 # ─────────────────────────────────────────
-def llm_chat(messages, tools=None, context_size=8192, temperature=0.7, enable_thinking=THINKING):
+def llm_chat(messages, tools=None, max_tokens=8192, temperature=0.7, enable_thinking=THINKING):
     sys_msg = next(_system_prompt_gen)
     full_messages = sys_msg + messages
 
     # Note: Ollama doesn't have a native toggle for thinking models.
     # If enable_thinking=False, the model may still output <think> tags depending on the Modelfile.
-    res = _call_ollama(full_messages, context_size, temperature, top_p=0.9, tools=tools, thinking=enable_thinking)
+    res = _call_ollama(full_messages, max_tokens, temperature, top_p=0.9, tools=tools, thinking=enable_thinking)
 
     assistant_msg = res.get("message", {})
     raw_content = assistant_msg.get("content", "")
@@ -206,7 +207,7 @@ def llm_chat(messages, tools=None, context_size=8192, temperature=0.7, enable_th
 # ─────────────────────────────────────────
 # 2) Media analysis
 # ─────────────────────────────────────────
-def llm_analyze_media(media, prompt="Describe this.", system=None, context_size=8192, temperature=0.1):
+def llm_analyze_media(media, prompt="Describe this.", system=None, max_tokens=8192, temperature=0.1):
     from plan10.lib.util import video_to_img
 
     image = None
@@ -228,7 +229,7 @@ def llm_analyze_media(media, prompt="Describe this.", system=None, context_size=
 
     messages.append({"role": "user", "content": user_content})
 
-    res = _call_ollama(messages, context_size=context_size, temperature=temperature, top_p=0.9)
+    res = _call_ollama(messages, max_tokens=max_tokens, temperature=temperature, top_p=0.9)
     output_text = res.get("message", {}).get("content", "").strip()
 
     return {"status": "success", "analysis": output_text}
