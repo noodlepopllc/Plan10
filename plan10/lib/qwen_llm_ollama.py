@@ -86,6 +86,7 @@ def _normalize_for_ollama(messages):
     return normalized
 
 def dummy_request():
+    import time, trackback
     payload = {
         "model": "qwen3.8-next:xs",
         "messages": [{"role": "user", "content": "hi"}],
