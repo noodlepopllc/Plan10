@@ -117,6 +117,14 @@ def dummy_request():
 def _call_ollama(messages, max_tokens=8192, temperature=0.5, top_p=0.9, tools=None, thinking=THINKING):
     #dummy_request()
     ollama_messages = _normalize_for_ollama(messages)
+    if num_ctx <= 4096:
+        num_predict = 512
+    elif num_ctx <= 8192:
+        num_predict = 2048
+    elif num_ctx <= 16384:
+        num_predict = 4096
+    else:
+        num_predict = 8192
 
     payload = {
         "model": OLLAMA_MODEL,
@@ -125,7 +133,8 @@ def _call_ollama(messages, max_tokens=8192, temperature=0.5, top_p=0.9, tools=No
         "think": thinking,
         "keep_alive": "1m",
         "options": {
-            "num_predict": max_tokens,
+            "num_ctx": max_tokens,
+            "num_predict": num_predict,
             "temperature": temperature,
             "top_p": top_p,
             "seed": SEED
@@ -146,6 +155,7 @@ def _call_ollama(messages, max_tokens=8192, temperature=0.5, top_p=0.9, tools=No
     # Attempt up to 3 times. 
     # Attempt 1 warms the OS page cache (may fail with 500).
     # Attempt 2 reads from RAM cache and succeeds.
+
     for attempt in range(3):
         try:
             response = requests.post(
