@@ -85,9 +85,38 @@ def _normalize_for_ollama(messages):
         normalized.append(msg_dict)
     return normalized
 
+def dummy_request():
+    payload = {
+        "model": "qwen3.8-next:xs",
+        "messages": [{"role": "user", "content": "hi"}],
+        "stream": False
+    }
+
+    start = time.time()
+    print(f"Starting at {time.strftime('%X')}...")
+
+    try:
+        response = requests.post(
+            f"{OLLAMA_URL}/api/chat", 
+            json=payload, 
+            timeout=300,
+            proxies={"http": None, "https": None}
+        )
+        elapsed = time.time() - start
+        print(f"✅ Success in {elapsed:.2f}s")
+        print(response.json()['message']['content'])
+    except Exception as e:
+        elapsed = time.time() - start
+        print(f"❌ FAILED after {elapsed:.2f}s")
+        print(f"Exception type: {type(e).__name__}")
+        print(f"Exception: {e}")
+        import traceback
+        traceback.print_exc()
+
 def _call_ollama(messages, max_tokens=8192, temperature=0.5, top_p=0.9, tools=None, thinking=THINKING):
+    dummy_request()
     ollama_messages = _normalize_for_ollama(messages)
-    
+
     payload = {
         "model": OLLAMA_MODEL,
         "messages": ollama_messages,
