@@ -115,7 +115,7 @@ def dummy_request():
         traceback.print_exc()
 
 def _call_ollama(messages, max_tokens=8192, temperature=0.5, top_p=0.9, tools=None, thinking=THINKING):
-    dummy_request()
+    #dummy_request()
     ollama_messages = _normalize_for_ollama(messages)
 
     payload = {
