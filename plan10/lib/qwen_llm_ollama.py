@@ -143,12 +143,30 @@ def _call_ollama(messages, max_tokens=8192, temperature=0.5, top_p=0.9, tools=No
     # 🔍 Debug: uncomment to see exactly what Ollama receives
     # print(json.dumps(payload, indent=2))
     
-    response = requests.post(
-        f"{OLLAMA_URL}/api/chat", 
-        json=payload, 
-        timeout=(10, 600),  # 10s to connect, 10 min to wait for response
-        proxies={"http": None, "https": None}
-    )
+    # Attempt up to 3 times. 
+    # Attempt 1 warms the OS page cache (may fail with 500).
+    # Attempt 2 reads from RAM cache and succeeds.
+    for attempt in range(3):
+        try:
+            response = requests.post(
+                f"{OLLAMA_URL}/api/chat", 
+                json=payload, 
+                timeout=(10, 600),
+                proxies={"http": None, "https": None}
+            )
+            response.raise_for_status()
+            return response.json()
+            
+        except requests.exceptions.HTTPError as e:
+            if response.status_code == 500 and attempt == 0:
+                print("Warning: First attempt failed (USB I/O bottleneck). Warming cache and retrying...")
+                time.sleep(0.5) # Brief pause to ensure OS finishes caching
+                continue
+            else:
+                # If it is not a 500, or it fails on the second attempt, raise it
+                raise
+        except Exception as e:
+            raise
     
     if response.status_code == 400:
         print("❌ Ollama 400 Error Response:", response.text)
