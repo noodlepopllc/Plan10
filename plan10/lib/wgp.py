@@ -370,7 +370,9 @@ def s2v_ltx(prompt='', media='', end_image='', audio='', text='', output='output
     args['resolution'] = f'{width}x{height}' #'720x1280' if height > width else '1280x720'
     args['video_length'] = (duration_sec * 24) + 1 
     print(args)
-    job_id = requests.post("http://127.0.0.1:8080/run", json=args).json()
+    output = requests.post("http://127.0.0.1:8080/run", json=args)
+    print(output.text)
+    job_id = output.json()
     print(job_id)
 
     last = ''
