@@ -376,8 +376,8 @@ def s2v_ltx(prompt='', media='', end_image='', audio='', text='', output='output
     last = ''
     dedupe_updates = set([])
     try:
-        while status := requests.get(f"http://127.0.0.1:8080/status/{job_id}").json():
-            if status[-1] in ("pending","running"):
+        while status := requests.get(f"http://127.0.0.1:8080/status/{job_id}"):
+            if status.json()[-1] in ("pending","running"):
                 sleep(5)
                 update = requests.get(f"http://127.0.0.1:8080/updates/{job_id}").json()
                 if update:
@@ -386,6 +386,7 @@ def s2v_ltx(prompt='', media='', end_image='', audio='', text='', output='output
                         dedupe_updates.add(update)
                         print(update)
     except Exception as e:
+        print(status.text)
         print(e)
     print(requests.get(f"http://127.0.0.1:8080/status/{job_id}").json()[-2:])
 
