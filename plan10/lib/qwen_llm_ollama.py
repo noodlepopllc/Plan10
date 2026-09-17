@@ -114,15 +114,15 @@ def dummy_request():
         import traceback
         traceback.print_exc()
 
-def _call_ollama(messages, max_tokens=8192, temperature=0.5, top_p=0.9, tools=None, thinking=THINKING):
+def _call_ollama(messages, context_size=8192, temperature=0.5, top_p=0.9, tools=None, thinking=THINKING):
     ollama_messages = _normalize_for_ollama(messages)
     
     # Map max_tokens to num_predict
-    if max_tokens <= 4096:
+    if context_size <= 4096:
         num_predict = 512
-    elif max_tokens <= 8192:
+    elif context_size <= 8192:
         num_predict = 2048
-    elif max_tokens <= 16384:
+    elif context_size <= 16384:
         num_predict = 4096
     else:
         num_predict = 8192
@@ -133,7 +133,7 @@ def _call_ollama(messages, max_tokens=8192, temperature=0.5, top_p=0.9, tools=No
         "stream": False,
         "keep_alive": "1m",
         "options": {
-            "num_ctx": max_tokens,  # ← Output + room for input
+            "num_ctx": context_size,  # ← Output + room for input
             "num_predict": num_predict,
             "temperature": temperature,
             "top_p": top_p,
