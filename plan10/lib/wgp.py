@@ -339,7 +339,7 @@ def s2v_ltx(prompt='', media='', end_image='', audio='', text='', output='output
     model = tool_dialog
 
     local_server = "http://locathost:8080"
-    args = requests.get("http://127.0.0.1:8080/defaults/ltx2_23_22B_distilled").json()
+    args = requests.get(f"http://127.0.0.1:8080/defaults/{tool_dialog}").json()
 
     desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
     audio_desc = translate_to_audio_prompt(desc)
