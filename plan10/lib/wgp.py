@@ -370,26 +370,19 @@ def s2v_ltx(prompt='', media='', end_image='', audio='', text='', output='output
     args['resolution'] = f'{width}x{height}' #'720x1280' if height > width else '1280x720'
     args['video_length'] = (duration_sec * 24) + 1 
     print(args)
-    output = requests.post("http://127.0.0.1:8080/run", json=args)
-    print(output.text)
-    job_id = output.json()
+    job_id = requests.post("http://127.0.0.1:8080/run", json=args).json()
     print(job_id)
 
     last = ''
     dedupe_updates = set([])
-    try:
-        while status := requests.get(f"http://127.0.0.1:8080/status/{job_id}"):
-            if status.json()[-1] in ("pending","running"):
-                sleep(5)
-                update = requests.get(f"http://127.0.0.1:8080/updates/{job_id}").json()
-                if update:
-                    update = update[0].strip()
-                    if update not in dedupe_updates:
-                        dedupe_updates.add(update)
-                        print(update)
-    except Exception as e:
-        print(status.text)
-        print(e)
+    while status := requests.get(f"http://127.0.0.1:8080/status/{job_id}").json()[-1] in ("pending","running"):
+        sleep(5)
+        update = requests.get(f"http://127.0.0.1:8080/updates/{job_id}").json()
+        if update:
+            update = update[0].strip()
+            if update not in dedupe_updates:
+                dedupe_updates.add(update)
+                print(update)
     print(requests.get(f"http://127.0.0.1:8080/status/{job_id}").json()[-2:])
 
 async def s2v_h3(prompt='', media='', end_image='', audio='', text='', output='output.mp4', 
