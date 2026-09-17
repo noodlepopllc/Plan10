@@ -88,6 +88,7 @@ def _normalize_for_ollama(messages):
 def _call_ollama(messages, max_tokens=8192, temperature=0.5, top_p=0.9, tools=None, thinking=THINKING):
     # ✅ Convert to Ollama's expected format
     # 🔍 DIAGNOSTIC: Print environment details
+    import sys, socket
     print(f"Python version: {sys.version}")
     print(f"requests version: {requests.__version__}")
     print(f"urllib3 version: {requests.__import__('urllib3').__version__}")
