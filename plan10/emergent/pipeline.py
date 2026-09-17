@@ -116,7 +116,7 @@ class Pipeline:
             prompt=combined_desc,
             output=str(clean_bg_path),
             seed=self.seed,
-            override=(self.width, self.height)'
+            override=(self.width, self.height)
         )
         
         # Step 4: Composite characters onto the fresh background
