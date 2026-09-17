@@ -345,8 +345,6 @@ NOW, generate the shots for the INPUT DATA provided above:
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-O', '--output', type=str, default="feedback_output")
-    parser.add_argument('-F', '--fast', action='store_true')
-    parser.add_argument('--debug', action='store_true')
     args, _ = parser.parse_known_args()
     
     state_mgr = StateManager(args.output)
@@ -366,39 +364,6 @@ def main():
     char_names = state.get('char_names', [])
     bg = state.get('current_bg')
     output_dir = state.get('output_dir') or args.output
-    
-    '''
-    # --- MEMORY OPTIMIZATION FOR MMH3 ---
-    if MMH3:
-        os.makedirs(output_dir, exist_ok=True)
-        # Fallback for older Pillow versions that don't have Image.Resampling
-        resample_filter = getattr(Image, 'Resampling', Image).LANCZOS 
-        # Resize background to target video resolution (e.g., 768x448)
-        if bg and os.path.exists(bg):
-            bg_img = Image.open(bg).convert("RGB")
-            if bg_img.width > bg_img.height:
-                bg_img = bg_img.resize((768, 448), resample_filter)
-            else:
-                bg_img = bg_img.resize((448, 768), resample_filter)
-            bg_resized = os.path.join(output_dir, "resized_bg.png")
-            bg_img.save(bg_resized)
-            bg_img.close()
-            bg = bg_resized
-            
-        # Resize character references to 512x512
-        resized_refs = []
-        for i, ref in enumerate(refs):
-            if ref and os.path.exists(ref):
-                ref_img = Image.open(ref).convert("RGB")
-                ref_img = ref_img.resize((512, 512), resample_filter)
-                ref_resized = os.path.join(output_dir, f"resized_ref_{i}.png")
-                ref_img.save(ref_resized)
-                ref_img.close()
-                resized_refs.append(ref_resized)
-            else:
-                resized_refs.append(ref)
-        refs = resized_refs
-    '''
     # ------------------------------------
 
     # Find the first pending job
@@ -435,64 +400,14 @@ def main():
         current_source_path = f'{os.getcwd()}/tmp.png'
         script = h3_ref(bg, None, refs, portraits, prompt,  duration, visual_ids=visual_ids, char_names=char_names)
         Path(pending_job['output_path'].replace('.mp4', '_script.txt')).write_text(script)
-        if args.debug:
-            # Mark as complete and update current_media
-            pending_job['status'] = 'complete'
-            state['current_media'] = pending_job['output_path']
-            state_mgr.save(state)
-            
-            print(f"✅ Beat {pending_job['beat']} rendered successfully.")
-            sys.exit(pending_job['beat'])  # Positive = success
 
-        if MMH3:
-            builder = get_builder(script, '')
-            final_prompt = builder.generate()
-            print("FINAL", final_prompt)
-            
-            # Extract paths dynamically from the builder instead of hardcoding
-            img_refs = [data["path"] for data in builder.entities.values()]
-            aud_refs = [data["path"] for data in builder.used_audio_refs.values()]
-            '''
-
-            if WGP:
-                import asyncio
-                from plan10.lib.director_mmh3 import send
-
-                asyncio.run(send(
-                    final_prompt, 
-                    img_refs, 
-                    aud_refs, 
-                    output=Path(pending_job['output_path']).name, 
-                    width=WIDTH, 
-                    height=HEIGHT, 
-                    duration=builder.duration,
-                    steps=4 if args.fast else 8, 
-                    upscale=False
-                ))
-            else:
-                from plan10.lib.mmh3 import compose_video
-                print(compose_video(final_prompt, img_refs, aud_refs, pending_job['output_path'], WIDTH, HEIGHT, builder.duration))
-            '''
-
-        else:
+        if LTX:
             from plan10.emergent.ltx25_previewer import LTXPipeline
             converter = LTXPipeline()
             beat_out = pending_job['output_path'].replace('.mp4', '_script.txt')
             converted = converter.run(beat_out, style='', use_descriptions=False)
             print(converted)
             Path(beat_out.replace('.txt', '_ltx.txt')).write_text(f'RUNLENGTH (s):{converter.run_length}\n{converted}')
-
-            '''
-            # Generate the video
-            GenerateVideo(
-                prompt=converted,
-                media=pending_job['input_media'],
-                output=pending_job['output_path'],
-                duration_sec=float(converter.run_length),
-                seed=pending_job['seed'],
-                enhance=False
-            )
-            '''
         
         # Mark as complete and update current_media
         pending_job['status'] = 'complete'
