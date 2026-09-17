@@ -114,7 +114,7 @@ def _call_ollama(messages, max_tokens=8192, temperature=0.5, top_p=0.9, tools=No
     # 🔍 Debug: uncomment to see exactly what Ollama receives
     # print(json.dumps(payload, indent=2))
     
-    response = requests.post(f"{OLLAMA_URL}/api/chat", json=payload, timeout=300)
+    response = requests.post(f"{OLLAMA_URL}/api/chat", json=payload, timeout=300, proxies={"http": None, "https": None} )
     
     if response.status_code == 400:
         print("❌ Ollama 400 Error Response:", response.text)
