@@ -15,7 +15,7 @@ def transcribe(path, detailed=False):
 
     details = []
 
-    details.append("Detected language '%s' with probability %f" % (info.language, info.language_probability))
+    details.append("Detected language '%s' with probability %f\n" % (info.language, info.language_probability))
     
     segs = []
     for segment in segments:
