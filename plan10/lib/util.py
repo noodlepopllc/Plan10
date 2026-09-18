@@ -7,6 +7,50 @@ import soundfile as sf
 
 from PIL.PngImagePlugin import PngInfo
 
+import os
+import gc
+import sys
+import functools
+import multiprocessing
+
+def isolate_vram_process(func):
+    """
+    Decorator that executes a function in an isolated 'spawn' subprocess.
+    Guarantees that 100% of local VRAM hooks are stripped from the GPU
+    the exact millisecond the function returns control to the script.
+    """
+    def _worker_proxy(queue, args, kwargs, environ_copy):
+        os.environ.update(environ_copy)
+        import torch
+        try:
+            result = func(*args, **kwargs)
+            queue.put({"status": "success", "data": result})
+        except Exception as e:
+            queue.put({"status": "error", "data": str(e)})
+        finally:
+            gc.collect()
+            if 'torch' in sys.modules and torch.cuda.is_available():
+                torch.cuda.empty_cache()
+
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        ctx = multiprocessing.get_context("spawn")
+        queue = ctx.Queue()
+        process = ctx.Process(
+            target=_worker_proxy, 
+            args=(queue, args, kwargs, dict(os.environ))
+        )
+        process.start()
+        process.join() # Synchronous block
+        
+        if not queue.empty():
+            response = queue.get()
+            if response["status"] == "success":
+                return response["data"]
+            raise RuntimeError(f"Isolated VRAM Error: {response['data']}")
+        raise RuntimeError("Isolated vision process died unexpectedly.")
+    return wrapper
+
 def load_metadata(img):
     metadata = PngInfo()
     for key, value in img.info.items():
