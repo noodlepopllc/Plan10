@@ -254,7 +254,7 @@ def AnalyzeImage(image='', prompt='Describe this.', output=None, backend=None, m
     Returns:
         dict with 'analysis' key containing the text response
     """
-    if backend is None:
+    if not backend:
         backend = os.environ.get("VISION_BACKEND", "qwen").lower()
     
     if backend == "smol":
