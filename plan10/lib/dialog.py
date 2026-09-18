@@ -1,7 +1,6 @@
 import torch, torchaudio, gc, librosa, traceback
 import numpy as np
 from faster_whisper import WhisperModel
-from pyannote.audio import Pipeline
 from plan10.lib.config import load_environ
 from pathlib import Path
 load_environ()
@@ -22,8 +21,9 @@ def transcribe(path):
         segs.append(segment.text)
     return segs
 
-PYANNOTE_PIPELINE
+PYANNOTE_PIPELINE = None
 def transcribe_plus(path):
+    from pyannote.audio import Pipeline
     global PYANNOTE_PIPELINE
     model_size = "large-v3"
 
