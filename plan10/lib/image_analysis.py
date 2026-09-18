@@ -1,5 +1,5 @@
 from plan10.lib.qwen_llm import llm_analyze_media
-import os, re
+import os, re, gc
 import torch
 from pathlib import Path
 
