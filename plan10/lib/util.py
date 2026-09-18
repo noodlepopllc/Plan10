@@ -13,35 +13,47 @@ import sys
 import functools
 import multiprocessing
 
+def _global_worker_proxy(queue, func, args, kwargs, environ_copy):
+    """
+    Must live at the top level of the module so it can be serialized 
+    by Python's multiprocessing pickler during process spawning.
+    """
+    # Sync current runtime environment configurations
+    os.environ.update(environ_copy)
+    import torch
+    
+    try:
+        # Run your actual wrapped vision function natively inside the child PID
+        result = func(*args, **kwargs)
+        queue.put({"status": "success", "data": result})
+    except Exception as e:
+        queue.put({"status": "error", "data": str(e)})
+    finally:
+        # Clear out tensors before process termination
+        gc.collect()
+        if 'torch' in sys.modules and torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
 def isolate_vram_process(func):
     """
-    Decorator that executes a function in an isolated 'spawn' subprocess.
-    Guarantees that 100% of local VRAM hooks are stripped from the GPU
-    the exact millisecond the function returns control to the script.
+    A decorator that executes functions inside an isolated child process context.
+    Guarantees absolute VRAM reclamation back to the system.
     """
-    def _worker_proxy(queue, args, kwargs, environ_copy):
-        os.environ.update(environ_copy)
-        import torch
-        try:
-            result = func(*args, **kwargs)
-            queue.put({"status": "success", "data": result})
-        except Exception as e:
-            queue.put({"status": "error", "data": str(e)})
-        finally:
-            gc.collect()
-            if 'torch' in sys.modules and torch.cuda.is_available():
-                torch.cuda.empty_cache()
-
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
+        # Enforce safe 'spawn' start method to prevent CUDA stream corruption
         ctx = multiprocessing.get_context("spawn")
         queue = ctx.Queue()
+        environ_copy = dict(os.environ)
+        
+        # Pass the top-level global worker proxy instead of a nested local object
         process = ctx.Process(
-            target=_worker_proxy, 
-            args=(queue, args, kwargs, dict(os.environ))
+            target=_global_worker_proxy, 
+            args=(queue, func, args, kwargs, environ_copy)
         )
+        
         process.start()
-        process.join() # Synchronous block
+        process.join()  # Synchronous block
         
         if not queue.empty():
             response = queue.get()
@@ -49,7 +61,9 @@ def isolate_vram_process(func):
                 return response["data"]
             raise RuntimeError(f"Isolated VRAM Error: {response['data']}")
         raise RuntimeError("Isolated vision process died unexpectedly.")
+        
     return wrapper
+
 
 def load_metadata(img):
     metadata = PngInfo()
