@@ -477,7 +477,7 @@ def main():
     elif args.transcribe and args.ref_audio:
         if args.plus:
             output = json.dumps(transcribe_plus(args.ref), indent=4)
-        else;
+        else:
             output = ' '.join(transcribe(args.ref_audio))
         if args.output.endswith('.txt'):
             if args.ref_audio.endswith('.mp4'):
