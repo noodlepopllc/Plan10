@@ -60,15 +60,12 @@ import torch
 from pathlib import Path
 from transformers import AutoProcessor, AutoModelForMultimodalLM, BitsAndBytesConfig
 
-GEMMA_PROCESSOR = None
-GEMMA_MODEL = None
-
 def AnalyzeMediaGemma(media='', prompt="Describe this", max_tokens=512, temperature=0.7):
     """
     Completely self-contained Gemma 4 backend function matching your unified signature.
     Leverages native automated file loading with full video audio-track routing.
     """
-    global GEMMA_PROCESSOR, GEMMA_MODEL
+    GEMMA_PROCESSOR, GEMMA_MODEL
     
     # 1. Self-contained Lazy Initialization with Environment Profiling
     if GEMMA_MODEL is None or GEMMA_PROCESSOR is None:
@@ -149,6 +146,14 @@ def AnalyzeMediaGemma(media='', prompt="Describe this", max_tokens=512, temperat
         gc.collect()
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
+        if GEMMA_MODEL is not None:
+            # Move back to CPU before deletion to sever active CUDA streams
+            GEMMA_MODEL.to("cpu")
+        del GEMMA_MODEL
+        GEMMA_MODEL = None
+        if GEMMA_PROCESSOR is not None:
+            del GEMMA_PROCESSOR
+            GEMMA_PROCESSOR = None
 
     return response
 
