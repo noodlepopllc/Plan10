@@ -333,6 +333,5 @@ def main():
         result = AnalyzeImage(args.image, args.prompt, output=args.output, backend=args.backend)
         print(result['analysis'])
 
-
 if __name__ == '__main__':
     main()
