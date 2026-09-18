@@ -112,30 +112,45 @@ def AnalyzeMediaGemma(media='', prompt="Describe this", max_tokens=512, temperat
             }
         ]
 
-    # 4. Tokenize and execute utilizing the critical load_audio_from_video parameter
-    inputs = GEMMA_PROCESSOR.apply_chat_template(
-        messages,
-        tokenize=True,
-        return_dict=True,
-        return_tensors="pt",
-        add_generation_prompt=True,
-        load_audio_from_video=load_audio, # <-- CRITICAL: Forces HF to extract the audio track from the mp4
-    ).to(GEMMA_MODEL.device)
-    
-    input_len = inputs["input_ids"].shape[-1]
-    do_sample = temperature > 0.0
+    try:
+        # 4. Tokenize and execute utilizing the critical load_audio_from_video parameter
+        inputs = GEMMA_PROCESSOR.apply_chat_template(
+            messages,
+            tokenize=True,
+            return_dict=True,
+            return_tensors="pt",
+            add_generation_prompt=True,
+            load_audio_from_video=load_audio,
+        ).to(GEMMA_MODEL.device)
+        
+        input_len = inputs["input_ids"].shape[-1]
+        do_sample = temperature > 0.0
 
-    with torch.inference_mode():
-        outputs = GEMMA_MODEL.generate(
-            **inputs, 
-            max_new_tokens=max_tokens,
-            temperature=temperature if do_sample else None,
-            do_sample=do_sample
-        )
+        with torch.inference_mode():
+            outputs = GEMMA_MODEL.generate(
+                **inputs, 
+                max_new_tokens=max_tokens,
+                temperature=temperature if do_sample else None,
+                do_sample=do_sample
+            )
 
-    # 5. Extract only the newly generated text answer slices
-    response = GEMMA_PROCESSOR.decode(outputs[0][input_len:], skip_special_tokens=True)
-    return response.strip()
+        # 5. Extract text responses
+        response = GEMMA_PROCESSOR.decode(outputs[0][input_len:], skip_special_tokens=True).strip()
+
+    finally:
+        # --- CRITICAL VRAM SWEEP HOOKS ---
+        # Explicitly delete the heavy intermediate tensors holding activation maps
+        if inputs is not None:
+            del inputs
+        if outputs is not None:
+            del outputs
+            
+        # Clear out Python reference counters and clear the PyTorch allocator cache
+        gc.collect()
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
+
+    return response
 
 def load_smol_vlm():
     """Load SmolVLM2 model and processor, caching them globally."""
