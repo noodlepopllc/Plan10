@@ -50,10 +50,8 @@ def transcribe_plus(path):
         # Ensure you have accepted user conditions on Hugging Face for:
         # 1. pyannote/speaker-diarization-3.1
         # 2. pyannote/segmentation-3.0
-        hf_token = os.environ.get("HF_TOKEN", "YOUR_HF_TOKEN_HERE")
         PYANNOTE_PIPELINE = Pipeline.from_pretrained(
-            "pyannote/speaker-diarization-3.1", 
-            use_auth_token=hf_token
+            "pyannote/speaker-diarization-3.1"
         )
         # Optional optimization if your CPU bottleneck gets tight:
         # if torch.cuda.is_available(): PYANNOTE_PIPELINE.to(torch.device("cuda"))
