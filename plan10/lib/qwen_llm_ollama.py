@@ -144,7 +144,7 @@ def _call_ollama(messages, max_tokens=8192, temperature=0.5, top_p=0.9, tools=No
     
     # Set thinking parameters correctly
     if '3.8' in OLLAMA_MODEL and thinking:
-        payload['think'] = "low"
+        payload['think'] = thinking if thinking in ("low","medium","xhigh") else "low"
         payload['options']["preserve_thinking"] = True
     
     if 'mtp' in OLLAMA_MODEL:
