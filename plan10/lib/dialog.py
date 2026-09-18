@@ -5,6 +5,23 @@ from plan10.lib.config import load_environ
 from pathlib import Path
 load_environ()
 
+class Transcription(object):
+    def __init__(self, language, probability):
+        self.language = language
+        self.language_probability = probability
+        self.details = []
+
+    def add_detail(self, start, end, text):
+        details.append({"start":start,"end":end,"text":text})
+
+    def __str__(self):
+        text = ''
+        text += "Detected language '%s' with probability %f\n" % (self.language, self..language_probability)
+        for detail in details:
+            text += "[%.2fs -> %.2fs] %s\n" % detail['start'], detail['end'], detail['text']"
+        return text
+
+
 def transcribe(path, detailed=False):
 
     model_size = "large-v3"
@@ -13,15 +30,13 @@ def transcribe(path, detailed=False):
 
     segments, info = model.transcribe(path, beam_size=5)
 
-    details = []
-
-    details.append("Detected language '%s' with probability %f\n" % (info.language, info.language_probability))
+    transcription = Transcription(info.language, info.language_probability)
     
     segs = []
     for segment in segments:
-        details.append("[%.2fs -> %.2fs] %s\n" % (segment.start, segment.end, segment.text))
+        transcription.add_detail(segment.start, segment.end, segment.text)
         segs.append(segment.text)
-    return details if detailed else segs
+    return transcription if detailed else segs
 
 # ADD this:
 def _load_omnivoice():
@@ -374,12 +389,12 @@ def main():
         dur = -1
         if args.output.endswith('.txt'):
             if args.ref_audio.endswith('.mp4'):
-                Path(args.output).write_text(f'{output.strip()}')
+                Path(args.output).write_text(f'{str(output).strip()}')
                 sys.exit()
             y, sr = librosa.load(args.ref_audio, sr=None)
             dur = librosa.get_duration(y=y, sr=sr)
-            Path(args.output).write_text(f'{math.ceil(dur)}|{output.strip()}')
-        print(f'Duration: {math.ceil(dur)} seconds, Text: "{output.strip()}"')
+            Path(args.output).write_text(f'{math.ceil(dur)}|{str(output).strip()}')
+        print(f'Duration: {math.ceil(dur)} seconds, Text: "{str(output).strip()}"')
     else:
         create_audio_and_free_vram(args.text, args.instruct, args.ref_audio, '', args.output, 2, args.duration, 16000, args.seed, args.no_whisper)
 
