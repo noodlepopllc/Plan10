@@ -17,12 +17,10 @@ VRAM = int(os.environ.get("VRAM", "80"))
 class Director:
 
     def analyze_reality(self, media_path, intended_action, width, height, output_dir):
-        if VRAM > 24:
+        if os.environ.get('VISION_BACKEND', 'smol') == 'gemma':
             return self.analyze_reality_gemma(media_path, intended_action, width, height, output_dir)
         return self.analyze_reality_smol(media_path, intended_action, width, height, output_dir)
         
-
-
     def analyze_reality_gemma(self, media_path, intended_action, width, height, output_dir):
         from plan10.lib.image_analysis import AnalyzeMediaGemma     
         from plan10.lib.dialog import transcribe
@@ -74,6 +72,89 @@ class Director:
         
         return result
 
+        
+    def analyze_reality_smol(self, media_path, intended_action, width, height, output_dir):
+        media_path = Path(media_path)
+        ext = media_path.suffix.lower()
+        media_type = "video" if ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm'] else "image"
+
+        if media_type == "video":
+            # --- Stage 0: ASR pass ---
+            full_transcript_text = str(transcribe(media_path, True))
+
+            # Handle empty/silent audio strings gracefully
+            transcript_context = f'"{full_transcript_text}"' if full_transcript_text.strip() else "[No speech or dialogue detected in audio track]"
+
+            qa_instructions = f"""You are a high-precision QA bot checking an AI video generation output.
+        We intended to generate the following action: "{intended_action}"
+
+        RAW AUDIO TRANSCRIPT:
+        {transcript_context}
+
+        TASK:
+        1. Identify all active characters in the video frames. Invent clear, descriptive temporary names for them based on their clothing or appearance (e.g., <woman_in_red>, <man_in_suit>).
+        2. If speech is present in the transcript above, analyze the video frames to break down the conversation sentence-by-sentence. Attribute each line to an invented character ID based on their mouth movements, physical reactions, and timing.
+        3. If no speech is present, or if it is just background audio/music, skip the dialogue section and note "none".
+        4. Evaluate the video for physical hallucinations, warping, or quality issues.
+
+        Output strictly inside this format:
+
+        CHARACTER IDENTIFIERS:
+        - [Invented Character ID]: [Short visual description of appearance/clothing]
+
+        DIALOGUE BREAKDOWN:
+        - [Invented Character ID]: "[Words spoken]" ([Short action/expression description])
+        (or output "none" if no dialogue is present)
+
+        CHARACTER STATES:
+        - [Invented Character ID]: [pose], [position], [facing], [holding]
+
+        VISUAL & PHYSICAL QUALITY ISSUES:
+        - [List hallucinations, warping, continuity breaks, problems, differences with intended actions, location changes or "none"]
+        """
+
+            result = AnalyzeMedia(
+                str(media_path),
+                qa_instructions,
+                max_tokens=2048,
+                temperature=0.4
+            )
+        else:
+            visual_description = AnalyzeMedia(
+                str(media_path),
+                f"Describe what you see in this {media_type}.",
+                max_tokens=1024,
+                temperature=0.4
+            )
+
+            # --- Stage 2: Merge transcript + visuals ---
+            analysis_prompt = f"""
+        We intended: "{intended_action}"
+
+        VISUAL EVENTS:
+        {visual_description}
+
+        DIALOGUE (ASR):
+        {transcript}
+
+        Extract character states and issues:
+
+        CHARACTER STATES:
+        - char1: [pose], [position], [facing], [holding]
+        - char2: [pose], [position], [facing], [holding]
+
+        ISSUES: [problems or "none"]
+        """
+
+            result = llm_analyze_media(
+                media="", 
+                prompt=analysis_prompt,
+                max_tokens=2048,
+                temperature=0.2
+            )['analysis']
+
+        return self._clean_analysis(result)
+    '''
     def analyze_reality_smol(self, media_path, intended_action, width, height, output_dir):
         media_path = Path(media_path)
         ext = media_path.suffix.lower()
@@ -82,7 +163,7 @@ class Director:
         # --- Stage 0: ASR pass ---
         transcript = ""
         if media_type == "video":
-            transcript = transcribe(str(media_path))  # <-- Whisper handles mp4 directly
+            transcript = transcribe(str(media_path), True)  # <-- Whisper handles mp4 directly
 
         # --- Stage 1: Visual description ---
         if media_type == "video":
@@ -128,6 +209,7 @@ class Director:
 
         return self._clean_analysis(result)
 
+    '''
 
     def compare_and_decide(self, intended_action, actual_reality, story_context, history, 
                         pending_setup, goal=None, force_transition=False, 
