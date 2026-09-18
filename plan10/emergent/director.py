@@ -13,9 +13,17 @@ WGP = os.environ.get("WGP","False") != "False"
 LTX = os.environ.get("LTX", "False") != "False"
 MMH3 = os.environ.get("MMH3","False") != "False"
 DIALOG_ALLOWED = WGP or LTX or MMH3
+VRAM = int(os.environg.get("VRAM", "80"))
 class Director:
 
     def analyze_reality(self, media_path, intended_action, width, height, output_dir):
+        if VRAM > 24:
+            return self.analyze_reality_gemma(self, media_path, intended_action, width, height, output_dir)
+        return analyze_reality_smol(self, media_path, intended_action, width, height, output_dir)
+        
+
+
+    def analyze_reality_gemma(self, media_path, intended_action, width, height, output_dir):
         from plan10.lib.image_analysis import AnalyzeMediaGemma     
         from plan10.lib.dialog import transcribe
         # 1. Run your clean, reliable native Whisper pass
