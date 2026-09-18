@@ -21,126 +21,6 @@ def transcribe(path):
         segs.append(segment.text)
     return segs
 
-PYANNOTE_PIPELINE = None
-def transcribe_plus(path):
-    from pyannote.audio import Pipeline
-    global PYANNOTE_PIPELINE
-    model_size = "large-v3"
-
-    # --- 1. Run Your Existing Whisper Pass with Word Timestamps ---
-    # Enforcing word_timestamps=True provides sub-second positioning metrics
-    model = WhisperModel(model_size, device="cpu", compute_type="int8")
-    segments, info = model.transcribe(path, beam_size=5, word_timestamps=True)
-    print("Detected language '%s' with probability %f" % (info.language, info.language_probability))
-
-    # Collect all words and their absolute time bounds
-    all_words = []
-    for segment in segments:
-        if segment.words:
-            for word in segment.words:
-                all_words.append({
-                    "start": word.start,
-                    "end": word.end,
-                    "text": word.word.strip()
-                })
-
-    # --- 2. Run the Pyannote Diarization Pass ---
-    if PYANNOTE_PIPELINE is None:
-        # Note: Requires a valid read token from hf.co/settings/tokens
-        # Ensure you have accepted user conditions on Hugging Face for:
-        # 1. pyannote/speaker-diarization-3.1
-        # 2. pyannote/segmentation-3.0
-        PYANNOTE_PIPELINE = Pipeline.from_pretrained(
-            'pyannote/speaker-diarization-community-1', token=os.environ.get('HF_TOKEN','')
-        )
-        # Optional optimization if your CPU bottleneck gets tight:
-        # if torch.cuda.is_available(): PYANNOTE_PIPELINE.to(torch.device("cuda"))
-
-    # Process the audio file to map out speaker timeline ranges
-    diarize_result = PYANNOTE_PIPELINE(path)
-    diarization_output = diarize_result.speaker_diarization  # <-- Fixes the AttributeError
-    
-    speaker_turns = []
-    # Now itertracks will execute perfectly on the extracted annotation
-    for turn, _, speaker in diarization_output.itertracks(yield_label=True):
-        speaker_turns.append({
-            "start": turn.start,
-            "end": turn.end,
-            "speaker_id": speaker
-        })
-
-
-    # --- 3. Align Word Timestamps to Speaker Windows Natively ---
-    # Instead of iterating over words first, let's map text directly to the true speaker segments
-    final_stats = []
-    
-    # Track segment changes chronologically
-    for turn, _, speaker in diarization_output.itertracks(yield_label=True):
-        segment_words = []
-        segment_start_time = None
-        
-        # Gather all words that drop inside this speaker's exact timeline turn window
-        for word in all_words:
-            word_midpoint = (word["start"] + word["end"]) / 2
-            if turn.start <= word_midpoint <= turn.end:
-                segment_words.append(word["text"])
-                if segment_start_time is None:
-                    segment_start_time = word["start"]
-                    
-        # Only commit an entry if text was actually found inside this block
-        if segment_words:
-            # Build formatting timestamp (MM:SS)
-            actual_start = segment_start_time if segment_start_time is not None else turn.start
-            minutes = int(actual_start // 60)
-            seconds = int(actual_start % 60)
-            timestamp_str = f"{minutes:02d}:{seconds:02d}"
-            
-            # Combine individual tokens with natural spacing
-            combined_text = " ".join(segment_words).strip()
-            
-            # Optional: Clean up double spacing or floating punctuations if they bleed over
-            combined_text = combined_text.replace(" ,", ",").replace(" .", ".").replace(" ?", "?")
-            
-            final_stats = append_or_merge_segments(final_stats, speaker, timestamp_str, combined_text)
-
-    # Handle any stray words that Pyannote missed by checking if they are unassigned
-    # This catches the fallback "UNKNOWN_SPEAKER" edge cases
-    unassigned_words = []
-    for word in all_words:
-        word_midpoint = (word["start"] + word["end"]) / 2
-        is_assigned = any(t.start <= word_midpoint <= t.end for t, _, _ in diarization_output.itertracks(yield_label=True))
-        if not is_assigned:
-            unassigned_words.append(word)
-            
-    if unassigned_words:
-        minutes = int(unassigned_words[0]["start"] // 60)
-        seconds = int(unassigned_words[0]["start"] % 60)
-        final_stats.insert(0, {
-            "speaker_id": "UNKNOWN_SPEAKER",
-            "timestamp": f"{minutes:02d}:{seconds:02d}",
-            "text": " ".join([w["text"] for w in unassigned_words]).strip()
-        })
-
-    return final_stats
-
-
-def append_or_merge_segments(final_stats, speaker, timestamp_str, combined_text):
-    """Helper layout to combine back-to-back segments from the same speaker."""
-    if final_stats and final_stats[-1]["speaker_id"] == speaker:
-        final_stats[-1]["text"] += " " + combined_text
-    else:
-        final_stats.append({
-            "speaker_id": speaker,
-            "timestamp": timestamp_str,
-            "text": combined_text
-        })
-    return final_stats
-
-
-
-# REMOVE this:
-# from omnivoice import OmniVoice, VoiceClonePrompt
-
 # ADD this:
 def _load_omnivoice():
     from omnivoice import OmniVoice, VoiceClonePrompt
@@ -483,15 +363,11 @@ def main():
     parser.add_argument('-D', '--duration', type=float, default=5.0, help='duration of the generated clip')
     parser.add_argument('-S', '--transcribe', action='store_true', help='transcribe the reference audio')
     parser.add_argument('-L', '--long', action='store_true', help='increased duration for designed voice')
-    parser.add_argument('-P', '--plus', action='store_true', help='Use transcribe plus instead of transcribe')
     args = parser.parse_args()
     if not args.ref_audio:
         DesignVoice(args.instruct, args.output, args.seed, args.long)
     elif args.transcribe and args.ref_audio:
-        if args.plus:
-            output = json.dumps(transcribe_plus(args.ref_audio), indent=4)
-        else:
-            output = ' '.join(transcribe(args.ref_audio))
+        output = ' '.join(transcribe(args.ref_audio))
         dur = -1
         if args.output.endswith('.txt'):
             if args.ref_audio.endswith('.mp4'):

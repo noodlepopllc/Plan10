@@ -19,8 +19,7 @@ dependencies = [
     "pip",
     "fastmcp",
     "num2words",
-    "diffsynth[all]",
-    "pyannote.audio"
+    "diffsynth[all]"
 ]
 
 [tool.uv]
