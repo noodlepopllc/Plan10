@@ -17,7 +17,7 @@ class Transcription(object):
     def __str__(self):
         text = ''
         text += "Detected language '%s' with probability %f\n" % (self.language, self.language_probability)
-        for detail in details:
+        for detail in self.details:
             text += "[%.2fs -> %.2fs] %s\n" % detail['start'], detail['end'], detail['text']
         return text
 
