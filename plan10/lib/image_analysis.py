@@ -240,6 +240,9 @@ def AnalyzeImage(image='', prompt='Describe this.', output=None, backend=None, m
     if backend == "smol":
         analysis_text = AnalyzeMedia(image, prompt, max_tokens=max_tokens, temperature=temperature)
         status = {'analysis': analysis_text}
+    elif backend = "gemma":
+        analysis_text = AnalyzeMediaGemma(image, prompt, max_tokens=max_tokens, temperature=temperature)
+        status = {'analysis': analysis_text}
     else:
         # Default to Qwen
         status = llm_analyze_media(image, prompt, max_tokens=max_tokens, temperature=temperature)

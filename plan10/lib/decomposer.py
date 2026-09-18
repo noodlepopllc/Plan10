@@ -15,6 +15,7 @@ ANIME = os.environ.get("ANIME", "False") != "False"
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
 SEED = int(os.environ.get("SEED", "-1"))
+VRAM = int(os.environ.get("VRAM", "80"))
 
 if ANIME:
     from plan10.lib.anime_gen import CreateCharacterSheet, CreateBackground, ImageGen, add_metadata_loc, GenerateImage
@@ -26,7 +27,6 @@ from plan10.lib.compositor import CompositeScene
 import json
 from pathlib import Path
 from plan10.lib.image_analysis import AnalyzeImage
-
 
 def analyze_scene(input_image: str, original_prompt: str = '', anime_mode: bool = False) -> dict:
     analysis_prompt = build_analysis_prompt(anime_mode)
@@ -41,7 +41,7 @@ def analyze_scene(input_image: str, original_prompt: str = '', anime_mode: bool 
 
 Use the original prompt to help identify characters and environment details that might be ambiguous."""
     
-    result = AnalyzeImage(input_image, analysis_prompt, backend="smol")
+    result = AnalyzeImage(input_image, analysis_prompt, backend="gemma" if VRAM > 24 else "smol")
     analysis = result['analysis']
     
     char_count = parse_character_count(analysis)
