@@ -476,7 +476,7 @@ def main():
         DesignVoice(args.instruct, args.output, args.seed, args.long)
     elif args.transcribe and args.ref_audio:
         if args.plus:
-            output = json.dumps(transcribe_plus(args.ref), indent=4)
+            output = json.dumps(transcribe_plus(args.ref_audio), indent=4)
         else:
             output = ' '.join(transcribe(args.ref_audio))
         if args.output.endswith('.txt'):
