@@ -65,7 +65,7 @@ def AnalyzeMediaGemma(media='', prompt="Describe this", max_tokens=512, temperat
     Completely self-contained Gemma 4 backend function matching your unified signature.
     Leverages native automated file loading with full video audio-track routing.
     """
-    GEMMA_PROCESSOR, GEMMA_MODEL
+    GEMMA_PROCESSOR, GEMMA_MODEL = None, None
     
     # 1. Self-contained Lazy Initialization with Environment Profiling
     if GEMMA_MODEL is None or GEMMA_PROCESSOR is None:
