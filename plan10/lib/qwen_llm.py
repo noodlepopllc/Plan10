@@ -61,8 +61,11 @@ elif BACKEND == "transformers":
         return processor, model
 
     def _unload_llm(model, processor):
-        del model
-        del processor
+        if model:
+            model.to('cpu')
+            del model
+        if processor:
+            del processor
         gc.collect()
         torch.cuda.empty_cache()
         torch.cuda.ipc_collect()
