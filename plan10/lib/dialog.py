@@ -480,6 +480,7 @@ def main():
             output = json.dumps(transcribe_plus(args.ref_audio), indent=4)
         else:
             output = ' '.join(transcribe(args.ref_audio))
+        dur = -1
         if args.output.endswith('.txt'):
             if args.ref_audio.endswith('.mp4'):
                 Path(args.output).write_text(f'{output.strip()}')
