@@ -385,8 +385,10 @@ def main():
     if not args.ref_audio:
         DesignVoice(args.instruct, args.output, args.seed, args.long)
     elif args.transcribe and args.ref_audio:
-        output = str(transcribe(args.ref_audio, detailed=args.plus))
-        if not args.plus:
+        output = transcribe(args.ref_audio, detailed=args.plus)
+        if args.plus:
+            output = str(output)
+        else:
             output = ' '.join(output)
         dur = -1
         if args.output.endswith('.txt'):
