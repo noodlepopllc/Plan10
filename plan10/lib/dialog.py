@@ -21,7 +21,7 @@ def transcribe(path, detailed=False):
     for segment in segments:
         details.append("[%.2fs -> %.2fs] %s\n" % (segment.start, segment.end, segment.text))
         segs.append(segment.text)
-    return segs if detailed else details
+    return details if detailed else segs
 
 # ADD this:
 def _load_omnivoice():
