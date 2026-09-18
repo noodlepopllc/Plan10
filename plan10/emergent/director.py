@@ -18,8 +18,8 @@ class Director:
 
     def analyze_reality(self, media_path, intended_action, width, height, output_dir):
         if VRAM > 24:
-            return self.analyze_reality_gemma(self, media_path, intended_action, width, height, output_dir)
-        return analyze_reality_smol(self, media_path, intended_action, width, height, output_dir)
+            return self.analyze_reality_gemma(media_path, intended_action, width, height, output_dir)
+        return self.analyze_reality_smol(media_path, intended_action, width, height, output_dir)
         
 
 
