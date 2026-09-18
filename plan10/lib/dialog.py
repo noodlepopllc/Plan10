@@ -57,15 +57,18 @@ def transcribe_plus(path):
         # if torch.cuda.is_available(): PYANNOTE_PIPELINE.to(torch.device("cuda"))
 
     # Process the audio file to map out speaker timeline ranges
-    diarization_output = PYANNOTE_PIPELINE(path)
+    diarize_result = PYANNOTE_PIPELINE(path)
+    diarization_output = diarize_result.speaker_diarization  # <-- Fixes the AttributeError
     
     speaker_turns = []
+    # Now itertracks will execute perfectly on the extracted annotation
     for turn, _, speaker in diarization_output.itertracks(yield_label=True):
         speaker_turns.append({
             "start": turn.start,
             "end": turn.end,
-            "speaker_id": speaker # Returns string mapping e.g., 'SPEAKER_00'
+            "speaker_id": speaker
         })
+
 
     # --- 3. Align Word Timestamps to Speaker Windows ---
     structured_output = []
