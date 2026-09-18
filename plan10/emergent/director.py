@@ -14,7 +14,59 @@ LTX = os.environ.get("LTX", "False") != "False"
 MMH3 = os.environ.get("MMH3","False") != "False"
 DIALOG_ALLOWED = WGP or LTX or MMH3
 class Director:
+
     def analyze_reality(self, media_path, intended_action, width, height, output_dir):
+        from plan10.lib.image_analysis import AnalyzeMediaGemma     
+        from plan10.lib.dialog import transcribe
+        # 1. Run your clean, reliable native Whisper pass
+        # (Extracts: "You know what you are? AI slop.", etc.)
+        #raw_transcript_lines = str(transcribe(media_path, True))
+        #full_transcript_text = " ".join(raw_transcript_lines)
+
+        full_transcript_text = str(transcribe(media_path, True))
+
+        # Handle empty/silent audio strings gracefully
+        transcript_context = f'"{full_transcript_text}"' if full_transcript_text.strip() else "[No speech or dialogue detected in audio track]"
+
+        qa_instructions = f"""You are a high-precision QA bot checking an AI video generation output.
+    We intended to generate the following action: "{intended_action}"
+
+    RAW AUDIO TRANSCRIPT:
+    {transcript_context}
+
+    TASK:
+    1. Identify all active characters in the video frames. Invent clear, descriptive temporary names for them based on their clothing or appearance (e.g., <woman_in_red>, <man_in_suit>).
+    2. If speech is present in the transcript above, analyze the video frames to break down the conversation sentence-by-sentence. Attribute each line to an invented character ID based on their mouth movements, physical reactions, and timing.
+    3. If no speech is present, or if it is just background audio/music, skip the dialogue section and note "none".
+    4. Evaluate the video for physical hallucinations, warping, or quality issues.
+
+    Output strictly inside this format:
+
+    CHARACTER IDENTIFIERS:
+    - [Invented Character ID]: [Short visual description of appearance/clothing]
+
+    DIALOGUE BREAKDOWN:
+    - [Invented Character ID]: "[Words spoken]" ([Short action/expression description])
+    (or output "none" if no dialogue is present)
+
+    CHARACTER STATES:
+    - [Invented Character ID]: [pose], [position], [facing], [holding]
+
+    VISUAL & PHYSICAL QUALITY ISSUES:
+    - [List hallucinations, warping, continuity breaks, problems, differences with intended actions, location changes or "none"]
+    """
+
+        # 3. Call your native Gemma 4 function with your runtime multi-backend signature
+        result = AnalyzeMediaGemma(
+            media=media_path, 
+            prompt=qa_instructions, 
+            max_tokens=512, 
+            temperature=0.0 # Force greedy decoding for strict mapping accuracy
+        )
+        
+        return result
+
+    def analyze_reality_smol(self, media_path, intended_action, width, height, output_dir):
         media_path = Path(media_path)
         ext = media_path.suffix.lower()
         media_type = "video" if ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm'] else "image"
