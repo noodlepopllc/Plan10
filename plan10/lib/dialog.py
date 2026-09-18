@@ -51,7 +51,7 @@ def transcribe_plus(path):
         # 1. pyannote/speaker-diarization-3.1
         # 2. pyannote/segmentation-3.0
         PYANNOTE_PIPELINE = Pipeline.from_pretrained(
-            "pyannote/speaker-diarization-3.1"
+            'pyannote/speaker-diarization-community-1'
         )
         # Optional optimization if your CPU bottleneck gets tight:
         # if torch.cuda.is_available(): PYANNOTE_PIPELINE.to(torch.device("cuda"))
