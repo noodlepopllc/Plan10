@@ -1,6 +1,7 @@
 import torch, torchaudio, gc, librosa, traceback
 import numpy as np
 from faster_whisper import WhisperModel
+from pyannote.audio import Pipeline
 from plan10.lib.config import load_environ
 from pathlib import Path
 load_environ()
@@ -20,6 +21,109 @@ def transcribe(path):
         print("[%.2fs -> %.2fs] %s" % (segment.start, segment.end, segment.text))
         segs.append(segment.text)
     return segs
+
+PYANNOTE_PIPELINE
+def transcribe_plus(path):
+    global PYANNOTE_PIPELINE
+    model_size = "large-v3"
+
+    # --- 1. Run Your Existing Whisper Pass with Word Timestamps ---
+    # Enforcing word_timestamps=True provides sub-second positioning metrics
+    model = WhisperModel(model_size, device="cpu", compute_type="int8")
+    segments, info = model.transcribe(path, beam_size=5, word_timestamps=True)
+    print("Detected language '%s' with probability %f" % (info.language, info.language_probability))
+
+    # Collect all words and their absolute time bounds
+    all_words = []
+    for segment in segments:
+        if segment.words:
+            for word in segment.words:
+                all_words.append({
+                    "start": word.start,
+                    "end": word.end,
+                    "text": word.word.strip()
+                })
+
+    # --- 2. Run the Pyannote Diarization Pass ---
+    if PYANNOTE_PIPELINE is None:
+        # Note: Requires a valid read token from hf.co/settings/tokens
+        # Ensure you have accepted user conditions on Hugging Face for:
+        # 1. pyannote/speaker-diarization-3.1
+        # 2. pyannote/segmentation-3.0
+        hf_token = os.environ.get("HF_TOKEN", "YOUR_HF_TOKEN_HERE")
+        PYANNOTE_PIPELINE = Pipeline.from_pretrained(
+            "pyannote/speaker-diarization-3.1", 
+            use_auth_token=hf_token
+        )
+        # Optional optimization if your CPU bottleneck gets tight:
+        # if torch.cuda.is_available(): PYANNOTE_PIPELINE.to(torch.device("cuda"))
+
+    # Process the audio file to map out speaker timeline ranges
+    diarization_output = PYANNOTE_PIPELINE(path)
+    
+    speaker_turns = []
+    for turn, _, speaker in diarization_output.itertracks(yield_label=True):
+        speaker_turns.append({
+            "start": turn.start,
+            "end": turn.end,
+            "speaker_id": speaker # Returns string mapping e.g., 'SPEAKER_00'
+        })
+
+    # --- 3. Align Word Timestamps to Speaker Windows ---
+    structured_output = []
+    
+    for word in all_words:
+        word_midpoint = (word["start"] + word["end"]) / 2
+        assigned_speaker = "UNKNOWN_SPEAKER"
+        
+        # Check which speaker window matches the midpoint of the word
+        for turn in speaker_turns:
+            if turn["start"] <= word_midpoint <= turn["end"]:
+                assigned_speaker = turn["speaker_id"]
+                break
+                
+        # Format a clean time string display layout (MM:SS)
+        minutes = int(word["start"] // 60)
+        seconds = int(word["start"] % 60)
+        timestamp_str = f"{minutes:02d}:{seconds:02d}"
+        
+        structured_output.append({
+            "speaker_id": assigned_speaker,
+            "timestamp": timestamp_str,
+            "text": word["text"]
+        })
+
+    # --- 4. Chronological Word Consolidation ---
+    # Merges sequential words from the same speaker so you don't get one line per word
+    final_stats = []
+    if not structured_output:
+        return final_stats
+
+    current_entry = structured_output[0]
+    words_buffer = [current_entry["text"]]
+
+    for next_entry in structured_output[1:]:
+        if next_entry["speaker_id"] == current_entry["speaker_id"]:
+            words_buffer.append(next_entry["text"])
+        else:
+            # Commit the built string block before switching speakers
+            final_stats.append({
+                "speaker_id": current_entry["speaker_id"],
+                "timestamp": current_entry["timestamp"],
+                "text": " ".join(words_buffer)
+            })
+            current_entry = next_entry
+            words_buffer = [current_entry["text"]]
+
+    # Commit remaining trailing slice entries
+    final_stats.append({
+        "speaker_id": current_entry["speaker_id"],
+        "timestamp": current_entry["timestamp"],
+        "text": " ".join(words_buffer)
+    })
+
+    return final_stats # Returns your clean, grouped dict list layout
+
 
 # REMOVE this:
 # from omnivoice import OmniVoice, VoiceClonePrompt
@@ -366,11 +470,15 @@ def main():
     parser.add_argument('-D', '--duration', type=float, default=5.0, help='duration of the generated clip')
     parser.add_argument('-S', '--transcribe', action='store_true', help='transcribe the reference audio')
     parser.add_argument('-L', '--long', action='store_true', help='increased duration for designed voice')
+    parser.add_argument('-P', '--plus', action='store_true', help='Use transcribe plus instead of transcribe')
     args = parser.parse_args()
     if not args.ref_audio:
         DesignVoice(args.instruct, args.output, args.seed, args.long)
     elif args.transcribe and args.ref_audio:
-        output = ' '.join(transcribe(args.ref_audio))
+        if args.plus:
+            output = json.dumps(transcribe_plus(args.ref), indent=4)
+        else;
+            output = ' '.join(transcribe(args.ref_audio))
         if args.output.endswith('.txt'):
             if args.ref_audio.endswith('.mp4'):
                 Path(args.output).write_text(f'{output.strip()}')
