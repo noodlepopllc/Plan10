@@ -320,14 +320,17 @@ def main():
     parser.add_argument('-P', '--prompt', type=str, default='Describe this.', help='prompt')
     parser.add_argument('-E', '--enhance', type=str, default=None, help='prompt enhancer')
     parser.add_argument('-O', '--output', type=str, default=None, help='file to output')
-    parser.add_argument('-B', '--backend', type=str, default=None, choices=['qwen', 'smol'], 
-                       help='Vision backend to use (default: from VISION_BACKEND env or qwen)')
+    parser.add_argument('-B', '--backend', type=str, default=None, choices=['qwen', 'smol', 'gemma'], 
+        help='Vision backend to use (default: from VISION_BACKEND env or qwen)')
+    parser.add_argument('-M', '--max-tokens', type=int, default=512)
+    parser.add_argument('-T', '--temperature', type=float, default=0.5)
+                       
     args = parser.parse_args()
     
     if args.enhance:
         print(EnhancePrompt(args.image, args.prompt, args.enhance, args.output, args.backend))
     else:
-        result = AnalyzeImage(args.image, args.prompt, output=args.output, backend=args.backend)
+        result = AnalyzeImage(args.image, args.prompt, output=args.output, backend=args.backend, max_tokens=args.max_tokens, temperature=args.temperature)
         print(result['analysis'])
 
 if __name__ == '__main__':
