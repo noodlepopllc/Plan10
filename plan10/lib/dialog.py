@@ -12,7 +12,7 @@ class Transcription(object):
         self.details = []
 
     def add_detail(self, start, end, text):
-        details.append({"start":start,"end":end,"text":text})
+        self.details.append({"start":start,"end":end,"text":text})
 
     def __str__(self):
         text = ''
