@@ -5,7 +5,7 @@ from plan10.lib.config import load_environ
 from pathlib import Path
 load_environ()
 
-def transcribe(path):
+def transcribe(path, detailed=False):
 
     model_size = "large-v3"
 
@@ -16,10 +16,11 @@ def transcribe(path):
     print("Detected language '%s' with probability %f" % (info.language, info.language_probability))
     
     segs = []
+    details = []
     for segment in segments:
-        print("[%.2fs -> %.2fs] %s" % (segment.start, segment.end, segment.text))
+        details.append("[%.2fs -> %.2fs] %s\n" % (segment.start, segment.end, segment.text))
         segs.append(segment.text)
-    return segs
+    return segs if detailed else details
 
 # ADD this:
 def _load_omnivoice():
@@ -363,11 +364,12 @@ def main():
     parser.add_argument('-D', '--duration', type=float, default=5.0, help='duration of the generated clip')
     parser.add_argument('-S', '--transcribe', action='store_true', help='transcribe the reference audio')
     parser.add_argument('-L', '--long', action='store_true', help='increased duration for designed voice')
+    parser.add_argument('-P', '--plus', action='store_true', help='detailed timestamps with transcript')
     args = parser.parse_args()
     if not args.ref_audio:
         DesignVoice(args.instruct, args.output, args.seed, args.long)
     elif args.transcribe and args.ref_audio:
-        output = ' '.join(transcribe(args.ref_audio))
+        output = ' '.join(transcribe(args.ref_audio, args.plus))
         dur = -1
         if args.output.endswith('.txt'):
             if args.ref_audio.endswith('.mp4'):

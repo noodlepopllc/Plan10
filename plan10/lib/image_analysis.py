@@ -55,6 +55,88 @@ def translate_to_audio_prompt(visual_prompt):
     
     return final_audio_prompt
 
+import os
+import torch
+from pathlib import Path
+from transformers import AutoProcessor, AutoModelForMultimodalLM, BitsAndBytesConfig
+
+GEMMA_PROCESSOR = None
+GEMMA_MODEL = None
+
+def AnalyzeMediaGemma(media='', prompt="Describe this", max_tokens=512, temperature=0.7):
+    """
+    Completely self-contained Gemma 4 backend function matching your unified signature.
+    Leverages native automated file loading with full video audio-track routing.
+    """
+    global GEMMA_PROCESSOR, GEMMA_MODEL
+    
+    # 1. Self-contained Lazy Initialization with Environment Profiling
+    if GEMMA_MODEL is None or GEMMA_PROCESSOR is None:
+        model_id = "google/gemma-4-12B-it"
+        GEMMA_PROCESSOR = AutoProcessor.from_pretrained(model_id)
+        
+        vram_limit = int(os.environ.get("VRAM", 32))
+        use_bnb = os.environ.get("BITSNBYTES", "False").strip().lower() in ["true", "1", "yes"]
+        kwargs = {"device_map": "auto"}
+        
+        if use_bnb:
+            if vram_limit < 16:
+                kwargs["quantization_config"] = BitsAndBytesConfig(
+                    load_in_4bit=True, bnb_4bit_quant_type="nf4", bnb_4bit_compute_dtype=torch.bfloat16
+                )
+            else:
+                kwargs["load_in_8bit"] = True
+        else:
+            kwargs["dtype"] = torch.bfloat16
+
+        GEMMA_MODEL = AutoModelForMultimodalLM.from_pretrained(model_id, **kwargs)
+
+    # 2. Handle Text-Only Fallbacks
+    if not media:
+        messages = [{"role": "user", "content": [{"type": "text", "text": prompt}]}]
+        load_audio = False
+    else:
+        media_src = str(Path(media).resolve()) if not (media.startswith("http://") or media.startswith("https://")) else media
+        ext = Path(media_src).suffix.lower() if not media_src.startswith("http") else media_src
+        is_video = any(e in ext for e in ['.mp4', '.avi', '.mov', '.mkv', '.webm'])
+        load_audio = is_video # Only trigger audio extractor blocks if it's a video file
+
+        # 3. Structural Asset Pipeline (Ordered: Video/Image Asset first, then Prompt Text)
+        messages = [
+            {
+                "role": "user",
+                "content": [
+                    {"type": "video" if is_video else "image", "video" if is_video else "image": media_src},
+                    {"type": "text", "text": prompt}
+                ]
+            }
+        ]
+
+    # 4. Tokenize and execute utilizing the critical load_audio_from_video parameter
+    inputs = GEMMA_PROCESSOR.apply_chat_template(
+        messages,
+        tokenize=True,
+        return_dict=True,
+        return_tensors="pt",
+        add_generation_prompt=True,
+        load_audio_from_video=load_audio, # <-- CRITICAL: Forces HF to extract the audio track from the mp4
+    ).to(GEMMA_MODEL.device)
+    
+    input_len = inputs["input_ids"].shape[-1]
+    do_sample = temperature > 0.0
+
+    with torch.inference_mode():
+        outputs = GEMMA_MODEL.generate(
+            **inputs, 
+            max_new_tokens=max_tokens,
+            temperature=temperature if do_sample else None,
+            do_sample=do_sample
+        )
+
+    # 5. Extract only the newly generated text answer slices
+    response = GEMMA_PROCESSOR.decode(outputs[0][input_len:], skip_special_tokens=True)
+    return response.strip()
+
 def load_smol_vlm():
     """Load SmolVLM2 model and processor, caching them globally."""
     global _smol_model, _smol_processor
