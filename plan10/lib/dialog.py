@@ -455,7 +455,7 @@ def CloneVoice(text, audio, output, duration=5.0, seed=-1, lengthen=True, sessio
 
 def main():
     import argparse, math
-    import sys
+    import sys, json
     from pathlib import Path
     parser = argparse.ArgumentParser(
                     prog='GenerateDialog',
