@@ -5,7 +5,6 @@ import mimetypes
 import requests
 from PIL import Image
 import json
-from fastmcp import Client
 from time import sleep
 from functools import partial
 from pathlib import Path
@@ -42,7 +41,7 @@ class PortraitReferenceManager:
         prompt = """Provide a single, concise sentence describing ONLY the character's
         facial features, hair, and identity-defining appearance. Ignore background,
         props, and lighting. Do not include introductory phrases."""
-        desc = AnalyzeImage(image_path, prompt, backend='qwen')['analysis']
+        desc = AnalyzeImage(image_path, prompt)['analysis']
         if desc:
             desc = desc[0].lower() + desc[1:]
         return desc
@@ -220,7 +219,7 @@ class SmartVideoPromptBuilder:
             atmosphere, and key objects in this environment/scene. Do not include introductory phrases 
             like 'This image shows' or 'The image features'."""
         
-        desc = AnalyzeImage(image_path, prompt, backend='qwen')['analysis']
+        desc = AnalyzeImage(image_path, prompt)['analysis']
         if desc:
             desc = desc[0].lower() + desc[1:]
         return desc
