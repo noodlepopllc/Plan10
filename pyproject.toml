@@ -17,7 +17,6 @@ dependencies = [
     "faster-whisper",
     "spacy_download",
     "pip",
-    "fastmcp",
     "num2words",
     "diffsynth[all]",
     "AuK"
