@@ -75,7 +75,7 @@ def AnalyzeMediaGemma(media='', prompt="Describe this", max_tokens=512, temperat
         model_id = "google/gemma-4-12B-it"
         GEMMA_PROCESSOR = AutoProcessor.from_pretrained(model_id)
         
-        vram_limit = int(os.environ.get("VRAM", 32))
+        vram_limit = int(os.environ.get("VRAM", 80))
         use_bnb = os.environ.get("BITSNBYTES", "False").strip().lower() in ["true", "1", "yes"]
         kwargs = {"device_map": "auto"}
         
