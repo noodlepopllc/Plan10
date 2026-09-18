@@ -1,4 +1,4 @@
-import torch, torchaudio, gc, librosa, traceback
+import torch, torchaudio, gc, librosa, traceback, os
 import numpy as np
 from faster_whisper import WhisperModel
 from plan10.lib.config import load_environ
