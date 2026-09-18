@@ -252,8 +252,8 @@ def generate_background(
         prompt=edit_prompt,
         images=[input_image],
         output=str(bg_output),
-        width=tmp.width,
-        height=tmp.height
+        width=WIDTH,
+        height=HEIGHT
     )
     
     description = add_metadata_loc(str(bg_output))
