@@ -16,22 +16,26 @@ F5_HOP_LENGTH = 256
 from huggingface_hub import snapshot_download
 import os
 
-import tomllib
+basepath = os.environ.get("DIFFSYNTH_MODEL_BASE_PATH","./models")
 
-def load_toml(path: str):
-    with open(path, "rb") as f:
-        return tomllib.load(f)
+[models]
+auk_base_repo = "tencent/AuK"
+auk_base_path = f"{basepath}/ckpts/AuK"
 
+auk_flash_repo = "tencent/AuK-Flash"
+auk_flash_path = f"{basepath}/ckpts/AuK-Flash"
+
+mllm_repo = "Qwen/Qwen2.5-Omni-3B"
+mllm_path = f"{basepath}/ckpts/Qwen2.5-Omni-3B"
 
 def ensure_model(repo, path):
     if not os.path.exists(path):
         snapshot_download(repo, local_dir=path)
 
-cfg = load_toml("pyproject.toml")
 
-ensure_model(cfg["models"]["auk_base_repo"], cfg["models"]["auk_base_path"])
-ensure_model(cfg["models"]["auk_flash_repo"], cfg["models"]["auk_flash_path"])
-ensure_model(cfg["models"]["mllm_repo"], cfg["models"]["mllm_path"])
+ensure_model(auk_base_repo, auk_base_path)
+ensure_model(auk_flash_repo, auk_flash_path)
+ensure_model(mllm_repo, mllm_path)
 
 
 def parse_omnivoice(desc: str):
@@ -122,8 +126,8 @@ def estimate_f5_baseline_duration(text: str, language: str = "en") -> float:
 # config = "ckpts/AuK/config.yaml"
 
 # Use AuK-Flash instead:
-checkpoint = "ckpts/AuK-Flash/auk_flash.safetensors"
-config = "ckpts/AuK-Flash/config.yaml"
+checkpoint = f"{auk_flash_path}/auk_flash.safetensors"
+config = f"{auk_flash_path}/config.yaml"
 
 engine = AukInfer(
     config,
