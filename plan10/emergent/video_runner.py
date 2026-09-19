@@ -246,11 +246,14 @@ def normalize_shot_characters(shot_text: str, char_labels: list) -> str:
     
     return result
 
+import os
+
 def expand_to_shots(prompt: str, bg_label: str, char_labels: list, duration: float, first_frame_path: str = None) -> str:
     """Returns raw shot lines ready to append to your script, grounded in the actual first frame."""
 
     scene_context = ""
     if first_frame_path and os.path.exists(first_frame_path):
+        # Assuming AnalyzeImage is defined elsewhere in your code
         analysis = AnalyzeImage(first_frame_path, prompt="""
             Describe this exact frame for video generation:
             Where are the characters positioned? What are their poses and expressions?
@@ -276,14 +279,16 @@ CHARACTER MAPPING:
 {scene_context}
 
 TASK:
-Generate a sequence of cinematic shots that follow the scene description and maintain visual continuity. Use as many shots as needed.
+Generate a sequence of cinematic shots that follow the scene description and maintain visual continuity. 
+CRITICAL CONSTRAINT: You must summarize and condense the action. Generate a STRICT MAXIMUM of 5 shots. Do not exceed 5 shots under any circumstances. Combine minor actions into continuous takes and focus only on the most crucial narrative beats.
 
-SHOT DURATION GUIDELINES (use whole seconds only):
-- Quick dialogue (1-5 words): 1 second
-- Medium dialogue (6-15 words): 2 seconds
-- Simple actions (turn, look, gesture): 2 seconds
-- Complex actions (crawl, stand up, walk): 3-4 seconds
-- Reaction shots: 2 seconds
+SHOT DURATION GUIDELINES:
+- Adjust shot durations to approximate the total target duration, but NEVER exceed 5 shots total.
+- Quick dialogue (1-5 words): 1-2 seconds
+- Medium dialogue (6-15 words): 2-3 seconds
+- Simple actions (turn, look, gesture): 2-3 seconds
+- Complex actions (crawl, stand up, walk): 3-5 seconds (Use longer takes to fill time instead of adding cuts)
+- Reaction shots: 1-2 seconds
 
 GLOBAL RULES:
 
@@ -311,7 +316,7 @@ SILENCE RULES (when no dialogue is present):
    - DO NOT force physical actions after speaking - this creates padding
 
 5. Dialogue length:
-   - Max 15 words per shot. Break long dialogue into multiple shots.
+   - Max 15 words per shot. Break long dialogue into multiple shots (but remember the 5-shot total limit!).
 
 6. Foley:
    - EVERY shot MUST begin with a foley cue.
@@ -319,6 +324,10 @@ SILENCE RULES (when no dialogue is present):
 7. Continuity:
    - Lighting, shadows, and weather remain identical.
    - Actions flow continuously between shots.
+
+8. Pacing & Summarization:
+   - Prioritize the core emotional or narrative beat of the scene.
+   - Combine sequential minor actions (e.g., walking over and picking up an object) into a single shot instead of cutting.
 
 FORMAT:
 shot | foley + description | duration_seconds
@@ -328,9 +337,9 @@ shot | Low wind through rafters. Medium shot. char1 shifts her stance, glancing 
 shot | Soft creak of wood. Medium shot of char1 facing char2. char1 speaks [English] "Stay back." | 1
 shot | Distant hoofbeats. Medium shot. char2 reacts with a quick blink. | 2
 
-NOW, generate the shots for the INPUT DATA provided above:
+NOW, generate the shots for the INPUT DATA provided above (REMEMBER: STRICT MAX 5 SHOTS):
 """
-
+    
     response = llm_analyze_media('', prompt=formatted_prompt, max_tokens=8192, temperature=0.4)['analysis']
 
     lines = []

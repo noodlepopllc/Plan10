@@ -290,7 +290,7 @@ LOCATION: [brief location]
 CHARACTERS: [brief descriptions, including key visual identifiers like hair/clothing color]
 SCENE_TRANSITION: [YES/NO]
 NEW_LOCATION: [if YES, describe the new location in detail for background generation]
-NEXT_ACTION: Describe the moment-to-moment action and dialogue for this 6-15 second beat. Start from the characters' CURRENT physical state. Include natural dialogue, specific movements, and expressions. Provide enough concrete detail for the renderer to execute the shot while advancing the goal.
+NEXT_ACTION: Describe ONE primary action beat (6-15 seconds). Start from characters' CURRENT physical state. Include: ONE main movement per character, ONE dialogue line max (≤15 words, or none), facial expression/mouth state. Keep it to 2-4 sentences total. No chained actions or micro-gestures.
 SETUP: [what this beat sets up for the next beat]
 GOAL_PROGRESS: [how this action moves toward completing the goal]
 """
