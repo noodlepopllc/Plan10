@@ -71,24 +71,15 @@ def AnalyzeMediaGemma(media='', prompt="Describe this", max_tokens=512, temperat
     
     # 1. Self-contained Lazy Initialization with Environment Profiling
     if GEMMA_MODEL is None or GEMMA_PROCESSOR is None:
-        model_id = "google/gemma-4-12b-it-unified"
+        model_id = "google/gemma-4-12B-it"
         GEMMA_PROCESSOR = AutoProcessor.from_pretrained(model_id)
-        
-        vram_limit = int(os.environ.get("VRAM", 80))
-        use_bnb = os.environ.get("BITSNBYTES", "False").strip().lower() in ["true", "1", "yes"]
-        kwargs = {"device_map": "auto"}
-        
-        if use_bnb:
-            if vram_limit < 16:
-                kwargs["quantization_config"] = BitsAndBytesConfig(
-                    load_in_4bit=True, bnb_4bit_quant_type="nf4", bnb_4bit_compute_dtype=torch.bfloat16
-                )
-            else:
-                kwargs["load_in_8bit"] = True
-        else:
-            kwargs["dtype"] = torch.bfloat16
 
-        GEMMA_MODEL = AutoModelForMultimodalLM.from_pretrained(model_id, **kwargs)
+        GEMMA_MODEL = AutoModelForMultimodalLM.from_pretrained(
+            model_id,
+            torch_dtype=torch.bfloat16,
+            device_map="cuda",
+            trust_remote_code=True,
+        )
 
     # 2. Handle Text-Only Fallbacks
     if not media:
