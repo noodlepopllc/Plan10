@@ -142,6 +142,10 @@ def CloneVoice(text, audio, output, duration=5.0, seed=-1, lengthen=True, sessio
     if lengthen and len(text.split(' ')) < 5:
         text = f"{text} ... Random words added for length."
 
+    estimate = estimate_f5_baseline_duration(text) 
+
+    duration = estimate if estimate < duration else duration
+
     run_auk(
         f"Say the following with the same voice: '{text}",
         output,
