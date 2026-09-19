@@ -71,7 +71,7 @@ def AnalyzeMediaGemma(media='', prompt="Describe this", max_tokens=512, temperat
     
     # 1. Self-contained Lazy Initialization with Environment Profiling
     if GEMMA_MODEL is None or GEMMA_PROCESSOR is None:
-        model_id = "google/gemma-4-12B-it"
+        model_id = "google/gemma-4-12b-it-unified"
         GEMMA_PROCESSOR = AutoProcessor.from_pretrained(model_id)
         
         vram_limit = int(os.environ.get("VRAM", 80))
