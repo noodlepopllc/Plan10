@@ -7,7 +7,7 @@ import os
 
 from plan10.lib.image_analysis import AnalyzeMedia
 from plan10.lib.qwen_llm import llm_analyze_media
-from plan10.lib.dialog import transcribe
+from plan10.lib.util import transcribe
 
 WGP = os.environ.get("WGP","False") != "False"
 LTX = os.environ.get("LTX", "False") != "False"
