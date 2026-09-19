@@ -247,8 +247,13 @@ def AnalyzeImage(image='', prompt='Describe this.', output=None, backend=None, m
     Returns:
         dict with 'analysis' key containing the text response
     """
+
+    media_path = str(image)
+    ext = Path(media_path).suffix.lower()
+    is_video = ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm']
+
     if not backend:
-        backend = os.environ.get("VISION_BACKEND", "qwen").lower()
+        backend = os.environ.get("VISION_BACKEND", "smol" if is_video else "qwen" ).lower()
     
     if backend == "smol":
         analysis_text = AnalyzeMedia(image, prompt, max_tokens=max_tokens, temperature=temperature)
