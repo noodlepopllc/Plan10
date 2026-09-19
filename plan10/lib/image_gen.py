@@ -408,8 +408,8 @@ def CreatePortrait(prompt='', reference='', output='character_tmp.png',
     )
 
     input = Image.open('tmp.png')
-    output = remove(input)
-    output.save(output)
+    output_tmp = remove(input)
+    output_tmp.save(output)
 
     return status
 
@@ -553,8 +553,8 @@ def CreateCharacterSheet(prompt='', output='character_tmp.png', seed=-1, imagege
     if not imagegen:
         del gen
     input = Image.open('tmp.png')
-    output = remove(input)
-    output.save(str(output))
+    output_tmp = remove(input)
+    output_tmp.save(str(output))
     
     status['description'] = add_metadata_char(output, prompt, seed)
     status['prompt'] = eprompt
