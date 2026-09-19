@@ -16,6 +16,13 @@ F5_HOP_LENGTH = 256
 from huggingface_hub import snapshot_download
 import os
 
+import tomllib
+
+def load_toml(path: str):
+    with open(path, "rb") as f:
+        return tomllib.load(f)
+
+
 def ensure_model(repo, path):
     if not os.path.exists(path):
         snapshot_download(repo, local_dir=path)
