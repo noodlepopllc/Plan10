@@ -133,8 +133,6 @@ def run_auk(
     )
     save_audio(audio, sr, output_path)
 
-
-
 def CloneVoice(text, audio, output, duration=5.0, seed=-1, lengthen=True, session=None):
     # The actual prompt fed into the model
     final_prompt = f"{text} | cloned from: {audio}"
@@ -146,8 +144,8 @@ def CloneVoice(text, audio, output, duration=5.0, seed=-1, lengthen=True, sessio
 
     run_auk(
         f"Say the following with the same voice: '{text}",
-        audio,
-        audio_path=output,
+        output,
+        audio_path=audio,
         gen_seconds=duration,
     )
 
