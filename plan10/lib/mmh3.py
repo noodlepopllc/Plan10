@@ -525,7 +525,7 @@ def compose_video(prompt, images, audio, output='output.mp4', width=768, height=
 
         references = []
         for image in images:
-            references.append({"type": "image", "image": Image.open(image)})
+            references.append({"type": "image", "image": Image.open(image).convert("RGB")})
         for aud in audio:
             ref_audio, sample_rate = read_audio(aud, duration=5, resample=True, resample_rate=pipe.audio_vae.sample_rate)
             references.append({"type": "audio", "audio": ref_audio, "sample_rate": sample_rate})
