@@ -20,7 +20,8 @@ dependencies = [
     "num2words",
     "diffsynth[all]",
     "audioread",
-    "AuK"
+    "AuK",
+    "rembg"
 ]
 
 [tool.uv]

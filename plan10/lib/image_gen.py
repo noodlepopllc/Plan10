@@ -9,6 +9,7 @@ import os, random
 from plan10.lib.image_analysis import AnalyzeImage, EnhancePrompt
 from plan10.lib.config import load_environ
 from PIL import Image
+from rembg import remove
 
 from plan10.lib.util import load_metadata
 
@@ -399,12 +400,16 @@ def CreatePortrait(prompt='', reference='', output='character_tmp.png',
 
     status = GenerateImage(
         prompt=full_prompt,
-        output=str(output),
+        output=str('tmp.png'),
         width=1024,
         height=1024,
         seed=seed,
         imagegen=igen
     )
+
+    input = Image.open('tmp.png')
+    output = remove(input)
+    output.save(output)
 
     return status
 
@@ -544,9 +549,12 @@ def CreateCharacterSheet(prompt='', output='character_tmp.png', seed=-1, imagege
     else:
         width, height = override if override else (1536, 1536)
     
-    status = gen.generate(eprompt, output, width, height, seed)
+    status = gen.generate(eprompt, 'tmp.png', width, height, seed)
     if not imagegen:
         del gen
+    input = Image.open('tmp.png')
+    output = remove(input)
+    output.save(str(output))
     
     status['description'] = add_metadata_char(output, prompt, seed)
     status['prompt'] = eprompt
