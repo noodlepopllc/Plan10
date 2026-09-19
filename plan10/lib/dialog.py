@@ -27,9 +27,34 @@ auk_flash_path = f"{basepath}/ckpts/AuK-Flash"
 mllm_repo = "Qwen/Qwen2.5-Omni-3B"
 mllm_path = f"{basepath}/ckpts/Qwen2.5-Omni-3B"
 
+import os
+import yaml
+import pathlib
+
+BASE = pathlib.Path(os.environ["DIFFSYNTH_MODEL_BASE_PATH"])
+CKPTS = BASE / "ckpts"
+
+def patch_auk_yaml(yaml_path):
+    with open(yaml_path, "r") as f:
+        cfg = yaml.safe_load(f)
+
+    # Fix text encoder path
+    encoder_rel = cfg["text_encoder"]["model_path"]
+    cfg["text_encoder"]["model_path"] = str(CKPTS / encoder_rel)
+
+    with open(yaml_path, "w") as f:
+        yaml.safe_dump(cfg, f)
+
+
 def ensure_model(repo, path):
     if not os.path.exists(path):
         snapshot_download(repo, local_dir=path)
+
+        name = Path(path).name
+
+        if name.startswith("AuK"):
+            patch_auk_yaml(Path(path) / "config.yaml")
+
 
 
 ensure_model(auk_base_repo, auk_base_path)
