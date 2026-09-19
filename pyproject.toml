@@ -19,6 +19,7 @@ dependencies = [
     "pip",
     "num2words",
     "diffsynth[all]",
+    "audioread",
     "AuK"
 ]
 
