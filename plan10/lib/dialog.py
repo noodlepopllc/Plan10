@@ -13,6 +13,20 @@ F5_SHORT_TEXT_SPEED = 0.3
 F5_SAMPLE_RATE = 24000
 F5_HOP_LENGTH = 256
 
+from huggingface_hub import snapshot_download
+import os
+
+def ensure_model(repo, path):
+    if not os.path.exists(path):
+        snapshot_download(repo, local_dir=path)
+
+cfg = load_toml("pyproject.toml")
+
+ensure_model(cfg["models"]["auk_base_repo"], cfg["models"]["auk_base_path"])
+ensure_model(cfg["models"]["auk_flash_repo"], cfg["models"]["auk_flash_path"])
+ensure_model(cfg["models"]["mllm_repo"], cfg["models"]["mllm_path"])
+
+
 def parse_omnivoice(desc: str):
     parts = [p.strip().lower() for p in desc.split(",")]
     gender = next((p for p in parts if p in ["male", "female"]), None)

@@ -43,6 +43,16 @@ omni = [
     "omnivoice"
 ]
 
+[models]
+auk_base_repo = "tencent/AuK"
+auk_base_path = "./ckpts/AuK"
+
+auk_flash_repo = "tencent/AuK-Flash"
+auk_flash_path = "./ckpts/AuK-Flash"
+
+mllm_repo = "Qwen/Qwen2.5-Omni-3B"
+mllm_path = "./ckpts/Qwen2.5-Omni-3B"
+
 
 [project.scripts]
 config = "plan10.lib.config:main"
