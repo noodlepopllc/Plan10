@@ -327,7 +327,7 @@ class Pipeline:
                     print("  → Character is leaving the scene. Forcing cinematic CUT TO new location/angle.")
                     needs_transition = True
                     
-                elif not MMH3 and reason_code == "turned_away":
+                elif LTX and reason_code == "turned_away":
                     print("  → Character is turned away. Recreating frame to face camera (same location)...")
                     current_state = f"{' and '.join([x for x in self.visual_ids])} turns around to face the camera in a frontal or 3/4 view, maintaining the exact same environment."
                     current_media, current_bg = recreate(current_media, current_bg, current_state, beat_count)
@@ -336,10 +336,10 @@ class Pipeline:
                 elif reason_code == "wrong_character":
                     print("  → Character identity issue (props/weapons drifted). Accepting for now...")
                     # Don't recreate - just continue and hope it stabilizes
-                    needs_transition = False
+                    needs_transition = True if LTX else False
                     
                 else:
-                    if not MMH3:
+                    if LTX:
                         print("  → Unintended loss of visibility. Recreating frame...")
                         current_state = f"{' and '.join([x for x in self.visual_ids])} is now visible in the scene, facing the camera in a frontal or 3/4 view."
                         current_media, current_bg = recreate(current_media, current_bg, current_state, beat_count)
