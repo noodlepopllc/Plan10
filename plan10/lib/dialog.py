@@ -18,7 +18,6 @@ import os
 
 basepath = os.environ.get("DIFFSYNTH_MODEL_BASE_PATH","./models")
 
-[models]
 auk_base_repo = "tencent/AuK"
 auk_base_path = f"{basepath}/ckpts/AuK"
 
