@@ -189,10 +189,10 @@ class ImageEditQwen(object):
         for item in images:
             if isinstance(item, Image.Image):
                 # Already a PIL image → use directly
-                edit_images.append(item)
+                edit_images.append(item.convert("RGB"))
             elif isinstance(item, str):
                 # File path → load it
-                edit_images.append(Image.open(item))
+                edit_images.append(Image.open(item).convert("RGB"))
             else:
                 raise TypeError(f"Unsupported image type: {type(item)}")
         if seed == -1: seed = random.randint(0, 1000000)
@@ -260,10 +260,10 @@ class ImageEditKlein(object):
         for item in images:
             if isinstance(item, Image.Image):
                 # Already a PIL image → use directly
-                edit_images.append(item)
+                edit_images.append(item.convert("RGB"))
             elif isinstance(item, str):
                 # File path → load it
-                edit_images.append(Image.open(item))
+                edit_images.append(Image.open(item).convert("RGB"))
             else:
                 raise TypeError(f"Unsupported image type: {type(item)}")
     
@@ -335,10 +335,10 @@ class ImageEditSenseNova(object):
         for item in images:
             if isinstance(item, Image.Image):
                 # Already a PIL image → use directly
-                edit_images.append(item)
+                edit_images.append(item.convert("RGB"))
             elif isinstance(item, str):
                 # File path → load it
-                edit_images.append(Image.open(item))
+                edit_images.append(Image.open(item).convert("RGB"))
             else:
                 raise TypeError(f"Unsupported image type: {type(item)}")
 
