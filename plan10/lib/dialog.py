@@ -1,330 +1,139 @@
-import torch, torchaudio, gc, librosa, traceback, os
-import numpy as np
-from faster_whisper import WhisperModel
-from plan10.lib.config import load_environ
-from pathlib import Path
-load_environ()
+from plan10.lib.config import load_config
+load_config()
 
-class Transcription(object):
-    def __init__(self, language, probability):
-        self.language = language
-        self.language_probability = probability
-        self.details = []
+from auk.infer.infer_auk import AukInfer, save_audio
+from plan10.lib.qwen_llm import llm_analyze_media
+import sys, json, re
+from plan10.lib.util import transcribe
 
-    def add_detail(self, start, end, text):
-        self.details.append({"start":start,"end":end,"text":text})
+# Constants extracted directly from pe.config.yaml
+TTS_SEC_PER_UTF8_BYTE = {"en": 0.0656, "zh": 0.0803}
+F5_SHORT_TEXT_BYTE_THRESHOLD = 10
+F5_SHORT_TEXT_SPEED = 0.3
+F5_SAMPLE_RATE = 24000
+F5_HOP_LENGTH = 256
 
-    def __str__(self):
-        text = ''
-        text += "Detected language '%s' with probability %f\n" % (self.language, self.language_probability)
-        for detail in self.details:
-            text += "[%.2fs -> %.2fs] %s\n" % (detail['start'], detail['end'], detail['text'])
-        return text
+def parse_omnivoice(desc: str):
+    parts = [p.strip().lower() for p in desc.split(",")]
+    gender = next((p for p in parts if p in ["male", "female"]), None)
+    age = next((p for p in parts if p in [
+        "child", "teenager", "young adult", "middle-aged", "elderly"
+    ]), None)
+    pitch = next((p for p in parts if "pitch" in p), None)
+    accent = next((p for p in parts if "accent" in p), None)
+    style = "whisper" if "whisper" in parts else None
+    return gender, age, pitch, accent, style
+
+def map_gender(g):
+    return "男性" if g == "male" else "女性"
+
+def map_age(a):
+    return {
+        "child": "一位十岁左右的儿童",
+        "teenager": "一位十几岁的青少年",
+        "young adult": "一位二十多岁的成年人",
+        "middle-aged": "一位中年人",
+        "elderly": "一位年长者",
+    }.get(a, "一位成年人")
+
+def map_pitch(p):
+    return {
+        "very low pitch": "音色极低沉",
+        "low pitch": "音色低沉",
+        "moderate pitch": "音色适中",
+        "high pitch": "音色偏高",
+        "very high pitch": "音色极高",
+    }.get(p, "")
+
+def map_accent(a):
+    return {
+        "british accent": "带有轻微的英式口音",
+        "american accent": "带有轻微的美式口音",
+        "australian accent": "带有轻微的澳洲口音",
+        "canadian accent": "带有轻微的加拿大口音",
+        "chinese accent": "带有轻微的中文口音",
+        "indian accent": "带有轻微的印度口音",
+        "japanese accent": "带有轻微的日式口音",
+        "korean accent": "带有轻微的韩式口音",
+        "portuguese accent": "带有轻微的葡萄牙口音",
+        "russian accent": "带有轻微的俄式口音",
+    }.get(a, "")
+
+def map_style(s):
+    return "以轻声耳语的方式说话" if s == "whisper" else ""
 
 
-def transcribe(path, detailed=False):
+def build_auk_prompt(desc, text):
+    gender, age, pitch, accent, style = parse_omnivoice(desc)
 
-    model_size = "large-v3"
+    demo = f"{map_age(age)}的{map_gender(gender)}"
+    tone = f"{map_pitch(pitch)}{',' if pitch else ''}{map_style(style)}"
+    tone = tone.strip(" ,")
 
-    model = WhisperModel(model_size, device="cpu", compute_type="int8")
+    # Add neutral filler if accent is missing
+    if accent is None:
+        filler = "声音清晰，音量适中"
+    else:
+        filler = map_accent(accent)
 
-    segments, info = model.transcribe(path, beam_size=5)
+    chinese_style = (
+        f"{demo}，在安静的环境中，以自然、平稳的语气说话，"
+        f"{tone if tone else '音色自然'}，{filler}。"
+    )
 
-    transcription = Transcription(info.language, info.language_probability)
+    return f'请基于下面的描述: "{chinese_style}", 生成语音内容 "{text}".'
+
+
+
+def estimate_f5_baseline_duration(text: str, language: str = "en") -> float:
+    """Replicates _estimate_f5_instruct_duration from pe.py"""
+    # Simple UTF-8 byte weight (sufficient for single-language prompts)
+    byte_count = len(text.encode("utf-8"))
+    weight = byte_count * TTS_SEC_PER_UTF8_BYTE.get(language, 0.0656)
     
-    segs = []
-    for segment in segments:
-        transcription.add_detail(segment.start, segment.end, segment.text)
-        segs.append(segment.text)
-    return transcription if detailed else segs
+    # Short text speed adjustment
+    speed_multiplier = F5_SHORT_TEXT_SPEED if byte_count < F5_SHORT_TEXT_BYTE_THRESHOLD else 1.0
+    
+    frames = int(weight * F5_SAMPLE_RATE / F5_HOP_LENGTH / speed_multiplier)
+    return frames * F5_HOP_LENGTH / F5_SAMPLE_RATE
 
-# ADD this:
-def _load_omnivoice():
-    from omnivoice import OmniVoice, VoiceClonePrompt
-    return OmniVoice, VoiceClonePrompt
+# checkpoint = "ckpts/AuK/auk_base.safetensors"
+# config = "ckpts/AuK/config.yaml"
 
+# Use AuK-Flash instead:
+checkpoint = "ckpts/AuK-Flash/auk_flash.safetensors"
+config = "ckpts/AuK-Flash/config.yaml"
 
-def create_audio_and_free_vram(
-    text, 
-    instruct='female, low pitch, british accent', 
-    ref_audio='',
-    ref_text='',
-    output='temp.wav',
-    max_retries=2,
-    max_duration_seconds=5.0,
-    target_sr=16000,
-    seed=-1,
-    use_whisper=True,
-    persistent_model = None
+engine = AukInfer(
+    config,
+    checkpoint,
+)
+
+def run_auk(
+    instruction,
+    output_path,
+    audio_path=None,
+    gen_seconds=None,
 ):
-    """
-    Generate audio via OmniVoice with robust validation:
-    - RMS check
-    - histogram check
-    - voiced-frame check
-    - optional Whisper semantic verification
-    """
-    OmniVoice, VoiceClonePrompt = _load_omnivoice()
+    content = [{"type": "text", "text": instruction}]
 
-    pt_path = ref_audio.replace('.wav', '.pt')
+    if audio_path is not None:
+        content.append({"type": "audio", "audio": audio_path})
 
-    start_silence_ms = 300
-    end_silence_ms = 500
-    speed = 0.85
-
-    prompt = None
-
-    for attempt in range(1, max_retries + 1):
-        torch.cuda.empty_cache()
-        model = persistent_model or OmniVoice.from_pretrained("k2-fsa/OmniVoice", device_map="cuda:0", dtype=torch.float32)
-
-        if pt_path:
-            if not Path(pt_path).exists():
-                    # Optional reference transcription
-                if ref_audio and not ref_text:
-                    segs = transcribe(ref_audio)
-                    ref_text = " ".join(segs)
-                prompt = model.create_voice_clone_prompt(ref_audio=ref_audio, ref_text=ref_text)
-                prompt.save(pt_path)
-
-            else:
-                prompt = VoiceClonePrompt.load(pt_path)
-
-        if seed != -1:
-            torch.cuda.manual_seed(seed)
-
-        try:
-            with torch.no_grad():
-                if ref_audio:
-                    audio = model.generate(text=text, voice_clone_prompt=prompt)
-                else:
-                    audio = model.generate(text=text, instruct=instruct, speed=speed)
-
-            # OmniVoice returns numpy -> convert to tensor, move to CPU, fix shape
-            audio_tensor = torch.from_numpy(audio[0]).cpu()
-            if audio_tensor.dim() == 1:
-                audio_tensor = audio_tensor.unsqueeze(0)  # torchaudio expects (channels, samples)
-                
-            torchaudio.save(output, audio_tensor, 24000)
-            input_audio, sr = librosa.load(output, sr=target_sr, mono=True, dtype=np.float32)
-
-            # --- SIGNAL QUALITY VALIDATION ---
-            peak = np.max(np.abs(input_audio))
-            rms = np.sqrt(np.mean(input_audio**2))
-            hist, _ = np.histogram(input_audio, bins=50, range=(-1, 1))
-            nonzero_bins = np.sum(hist > 10)
-            voiced_frames = np.sum(np.abs(input_audio) > 0.02)
-
-            if (
-                peak < 0.02 or
-                rms < 0.005 or
-                nonzero_bins < 5 or
-                voiced_frames < 200 or
-                np.isnan(input_audio).any()
-            ):
-                print(f"⚠️ Low-quality audio (attempt {attempt}), retrying...")
-                continue
-
-            # --- OPTIONAL WHISPER VALIDATION ---
-            if use_whisper:
-                segs = transcribe(output)
-                if len(segs) == 0:
-                    print(f"⚠️ Whisper found no speech (attempt {attempt}), retrying...")
-                    continue
-
-                transcribed = " ".join(segs).strip()
-                if len(transcribed.split()) < 2:
-                    print(f"⚠️ Whisper detected too little content, retrying...")
-                    continue
-
-            # Add silence padding
-            start_samples = int((start_silence_ms / 1000) * sr)
-            end_samples = int((end_silence_ms / 1000) * sr)
-            input_audio = np.concatenate([
-                np.zeros(start_samples),
-                input_audio,
-                np.zeros(end_samples)
-            ])
-
-            # Duration enforcement
-            actual_duration = len(input_audio) / sr
-            if actual_duration > max_duration_seconds:
-                print(f"⚠️ Audio too long ({actual_duration:.2f}s), regenerating with duration cap...")
-
-                with torch.no_grad():
-                    if ref_audio:
-                        audio = model.generate(
-                            text=text, voice_clone_prompt=prompt,
-                            duration=max_duration_seconds
-                        )
-                    else:
-                        audio = model.generate(
-                            text=text, instruct=instruct,
-                            duration=max_duration_seconds
-                        )
-
-                # 🔧 FIX: Convert numpy → tensor, move to CPU, ensure (1, samples) shape
-                audio_tensor = torch.from_numpy(audio[0]).cpu()
-                if audio_tensor.dim() == 1:
-                    audio_tensor = audio_tensor.unsqueeze(0)
-                    
-                torchaudio.save(output, audio_tensor, 24000)
-                input_audio, sr = librosa.load(output, sr=target_sr, mono=True, dtype=np.float32)
-
-                # Re-check RMS + histogram
-                rms = np.sqrt(np.mean(input_audio**2))
-                if rms < 0.005:
-                    print(f"⚠️ Constrained output still weak, retrying...")
-                    continue
-
-            print(f"✅ Clean audio generated (attempt {attempt})")
-
-            if not persistent_model:
-                del model, audio
-                gc.collect()
-                torch.cuda.empty_cache()
-            return input_audio, sr
-
-        except Exception as e:
-            print(traceback.format_exc())
-            print(f"❌ Failed (attempt {attempt}): {e}")
-
-        finally:
-            if not persistent_model:
-                try: del model, audio
-                except: pass
-                gc.collect()
-                torch.cuda.empty_cache()
-
-    raise RuntimeError(f"Failed to generate valid audio ≤{max_duration_seconds}s after {max_retries} retries.")
-
-
-def VoiceDesignSchema():
-    return {
-        "type": "function",
-        "function": {
-            "name": "design_voice",
-            "description": "Generate speech using a synthetic designed voice.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "voice": {
-                        "type": "string",
-                        "description": "Voice description (timbre, pitch, accent, energy, etc.)."
-                    },
-                    "output": {
-                        "type": "string",
-                        "description": "Output WAV file path."
-                    },
-                    "duration": {
-                        "type": "number",
-                        "description": "Optional target duration in seconds default is 10 seconds"
-                    },
-                    "seed": {
-                        "type": "integer",
-                        "description": "Optional seed for deterministic output."
-                    }
-                },
-                "required": ["voice", "output"]
-            }
+    messages = [
+        {
+            "role": "user",
+            "content": content,
         }
-    }
+    ]
 
-def VoiceCloneSchema():
-    return {
-        "type": "function",
-        "function": {
-            "name": "clone_voice",
-            "description": "Generate speech using a cloned voice from reference audio.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "text": {
-                        "type": "string",
-                        "description": "The text to speak."
-                    },
-                    "audio": {
-                        "type": "string",
-                        "description": "Path to reference audio file."
-                    },
-                    "ref_text": {
-                        "type": "string",
-                        "description": "Optional transcription of the reference audio."
-                    },
-                    "output": {
-                        "type": "string",
-                        "description": "Output WAV file path."
-                    },
-                    "seed": {
-                        "type": "integer",
-                        "description": "Optional seed for deterministic output."
-                    }
-                },
-                "required": ["text", "audio", "output"]
-            }
-        }
-    }
-
-def DesignVoice(voice, output, seed=-1, long=False):
-    duration=10.0 if long else 5.0
-    # The actual prompt fed into the model
-    short_text = "The quick, anxious boy judged the rough wizard's vibrant, icy voice..." # as a huge, sharp, mellow echo drifting through the quiet, yellow forest."
-    long_text = "The quick, anxious boy judged the rough wizard's vibrant, icy voice as a huge, sharp, mellow echo drifting through the quiet, yellow forest."
-    text = long_text if long else short_text
-    final_prompt = f"{text} | voice: {voice}"
-    duration=float(duration)
-    seed=int(seed)
-
-    text_array = text.split()
-    if len(text_array) > 24:
-        text = ' '.join(text_array[:24])
-
-    audio, sr = create_audio_and_free_vram(
-        text=text,
-        instruct=voice,
-        output=output,
-        max_duration_seconds=duration,
-        seed=seed,
-        use_whisper=True
+    audio, sr = engine.generate(
+        messages,
+        gen_seconds=gen_seconds,
     )
+    save_audio(audio, sr, output_path)
 
-    actual_duration = len(audio) / sr
-    transcription = " ".join(transcribe(output))
 
-    description = (
-        f"Designed voice.\n"
-        f"Voice style: {voice}\n"
-        f"Duration: {actual_duration:.2f} seconds\n"
-        f"Transcription: \"{transcription}\""
-    )
-
-    return {
-        "status": "success",
-        "description": description,
-        "output_path": output,
-        "prompt": final_prompt
-    }
-
-class DialogSession:
-    def __init__(self):
-        self.model = None
-
-    def __enter__(self):
-        OmniVoice, VoiceClonePrompt = _load_omnivoice()
-        self.model = OmniVoice.from_pretrained(
-            "k2-fsa/OmniVoice",
-            device_map="cuda:0",
-            dtype=torch.float32
-        )
-        return self.model
-
-    def __exit__(self, exc_type, exc, tb):
-        try:
-            del self.model
-        except:
-            pass
-        gc.collect()
-        torch.cuda.empty_cache()
 
 def CloneVoice(text, audio, output, duration=5.0, seed=-1, lengthen=True, session=None):
     # The actual prompt fed into the model
@@ -335,15 +144,11 @@ def CloneVoice(text, audio, output, duration=5.0, seed=-1, lengthen=True, sessio
     if lengthen and len(text.split(' ')) < 5:
         text = f"{text} ... Random words added for length."
 
-    _audio, sr = create_audio_and_free_vram(
-        text=text,
-        ref_audio=audio,
-        ref_text='',
-        output=output,
-        max_duration_seconds=duration,
-        seed=seed,
-        use_whisper=lengthen,
-        persistent_model=session
+    run_auk(
+        f"Say the following with the same voice: '{text}",
+        audio,
+        audio_path=output,
+        gen_seconds=duration,
     )
 
     actual_duration = len(_audio) / sr
@@ -352,7 +157,7 @@ def CloneVoice(text, audio, output, duration=5.0, seed=-1, lengthen=True, sessio
     description = (
         f"Cloned voice.\n"
         f"Reference audio: {audio}\n"
-        f"Duration: {actual_duration:.2f} seconds\n"
+        f"Duration: {duration} seconds\n"
         f"Transcription: \"{transcription}\""
     )
 
@@ -362,6 +167,73 @@ def CloneVoice(text, audio, output, duration=5.0, seed=-1, lengthen=True, sessio
         "output_path": output,
         "prompt": final_prompt
     }
+
+def DesignVoice(voice=None, output='output.wav', seed=-1, long=False):
+    duration=10.0 if long else 5.0
+    short_text = "The quick, anxious boy judged the rough wizard's vibrant, icy voice..." # as a huge, sharp, mellow echo drifting through the quiet, yellow forest."
+    long_text = "The quick, anxious boy judged the rough wizard's vibrant, icy voice as a huge, sharp, mellow echo drifting through the quiet, yellow forest."
+    text_to_speak = long_text if long else short_text
+    style_desc = (
+        '"A woman in her twenties, speaking softly to her partner who just arrived home. '
+        'Her tone is gentle, caring, and slightly playful. '
+        'Her voice is soft, intimate, with a slightly slower speech rate and moderate volume. '
+        'The timbre is sweet and natural, featuring a warm, upward inflection at the end of phrases." '
+        )
+    language = "en"
+
+    # 2. Calculate F5 baseline
+    f5_duration = estimate_f5_baseline_duration(text_to_speak, language)
+    print(f"F5 Baseline Duration: {f5_duration:.2f}s")
+    llm_payload = {
+        "items": [
+            {
+                "key": "request",
+                "language": language,
+                "content": text_to_speak,
+                "style_instruction": style_desc,
+                "f5_duration_sec": round(f5_duration, 6),
+            }
+        ]
+    }
+    final_duration = f5_duration
+    instruction = build_auk_prompt(voice, text_to_speak)
+
+    # Use the LLM-refined duration
+    run_auk(instruction, output, gen_seconds=final_duration)
+
+    description = (
+        f"Designed voice.\n"
+        f"Voice style: {style_desc}\n"
+        f"Duration: {final_duration:.2f} seconds\n"
+        f"Transcription: \"{text_to_speak}\""
+    )
+
+    return {
+        "status": "success",
+        "description": description,
+        "output_path": output,
+        "prompt": voice
+    }
+
+def main():
+    import argparse, math
+    import sys, json
+    from pathlib import Path
+    parser = argparse.ArgumentParser(
+                    prog='GenerateDialog',
+                    description='Generate voices with dialog',
+                    epilog='')
+    parser.add_argument('-E', '--seed', type=int, default=42, help='seed')
+    parser.add_argument('-I', '--instruct', type=str, default='female, low pitch, british accent', help='instructions for voice')
+    parser.add_argument('-O', '--output', type=str, default='output.wav', help='output filename')
+    parser.add_argument('-L', '--long', action='store_true', help='increased duration for designed voice')
+    args = parser.parse_args()
+
+    DesignVoice(args.instruct, args.output, args.seed, args.long)
+
+
+if __name__ == '__main__':
+    main()
 
 def main():
     import argparse, math
@@ -400,7 +272,7 @@ def main():
             Path(args.output).write_text(f'{math.ceil(dur)}|{str(output).strip()}')
         print(f'Duration: {math.ceil(dur)} seconds, Text: "{str(output).strip()}"')
     else:
-        create_audio_and_free_vram(args.text, args.instruct, args.ref_audio, '', args.output, 2, args.duration, 16000, args.seed, args.no_whisper)
+        CloneVoice(args.text, args.ref_audio, args.output, duration=args.duration, seed=args.seed, lengthen=args.long, session=None)
 
 if __name__ == '__main__':
     main()

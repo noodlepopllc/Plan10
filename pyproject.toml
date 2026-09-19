@@ -12,7 +12,6 @@ dependencies = [
     "bitsandbytes", 
     "opencv-python-headless==4.10.0.84",
     "uniface",
-    "omnivoice",
     "librosa",
     "faster-whisper",
     "spacy_download",
@@ -38,6 +37,12 @@ include = ["plan10*"]
 
 [tool.setuptools.package-data]
 plan10 = ["system/*.txt"]
+
+[project.optional-dependencies]
+omni = [
+    "omnivoice"
+]
+
 
 [project.scripts]
 config = "plan10.lib.config:main"

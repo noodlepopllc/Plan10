@@ -7,6 +7,39 @@ import soundfile as sf
 
 from PIL.PngImagePlugin import PngInfo
 
+class Transcription(object):
+    def __init__(self, language, probability):
+        self.language = language
+        self.language_probability = probability
+        self.details = []
+
+    def add_detail(self, start, end, text):
+        self.details.append({"start":start,"end":end,"text":text})
+
+    def __str__(self):
+        text = ''
+        text += "Detected language '%s' with probability %f\n" % (self.language, self.language_probability)
+        for detail in self.details:
+            text += "[%.2fs -> %.2fs] %s\n" % (detail['start'], detail['end'], detail['text'])
+        return text
+
+
+def transcribe(path, detailed=False):
+
+    model_size = "large-v3"
+
+    model = WhisperModel(model_size, device="cpu", compute_type="int8")
+
+    segments, info = model.transcribe(path, beam_size=5)
+
+    transcription = Transcription(info.language, info.language_probability)
+    
+    segs = []
+    for segment in segments:
+        transcription.add_detail(segment.start, segment.end, segment.text)
+        segs.append(segment.text)
+    return transcription if detailed else segs
+
 def load_metadata(img):
     metadata = PngInfo()
     for key, value in img.info.items():
