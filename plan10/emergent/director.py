@@ -72,6 +72,7 @@ class Director:
         
         return result
 
+    '''
         
     def analyze_reality_smol(self, media_path, intended_action, width, height, output_dir):
         media_path = Path(media_path)
@@ -208,8 +209,6 @@ class Director:
         )['analysis']
 
         return self._clean_analysis(result)
-
-    '''
 
     def compare_and_decide(self, intended_action, actual_reality, story_context, history, 
                         pending_setup, goal=None, force_transition=False, 
