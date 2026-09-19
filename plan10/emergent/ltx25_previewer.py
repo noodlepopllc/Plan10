@@ -4,6 +4,8 @@ load_config()
 from plan10.lib.image_analysis import AnalyzeImage
 import re, os, math
 
+BACKEND=os.environ.get('VISION_BACKEND','qwen')
+
 BG_PROMPT = """
 Describe only what is visible in the image in 80–120 words.
 
@@ -47,7 +49,7 @@ Use ONLY these slots. Do not reorder them.
 
 
 class LTXPipeline:
-    def __init__(self, backend='smol', temperature=0.4, max_tokens=2048):
+    def __init__(self, backend=BACKEND, temperature=0.4, max_tokens=2048):
         self.backend = backend
         self.temperature = temperature
         self.max_tokens = max_tokens

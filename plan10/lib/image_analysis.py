@@ -165,7 +165,7 @@ def load_smol_vlm():
             model_id,
             torch_dtype=torch.bfloat16
         ).to("cuda")
-        _smol_model.config.pad_token_id = _smol_model.config.eos_token_id
+        _smol_model.config.pad_token_id = _smol_processor.tokenizer.eos_token_id
         
         print(f"✓ SmolVLM2 loaded on cuda")
     
