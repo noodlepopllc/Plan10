@@ -231,7 +231,10 @@ def AnalyzeMediaQwenOmni(
     Qwen2.5-Omni-3B image/video analyzer.
     No audio, no TTS, pure text output. Loads, runs, unloads.
     """
-    model_id = "Qwen/Qwen2.5-Omni-3B"
+    if (base / 'ckpts/Qwen2.5-Omni-3B').exists():
+        model_id = str(base / 'ckpts/Qwen2.5-Omni-3B')
+    else:
+        model_id = "Qwen/Qwen2.5-Omni-3B-Instruct"
 
     # 1. Load processor + model (temporary, unloaded after inference)
     processor = Qwen2_5OmniProcessor.from_pretrained(model_id)
