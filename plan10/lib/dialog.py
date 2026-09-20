@@ -59,6 +59,7 @@ def ensure_model(repo, path):
 
         name = pathlib.Path(path).name
 
+    name = pathlib.Path(path).name
     if name.startswith("AuK"):
         print(pathlib.Path(path) / "config.yaml")
         patch_auk_yaml(pathlib.Path(path) / "config.yaml")
