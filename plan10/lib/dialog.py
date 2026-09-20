@@ -31,6 +31,10 @@ import os
 import yaml
 import pathlib
 
+import os
+import yaml
+import pathlib
+
 BASE = pathlib.Path(os.environ["DIFFSYNTH_MODEL_BASE_PATH"])
 CKPTS = BASE / "ckpts"
 
@@ -38,12 +42,19 @@ def patch_auk_yaml(yaml_path):
     with open(yaml_path, "r") as f:
         cfg = yaml.safe_load(f)
 
-    # Fix text encoder path
-    encoder_rel = cfg["text_encoder"]["model_path"]
-    cfg["text_encoder"]["model_path"] = str(CKPTS / encoder_rel)
+    # AuK-Flash uses text_encoder_path
+    if "text_encoder_path" in cfg.get("text_encoder", {}):
+        rel = cfg["text_encoder"]["text_encoder_path"]
+        cfg["text_encoder"]["text_encoder_path"] = str(CKPTS / rel)
+
+    # AuK-Base uses model_path
+    if "model_path" in cfg.get("text_encoder", {}):
+        rel = cfg["text_encoder"]["model_path"]
+        cfg["text_encoder"]["model_path"] = str(CKPTS / rel)
 
     with open(yaml_path, "w") as f:
         yaml.safe_dump(cfg, f)
+
 
 
 def ensure_model(repo, path):
@@ -54,7 +65,6 @@ def ensure_model(repo, path):
 
         if name.startswith("AuK"):
             patch_auk_yaml(Path(path) / "config.yaml")
-
 
 
 ensure_model(auk_base_repo, auk_base_path)
