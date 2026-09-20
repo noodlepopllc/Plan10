@@ -18,8 +18,6 @@ dependencies = [
     "pip",
     "num2words",
     "diffsynth[all]",
-    "audioread",
-    "AuK",
     "faster-qwen3-tts",
     "rembg"
 ]
@@ -41,7 +39,9 @@ plan10 = ["system/*.txt"]
 
 [project.optional-dependencies]
 omni = [
-    "omnivoice"
+    "omnivoice",
+    "audioread",
+    "AuK"
 ]
 
 [project.scripts]
