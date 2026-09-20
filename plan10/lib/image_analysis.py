@@ -256,7 +256,7 @@ def AnalyzeImage(image='', prompt='Describe this.', output=None, backend=None, m
     if not backend:
         backend = os.environ.get("VISION_BACKEND", "qwen" ).lower()
 
-    if is_video:
+    if is_video or backend in ("gemma", "smol"):
 
         if backend == "gemma":
             analysis_text = AnalyzeMediaGemma(image, prompt, max_tokens=max_tokens, temperature=temperature)
