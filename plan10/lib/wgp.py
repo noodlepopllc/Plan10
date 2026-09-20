@@ -4,7 +4,6 @@ load_environ()
 from PIL import Image
 
 import asyncio, logging, os, random, json, math, requests
-from fastmcp import Client
 from time import sleep
 import librosa
 
@@ -42,205 +41,122 @@ tool = "ltx2_25_22B_distilled" if DISTILLED else "ltx2_25_22B"
 def i2v_ltx2(prompt='', media='', end='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
 
-        local_server = "http://locathost:8080"
-        args = requests.get("http://127.0.0.1:8080/defaults/ltx2_25_22B_distilled").json()
+    args = requests.get("http://127.0.0.1:8080/defaults/ltx2_25_22B_distilled").json()
 
-        if media:
-            desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
-            audio_desc = translate_to_audio_prompt(desc)
-            sfx_modifiers = ", realistic sound effects only, crisp SFX, ambient background noise, completely devoid of music, no BGM, no instruments"
-            final_prompt = f"{prompt} {audio_desc} {sfx_modifiers}" if prompt else "ambient sound effects, SFX, absolute no music"
-        else:
-            final_prompt = prompt
-        
-        # Purged "silent or muted audio" to allow empty spaces, heavily punished music architecture
-        negative_prompt = (
-            "text, subtitles, lyrics, captions, on-screen text, logo, " # Text
-            "music, song, soundtrack, singing, talking, speech, voice, "
-            "blurry, out of focus, overexposed, underexposed, low contrast, washed out colors, excessive noise, "
-            "grainy texture, poor lighting, flickering, motion blur, distorted proportions, unnatural skin tones, "
-            "deformed facial features, asymmetrical face, missing facial features, extra limbs, disfigured hands, "
-            "wrong hand count, artifacts around text, inconsistent perspective, camera shake, incorrect depth of "
-            "field, background too sharp, background clutter, distracting reflections, harsh shadows, inconsistent "
-            "lighting direction, color banding, cartoonish rendering, 3D CGI look, unrealistic materials, uncanny "
-            "valley effect, incorrect ethnicity, wrong gender, exaggerated expressions, wrong gaze direction, "
-            "mismatched lip sync, music, background music, BGM, melody, song, soundtrack, musical instruments, synth, "
-            "singing, vocals, rhythm, beats, distorted voice, robotic voice, echo, background noise, off-sync audio, "
-            "incorrect dialogue, added dialogue, repetitive speech, jittery movement, awkward pauses, incorrect timing, "
-            "unnatural transitions, inconsistent framing, tilted camera, flat lighting, inconsistent tone, "
-            "cinematic oversaturation, stylized filters, or AI artifacts."
-        )
-
-
-        args['output_dir'] = f'{os.getcwd()}/{Path(output).parent}'
-        args['output_filename'] = Path(output).name
-        args['prompt'] = final_prompt
-        if media:
-            args['image_prompt_type'] =  'SE' if end else 'S'
-            args['image_start'] = media
-            if end:
-                args['image_end'] = end
-
-        args['resolution'] = f'{width}x{height}'
-        args['video_length'] = (duration_sec * 24) + 1 
-        args["multi_prompts_gen_type"] = "FG"
-        args['num_inference_steps'] = 8 if DISTILLED else 30
-        args['guidance_scale'] = 1.0 if DISTILLED else 3.0
-        args['seed'] = SEED
-        print(args)
-        job_id = requests.post("http://127.0.0.1:8080/run", json=args).json()
-        print(job_id)
-
-        last = ''
-        dedupe_updates = set([])
-        while status := requests.get(f"http://127.0.0.1:8080/status/{job_id}").json()[-1] in ("pending","running"):
-            sleep(5)
-            update = requests.get(f"http://127.0.0.1:8080/updates/{job_id}").json()
-            if update:
-                update = update[0].strip()
-                if update not in dedupe_updates:
-                    dedupe_updates.add(update)
-                    print(update)
-        print(requests.get(f"http://127.0.0.1:8080/status/{job_id}").json()[-2:])
-
-async def i2v_ltx(prompt='', media='', end='', output='output.mp4', 
-                  duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
-    async with Client("http://localhost:7866/mcp") as client:
-
-        r = await client.call_tool("wangp_get_default_settings", {"model_type":tool})
-        results = json.dumps(r.data, indent=4)
-
-        if media:
-            desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
-            audio_desc = translate_to_audio_prompt(desc)
-            sfx_modifiers = ", realistic sound effects only, crisp SFX, ambient background noise, completely devoid of music, no BGM, no instruments"
-            final_prompt = f"{prompt} {audio_desc} {sfx_modifiers}" if prompt else "ambient sound effects, SFX, absolute no music"
-        else:
-            final_prompt = prompt
-        
-        # Purged "silent or muted audio" to allow empty spaces, heavily punished music architecture
-        negative_prompt = (
-            "text, subtitles, lyrics, captions, on-screen text, logo, " # Text
-            "music, song, soundtrack, singing, talking, speech, voice, "
-            "blurry, out of focus, overexposed, underexposed, low contrast, washed out colors, excessive noise, "
-            "grainy texture, poor lighting, flickering, motion blur, distorted proportions, unnatural skin tones, "
-            "deformed facial features, asymmetrical face, missing facial features, extra limbs, disfigured hands, "
-            "wrong hand count, artifacts around text, inconsistent perspective, camera shake, incorrect depth of "
-            "field, background too sharp, background clutter, distracting reflections, harsh shadows, inconsistent "
-            "lighting direction, color banding, cartoonish rendering, 3D CGI look, unrealistic materials, uncanny "
-            "valley effect, incorrect ethnicity, wrong gender, exaggerated expressions, wrong gaze direction, "
-            "mismatched lip sync, music, background music, BGM, melody, song, soundtrack, musical instruments, synth, "
-            "singing, vocals, rhythm, beats, distorted voice, robotic voice, echo, background noise, off-sync audio, "
-            "incorrect dialogue, added dialogue, repetitive speech, jittery movement, awkward pauses, incorrect timing, "
-            "unnatural transitions, inconsistent framing, tilted camera, flat lighting, inconsistent tone, "
-            "cinematic oversaturation, stylized filters, or AI artifacts."
-        )
-
-        args = r.data
-        args['output_filename'] = output
-        args['prompt'] = final_prompt
-        if media:
-            args['image_prompt_type'] =  'SE' if end else 'S'
-            args['image_start'] = media
-            if end:
-                args['image_end'] = end
-
-        args['resolution'] = f'{width}x{height}'
-        args['video_length'] = (duration_sec * 24) + 1 
-        args["multi_prompts_gen_type"] = "FG"
-        args['num_inference_steps'] = 8 if DISTILLED else 30
-        args['guidance_scale'] = 1.0 if DISTILLED else 3.0
-        args['seed'] = SEED
-        print(args)
-        r = await client.call_tool("wangp_generate", {"source": args})
-        print(r.data['job_id'])
-        job_id = r.data['job_id']
-
-        r = await client.call_tool("wangp_get_job", {"job_id": job_id})
-        last = ''
-        if VERBOSE:
-            print("VERBOSE MODE")
-        while not r.data['done']:
-            sleep(5)
-            this = '' 
-            if r.data.get('events',[]):
-                for event in r.data['events']:
-                    if event and event.get('data') and 'text' in event.get('data',''):
-                        if VERBOSE:
-                            this = event['data']['text']
-                        elif '%|' in event['data']['text']:
-                            this = event['data']['text']
-            if this != last:
-                last = this
-                print(this)
-            r = await client.call_tool("wangp_get_job", {"job_id": job_id})
-        print(r.data['result'])
-
-async def i2v_h3(prompt='', media='', end='', output='output.mp4', 
-                  duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
-    async with Client("http://localhost:7866/mcp") as client:
-
-        tool = "minimax_h3_fl2va_pruned"
-
-        r = await client.call_tool("wangp_get_default_settings", {"model_type":tool})
-        results = json.dumps(r.data, indent=4)
-
-        if media:
-            desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
-        else:
-            desc = prompt
+    if media:
+        desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
         audio_desc = translate_to_audio_prompt(desc)
-
-        # Force explicit SFX and ban melody structure in the positive prompt
         sfx_modifiers = ", realistic sound effects only, crisp SFX, ambient background noise, completely devoid of music, no BGM, no instruments"
-        final_prompt = f"{prompt} {audio_desc}" # {sfx_modifiers}" if prompt else "ambient sound effects, SFX, absolute no music"
+        final_prompt = f"{prompt} {audio_desc} {sfx_modifiers}" if prompt else "ambient sound effects, SFX, absolute no music"
+    else:
+        final_prompt = prompt
+    
+    # Purged "silent or muted audio" to allow empty spaces, heavily punished music architecture
+    negative_prompt = (
+        "text, subtitles, lyrics, captions, on-screen text, logo, " # Text
+        "music, song, soundtrack, singing, talking, speech, voice, "
+        "blurry, out of focus, overexposed, underexposed, low contrast, washed out colors, excessive noise, "
+        "grainy texture, poor lighting, flickering, motion blur, distorted proportions, unnatural skin tones, "
+        "deformed facial features, asymmetrical face, missing facial features, extra limbs, disfigured hands, "
+        "wrong hand count, artifacts around text, inconsistent perspective, camera shake, incorrect depth of "
+        "field, background too sharp, background clutter, distracting reflections, harsh shadows, inconsistent "
+        "lighting direction, color banding, cartoonish rendering, 3D CGI look, unrealistic materials, uncanny "
+        "valley effect, incorrect ethnicity, wrong gender, exaggerated expressions, wrong gaze direction, "
+        "mismatched lip sync, music, background music, BGM, melody, song, soundtrack, musical instruments, synth, "
+        "singing, vocals, rhythm, beats, distorted voice, robotic voice, echo, background noise, off-sync audio, "
+        "incorrect dialogue, added dialogue, repetitive speech, jittery movement, awkward pauses, incorrect timing, "
+        "unnatural transitions, inconsistent framing, tilted camera, flat lighting, inconsistent tone, "
+        "cinematic oversaturation, stylized filters, or AI artifacts."
+    )
 
-        frames = (((duration_sec * 24) // 17) * 17) + 5
-        frames = 107 if frames < 107 else frames
+
+    args['output_dir'] = f'{os.getcwd()}/{Path(output).parent}'
+    args['output_filename'] = Path(output).name
+    args['prompt'] = final_prompt
+    if media:
+        args['image_prompt_type'] =  'SE' if end else 'S'
+        args['image_start'] = media
+        if end:
+            args['image_end'] = end
+
+    args['resolution'] = f'{width}x{height}'
+    args['video_length'] = (duration_sec * 24) + 1 
+    args["multi_prompts_gen_type"] = "FG"
+    args['num_inference_steps'] = 8 if DISTILLED else 30
+    args['guidance_scale'] = 1.0 if DISTILLED else 3.0
+    args['seed'] = SEED
+    print(args)
+    job_id = requests.post("http://127.0.0.1:8080/run", json=args).json()
+    print(job_id)
+
+    last = ''
+    dedupe_updates = set([])
+    while status := requests.get(f"http://127.0.0.1:8080/status/{job_id}").json()[-1] in ("pending","running"):
+        sleep(5)
+        update = requests.get(f"http://127.0.0.1:8080/updates/{job_id}").json()
+        if update:
+            update = update[0].strip()
+            if update not in dedupe_updates:
+                dedupe_updates.add(update)
+                print(update)
+    print(requests.get(f"http://127.0.0.1:8080/status/{job_id}").json()[-2:])
 
 
-        args = r.data
-        args['output_filename'] = output
-        args['prompt'] = final_prompt
-        if media or end:
-            args['image_prompt_type'] = ''
-            if media:
-                args['image_start'] = media
-            args['image_prompt_type'] +=  'S'
-            if end:
-                args['image_end'] = end
-                args['image_prompt_type'] +=  'E'
-        args['resolution'] = f'{width}x{height}'
-        args['video_length'] = frames
-        args["activated_loras"] = ["minimax_h3_larryvrh_v4_step600_ema.safetensors"]
-        args["loras_multipliers"] = "1.0|"
-        args["guidance_scale"] = 1
-        args["num_inference_steps"] = 4
-        args["multi_prompts_gen_type"] = "FG"
-        print(args)
-        r = await client.call_tool("wangp_generate", {"source": args})
-        print(r.data['job_id'])
-        job_id = r.data['job_id']
+def i2v_h3(prompt='', media='', end='', output='output.mp4', 
+                  duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
 
-        r = await client.call_tool("wangp_get_job", {"job_id": job_id})
-        last = ''
-        if VERBOSE:
-            print("VERBOSE MODE")
-        while not r.data['done']:
-            sleep(5)
-            this = '' 
-            if r.data.get('events',[]):
-                for event in r.data['events']:
-                    if event and event.get('data') and 'text' in event.get('data',''):
-                        if VERBOSE:
-                            this = event['data']['text']
-                        elif '%|' in event['data']['text']:
-                            this = event['data']['text']
-            if this != last:
-                last = this
-                print(this)
-            r = await client.call_tool("wangp_get_job", {"job_id": job_id})
-        print(r.data['result'])
+
+    tool = "minimax_h3_fl2va_pruned"
+
+    args = requests.get(f"http://127.0.0.1:8080/defaults/{tool}").json()
+
+    if media:
+        desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
+    else:
+        desc = prompt
+    audio_desc = translate_to_audio_prompt(desc)
+
+    # Force explicit SFX and ban melody structure in the positive prompt
+    sfx_modifiers = ", realistic sound effects only, crisp SFX, ambient background noise, completely devoid of music, no BGM, no instruments"
+    final_prompt = f"{prompt} {audio_desc}" # {sfx_modifiers}" if prompt else "ambient sound effects, SFX, absolute no music"
+
+    frames = (((duration_sec * 24) // 17) * 17) + 5
+    frames = 107 if frames < 107 else frames
+
+
+    args['output_dir'] = f'{os.getcwd()}/{Path(output).parent}'
+    args['output_filename'] = Path(output).name
+    args['prompt'] = final_prompt
+    if media or end:
+        args['image_prompt_type'] = ''
+        if media:
+            args['image_start'] = media
+        args['image_prompt_type'] +=  'S'
+        if end:
+            args['image_end'] = end
+            args['image_prompt_type'] +=  'E'
+    args['resolution'] = f'{width}x{height}'
+    args['video_length'] = frames
+    args["activated_loras"] = ["minimax_h3_larryvrh_v4_step600_ema.safetensors"]
+    args["loras_multipliers"] = "1.0|"
+    args["guidance_scale"] = 1
+    args["num_inference_steps"] = 4
+    args["multi_prompts_gen_type"] = "FG"
+    print(args)
+    job_id = requests.post("http://127.0.0.1:8080/run", json=args).json()
+    print(job_id)
+
+    last = ''
+    dedupe_updates = set([])
+    while status := requests.get(f"http://127.0.0.1:8080/status/{job_id}").json()[-1] in ("pending","running"):
+        sleep(5)
+        update = requests.get(f"http://127.0.0.1:8080/updates/{job_id}").json()
+        if update:
+            update = update[0].strip()
+            if update not in dedupe_updates:
+                dedupe_updates.add(update)
+                print(update)
+    print(requests.get(f"http://127.0.0.1:8080/status/{job_id}").json()[-2:])
 
 i2v = i2v_h3 if MMH3 else i2v_ltx2
 
@@ -307,8 +223,8 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
 
         try:
             if MMH3:
-                asyncio.run(i2v(eprompt, f'{os.getcwd()}/tmp.png' if start_image else '', last, Path(output).name, 
-                        duration_sec, width, height, seed))
+                i2v(eprompt, f'{os.getcwd()}/tmp.png' if start_image else '', last, Path(output).name, 
+                        duration_sec, width, height, seed)
             else:
                 i2v(eprompt, f'{os.getcwd()}/tmp.png' if start_image else '', last, output, 
                             duration_sec, width, height, seed)
@@ -338,7 +254,6 @@ def s2v_ltx(prompt='', media='', end_image='', audio='', text='', output='output
 
     model = tool_dialog
 
-    local_server = "http://locathost:8080"
     args = requests.get(f"http://127.0.0.1:8080/defaults/{tool_dialog}").json()
 
     desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
@@ -385,7 +300,7 @@ def s2v_ltx(prompt='', media='', end_image='', audio='', text='', output='output
                 print(update)
     print(requests.get(f"http://127.0.0.1:8080/status/{job_id}").json()[-2:])
 
-async def s2v_h3(prompt='', media='', end_image='', audio='', text='', output='output.mp4', 
+def s2v_h3(prompt='', media='', end_image='', audio='', text='', output='output.mp4', 
                   duration_sec=5, width=WIDTH, height=HEIGHT, seed=-1):
     transcript = ''
     cam_desc = ''
@@ -417,61 +332,52 @@ f''' overall_soundscape: {audio_desc} ''')
 "and distinctive accessories.\n <Audio 1> is the voice timbre reference for <Subject 1>'s voice, containing a spoken voiceover. summary:\n"
 f''' <Picture 1> is the first frame of [Shot 1] static {cam_desc} Camera focuses on <Subject 1> as they speak, keeping them clearly in frame. <Subject 1> remains stationary as they speak (S1) clearly <d>[English] {text} </d> \n'''
 f''' After speaking, <Subject 1> {prompt} They continue to move naturally for the remainder of the video. \n overall_soundscape: {audio_desc} ''') 
-    async with Client("http://localhost:7866/mcp") as client:
 
-        model = "minimax_h3_ref2va_pruned"
+    model = "minimax_h3_ref2va_pruned"
 
-        r = await client.call_tool("wangp_get_default_settings", {"model_type":model})
-        results = json.dumps(r.data, indent=4)
-        print(newprompt if text else lipsync)
+    args = requests.get(f"http://127.0.0.1:8080/defaults/{model}").json()
+    print(newprompt if text else lipsync)
 
-        args = r.data
-        args["activated_loras"] = ["minimax_h3_larryvrh_v4_step600_ema.safetensors"]
-        args["loras_multipliers"] = "1.0|"
-        args['output_filename'] = output
-        args['prompt'] = newprompt if text else lipsync
-        args['image_refs'] = [media, end_image] if end_image else [media]
-        args["audio_guide"] = fixed_audio
-        args["audio_prompt_type"] = "A"
-        args["video_prompt_type"] = "I"
-        args["multi_prompts_gen_type"] = "FG"
-        args["num_inference_steps"] = 8
-        args["guidance_scale"] = 1
-        args["guidance2_scale"] = 5
-        args["guidance3_scale"] = 5
-        args["model_switch_phase"] = 1
-        args["alt_guidance_scale"] = 1
-        args["audio_guidance_scale"] = 1
-        args["audio_scale"] = 1
-        args["sample_solver"] = "euler"
-        args["embedded_guidance_scale"] = 1.5
-        args['resolution'] = f'{width}x{height}'
-        args['video_length'] = (((duration_sec * 24) // 17) * 17) + 5
+    args['output_dir'] = f'{os.getcwd()}/{Path(output).parent}'
+    args['output_filename'] = Path(output).name
+    args["activated_loras"] = ["minimax_h3_larryvrh_v4_step600_ema.safetensors"]
+    args["loras_multipliers"] = "1.0|"
+    args['output_filename'] = output
+    args['prompt'] = newprompt if text else lipsync
+    args['image_refs'] = [media, end_image] if end_image else [media]
+    args["audio_guide"] = fixed_audio
+    args["audio_prompt_type"] = "A"
+    args["video_prompt_type"] = "I"
+    args["multi_prompts_gen_type"] = "FG"
+    args["num_inference_steps"] = 8
+    args["guidance_scale"] = 1
+    args["guidance2_scale"] = 5
+    args["guidance3_scale"] = 5
+    args["model_switch_phase"] = 1
+    args["alt_guidance_scale"] = 1
+    args["audio_guidance_scale"] = 1
+    args["audio_scale"] = 1
+    args["sample_solver"] = "euler"
+    args["embedded_guidance_scale"] = 1.5
+    args['resolution'] = f'{width}x{height}'
+    args['video_length'] = (((duration_sec * 24) // 17) * 17) + 5
 
-        args['resolution'] = f'{width}x{height}'
-        print(args)
-        r = await client.call_tool("wangp_generate", {"source": args})
-        print(r.data['job_id'])
-        job_id = r.data['job_id']
+    args['resolution'] = f'{width}x{height}'
+    print(args)
+    job_id = requests.post("http://127.0.0.1:8080/run", json=args).json()
+    print(job_id)
 
-        r = await client.call_tool("wangp_get_job", {"job_id": job_id})
-        last = ''
-        while r.data and not r.data['done']:
-            sleep(5)
-            this = '' 
-            if 'events' not in r.data:
-                continue
-            for event in r.data['events']:
-                if event['data'] and 'text' in event['data']:
-                    if VERBOSE:
-                        this = event['data']['text']
-                    elif '%|' in event['data']['text']:
-                        this = event['data']['text']
-            if this != last:
-                last = this
-                print(this)
-            r = await client.call_tool("wangp_get_job", {"job_id": job_id})
-        print(r.data['result'])
+    last = ''
+    dedupe_updates = set([])
+    while status := requests.get(f"http://127.0.0.1:8080/status/{job_id}").json()[-1] in ("pending","running"):
+        sleep(5)
+        update = requests.get(f"http://127.0.0.1:8080/updates/{job_id}").json()
+        if update:
+            update = update[0].strip()
+            if update not in dedupe_updates:
+                dedupe_updates.add(update)
+                print(update)
+    print(requests.get(f"http://127.0.0.1:8080/status/{job_id}").json()[-2:])
 
 s2v = s2v_h3 if MMH3 else s2v_ltx
 
