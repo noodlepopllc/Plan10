@@ -27,6 +27,7 @@ auk_flash_path = f"{basepath}/ckpts/AuK-Flash"
 mllm_repo = "Qwen/Qwen2.5-Omni-3B"
 mllm_path = f"{basepath}/ckpts/Qwen2.5-Omni-3B"
 
+
 import os
 import yaml
 import pathlib
@@ -66,8 +67,14 @@ def ensure_model(repo, path):
         if name.startswith("AuK"):
             patch_auk_yaml(Path(path) / "config.yaml")
 
+# checkpoint = "ckpts/AuK/auk_base.safetensors"
+# config = "ckpts/AuK/config.yaml"
+# ensure_model(auk_base_repo, auk_base_path)
 
-ensure_model(auk_base_repo, auk_base_path)
+# Use AuK-Flash instead:
+checkpoint = f"{auk_flash_path}/auk_flash.safetensors"
+config = f"{auk_flash_path}/config.yaml"
+
 ensure_model(auk_flash_repo, auk_flash_path)
 ensure_model(mllm_repo, mllm_path)
 
@@ -156,12 +163,7 @@ def estimate_f5_baseline_duration(text: str, language: str = "en") -> float:
     frames = int(weight * F5_SAMPLE_RATE / F5_HOP_LENGTH / speed_multiplier)
     return frames * F5_HOP_LENGTH / F5_SAMPLE_RATE
 
-# checkpoint = "ckpts/AuK/auk_base.safetensors"
-# config = "ckpts/AuK/config.yaml"
 
-# Use AuK-Flash instead:
-checkpoint = f"{auk_flash_path}/auk_flash.safetensors"
-config = f"{auk_flash_path}/config.yaml"
 
 engine = AukInfer(
     config,
