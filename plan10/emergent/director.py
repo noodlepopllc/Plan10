@@ -282,16 +282,26 @@ ACTUAL SCENE STATE: {actual_reality}
 
 {task_directive}
 
+VALIDATION RULES:
+If ACTUAL SCENE STATE shows duplication, warping, missing intended action, or any visual corruption:
+    MATCH: NO
+    SCENE_TRANSITION: NO
+    NEW_LOCATION:
+    NEXT_ACTION: RETRY_SCENE
+    SETUP: NONE
+    GOAL_PROGRESS: NONE
+    Stop here. Do NOT progress the narrative.
+
 Output format (STRICTLY follow this, no extra text or markdown formatting):
 MATCH: [YES/PARTIAL/NO]
 ISSUES: [none, or specific visual/narrative problem]
 LOCATION: [brief location]
-CHARACTERS: [brief descriptions, including key visual identifiers like hair/clothing color]
+CHARACTERS: [brief descriptions]
 SCENE_TRANSITION: [YES/NO]
-NEW_LOCATION: [if YES, describe the new location in detail for background generation]
-NEXT_ACTION: Describe ONE primary action beat (6-15 seconds). Start from characters' CURRENT physical state. Include: ONE main movement per character, ONE dialogue line max (≤15 words, or none), facial expression/mouth state. Keep it to 2-4 sentences total. No chained actions or micro-gestures.
-SETUP: [what this beat sets up for the next beat]
-GOAL_PROGRESS: [how this action moves toward completing the goal]
+NEW_LOCATION: [if YES]
+NEXT_ACTION: [Describe ONE action beat OR "RETRY_SCENE"]
+SETUP: [description OR "NONE"]
+GOAL_PROGRESS: [description OR "NONE"]
 """
         
         result = llm_analyze_media(
