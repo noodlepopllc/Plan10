@@ -152,11 +152,11 @@ def load_smol_vlm():
     backend = os.environ.get("VISION_BACKEND", "qwen" ).lower()
     if '256' in backend:
         model_id = "HuggingFaceTB/SmolVLM2-256M-Video-Instruct"
-    if '500' in backend:
+    elif '500' in backend:
         model_id = "HuggingFaceTB/SmolVLM2-500M-Video-Instruct"
     else:
         model_id = "HuggingFaceTB/SmolVLM2-2.2B-Instruct"
-    print("USING MODEL_ID: ", model_id)
+    print("USING MODEL_ID: ", model_id, "BACKEND: ", backend)
     processor = AutoProcessor.from_pretrained(model_id)
     model = AutoModelForImageTextToText.from_pretrained(
         model_id,
