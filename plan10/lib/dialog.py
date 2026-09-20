@@ -81,7 +81,7 @@ class DialogSession:
 
     def __enter__(self):
         # Load AuK here
-        self.model = AukInfer(self.config_path, self.checkpoint_path)
+        self.model = AukInfer(self.config_path, self.checkpoint_path, cpu_offload=True)
         return self.model
 
     def __exit__(self, exc_type, exc, tb):
