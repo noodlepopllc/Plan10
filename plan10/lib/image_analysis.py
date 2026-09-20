@@ -5,10 +5,6 @@ import os, re, gc
 import torch
 from pathlib import Path
 
-# Global model cache
-_smol_model = None
-_smol_processor = None
-
 AUDIO_SYSTEM_PROMPT = """
 You are a Sound Design Prompt Generator for an audio diffusion model. 
 Take the visual description provided and translate it into a high-density, action-oriented sound effect prompt.
@@ -151,25 +147,24 @@ def AnalyzeMediaGemma(media='', prompt="Describe this", max_tokens=512, temperat
     return response
 
 def load_smol_vlm():
-    """Load SmolVLM2 model and processor, caching them globally."""
-    global _smol_model, _smol_processor
-    
-    if _smol_model is None:
-        from transformers import AutoProcessor, AutoModelForImageTextToText
-        
+    from transformers import AutoProcessor, AutoModelForImageTextToText
+
+    backend = os.environ.get("VISION_BACKEND", "qwen" ).lower()
+    if '256' in backend:
+        model_id = "HuggingFaceTB/SmolVLM2-256M-Video-Instruct"
+    if '500' in backend:
+        model_id = "HuggingFaceTB/SmolVLM2-500M-Video-Instruct"
+    else:
         model_id = "HuggingFaceTB/SmolVLM2-2.2B-Instruct"
-        print(f"Loading SmolVLM2 model: {model_id}")
-        
-        _smol_processor = AutoProcessor.from_pretrained(model_id)
-        _smol_model = AutoModelForImageTextToText.from_pretrained(
-            model_id,
-            torch_dtype=torch.bfloat16
-        ).to("cuda")
-        _smol_model.config.pad_token_id = _smol_processor.tokenizer.eos_token_id
-        
-        print(f"✓ SmolVLM2 loaded on cuda")
-    
-    return _smol_model, _smol_processor
+    processor = AutoProcessor.from_pretrained(model_id)
+    model = AutoModelForImageTextToText.from_pretrained(
+        model_id,
+        torch_dtype=torch.bfloat16
+    ).to("cuda")
+
+    model.config.pad_token_id = processor.tokenizer.eos_token_id
+    return model, processor
+
 
 def AnalyzeMedia(media='', prompt="Describe this", max_tokens=512, temperature=0.7):
     model, processor = load_smol_vlm()
@@ -203,7 +198,7 @@ def AnalyzeMedia(media='', prompt="Describe this", max_tokens=512, temperature=0
             do_sample=temperature > 0,
             temperature=temperature if temperature > 0 else 1.0,
             max_new_tokens=max_tokens,
-            use_cache=True,   # <-- RESTORED
+            use_cache=True,
         )
 
     generated_text = processor.batch_decode(
@@ -214,9 +209,92 @@ def AnalyzeMedia(media='', prompt="Describe this", max_tokens=512, temperature=0
     # Cleanup
     del inputs
     del generated_ids
+    del model
+    del processor
     torch.cuda.empty_cache()
+    gc.collect()
 
     return generated_text.strip()
+
+def AnalyzeMediaQwenOmni(media='', prompt="Describe this", max_tokens=512, temperature=0.7):
+    """
+    Self-contained Qwen2.5-Omni-3B multimodal analyzer.
+    Loads on demand, analyzes image/video, then unloads to free VRAM.
+    """
+    from transformers import AutoModelForCausalLM, AutoTokenizer, AutoProcessor
+    import torch, gc
+    from pathlib import Path
+
+    base = Path(os.environ.get("DIFFSYNTH_MODEL_BASE_PATH"))
+
+    if (base / 'ckpts/Qwen2.5-Omni-3B').exists():
+        model_id = str(base / 'ckpts/Qwen2.5-Omni-3B')
+    else:
+        model_id = "Qwen/Qwen2.5-Omni-3B-Instruct"
+
+    # 1. Load Qwen processor + model (temporary, unloaded after inference)
+    processor = AutoProcessor.from_pretrained(model_id, trust_remote_code=True)
+    model = AutoModelForCausalLM.from_pretrained(
+        model_id,
+        torch_dtype=torch.bfloat16,
+        device_map="cuda",
+        trust_remote_code=True,
+    )
+
+    # 2. Build multimodal message
+    if not media:
+        # Text-only fallback
+        messages = [{"role": "user", "content": [{"type": "text", "text": prompt}]}]
+    else:
+        media_src = str(Path(media).resolve())
+        ext = Path(media_src).suffix.lower()
+        is_video = ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm']
+
+        messages = [{
+            "role": "user",
+            "content": [
+                {"type": "video" if is_video else "image",
+                 "video" if is_video else "image": media_src},
+                {"type": "text", "text": prompt}
+            ]
+        }]
+
+    # 3. Tokenize
+    inputs = processor.apply_chat_template(
+        messages,
+        tokenize=True,
+        return_tensors="pt",
+        add_generation_prompt=True,
+    ).to(model.device)
+
+    # 4. Generate
+    with torch.inference_mode():
+        outputs = model.generate(
+            **inputs,
+            max_new_tokens=max_tokens,
+            do_sample=temperature > 0,
+            temperature=temperature if temperature > 0 else 1.0,
+        )
+
+    # 5. Decode
+    input_len = inputs["input_ids"].shape[-1]
+    response = processor.decode(outputs[0][input_len:], skip_special_tokens=True).strip()
+
+    # 6. Cleanup (critical)
+    try:
+        del inputs
+        del outputs
+        model.to("cpu")
+        del model
+        del processor
+        gc.collect()
+        torch.cuda.empty_cache()
+    except:
+        pass
+
+    return response
+
+
 
 def AnalyzeImageSchema():
     return  {
@@ -256,10 +334,13 @@ def AnalyzeImage(image='', prompt='Describe this.', output=None, backend=None, m
     if not backend:
         backend = os.environ.get("VISION_BACKEND", "qwen" ).lower()
 
-    if is_video or backend in ("gemma", "smol"):
+    if is_video or backend.startswith("gemma") or backend.startswith("smol") or backend.startswith("omni"):
 
-        if backend == "gemma":
+        if backend.startswith("gemma"):
             analysis_text = AnalyzeMediaGemma(image, prompt, max_tokens=max_tokens, temperature=temperature)
+            status = {'analysis': analysis_text}
+        elif backend.startswith("omni"):
+            analysis_text = AnalyzeMediaQwenOmni(image, prompt, max_tokens=max_tokens, temperature=temperature)
             status = {'analysis': analysis_text}
         else:
             analysis_text = AnalyzeMedia(image, prompt, max_tokens=max_tokens, temperature=temperature)
