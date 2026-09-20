@@ -216,101 +216,6 @@ def AnalyzeMedia(media='', prompt="Describe this", max_tokens=512, temperature=0
 
     return generated_text.strip()
 
-import gc
-import torch
-from pathlib import Path
-from transformers import Qwen2_5OmniForConditionalGeneration, Qwen2_5OmniProcessor
-
-'''
-
-    base = Path(os.environ.get("DIFFSYNTH_MODEL_BASE_PATH"))
-
-    if (base / 'ckpts/Qwen2.5-Omni-3B').exists():
-        model_id = str(base / 'ckpts/Qwen2.5-Omni-3B')
-    else:
-        model_id = "Qwen/Qwen2.5-Omni-3B-Instruct"
-'''
-
-import gc
-import torch
-from pathlib import Path
-from transformers import Qwen2_5OmniForConditionalGeneration, Qwen2_5OmniProcessor
-
-def AnalyzeMediaQwenOmni(media, prompt, max_tokens=512, temperature=0.7):
-    base = Path(os.environ.get("DIFFSYNTH_MODEL_BASE_PATH"))
-
-    if (base / 'ckpts/Qwen2.5-Omni-3B').exists():
-        model_id = str(base / 'ckpts/Qwen2.5-Omni-3B')
-    else:
-        model_id = "Qwen/Qwen2.5-Omni-3B-Instruct"
-
-    processor = Qwen2_5OmniProcessor.from_pretrained(model_id)
-    model = Qwen2_5OmniForConditionalGeneration.from_pretrained(
-        model_id,
-        torch_dtype=torch.bfloat16,
-        device_map="cuda",
-    )
-
-    media_path = str(Path(media).resolve())
-    ext = Path(media_path).suffix.lower()
-    is_video = ext in [".mp4", ".avi", ".mov", ".mkv", ".webm"]
-
-    conversation = [
-        {
-            "role": "user",
-            "content": [
-                {
-                    "type": "video" if is_video else "image",
-                    "video" if is_video else "image": media_path,
-                },
-                {"type": "text", "text": prompt},
-            ],
-        }
-    ]
-
-    text = processor.apply_chat_template(
-        conversation,
-        add_generation_prompt=True,
-        tokenize=False,
-    )
-
-    inputs = processor(
-        text=text,
-        images=[media_path] if not is_video else None,
-        videos=[media_path] if is_video else None,
-        audio=None,
-        return_tensors="pt",
-        padding=True,
-        use_audio_in_video=False,
-    ).to(model.device).to(model.dtype)
-
-    with torch.inference_mode():
-        text_ids, _ = model.generate(
-            **inputs,
-            max_new_tokens=max_tokens,
-            do_sample=temperature > 0,
-            temperature=temperature if temperature > 0 else 1.0,
-            use_audio_in_video=False,
-        )
-
-    out = processor.batch_decode(
-        text_ids,
-        skip_special_tokens=True,
-        clean_up_tokenization_spaces=False,
-    )[0].strip()
-
-    try:
-        del inputs, text_ids, model, processor
-        gc.collect()
-        torch.cuda.empty_cache()
-    except:
-        pass
-
-    return out
-
-
-
-
 def AnalyzeImageSchema():
     return  {
         "type": "function",
@@ -353,9 +258,6 @@ def AnalyzeImage(image='', prompt='Describe this.', output=None, backend=None, m
 
         if backend.startswith("gemma"):
             analysis_text = AnalyzeMediaGemma(image, prompt, max_tokens=max_tokens, temperature=temperature)
-            status = {'analysis': analysis_text}
-        elif backend.startswith("omni"):
-            analysis_text = AnalyzeMediaQwenOmni(image, prompt, max_tokens=max_tokens, temperature=temperature)
             status = {'analysis': analysis_text}
         else:
             analysis_text = AnalyzeMedia(image, prompt, max_tokens=max_tokens, temperature=temperature)
