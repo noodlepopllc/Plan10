@@ -335,8 +335,10 @@ class Pipeline:
 
                 elif reason_code == "wrong_character":
                     print("  → Character identity issue (props/weapons drifted). Accepting for now...")
+                    if LTX:
+                        current_media, current_bg = recreate(current_media, current_bg, current_state, beat_count)
                     # Don't recreate - just continue and hope it stabilizes
-                    needs_transition = True if LTX else False
+                    needs_transition = False
                     
                 else:
                     if LTX:
