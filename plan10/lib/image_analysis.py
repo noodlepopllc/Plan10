@@ -221,7 +221,7 @@ def AnalyzeMediaQwenOmni(media='', prompt="Describe this", max_tokens=512, tempe
     Self-contained Qwen2.5-Omni-3B multimodal analyzer.
     Loads on demand, analyzes image/video, then unloads to free VRAM.
     """
-    from transformers import AutoModelForCausalLM, AutoTokenizer, AutoProcessor
+    from transformers import AutoModelForCausalLM, AutoTokenizer, AutoProcessor, AutoModel
     import torch, gc
     from pathlib import Path
 
