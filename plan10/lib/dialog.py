@@ -34,6 +34,16 @@ import pathlib
 BASE = pathlib.Path(os.environ["DIFFSYNTH_MODEL_BASE_PATH"])
 CKPTS = BASE / "ckpts"
 
+class DialogSession:
+    def __init__(self):
+        self.model = None
+
+    def __enter__(self):
+        return self.model
+
+    def __exit__(self, exc_type, exc, tb):
+        pass
+
 def patch_auk_yaml(yaml_path):
     with open(yaml_path, "r") as f:
         cfg = yaml.safe_load(f)
