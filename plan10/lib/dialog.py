@@ -34,15 +34,9 @@ import pathlib
 BASE = pathlib.Path(os.environ["DIFFSYNTH_MODEL_BASE_PATH"])
 CKPTS = BASE / "ckpts"
 
-class DialogSession:
-    def __init__(self):
-        self.model = None
-
-    def __enter__(self):
-        return self.model
-
-    def __exit__(self, exc_type, exc, tb):
-        pass
+import torch
+import gc
+from auk.infer.infer_auk import AukInfer
 
 def patch_auk_yaml(yaml_path):
     with open(yaml_path, "r") as f:
@@ -78,6 +72,33 @@ config = f"{auk_flash_path}/config.yaml"
 
 ensure_model(auk_flash_repo, auk_flash_path)
 ensure_model(mllm_repo, mllm_path)
+
+class DialogSession:
+    def __init__(self, config_path=config, checkpoint_path=checkpoint):
+        self.config_path = config_path
+        self.checkpoint_path = checkpoint_path
+        self.model = None
+
+    def __enter__(self):
+        # Load AuK here
+        self.model = AukInfer(self.config_path, self.checkpoint_path)
+        return self.model
+
+    def __exit__(self, exc_type, exc, tb):
+        self.cleanup()
+
+    def cleanup(self):
+        # Clean up GPU
+        try:
+            del self.model
+        except Exception:
+            pass
+
+        self.model = None
+
+        torch.cuda.empty_cache()
+        torch.cuda.synchronize()
+        gc.collect()
 
 
 def parse_omnivoice(desc: str):
@@ -165,17 +186,12 @@ def estimate_f5_baseline_duration(text: str, language: str = "en") -> float:
     return frames * F5_HOP_LENGTH / F5_SAMPLE_RATE
 
 
-
-engine = AukInfer(
-    config,
-    checkpoint,
-)
-
 def run_auk(
     instruction,
     output_path,
     audio_path=None,
     gen_seconds=None,
+    model=None
 ):
     content = [{"type": "text", "text": instruction}]
 
@@ -189,15 +205,18 @@ def run_auk(
         }
     ]
 
-    audio, sr = engine.generate(
-        messages,
-        gen_seconds=gen_seconds,
-    )
-    save_audio(audio, sr, output_path)
+    if model:
+        audio, sr = model.generate(
+            messages,
+            gen_seconds=gen_seconds,
+        )
+        save_audio(audio, sr, output_path)
 
 def CloneVoice(text, audio, output, duration=5.0, seed=-1, lengthen=True, session=None):
     # The actual prompt fed into the model
-    final_prompt = f"{text} | cloned from: {audio}"
+
+    this_session = session if session else DialogSession()
+
     duration=float(duration)
     seed=int(seed)
 
@@ -220,7 +239,11 @@ def CloneVoice(text, audio, output, duration=5.0, seed=-1, lengthen=True, sessio
         output,
         audio_path=audio,
         gen_seconds=duration,
+        model=session.__enter__()
     )
+
+    if not session:
+        session.cleanup()
 
     transcription = " ".join(transcribe(output)) if lengthen else ''
 
@@ -268,8 +291,9 @@ def DesignVoice(voice=None, output='output.wav', seed=-1, long=False):
     final_duration = f5_duration
     instruction = build_auk_prompt(voice, text_to_speak)
 
-    # Use the LLM-refined duration
-    run_auk(instruction, output, gen_seconds=final_duration)
+    with DialogSession() as session:
+        # Use the LLM-refined duration
+        run_auk(instruction, output, gen_seconds=final_duration, model=session)
 
     description = (
         f"Designed voice.\n"
