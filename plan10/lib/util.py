@@ -8,6 +8,25 @@ from faster_whisper import WhisperModel
 
 from PIL.PngImagePlugin import PngInfo
 
+# Constants extracted directly from pe.config.yaml
+TTS_SEC_PER_UTF8_BYTE = {"en": 0.0656, "zh": 0.0803}
+F5_SHORT_TEXT_BYTE_THRESHOLD = 10
+F5_SHORT_TEXT_SPEED = 0.3
+F5_SAMPLE_RATE = 24000
+F5_HOP_LENGTH = 256
+
+def estimate_f5_baseline_duration(text: str, language: str = "en") -> float:
+    """Replicates _estimate_f5_instruct_duration from pe.py"""
+    # Simple UTF-8 byte weight (sufficient for single-language prompts)
+    byte_count = len(text.encode("utf-8"))
+    weight = byte_count * TTS_SEC_PER_UTF8_BYTE.get(language, 0.0656)
+    
+    # Short text speed adjustment
+    speed_multiplier = F5_SHORT_TEXT_SPEED if byte_count < F5_SHORT_TEXT_BYTE_THRESHOLD else 1.0
+    
+    frames = int(weight * F5_SAMPLE_RATE / F5_HOP_LENGTH / speed_multiplier)
+    return frames * F5_HOP_LENGTH / F5_SAMPLE_RATE
+
 class Transcription(object):
     def __init__(self, language, probability):
         self.language = language

@@ -20,6 +20,7 @@ dependencies = [
     "diffsynth[all]",
     "audioread",
     "AuK",
+    "faster-qwen3-tts",
     "rembg"
 ]
 

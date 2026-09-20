@@ -1,27 +1,81 @@
 from plan10.lib.config import load_config
 load_config()
 
+from auk.infer.infer_auk import AukInfer, save_audio
 from plan10.lib.qwen_llm import llm_analyze_media
-import sys, json, re, torch, gc, librosa
+import sys, json, re, librosa
 from plan10.lib.util import transcribe, estimate_f5_baseline_duration
 
-import soundfile as sf
-from qwen_tts import Qwen3TTSModel
 
-# Load the model
+from huggingface_hub import snapshot_download
+import os
 
+basepath = os.environ.get("DIFFSYNTH_MODEL_BASE_PATH","./models")
+
+auk_base_repo = "tencent/AuK"
+auk_base_path = f"{basepath}/ckpts/AuK"
+
+auk_flash_repo = "tencent/AuK-Flash"
+auk_flash_path = f"{basepath}/ckpts/AuK-Flash"
+
+mllm_repo = "Qwen/Qwen2.5-Omni-3B"
+mllm_path = f"{basepath}/ckpts/Qwen2.5-Omni-3B"
+
+import os
+import yaml
+import pathlib
+
+BASE = pathlib.Path(os.environ["DIFFSYNTH_MODEL_BASE_PATH"])
+CKPTS = BASE / "ckpts"
+
+import torch
+import gc
+from auk.infer.infer_auk import AukInfer
+
+def patch_auk_yaml(yaml_path):
+    with open(yaml_path, "r") as f:
+        cfg = yaml.safe_load(f)
+
+    model = cfg.get("model",{})
+
+    # AuK-Flash uses text_encoder_path
+    if "text_encoder_path" in model.get("text_encoder", {}):
+        rel = model["text_encoder"]["text_encoder_path"]
+        tail = pathlib.Path(rel).name
+        model["text_encoder"]["text_encoder_path"] = str(CKPTS / tail)
+
+    with open(yaml_path, "w") as f:
+        yaml.safe_dump(cfg, f)
+
+
+def ensure_model(repo, path):
+    if not os.path.exists(path):
+        snapshot_download(repo, local_dir=path)
+        name = pathlib.Path(path).name
+
+        if name.startswith("AuK"):
+            patch_auk_yaml(pathlib.Path(path) / "config.yaml")
+
+# checkpoint = "ckpts/AuK/auk_base.safetensors"
+# config = "ckpts/AuK/config.yaml"
+# ensure_model(auk_base_repo, auk_base_path)
+
+# Use AuK-Flash instead:
+checkpoint = f"{auk_flash_path}/auk_flash.safetensors"
+config = f"{auk_flash_path}/config.yaml"
+
+ensure_model(auk_flash_repo, auk_flash_path)
+ensure_model(mllm_repo, mllm_path)
 
 class DialogSession:
-    def __init__(self, model_type="Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"):
-        self.model_type = model_type
+    def __init__(self, config_path=config, checkpoint_path=checkpoint):
+        self.config_path = config_path
+        self.checkpoint_path = checkpoint_path
         self.model = None
 
     def __enter__(self):
-        self.model = Qwen3TTSModel.from_pretrained(
-            self.model_type,
-            device_map="auto",
-            dtype=torch.bfloat16
-        )
+        # Load AuK here
+        self.model = AukInfer(self.config_path, self.checkpoint_path, cpu_offload=True)
         return self.model
 
     def __exit__(self, exc_type, exc, tb):
@@ -39,6 +93,7 @@ class DialogSession:
         torch.cuda.empty_cache()
         torch.cuda.synchronize()
         gc.collect()
+
 
 def parse_omnivoice(desc: str):
     parts = [p.strip().lower() for p in desc.split(",")]
@@ -110,11 +165,36 @@ def build_auk_prompt(desc, text):
 
     return f'请基于下面的描述: "{chinese_style}", 生成语音内容 "{text}".'
 
+def run_auk(
+    instruction,
+    output_path,
+    audio_path=None,
+    gen_seconds=None,
+    model=None
+):
+    content = [{"type": "text", "text": instruction}]
+
+    if audio_path is not None:
+        content.append({"type": "audio", "audio": audio_path})
+
+    messages = [
+        {
+            "role": "user",
+            "content": content,
+        }
+    ]
+
+    if model:
+        audio, sr = model.generate(
+            messages,
+            gen_seconds=gen_seconds,
+        )
+        save_audio(audio, sr, output_path)
 
 def CloneVoice(text, audio, output, duration=5.0, seed=-1, lengthen=True, session=None):
     # The actual prompt fed into the model
 
-    this_session = session if session else DialogSession( "Qwen/Qwen3-TTS-12Hz-1.7B-Base")
+    this_session = session if session else DialogSession()
 
     duration=float(duration)
     seed=int(seed)
@@ -128,28 +208,25 @@ def CloneVoice(text, audio, output, duration=5.0, seed=-1, lengthen=True, sessio
     if duration is None:
         duration = estimate
 
+    # If user DID specify a duration, blend or respect it
     else:
         duration = max(duration, estimate)
 
-    ref_audio = "https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen3-TTS-Repo/clone.wav"
-    ref_text  = "Okay. Yeah. I resent you. I love you. I respect you. But you know what? You blew it! And thanks to you."
 
-    wavs, sr = this_session.__enter__().generate_voice_clone(
-        text=text,
-        language="English",
-        ref_audio=audio,
-        ref_text=' '.join(transcribe(audio)),
+    run_auk(
+        f"Say the following with the same voice: '{text}",
+        output,
+        audio_path=audio,
+        gen_seconds=duration,
+        model=session.__enter__()
     )
-    sf.write(output, wavs[0], sr)
-
-    duration = round(librosa.get_duration(path=output), 2)
-
-    transcription = ' '.join(transcribe(output))
-
 
     if not session:
         this_session.cleanup()
 
+    transcription = " ".join(transcribe(output)) if lengthen else ''
+
+    duration = round(librosa.get_duration(path=output), 2)
 
     description = (
         f"Cloned voice.\n"
@@ -162,7 +239,7 @@ def CloneVoice(text, audio, output, duration=5.0, seed=-1, lengthen=True, sessio
         "status": "success",
         "description": description,
         "output_path": output,
-        "prompt": text
+        "prompt": final_prompt
     }
 
 def DesignVoice(voice=None, output='output.wav', seed=-1, long=False):
@@ -170,27 +247,40 @@ def DesignVoice(voice=None, output='output.wav', seed=-1, long=False):
     short_text = "The quick, anxious boy judged the rough wizard's vibrant, icy voice..." # as a huge, sharp, mellow echo drifting through the quiet, yellow forest."
     long_text = "The quick, anxious boy judged the rough wizard's vibrant, icy voice as a huge, sharp, mellow echo drifting through the quiet, yellow forest."
     text_to_speak = long_text if long else short_text
-    language = "English"
+    style_desc = (
+        '"A woman in her twenties, speaking softly to her partner who just arrived home. '
+        'Her tone is gentle, caring, and slightly playful. '
+        'Her voice is soft, intimate, with a slightly slower speech rate and moderate volume. '
+        'The timbre is sweet and natural, featuring a warm, upward inflection at the end of phrases." '
+        )
+    language = "en"
 
     # 2. Calculate F5 baseline
     f5_duration = estimate_f5_baseline_duration(text_to_speak, language)
-
+    print(f"F5 Baseline Duration: {f5_duration:.2f}s")
+    llm_payload = {
+        "items": [
+            {
+                "key": "request",
+                "language": language,
+                "content": text_to_speak,
+                "style_instruction": style_desc,
+                "f5_duration_sec": round(f5_duration, 6),
+            }
+        ]
+    }
     final_duration = f5_duration
     instruction = build_auk_prompt(voice, text_to_speak)
 
-    with DialogSession("Qwen/Qwen3-TTS-12Hz-1.7B-VoiceDesign") as session:
-        wavs, sr = session.generate_voice_design(
-            text=text_to_speak,
-            language=language,
-            instruct=instruction,
-        )
-        sf.write(output, wavs[0], sr)
+    with DialogSession() as session:
+        # Use the LLM-refined duration
+        run_auk(instruction, output, gen_seconds=final_duration, model=session)
 
     duration = round(librosa.get_duration(path=output), 2)
 
     description = (
         f"Designed voice.\n"
-        f"Voice style: {instruction}\n"
+        f"Voice style: {style_desc}\n"
         f"Duration: {duration:.2f} seconds\n"
         f"Transcription: \"{text_to_speak}\""
     )
@@ -201,6 +291,26 @@ def DesignVoice(voice=None, output='output.wav', seed=-1, long=False):
         "output_path": output,
         "prompt": voice
     }
+
+def main():
+    import argparse, math
+    import sys, json
+    from pathlib import Path
+    parser = argparse.ArgumentParser(
+                    prog='GenerateDialog',
+                    description='Generate voices with dialog',
+                    epilog='')
+    parser.add_argument('-E', '--seed', type=int, default=42, help='seed')
+    parser.add_argument('-I', '--instruct', type=str, default='female, low pitch, british accent', help='instructions for voice')
+    parser.add_argument('-O', '--output', type=str, default='output.wav', help='output filename')
+    parser.add_argument('-L', '--long', action='store_true', help='increased duration for designed voice')
+    args = parser.parse_args()
+
+    DesignVoice(args.instruct, args.output, args.seed, args.long)
+
+
+if __name__ == '__main__':
+    main()
 
 def main():
     import argparse, math
