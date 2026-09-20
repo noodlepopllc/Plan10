@@ -254,14 +254,16 @@ def AnalyzeImage(image='', prompt='Describe this.', output=None, backend=None, m
     is_video = ext in ['.mp4', '.avi', '.mov', '.mkv', '.webm']
 
     if not backend:
-        backend = os.environ.get("VISION_BACKEND", "smol" if is_video else "qwen" ).lower()
-    
-    if backend == "smol":
-        analysis_text = AnalyzeMedia(image, prompt, max_tokens=max_tokens, temperature=temperature)
-        status = {'analysis': analysis_text}
-    elif backend == "gemma":
-        analysis_text = AnalyzeMediaGemma(image, prompt, max_tokens=max_tokens, temperature=temperature)
-        status = {'analysis': analysis_text}
+        backend = os.environ.get("VISION_BACKEND", "qwen" ).lower()
+
+    if is_video:
+
+        if backend == "gemma":
+            analysis_text = AnalyzeMediaGemma(image, prompt, max_tokens=max_tokens, temperature=temperature)
+            status = {'analysis': analysis_text}
+        else backend == "smol":
+            analysis_text = AnalyzeMedia(image, prompt, max_tokens=max_tokens, temperature=temperature)
+            status = {'analysis': analysis_text}
     else:
         # Default to Qwen
         status = llm_analyze_media(image, prompt, max_tokens=max_tokens, temperature=temperature)
