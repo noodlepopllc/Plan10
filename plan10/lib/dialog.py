@@ -27,11 +27,6 @@ auk_flash_path = f"{basepath}/ckpts/AuK-Flash"
 mllm_repo = "Qwen/Qwen2.5-Omni-3B"
 mllm_path = f"{basepath}/ckpts/Qwen2.5-Omni-3B"
 
-
-import os
-import yaml
-import pathlib
-
 import os
 import yaml
 import pathlib
@@ -62,10 +57,10 @@ def ensure_model(repo, path):
     if not os.path.exists(path):
         snapshot_download(repo, local_dir=path)
 
-        name = Path(path).name
+        name = pathlib.Path(path).name
 
         if name.startswith("AuK"):
-            patch_auk_yaml(Path(path) / "config.yaml")
+            patch_auk_yaml(pathlib.Path(path) / "config.yaml")
 
 # checkpoint = "ckpts/AuK/auk_base.safetensors"
 # config = "ckpts/AuK/config.yaml"
