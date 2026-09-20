@@ -194,6 +194,7 @@ class Pipeline:
 
         # FIRST BEAT: Store initial media and animate directly
         if not history:
+            current_media, current_bg = recreate(current_media, current_bg, current_state, beat_count)
             self.initial_media = str(current_media)
             print("🎬 First beat - animating initial scene...")
             
