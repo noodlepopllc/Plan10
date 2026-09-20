@@ -221,16 +221,22 @@ import torch
 from pathlib import Path
 from transformers import Qwen2_5OmniForConditionalGeneration, Qwen2_5OmniProcessor
 
-def AnalyzeMediaQwenOmni(
-    media='',
-    prompt="Describe this",
-    max_tokens=512,
-    temperature=0.7,
-):
-    """
-    Qwen2.5-Omni-3B image/video analyzer.
-    No audio, no TTS, pure text output. Loads, runs, unloads.
-    """
+'''
+
+    base = Path(os.environ.get("DIFFSYNTH_MODEL_BASE_PATH"))
+
+    if (base / 'ckpts/Qwen2.5-Omni-3B').exists():
+        model_id = str(base / 'ckpts/Qwen2.5-Omni-3B')
+    else:
+        model_id = "Qwen/Qwen2.5-Omni-3B-Instruct"
+'''
+
+import gc
+import torch
+from pathlib import Path
+from transformers import Qwen2_5OmniForConditionalGeneration, Qwen2_5OmniProcessor
+
+def AnalyzeMediaQwenOmni(media, prompt, max_tokens=512, temperature=0.7):
     base = Path(os.environ.get("DIFFSYNTH_MODEL_BASE_PATH"))
 
     if (base / 'ckpts/Qwen2.5-Omni-3B').exists():
@@ -238,7 +244,6 @@ def AnalyzeMediaQwenOmni(
     else:
         model_id = "Qwen/Qwen2.5-Omni-3B-Instruct"
 
-    # 1. Load processor + model (temporary, unloaded after inference)
     processor = Qwen2_5OmniProcessor.from_pretrained(model_id)
     model = Qwen2_5OmniForConditionalGeneration.from_pretrained(
         model_id,
@@ -246,41 +251,23 @@ def AnalyzeMediaQwenOmni(
         device_map="cuda",
     )
 
-    # 2. Build conversation
-    if not media:
-        conversation = [
-            {
-                "role": "user",
-                "content": [
-                    {"type": "text", "text": prompt},
-                ],
-            }
-        ]
-        images, videos, audios = None, None, None
-    else:
-        media_path = str(Path(media).resolve())
-        ext = Path(media_path).suffix.lower()
-        is_video = ext in [".mp4", ".avi", ".mov", ".mkv", ".webm"]
+    media_path = str(Path(media).resolve())
+    ext = Path(media_path).suffix.lower()
+    is_video = ext in [".mp4", ".avi", ".mov", ".mkv", ".webm"]
 
-        conversation = [
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "video" if is_video else "image",
-                        "video" if is_video else "image": media_path,
-                    },
-                    {"type": "text", "text": prompt},
-                ],
-            }
-        ]
+    conversation = [
+        {
+            "role": "user",
+            "content": [
+                {
+                    "type": "video" if is_video else "image",
+                    "video" if is_video else "image": media_path,
+                },
+                {"type": "text", "text": prompt},
+            ],
+        }
+    ]
 
-        # We explicitly do NOT use audio here
-        audios = None
-        images = [media_path] if not is_video else None
-        videos = [media_path] if is_video else None
-
-    # 3. Prepare text + multimodal inputs
     text = processor.apply_chat_template(
         conversation,
         add_generation_prompt=True,
@@ -289,44 +276,38 @@ def AnalyzeMediaQwenOmni(
 
     inputs = processor(
         text=text,
-        audio=audios,
-        images=images,
-        videos=videos,
+        images=[media_path] if not is_video else None,
+        videos=[media_path] if is_video else None,
+        audio=None,
         return_tensors="pt",
         padding=True,
-        use_audio_in_video=False,  # <- critical: no audio extraction
-    )
-    inputs = inputs.to(model.device).to(model.dtype)
+        use_audio_in_video=False,
+    ).to(model.device).to(model.dtype)
 
-    # 4. Generate (text only)
     with torch.inference_mode():
         text_ids, _ = model.generate(
             **inputs,
             max_new_tokens=max_tokens,
             do_sample=temperature > 0,
             temperature=temperature if temperature > 0 else 1.0,
-            use_audio_in_video=False,  # <- again: no audio
+            use_audio_in_video=False,
         )
 
-    # 5. Decode
-    text_out = processor.batch_decode(
+    out = processor.batch_decode(
         text_ids,
         skip_special_tokens=True,
         clean_up_tokenization_spaces=False,
     )[0].strip()
 
-    # 6. Cleanup
     try:
-        del inputs
-        del text_ids
-        del model
-        del processor
+        del inputs, text_ids, model, processor
         gc.collect()
         torch.cuda.empty_cache()
     except:
         pass
 
-    return text_out
+    return out
+
 
 
 
