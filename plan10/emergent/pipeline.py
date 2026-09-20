@@ -194,6 +194,7 @@ class Pipeline:
 
         # FIRST BEAT: Store initial media and animate directly
         if not history:
+            current_state = f"{' and '.join([x for x in self.visual_ids])} is now visible in the scene, facing the camera in a frontal or 3/4 view."
             current_media, current_bg = self.recreate_frame(current_media, current_bg, current_state, beat_count)
             self.initial_media = str(current_media)
             print("🎬 First beat - animating initial scene...")
@@ -337,6 +338,7 @@ class Pipeline:
                 elif reason_code == "wrong_character":
                     print("  → Character identity issue (props/weapons drifted). Accepting for now...")
                     if LTX:
+                        current_state = f"{' and '.join([x for x in self.visual_ids])} is now visible in the scene, facing the camera in a frontal or 3/4 view."
                         current_media, current_bg = recreate(current_media, current_bg, current_state, beat_count)
                     # Don't recreate - just continue and hope it stabilizes
                     needs_transition = False
