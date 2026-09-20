@@ -233,13 +233,18 @@ def AnalyzeMediaQwenOmni(media='', prompt="Describe this", max_tokens=512, tempe
         model_id = "Qwen/Qwen2.5-Omni-3B-Instruct"
 
     # 1. Load Qwen processor + model (temporary, unloaded after inference)
-    processor = AutoProcessor.from_pretrained(model_id, trust_remote_code=True)
-    model = AutoModelForCausalLM.from_pretrained(
+    processor = AutoProcessor.from_pretrained(
+        model_id,
+        trust_remote_code=True,
+    )
+
+    model = AutoModel.from_pretrained(
         model_id,
         torch_dtype=torch.bfloat16,
         device_map="cuda",
         trust_remote_code=True,
     )
+
 
     # 2. Build multimodal message
     if not media:
