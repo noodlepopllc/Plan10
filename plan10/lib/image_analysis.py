@@ -261,7 +261,7 @@ def AnalyzeImage(image='', prompt='Describe this.', output=None, backend=None, m
         if backend == "gemma":
             analysis_text = AnalyzeMediaGemma(image, prompt, max_tokens=max_tokens, temperature=temperature)
             status = {'analysis': analysis_text}
-        else backend == "smol":
+        else:
             analysis_text = AnalyzeMedia(image, prompt, max_tokens=max_tokens, temperature=temperature)
             status = {'analysis': analysis_text}
     else:
