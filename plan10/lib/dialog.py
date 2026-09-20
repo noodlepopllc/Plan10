@@ -42,15 +42,15 @@ def patch_auk_yaml(yaml_path):
 
     # AuK-Flash uses text_encoder_path
     if "text_encoder_path" in model.get("text_encoder", {}):
-        rel = cfg["text_encoder"]["text_encoder_path"]
+        rel = model["text_encoder"]["text_encoder_path"]
         print("ENCODER PATH: ",rel)
-        cfg["text_encoder"]["text_encoder_path"] = str(CKPTS / rel)
+        model["text_encoder"]["text_encoder_path"] = str(CKPTS / rel)
 
     # AuK-Base uses model_path
     if "model_path" in model.get("text_encoder", {}):
-        rel = cfg["text_encoder"]["model_path"]
+        rel = model["text_encoder"]["model_path"]
         print("ENCODER PATH: ",rel)
-        cfg["text_encoder"]["model_path"] = str(CKPTS / rel)
+        model["text_encoder"]["model_path"] = str(CKPTS / rel)
     cfg["model"] = model
 
     with open(yaml_path, "w") as f:
