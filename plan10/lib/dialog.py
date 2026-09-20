@@ -44,32 +44,19 @@ def patch_auk_yaml(yaml_path):
     if "text_encoder_path" in model.get("text_encoder", {}):
         rel = model["text_encoder"]["text_encoder_path"]
         tail = pathlib.Path(rel).name
-        print("ENCODER PATH: ",tail)
         model["text_encoder"]["text_encoder_path"] = str(CKPTS / tail)
-
-    # AuK-Base uses model_path
-    if "model_path" in model.get("text_encoder", {}):
-        rel = model["text_encoder"]["model_path"]
-        tail = pathlib.Path(rel).name
-        print("ENCODER PATH: ",tail)
-        model["text_encoder"]["model_path"] = str(CKPTS / tail)
-    cfg["model"] = model
 
     with open(yaml_path, "w") as f:
         yaml.safe_dump(cfg, f)
 
 
-
 def ensure_model(repo, path):
     if not os.path.exists(path):
         snapshot_download(repo, local_dir=path)
-
         name = pathlib.Path(path).name
 
-    name = pathlib.Path(path).name
-    if name.startswith("AuK"):
-        print(pathlib.Path(path) / "config.yaml")
-        patch_auk_yaml(pathlib.Path(path) / "config.yaml")
+        if name.startswith("AuK"):
+            patch_auk_yaml(pathlib.Path(path) / "config.yaml")
 
 # checkpoint = "ckpts/AuK/auk_base.safetensors"
 # config = "ckpts/AuK/config.yaml"
