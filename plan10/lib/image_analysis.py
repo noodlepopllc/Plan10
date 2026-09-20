@@ -231,6 +231,8 @@ def AnalyzeMediaQwenOmni(
     Qwen2.5-Omni-3B image/video analyzer.
     No audio, no TTS, pure text output. Loads, runs, unloads.
     """
+    base = Path(os.environ.get("DIFFSYNTH_MODEL_BASE_PATH"))
+
     if (base / 'ckpts/Qwen2.5-Omni-3B').exists():
         model_id = str(base / 'ckpts/Qwen2.5-Omni-3B')
     else:
