@@ -212,39 +212,75 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0, visual_ids=[], char_n
     return script
 
 
+import re
+import unicodedata
+
 def replace_character_names(script, char_names):
-    cndx = 1
-    for name in char_names:
-        # Match whole words only, case-insensitive
-        pattern = re.compile(rf"\b{name}\b", re.IGNORECASE)
-        script = pattern.sub(f"char{cndx}", script)
+    # Normalize Unicode punctuation (curly quotes, fancy apostrophes)
+    script = unicodedata.normalize("NFKC", script)
 
-        # Also match possessive forms: Sora's, Lindsy's
-        pattern_possessive = re.compile(rf"\b{name}'s\b", re.IGNORECASE)
-        script = pattern_possessive.sub(f"char{cndx}'s", script)
+    # Split into quoted and non-quoted segments
+    segments = re.split(r'(".*?"|\'.*?\')', script)
 
-        cndx += 1
+    # Process only non-quoted segments
+    for cndx, name in enumerate(char_names, 1):
+        token = f"char{cndx}"
 
-    return script
+        # Whole-word replacement
+        pattern = re.compile(rf"\b{re.escape(name)}\b", re.IGNORECASE)
 
+        # Possessive replacement (Sora's, Lindsy's)
+        pattern_possessive = re.compile(
+            rf"\b{re.escape(name)}'s\b", re.IGNORECASE
+        )
+
+        for idx, segment in enumerate(segments):
+            # Skip quoted segments entirely
+            if segment and segment[0] in {'"', "'"}:
+                continue
+
+            # Apply replacements only outside quotes
+            segment = pattern.sub(token, segment)
+            segment = pattern_possessive.sub(f"{token}'s", segment)
+            segments[idx] = segment
+
+    return ''.join(segments)
+
+
+
+import re
 
 def normalize_shot_characters(shot_text: str, char_labels: list) -> str:
-    """Replace character names with char tokens in a single shot."""
+    """Replace character names with char tokens in a single shot, excluding quoted strings."""
     result = shot_text
-    
+
     # Sort by length descending to avoid partial replacements
-    # (e.g., "Sarah" before "Sara" if both exist)
     sorted_labels = sorted(char_labels, key=len, reverse=True)
-    
+
+    # Split into quoted and non-quoted segments, keeping quotes
+    # Matches "..." or '...'
+    segments = re.split(r'(".*?"|\'.*?\')', result)
+
+    # Process only non-quoted segments
     for i, label in enumerate(sorted_labels, 1):
-        # Find the original index for this label
         original_index = char_labels.index(label)
         token = f"char{original_index + 1}"
-        
-        # Case-insensitive word boundary replacement
-        result = re.sub(rf'\b{re.escape(label)}\b', token, result, flags=re.IGNORECASE)
-    
-    return result
+
+        for idx, segment in enumerate(segments):
+            # Skip quoted segments (start with " or ')
+            if not segment or segment[0] in {'"', "'"}:
+                continue
+
+            segments[idx] = re.sub(
+                rf'\b{re.escape(label)}\b',
+                token,
+                segment,
+                flags=re.IGNORECASE,
+            )
+
+    # Reassemble the text
+    return ''.join(segments)
+
 
 import os
 
