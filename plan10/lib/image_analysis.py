@@ -156,6 +156,7 @@ def load_smol_vlm():
         model_id = "HuggingFaceTB/SmolVLM2-500M-Video-Instruct"
     else:
         model_id = "HuggingFaceTB/SmolVLM2-2.2B-Instruct"
+    print("USING MODEL_ID: ", model_id)
     processor = AutoProcessor.from_pretrained(model_id)
     model = AutoModelForImageTextToText.from_pretrained(
         model_id,
@@ -254,7 +255,7 @@ def AnalyzeImage(image='', prompt='Describe this.', output=None, backend=None, m
     if not backend:
         backend = os.environ.get("VISION_BACKEND", "qwen" ).lower()
 
-    if is_video or backend.startswith("gemma") or backend.startswith("smol") or backend.startswith("omni"):
+    if is_video or backend.startswith("gemma") or backend.startswith("smol"):
 
         if backend.startswith("gemma"):
             analysis_text = AnalyzeMediaGemma(image, prompt, max_tokens=max_tokens, temperature=temperature)
