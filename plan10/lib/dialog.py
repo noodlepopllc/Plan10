@@ -37,6 +37,7 @@ CKPTS = BASE / "ckpts"
 def patch_auk_yaml(yaml_path):
     with open(yaml_path, "r") as f:
         cfg = yaml.safe_load(f)
+        print(cfg.keys())
 
     # AuK-Flash uses text_encoder_path
     if "text_encoder_path" in cfg.get("text_encoder", {}):
