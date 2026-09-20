@@ -17,7 +17,7 @@ dependencies = [
     "spacy_download",
     "pip",
     "num2words",
-    "diffsynth[all]",
+    "diffsynth[quant]",
     "faster-qwen3-tts",
     "rembg"
 ]
