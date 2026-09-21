@@ -195,6 +195,10 @@ def main():
         traceback.print_exc()
         sys.exit(255)
 
+        # Clean up old completed jobs (keep last 3 for reference)
+    video_queue = [job for job in video_queue if job['status'] in ['pending', 'processing', 'bad render']] + \
+                  [job for job in video_queue if job['status'] == 'complete'][-3:]
+
     if result['video_job']:
         # Add the new video job to the queue
         video_queue.append(result['video_job'])
@@ -206,9 +210,7 @@ def main():
         new_job["output_path"] = f"{output_dir}/beat_{new_job['beat']:03d}.mp4"
         video_queue.append(new_job)
 
-    # Clean up old completed jobs (keep last 3 for reference)
-    video_queue = [job for job in video_queue if job['status'] in ['pending', 'processing', 'bad render']] + \
-                  [job for job in video_queue if job['status'] == 'complete'][-3:]
+
 
     # Save state
     new_state = {
