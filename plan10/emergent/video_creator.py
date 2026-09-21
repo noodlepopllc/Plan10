@@ -191,9 +191,15 @@ def main():
         traceback.print_exc()
         sys.exit(255)
 
-    # Add the new video job to the queue
-    video_queue.append(result['video_job'])
-    
+    if result['video_job']:
+        # Add the new video job to the queue
+        video_queue.append(result['video_job'])
+    else:
+        new_job = video_queue[-1].copy()
+        new_job["status"] = "pending"
+        new_job["beat"] += 1
+        video_queue.append(new_job)
+
     # Clean up old completed jobs (keep last 3 for reference)
     video_queue = [job for job in video_queue if job['status'] in ['pending', 'processing']] + \
                   [job for job in video_queue if job['status'] == 'complete'][-3:]

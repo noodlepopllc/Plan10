@@ -369,6 +369,24 @@ class Pipeline:
                 print(f"\n🎬 Executing Cinematic Transition to: {location}")
                 current_media, current_bg = self.generate_transition_frame(location, beat_count)
                 needs_transition = False
+
+        if match == "NO" or next_action == "RETRY_SCENE":
+            print("\n⛔ Invalid beat — holding beat open and retrying with corrected frame.")
+
+            # Rebuild the frame using the director’s ACTUAL SCENE STATE
+            current_media, current_bg = recreate(current_media, current_bg, actual_reality, beat_count)
+
+            # Do NOT progress the beat
+            return {
+                "beat_count": beat_count,      # same beat
+                "current_media": current_media,
+                "current_bg": current_bg,
+                "history": history,            # unchanged
+                "pending_setup": pending_setup,
+                "needs_transition": False,
+                "video_job": None              # do NOT queue a video
+            }
+
         
         # 9. Format video prompt and queue it
         output_path = self.output_dir / f"beat_{beat_count+1:03d}.mp4"
