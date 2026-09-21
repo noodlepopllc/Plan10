@@ -448,7 +448,8 @@ class SmartVideoPromptBuilder:
         for label, data in self.entities.items():
             if data.get("is_environment"):
                 sub_defs.append(
-                    f"<Subject {data['id']}> is the {label} environment in {data['pic_tag']}, featuring {data['desc']}."
+                    #f"<Subject {data['id']}> is the {label} environment in {data['pic_tag']}, featuring {data['desc']}."
+                    f"<Subject {data['id']}> is the background environment in {data['pic_tag']}, featuring {data['desc']}."
                 )
             else:
                 sub_defs.append(

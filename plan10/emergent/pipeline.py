@@ -378,7 +378,7 @@ class Pipeline:
 
             # Do NOT progress the beat
             return {
-                "beat_count": beat_count,      # same beat
+                "beat_count": beat_count + 1,      # same beat
                 "current_media": current_media,
                 "current_bg": current_bg,
                 "history": history,            # unchanged
