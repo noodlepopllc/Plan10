@@ -297,7 +297,8 @@ class ImageGenQwen2(object):
                 prompt=prompt,
                 seed=seed,
                 height=height,
-                width=width
+                width=width,
+                tiled=(width > 1536 or height > 1536)
             )
         image.save(output)
         return {"status":"success", "output_path":output}
