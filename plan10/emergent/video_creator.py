@@ -150,7 +150,7 @@ def main():
     if not context:
         context = analyze_scene(current_media)
 
-    output_dir = args.output_dir
+    output_dir = args.output
     
     # Initialize Pipeline
     pipeline = Pipeline(refs, args.output, args.width, args.height, args.seed, visual_ids, 
