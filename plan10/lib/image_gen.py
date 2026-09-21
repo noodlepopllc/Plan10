@@ -1,6 +1,7 @@
 from diffsynth.pipelines.flux2_image import Flux2ImagePipeline, ModelConfig
 from diffsynth.pipelines.krea2 import Krea2Pipeline, ModelConfig
 from diffsynth.pipelines.qwen_image import QwenImagePipeline, ModelConfig, FlowMatchScheduler
+from diffsynth.pipelines.qwen_image_21 import QwenImage21Pipeline, ModelConfig
 from diffsynth.pipelines.z_image import ZImagePipeline, ModelConfig
 from diffsynth.pipelines.sensenova_u1_image import SenseNovaU1ImagePipeline, ModelConfig
 import gc
@@ -258,6 +259,57 @@ class ImageGenQwen(object):
         if torch.cuda.is_available():  # ✅ Was `if torch.cuda:` (always truthy)
             torch.cuda.empty_cache()
 
+class ImageGenQwen2(object):
+    def __init__(self,vrlimit=14):
+        if "VRAM" in os.environ:
+            vrlimit = int(os.environ["VRAM"])
+        self.vrlimit = vrlimit
+        self.pipe = None
+
+    def __enter__(self):
+        if not self.pipe:
+            vram_config = {
+                "offload_dtype": "disk",
+                "offload_device": "disk",
+                "onload_dtype": "disk",
+                "onload_device": "disk",
+                "preparing_dtype": torch.bfloat16,
+                "preparing_device": "cuda",
+                "computation_dtype": torch.bfloat16,
+                "computation_device": "cuda"
+            }
+        self.pipe = QwenImage21Pipeline.from_pretrained(
+            torch_dtype=torch.bfloat16,
+            device="cuda",
+            model_configs=[
+                ModelConfig(model_id="Qwen/Qwen-Image-2.1", origin_file_pattern="transformer/diffusion_pytorch_model*.safetensors", **vram_config),
+                ModelConfig(model_id="Qwen/Qwen-Image-2.1", origin_file_pattern="text_encoder/model*.safetensors", **vram_config),
+                ModelConfig(model_id="Qwen/Qwen-Image-2.1", origin_file_pattern="vae/diffusion_pytorch_model*.safetensors", **vram_config),
+            ],
+            processor_config=ModelConfig(model_id="Qwen/Qwen-Image-2.1", origin_file_pattern="processor/"),
+                    vram_limit=self.vrlimit,
+            )
+
+    def generate(self, prompt, output, width, height, seed):
+        if not self.pipe:
+            self.__enter__()
+        image = self.pipe(
+                prompt=prompt,
+                seed=seed,
+                height=height,
+                width=width
+            )
+        image.save(output)
+        return {"status":"success", "output_path":output}
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.__del__()
+
+    def __del__(self):
+        gc.collect()
+        if torch.cuda.is_available():  # ✅ Was `if torch.cuda:` (always truthy)
+            torch.cuda.empty_cache()
+
 class ImageGenKlein(object):
     def __init__(self,vrlimit=14):
         if "VRAM" in os.environ:
@@ -330,6 +382,8 @@ elif os.environ.get("IMAGE_GEN", "KLEIN") == "KREA2":
     ImageGen = ImageGenKrea2
 elif os.environ.get("IMAGE_GEN", "KLEIN") == "SENSENOVA":
     ImageGen = ImageGenSenseNova
+elif os.environ.get("IMAGE_GEN", "KLEIN") == "QWEN2":
+    ImageGen = ImageGenQwen2
 else:
     ImageGen = ImageGenQwen
 

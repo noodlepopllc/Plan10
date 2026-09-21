@@ -1,5 +1,6 @@
 from diffsynth.pipelines.flux2_image import Flux2ImagePipeline, ModelConfig
 from diffsynth.pipelines.qwen_image import QwenImagePipeline, ModelConfig, FlowMatchScheduler
+from diffsynth.pipelines.qwen_image_21 import QwenImage21Pipeline, ModelConfig
 from diffsynth.pipelines.sensenova_u1_image import SenseNovaU1ImagePipeline, ModelConfig
 from PIL import Image
 import random
@@ -217,6 +218,79 @@ class ImageEditQwen(object):
         gc.collect()
         if torch.cuda and torch.cuda.is_available():  # ✅ Was `if torch.cuda:` (always truthy)
             torch.cuda.empty_cache()
+
+class ImageEditQwen2(object):
+    def __init__(self,vrlimit=14):
+        if "VRAM" in os.environ:
+            vrlimit = int(os.environ["VRAM"])
+        self.vrlimit = vrlimit
+        self.pipe = None
+
+    def get_pipe(self):
+        if not self.pipe:
+            self.__enter__()
+        return self.pipe
+    
+    def __enter__(self):
+        if not self.pipe:
+            vram_config = {
+            "offload_dtype": "disk",
+            "offload_device": "disk",
+            "onload_dtype": "disk",
+            "onload_device": "disk",
+            "preparing_dtype": torch.bfloat16,
+            "preparing_device": "cuda",
+            "computation_dtype": torch.bfloat16,
+            "computation_device": "cuda"
+            }
+        self.pipe = QwenImage21Pipeline.from_pretrained(
+            torch_dtype=torch.bfloat16,
+            device="cuda",
+            model_configs=[
+                ModelConfig(model_id="Qwen/Qwen-Image-2.1", origin_file_pattern="transformer/diffusion_pytorch_model*.safetensors", **vram_config),
+                ModelConfig(model_id="Qwen/Qwen-Image-2.1", origin_file_pattern="text_encoder/model*.safetensors", **vram_config),
+                ModelConfig(model_id="Qwen/Qwen-Image-2.1", origin_file_pattern="vae/diffusion_pytorch_model*.safetensors", **vram_config),
+            ],
+            processor_config=ModelConfig(model_id="Qwen/Qwen-Image-2.1", origin_file_pattern="processor/"),
+                        vram_limit=self.vrlimit
+            )
+            return self
+
+    def generate(self, prompt, images, output, width, height, seed):
+        if not self.pipe:
+            self.__enter__()
+        # Safely handle empty/character-only lists
+        edit_images = []
+        for item in images:
+            if isinstance(item, Image.Image):
+                # Already a PIL image → use directly
+                edit_images.append(item.convert("RGB"))
+            elif isinstance(item, str):
+                # File path → load it
+                edit_images.append(Image.open(item).convert("RGB"))
+            else:
+                raise TypeError(f"Unsupported image type: {type(item)}")
+        if seed == -1: seed = random.randint(0, 1000000)
+
+        image = self.pipe(
+            prompt, edit_image=edit_images, seed=seed,
+            height=height, width=width
+        )
+        image.save(output)
+        os.utime(output, None) 
+        status = {"status": "success", "output_path": output, "prompt": prompt, "description": ''}
+        if os.environ['BATCH'] == 'False':
+            analysis = AnalyzeImage(output, "Briefly describe this image, no more than 100 words")
+            status['description'] = analysis['analysis']
+        return status
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.__del__()
+
+    def __del__(self):
+        gc.collect()
+        if torch.cuda and torch.cuda.is_available():  # ✅ Was `if torch.cuda:` (always truthy)
+            torch.cuda.empty_cache()
     
 class ImageEditKlein(object):
     def __init__(self,vrlimit=14):
@@ -375,6 +449,8 @@ if "KLEIN" in os.environ.get("IMAGE_EDIT", "KLEIN"):
     ImageEdit = ImageEditKlein
 elif "SENSENOVA" in os.environ.get("IMAGE_EDIT", "KLEIN"):
     ImageEdit = ImageEditSenseNova
+elif "QWEN2" in os.environ.get("IMAGE_EDIT", "KLEIN"):
+    ImageEdit = ImageEditQwen2
 else:
     ImageEdit = ImageEditQwen
 
