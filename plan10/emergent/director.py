@@ -282,6 +282,21 @@ ACTUAL SCENE STATE: {actual_reality}
 
 {task_directive}
 
+IMPORTANT:
+Identify characters ONLY by:
+- hair color
+- hair style
+- clothing type
+- crown/headpiece
+- face shape
+
+Do NOT infer identity from:
+- pose
+- gesture
+- hand position
+- who is speaking
+- who is gesturing
+
 VALIDATION RULES:
 If ACTUAL SCENE STATE shows duplication, warping, missing intended action, or any visual corruption:
     MATCH: NO
