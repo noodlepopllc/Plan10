@@ -132,7 +132,7 @@ def main():
         visual_ids = [x[0] for x in char_ids]
         char_names = [x[1] for x in char_ids]
         
-        beat_count = 1
+        beat_count = 0
         story_context = args.context
         history = []
         pending_setup = None
