@@ -254,7 +254,7 @@ class ImageEditQwen2(object):
             processor_config=ModelConfig(model_id="Qwen/Qwen-Image-2.1", origin_file_pattern="processor/"),
                         vram_limit=self.vrlimit
             )
-            return self
+        return self
 
     def generate(self, prompt, images, output, width, height, seed):
         if not self.pipe:
