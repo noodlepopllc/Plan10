@@ -246,7 +246,7 @@ def GenerateGraphicSchema():
             }
         }
     }
-GraphicGen = GraphicGenErnie
+GraphicGen = GraphicGenSenseNova
 def GenerateGraphic(prompt='', output='tmp_graphic.png', width=1024, height=1024, seed=SEED, target_video_size='', padding_style='blur'):
     # 1. Enforce model constraints
     w, h = _resolve_resolution(width, height)
