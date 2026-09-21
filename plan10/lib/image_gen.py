@@ -452,11 +452,21 @@ def CreatePortrait(prompt='', reference='', output='character_tmp.png',
     if prompt:
         full_prompt += prompt
 
+    gen = imagegen if imagegen else ImageGen()
+    if isinstance(gen, ImageGenQwen):
+        width, height = (1328, 1328)
+    elif isinstance(gen, ImageGenQwen2):
+        width, height = (2048, 2048)
+    elif isinstance(gen, ImageGenKlein):
+        width, height = (1024, 1024)
+    else:
+        width, height = (1536, 1536)
+
     status = GenerateImage(
         prompt=full_prompt,
         output=str('tmp.png'),
-        width=1024,
-        height=1024,
+        width=width,
+        height=height,
         seed=seed,
         imagegen=igen
     )
@@ -598,6 +608,8 @@ def CreateCharacterSheet(prompt='', output='character_tmp.png', seed=-1, imagege
     gen = imagegen if imagegen else ImageGen()
     if isinstance(gen, ImageGenQwen):
         width, height = override if override else (1328, 1328)
+    elif isinstance(gen, ImageGenQwen2):
+        width, height = override if override else (2048, 2048)
     elif isinstance(gen, ImageGenKlein):
         width, height = override if override else (1024, 1024)
     else:
