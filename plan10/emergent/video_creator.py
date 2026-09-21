@@ -19,6 +19,7 @@ HEIGHT = int(os.environ.get("HEIGHT", "480"))
 SEED = int(os.environ.get("SEED", "-1"))
 ANIME = os.environ.get('ANIME', 'False') != 'False'
 MMH3 = os.environ.get('MMH3', 'False') != 'False'
+QWEN2 = os.environ.get('IMAGE_GEN', 'False') == 'QWEN2'
 
 
 def get_or_create_visual_id(character_image: str, goal: str) -> str:
@@ -104,9 +105,15 @@ def main():
             
         if not args.initial:
             if WIDTH > HEIGHT:
-                GenerateImage(prompt=args.prompt, output=f'{args.output}/improv.png', width=1920, height=1080, seed=args.seed)
+                if QWEN2:
+                    GenerateImage(prompt=args.prompt, output=f'{args.output}/improv.png', width=2752, height=1536, seed=args.seed)
+                else:
+                    GenerateImage(prompt=args.prompt, output=f'{args.output}/improv.png', width=1920, height=1088, seed=args.seed)
             else:
-                GenerateImage(prompt=args.prompt, output=f'{args.output}/improv.png', width=1080, height=1920, seed=args.seed)
+                if QWEN2:
+                    GenerateImage(prompt=args.prompt, output=f'{args.output}/improv.png', width=1536, height=2752, seed=args.seed)
+                else:
+                    GenerateImage(prompt=args.prompt, output=f'{args.output}/improv.png', width=1088, height=1920, seed=args.seed)
             initial = f'{args.output}/improv.png'
             current_media = initial
         else:
