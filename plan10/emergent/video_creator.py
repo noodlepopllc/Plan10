@@ -86,6 +86,8 @@ def main():
         current_bg = state['current_bg']
         goal = state.get('goal')
         duration = state.get('duration')
+        output_dir = state.get('output_dir')
+        
     else:
         scene_mode = args.scene_mode
         first_run = True
@@ -147,6 +149,8 @@ def main():
     context = story_context
     if not context:
         context = analyze_scene(current_media)
+
+    output_dir = args.output_dir
     
     # Initialize Pipeline
     pipeline = Pipeline(refs, args.output, args.width, args.height, args.seed, visual_ids, 
@@ -195,9 +199,11 @@ def main():
         # Add the new video job to the queue
         video_queue.append(result['video_job'])
     else:
+        video_queue[-1]["status"] = "bad render"
         new_job = video_queue[-1].copy()
         new_job["status"] = "pending"
         new_job["beat"] += 1
+        new_job["output_path"] = f"{output_dir}/beat_{new_job['beat']:03d}.mp4"
         video_queue.append(new_job)
 
     # Clean up old completed jobs (keep last 3 for reference)
