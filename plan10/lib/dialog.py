@@ -9,11 +9,11 @@ import soundfile as sf
 
 class DialogSession:
     def __init__(self, model_type="Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"):
-        from qwen_tts import Qwen3TTSModel
         self.model_type = model_type
         self.model = None
 
     def __enter__(self):
+        from qwen_tts import Qwen3TTSModel
         self.model = Qwen3TTSModel.from_pretrained(
             self.model_type,
             device_map="auto",
