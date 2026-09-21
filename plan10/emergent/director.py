@@ -302,6 +302,8 @@ VALIDATION RULES:
 # HARD ERRORS — require full retry
 If ACTUAL SCENE STATE shows:
 - duplicated characters
+- wrong character performing action
+- wrong speaker attribution
 - severe warping/morphing
 - missing intended physical action
 - hallucinated figures
@@ -319,8 +321,6 @@ Then:
 
 # SOFT ERRORS — semantic mismatch, no retry
 If ACTUAL SCENE STATE shows:
-- wrong character performing action
-- wrong speaker attribution
 - expression mismatch
 - tonal inversion
 - missing micro-actions
