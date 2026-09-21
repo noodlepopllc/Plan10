@@ -4,22 +4,12 @@ load_config()
 from plan10.lib.qwen_llm import llm_analyze_media
 import sys, json, re, torch, gc, librosa
 from plan10.lib.util import transcribe, estimate_f5_baseline_duration
-
-import types
-
-# Create a fake flash_attn module
-fake = types.ModuleType("flash_attn")
-sys.modules["flash_attn"] = fake
-
-
+        
 import soundfile as sf
-from qwen_tts import Qwen3TTSModel
-
-# Load the model
-
 
 class DialogSession:
     def __init__(self, model_type="Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"):
+        from qwen_tts import Qwen3TTSModel
         self.model_type = model_type
         self.model = None
 
