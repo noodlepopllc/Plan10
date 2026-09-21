@@ -298,14 +298,41 @@ Do NOT infer identity from:
 - who is gesturing
 
 VALIDATION RULES:
-If ACTUAL SCENE STATE shows duplication, warping, missing intended action, or any visual corruption:
+
+# HARD ERRORS — require full retry
+If ACTUAL SCENE STATE shows:
+- duplicated characters
+- severe warping/morphing
+- missing intended physical action
+- hallucinated figures
+- empty/black frame
+- broken camera angle
+
+Then:
     MATCH: NO
-    SCENE_TRANSITION: NO
-    NEW_LOCATION:
     NEXT_ACTION: RETRY_SCENE
     SETUP: NONE
     GOAL_PROGRESS: NONE
-    Stop here. Do NOT progress the narrative.
+    SCENE_TRANSITION: NO
+    NEW_LOCATION:
+    Stop here.
+
+# SOFT ERRORS — semantic mismatch, no retry
+If ACTUAL SCENE STATE shows:
+- wrong character performing action
+- wrong speaker attribution
+- expression mismatch
+- tonal inversion
+- missing micro-actions
+- gesture misinterpretation
+
+Then:
+    MATCH: PARTIAL
+    NEXT_ACTION: [corrected action]
+    SETUP: [corrected setup]
+    GOAL_PROGRESS: [continue]
+    SCENE_TRANSITION: NO
+
 
 Output format (STRICTLY follow this, no extra text or markdown formatting):
 MATCH: [YES/PARTIAL/NO]
