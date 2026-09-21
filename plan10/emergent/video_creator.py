@@ -207,7 +207,7 @@ def main():
         video_queue.append(new_job)
 
     # Clean up old completed jobs (keep last 3 for reference)
-    video_queue = [job for job in video_queue if job['status'] in ['pending', 'processing']] + \
+    video_queue = [job for job in video_queue if job['status'] in ['pending', 'processing', 'bad render']] + \
                   [job for job in video_queue if job['status'] == 'complete'][-3:]
 
     # Save state
