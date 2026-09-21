@@ -304,7 +304,6 @@ If ACTUAL SCENE STATE shows:
 - duplicated characters
 - wrong character performing action
 - wrong speaker attribution
-- severe warping/morphing
 - missing intended physical action
 - hallucinated figures
 - empty/black frame
@@ -321,6 +320,7 @@ Then:
 
 # SOFT ERRORS — semantic mismatch, no retry
 If ACTUAL SCENE STATE shows:
+- severe warping/morphing
 - expression mismatch
 - tonal inversion
 - missing micro-actions
