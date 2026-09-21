@@ -274,7 +274,7 @@ class ImageGenQwen2(object):
                 "onload_dtype": "disk",
                 "onload_device": "disk",
                 "preparing_dtype": torch.bfloat16,
-                "preparing_device": "cuda",
+                "preparing_device": "cpu",
                 "computation_dtype": torch.bfloat16,
                 "computation_device": "cuda"
             }
