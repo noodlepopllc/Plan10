@@ -921,6 +921,8 @@ def CreateBackground(
     gen = ImageGen()
     if override:
         status = gen.generate(final_prompt, output, override[0], override[1], seed)
+    elif isinstance(gen, ImageGenQwen2):
+        width, height = override if override else (2752, 1536)
     else:
         status = gen.generate(final_prompt, output, 1920, 1080, seed)
     del gen
