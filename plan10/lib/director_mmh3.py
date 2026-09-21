@@ -82,7 +82,7 @@ class PortraitReferenceManager:
         # Picture index: subjects first, then portraits in append order
         picture_index = len(builder.entities) + len(self.portrait_refs) + 1
 
-        self.portrait_refs[label.lower()] = {
+        self.portrait_refs[target_id] = {
             "id": target_id,               # subject ID stays the same
             "path": image_path,
             "pic_tag": f"<Picture {picture_index}>",  # correct picture ID
@@ -614,6 +614,7 @@ def send(prompt, images, audio, output='output.mp4', width=768, height=448, dura
     args["embedded_guidance_scale"] = 1.5
     args['resolution'] = f'{width}x{height}'
     args['video_length'] = (((duration * 24) // 17) * 17) + 5
+    args["custom_settings"] = { "h3_mask_mode": "grouped_rows", "audio_refinement": "enabled" }
     print(args)
     job_id = requests.post("http://127.0.0.1:8080/run", json=args).json()
     print(job_id)
