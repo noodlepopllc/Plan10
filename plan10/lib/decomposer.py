@@ -347,7 +347,8 @@ def decompose_scene(input_image: str, prompt: str, output_dir: str, seed: int = 
         input_image=input_image,
         analysis=analysis,
         output_dir=output_dir,
-        seed=seed
+        seed=seed,
+        fresh=char_count > 2
     )
     
     # Step 4: Save manifest
