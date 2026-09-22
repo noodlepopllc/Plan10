@@ -57,8 +57,6 @@ class ImageGenSenseNova(object):
     def generate(self, prompt, output, width, height, seed):
         if not self.pipe:
             self.__enter__()
-        if seed == -1: 
-            seed = random.randint(0, 1000000)
 
         image = self.pipe(
             prompt=prompt,
@@ -395,7 +393,7 @@ def GenerateImage(prompt='', output='tmp.png', width=WIDTH, height=HEIGHT, seed=
     #prompt = EnhancePrompt('',prompt,'system/QwenImage.txt')['analysis']
     gen = imagegen if imagegen else ImageGen()
     if seed == -1:
-        seed = randint(0, 1000000)
+        seed = random.randint(0, 1000000)
     status = gen.generate(prompt, output, int(width), int(height), int(seed))
     del gen
     status['description'] = ''
