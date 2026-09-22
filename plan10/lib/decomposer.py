@@ -244,7 +244,13 @@ def generate_background(
     env_desc = extract_environment_description(analysis)
 
     # Inject the environment description so the model knows what to draw in the gaps
-    edit_prompt = f"remove people from image. preserve the background environment exactly: {env_desc}. clean background plate, highly detailed background, no people."
+    edit_prompt = f"""remove all people. this is not a portrait. 
+preserve and restore the environment exactly: {env_desc}. 
+reconstruct all background structures, lighting, materials, and geometry 
+behind the removed people. 
+fill erased regions with correct environmental detail. 
+no blank white areas, no empty voids.
+"""
 
     tmp = Image.open(input_image)
     
