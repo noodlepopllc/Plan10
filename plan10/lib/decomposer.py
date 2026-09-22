@@ -228,7 +228,8 @@ def generate_background(
     input_image: str, 
     analysis: str,
     output_dir: Path, 
-    seed: int
+    seed: int,
+    fresh: bool = True
 ) -> dict:
     """
     Generate a clean background plate by compositing and removing people.
@@ -242,25 +243,27 @@ def generate_background(
     bg_output = output_dir / "background.png"
 
     env_desc = extract_environment_description(analysis)
+    if fresh:
+        CreateBackground(prompt=env_desc, output=str(bg_output), seed=SEED, override=(WIDTH,HEIGHT))
+    else:
+        # Inject the environment description so the model knows what to draw in the gaps
+        edit_prompt = f"""remove all people. this is not a portrait. 
+    preserve and restore the environment exactly: {env_desc}. 
+    reconstruct all background structures, lighting, materials, and geometry 
+    behind the removed people. 
+    fill erased regions with correct environmental detail. 
+    no blank white areas, no empty voids.
+    """
 
-    # Inject the environment description so the model knows what to draw in the gaps
-    edit_prompt = f"""remove all people. this is not a portrait. 
-preserve and restore the environment exactly: {env_desc}. 
-reconstruct all background structures, lighting, materials, and geometry 
-behind the removed people. 
-fill erased regions with correct environmental detail. 
-no blank white areas, no empty voids.
-"""
-
-    tmp = Image.open(input_image)
-    
-    EditImage(
-        prompt=edit_prompt,
-        images=[input_image],
-        output=str(bg_output),
-        width=WIDTH,
-        height=HEIGHT
-    )
+        tmp = Image.open(input_image)
+        
+        EditImage(
+            prompt=edit_prompt,
+            images=[input_image],
+            output=str(bg_output),
+            width=WIDTH,
+            height=HEIGHT
+        )
     
     description = add_metadata_loc(str(bg_output))
     
