@@ -294,7 +294,8 @@ class Pipeline:
             print("\n⛔ Invalid beat — holding beat open and retrying with corrected frame.")
 
             # Rebuild the frame using the director’s ACTUAL SCENE STATE
-            #current_media, current_bg = recreate(current_media, current_bg, actual_reality, beat_count)
+            if LTX:
+                current_media, current_bg = recreate(current_media, current_bg, actual_reality, beat_count)
 
             # Do NOT progress the beat
             return {
