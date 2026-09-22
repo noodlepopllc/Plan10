@@ -394,6 +394,8 @@ else:
 def GenerateImage(prompt='', output='tmp.png', width=WIDTH, height=HEIGHT, seed=SEED, imagegen=None):
     #prompt = EnhancePrompt('',prompt,'system/QwenImage.txt')['analysis']
     gen = imagegen if imagegen else ImageGen()
+    if seed == -1:
+        seed = randint(0, 1000000)
     status = gen.generate(prompt, output, int(width), int(height), int(seed))
     del gen
     status['description'] = ''
