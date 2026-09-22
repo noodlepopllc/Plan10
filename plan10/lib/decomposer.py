@@ -142,7 +142,7 @@ def parse_character_count(analysis: str) -> int:
     for line in analysis.split('\n'):
         if line.strip().startswith("CHARACTER_"):
             count += 1
-    return min(count, 2)
+    return min(count, 3)
 
 def generate_character_sheets(
     analysis: str, 
