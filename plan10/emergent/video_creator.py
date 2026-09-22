@@ -105,15 +105,9 @@ def main():
             
         if not args.initial:
             if WIDTH > HEIGHT:
-                if QWEN2:
-                    GenerateImage(prompt=args.prompt, output=f'{args.output}/improv.png', width=2752, height=1536, seed=args.seed)
-                else:
-                    GenerateImage(prompt=args.prompt, output=f'{args.output}/improv.png', width=1920, height=1088, seed=args.seed)
+                GenerateImage(prompt=args.prompt, output=f'{args.output}/improv.png', width=1920, height=1088, seed=args.seed)
             else:
-                if QWEN2:
-                    GenerateImage(prompt=args.prompt, output=f'{args.output}/improv.png', width=1536, height=2752, seed=args.seed)
-                else:
-                    GenerateImage(prompt=args.prompt, output=f'{args.output}/improv.png', width=1088, height=1920, seed=args.seed)
+                GenerateImage(prompt=args.prompt, output=f'{args.output}/improv.png', width=1088, height=1920, seed=args.seed)
             initial = f'{args.output}/improv.png'
             current_media = initial
         else:

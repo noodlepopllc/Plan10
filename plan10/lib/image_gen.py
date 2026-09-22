@@ -298,6 +298,7 @@ class ImageGenQwen2(object):
                 seed=seed,
                 height=height,
                 width=width,
+                num_inference_steps=25,
                 tiled=(width > 1536) or (height > 1536),
                 tile_size = 384,
                 tile_stride = 320
@@ -458,8 +459,6 @@ def CreatePortrait(prompt='', reference='', output='character_tmp.png',
     gen = imagegen if imagegen else ImageGen()
     if isinstance(gen, ImageGenQwen):
         width, height = (1328, 1328)
-    elif isinstance(gen, ImageGenQwen2):
-        width, height = (2048, 2048)
     elif isinstance(gen, ImageGenKlein):
         width, height = (1024, 1024)
     else:
@@ -611,8 +610,6 @@ def CreateCharacterSheet(prompt='', output='character_tmp.png', seed=-1, imagege
     gen = imagegen if imagegen else ImageGen()
     if isinstance(gen, ImageGenQwen):
         width, height = override if override else (1328, 1328)
-    elif isinstance(gen, ImageGenQwen2):
-        width, height = override if override else (2048, 2048)
     elif isinstance(gen, ImageGenKlein):
         width, height = override if override else (1024, 1024)
     else:
@@ -655,10 +652,8 @@ def CreateBackground(prompt='', output='location_tmp.png', seed=-1, override=Non
     gen = ImageGen()
     if isinstance(gen, ImageGenQwen):
         width, height = override if override else (1664,928)
-    elif isinstance(gen, ImageGenQwen2):
-        width, height = override if override else (2752, 1536)
     else:
-        width, height = override if override else (1920,1080)
+        width, height = override if override else (1920,1088)
     status = gen.generate(prompt, output, width, height, seed)
     del gen
     status['description'] = add_metadata_loc(output, final_prompt, seed)
