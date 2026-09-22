@@ -129,7 +129,7 @@ def main():
                 output_dir=args.output,
                 seed=args.seed
             )
-            for p in ['character_1.png', 'character_2.png']:
+            for p in ['character_1.png', 'character_2.png', 'character_3.png']:
                 if Path(f'{args.output}/{p}').exists():
                     refs.append(f'{args.output}/{p}')
                     
