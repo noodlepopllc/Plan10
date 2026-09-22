@@ -298,7 +298,9 @@ class ImageGenQwen2(object):
                 seed=seed,
                 height=height,
                 width=width,
-                tiled=(width > 1536 or height > 1536)
+                tiled=(width > 1536) or (height > 1536),
+                tile_size = 384,
+                tile_stride = 320
             )
         image.save(output)
         return {"status":"success", "output_path":output}
