@@ -111,7 +111,11 @@ def build_auk_prompt(desc, text):
 def CloneVoice(text, audio, output, duration=5.0, seed=-1, lengthen=True, session=None):
     # The actual prompt fed into the model
 
-    this_session = session if session else DialogSession( "Qwen/Qwen3-TTS-12Hz-1.7B-Base")
+    if not session:
+        this_session = DialogSession( "Qwen/Qwen3-TTS-12Hz-1.7B-Base")
+        model = this_session.__enter__()
+    else:
+        model = session
 
     duration=float(duration)
     seed=int(seed)
@@ -131,7 +135,7 @@ def CloneVoice(text, audio, output, duration=5.0, seed=-1, lengthen=True, sessio
     ref_audio = "https://qianwen-res.oss-cn-beijing.aliyuncs.com/Qwen3-TTS-Repo/clone.wav"
     ref_text  = "Okay. Yeah. I resent you. I love you. I respect you. But you know what? You blew it! And thanks to you."
 
-    wavs, sr = this_session.__enter__().generate_voice_clone(
+    wavs, sr = model.generate_voice_clone(
         text=text,
         language="English",
         ref_audio=audio,
