@@ -8,7 +8,7 @@ from plan10.lib.util import transcribe, estimate_f5_baseline_duration
 import soundfile as sf
 
 class DialogSession:
-    def __init__(self, model_type="Qwen/Qwen3-TTS-12Hz-1.7B-CustomVoice"):
+    def __init__(self, model_type="Qwen/Qwen3-TTS-12Hz-1.7B-Base"):
         self.model_type = model_type
         self.model = None
 
@@ -112,7 +112,7 @@ def CloneVoice(text, audio, output, duration=5.0, seed=-1, lengthen=True, sessio
     # The actual prompt fed into the model
 
     if not session:
-        this_session = DialogSession( "Qwen/Qwen3-TTS-12Hz-1.7B-Base")
+        this_session = DialogSession("Qwen/Qwen3-TTS-12Hz-1.7B-Base")
         model = this_session.__enter__()
     else:
         model = session
