@@ -131,6 +131,9 @@ def i2v_diffsynth(prompt='', media='', last_image='', output='output.mp4',
             vram_limit=allocated_vram_limit,
         )
         pipe.load_lora(pipe.dit, ModelConfig(model_id="lightx2v/Minimax-h3-Turbo", origin_file_pattern="minimax_h3_fl2v_turbo_4step_v1.0_768p_bf16.safetensors"))
+        if os.environ.get("H3_LORA", "False") != "False":
+            lora, alpha = os.environ.get("H3_LORA").split(":")
+            pipe.load_lora(pipe.dit, ModelConfig(path=f"./loras/{lora}"), alpha=float(alph))
     else:
         pipe = MiniMaxH3Pipeline.from_pretrained(
             torch_dtype=torch.bfloat16,
