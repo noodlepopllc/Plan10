@@ -77,7 +77,7 @@ SEED = int(os.environ.get("SEED", "-1"))
 ANIME = "_anime" if os.environ.get("ANIME","False") != "False" else ""
 VRAM = int(os.environ.get("VRAM", 96))
 DURATION = 5 #5 if VRAM < 24 else 10
-FAST = os.environ.get("MMH3","False") == "FAST"
+FAST = os.environ.get("MMH3","False").startswith("FAST")
 
 if ANIME:
     from plan10.lib.anime_gen import GenerateImage
