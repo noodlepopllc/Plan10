@@ -501,12 +501,8 @@ def GenerateTalkingVideo(
     print("CURRENT PROMPT: ",eprompt)
 
     try:
-        if MMH3:
-            asyncio.run(s2v(eprompt, current_source_path, end_image, ref_audio, text, Path(output).name, 
-                    duration_sec, width, height, seed))
-        else:
-            s2v(eprompt, current_source_path, end_image, ref_audio, text, output, 
-                    duration_sec, width, height, seed)
+        s2v(eprompt, current_source_path, end_image, ref_audio, text, output, 
+            duration_sec, width, height, seed)
 
         description = ''
             
