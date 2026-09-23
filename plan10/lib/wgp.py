@@ -382,50 +382,16 @@ f''' After speaking, <Subject 1> {prompt} They continue to move naturally for th
 s2v = s2v_h3 if MMH3 else s2v_ltx
 
 import math
-
-def count_syllables(word):
-    """Count syllables in a word using heuristic rules."""
-    word = word.lower().strip(".,!?;:'\"")
-    if not word:
-        return 0
-    
-    # Special cases
-    if len(word) <= 2:
-        return 1
-    
-    # Count vowel groups
-    vowels = "aeiouy"
-    count = 0
-    prev_vowel = False
-    
-    for char in word:
-        is_vowel = char in vowels
-        if is_vowel and not prev_vowel:
-            count += 1
-        prev_vowel = is_vowel
-    
-    # Adjustments for silent endings
-    if word.endswith('e') and count > 1:
-        count -= 1
-    if word.endswith('le') and len(word) > 2 and word[-3] not in vowels:
-        count += 1
-    if word.endswith('ed') and count > 1:
-        if word[-3] not in 'td':
-            count -= 1
-    
-    return max(1, count)
-
+from plan10.lib.util import estimate_f5_baseline_duration
 
 def estimate_duration(text):
     """
     Estimate TTS duration using syllable count.
     Formula: ceil((syllables × 0.37) + 1.0) seconds
     """
-    words = text.split()
-    total_syllables = sum(count_syllables(w) for w in words)
-    duration = (total_syllables * 0.37)
-    duration = len(words) / 2.0
-    return math.ceil(duration)
+    
+    return math.ceil(estimate_f5_baseline_duration(text))
+
 
 def GenerateTalkingVideo(
     prompt='',
