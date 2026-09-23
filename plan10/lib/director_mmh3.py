@@ -570,7 +570,7 @@ continuity even during close-up framing.
         
         return "\n".join(sections)
 
-def send(prompt, images, audio, output='output.mp4', width=768, height=448, duration=5.0, steps=4, start_image=True, upscale=True):
+def send(prompt, images, audio, output='output.mp4', width=768, height=448, duration=5.0, steps=4, start_image=True, upscale=os.environ.get('UPSCALE', 'False') != 'False'):
 
     #model = "minimax_h3_ref2va_pruned_pdd"
     model = "minimax_h3_ref2va_pruned"
