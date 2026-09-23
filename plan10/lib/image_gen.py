@@ -126,7 +126,7 @@ class ImageGenKrea2(object):
             self.__enter__()
         image = self.pipe(
                 prompt=prompt,
-                negative_prompt="watermarks"
+                negative_prompt="watermark",
                 seed=seed,
                 height=height,
                 width=width,
