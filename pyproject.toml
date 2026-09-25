@@ -28,7 +28,14 @@ package = true
 [tool.uv.sources]
 #diffsynth = { git = "https://github.com/modelscope/DiffSynth-Studio.git", rev = "1e3527b2eb1cefe98c4202f7fc1a1883b45c7b15" }
 diffsynth = { git = "https://github.com/modelscope/DiffSynth-Studio.git"}
-AuK = { git = "https://github.com/noodlepopllc/AuK.git" }
+#AuK = { git = "https://github.com/noodlepopllc/AuK.git" }
+
+torch = { index = "https://download.pytorch.org/whl/cu132" }
+torchvision = { index = "https://download.pytorch.org/whl/cu132" }
+torchaudio = { index = "https://download.pytorch.org/whl/cu132" }
+torchao = { index = "https://download.pytorch.org/whl/cu132" }
+torchcodec = { index = "https://download.pytorch.org/whl/cu132" }
+
 
 
 [tool.setuptools.packages.find]
