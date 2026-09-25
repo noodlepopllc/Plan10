@@ -37,8 +37,6 @@ diffsynth = { git = "https://github.com/modelscope/DiffSynth-Studio.git"}
 torch = { index = "pytorch-cuda" }
 torchvision = { index = "pytorch-cuda" }
 torchaudio = { index = "pytorch-cuda" }
-torchao = { index = "pytorch-cuda" }
-torchcodec = { index = "pytorch-cuda" }
 
 
 [tool.setuptools.packages.find]
