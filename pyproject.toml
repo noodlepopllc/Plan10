@@ -30,13 +30,11 @@ package = true
 diffsynth = { git = "https://github.com/modelscope/DiffSynth-Studio.git"}
 #AuK = { git = "https://github.com/noodlepopllc/AuK.git" }
 
-torch = { index = "https://download.pytorch.org/whl/cu132" }
-torchvision = { index = "https://download.pytorch.org/whl/cu132" }
-torchaudio = { index = "https://download.pytorch.org/whl/cu132" }
-torchao = { index = "https://download.pytorch.org/whl/cu132" }
-torchcodec = { index = "https://download.pytorch.org/whl/cu132" }
-
-
+torch = { url = "https://download.pytorch.org/whl/cu132" }
+torchvision = { url = "https://download.pytorch.org/whl/cu132" }
+torchaudio = { url = "https://download.pytorch.org/whl/cu132" }
+torchao = { url = "https://download.pytorch.org/whl/cu132" }
+torchcodec = { url = "https://download.pytorch.org/whl/cu132" }
 
 [tool.setuptools.packages.find]
 include = ["plan10*"]
