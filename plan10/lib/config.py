@@ -15,7 +15,7 @@ cfg = {
     "HF_HUB_OFFLINE": "0", 
     "DIFFSYNTH_MODEL_BASE_PATH": "./models",
     "HF_HOME": "./models", 
-    "TRANSFORMERS_CACHE":"$HF_HOME",
+    "TRANSFORMERS_CACHE":"./models",
     "WAN21": "14B", # or 1.3B
     "DIFFSYNTH_DOWNLOAD_SOURCE": "huggingface", 
     "DIFFSYNTH_SKIP_DOWNLOAD": "False", 
@@ -34,6 +34,7 @@ cfg = {
     "LTX": "DISTILLED",
     "ANIME": "False",
     "VERBOSE": "False",
+    "UPSCALE": "False"
 
 }
 
