@@ -35,6 +35,11 @@ enhance_path = f'./system/ltx_enhancer_minimal{ANIME}.txt' if BRIEF else f'./sys
 if MMH3:
     enhance_path = './system/mmh3_enhancer.txt'
 
+def norm(p):
+    if not p:
+        return p
+    return str(Path(p).resolve())
+
 tool_dialog = "ltx2_22B_distilled_1_1" if DISTILLED else "ltx2_22B_1_1"
 tool = "ltx2_25_22B_distilled" if DISTILLED else "ltx2_25_22B"
 
@@ -70,14 +75,14 @@ def i2v_ltx2(prompt='', media='', end='', output='output.mp4',
     )
 
 
-    args['output_dir'] = f'{os.getcwd()}/{Path(output).parent}'
+    args['output_dir'] = norm(Path(output).parent)
     args['output_filename'] = Path(output).name
     args['prompt'] = final_prompt
     if media:
         args['image_prompt_type'] =  'SE' if end else 'S'
-        args['image_start'] = media
+        args['image_start'] = norm(media)
         if end:
-            args['image_end'] = end
+            args['image_end'] = norm(end)
 
     args['resolution'] = f'{width}x{height}'
     args['video_length'] = (duration_sec * 24) + 1 
@@ -124,16 +129,16 @@ def i2v_h3(prompt='', media='', end='', output='output.mp4',
     frames = 107 if frames < 107 else frames
 
 
-    args['output_dir'] = f'{os.getcwd()}/{Path(output).parent}'
+    args['output_dir'] = norm(Path(output).parent)
     args['output_filename'] = Path(output).name
     args['prompt'] = final_prompt
     if media or end:
         args['image_prompt_type'] = ''
         if media:
-            args['image_start'] = media
+            args['image_start'] = norm(media)
         args['image_prompt_type'] +=  'S'
         if end:
-            args['image_end'] = end
+            args['image_end'] = norm(end)
             args['image_prompt_type'] +=  'E'
     args['resolution'] = f'{width}x{height}'
     args['video_length'] = frames
@@ -262,11 +267,11 @@ def s2v_ltx(prompt='', media='', end_image='', audio='', text='', output='output
     newprompt = f"[VISUAL]: {desc} {prompt} Lips moving in perfect sync with the audio. Character begins speaking immediately on the first frame of the video. \n[SPEECH]: {text}.\n[SOUNDS]: {audio_desc}."
     print(newprompt)
 
-    args['output_dir'] = f'{os.getcwd()}/{Path(output).parent}'
+    args['output_dir'] = norm(Path(output).parent)
     args['output_filename'] = Path(output).name
     args['prompt'] = newprompt
     args['image_prompt_type'] =  'S'
-    args['image_start'] = media
+    args['image_start'] = norm(media)
     args['guidance_phases'] = 1 if 'DISTILLED:1' in os.environ['LTX'] else 2
     args['num_inference_steps'] = 8 if DISTILLED else 30
     args['guidance_scale'] = 1.0 if DISTILLED else 3.0
@@ -338,14 +343,13 @@ f''' After speaking, <Subject 1> {prompt} They continue to move naturally for th
     args = requests.get(f"http://127.0.0.1:8080/defaults/{model}").json()
     print(newprompt if text else lipsync)
 
-    args['output_dir'] = f'{os.getcwd()}/{Path(output).parent}'
+    args['output_dir'] = norm(Path(output).parent)
     args['output_filename'] = Path(output).name
     args["activated_loras"] = ["minimax_h3_larryvrh_v4_step600_ema.safetensors"]
     args["loras_multipliers"] = "1.0|"
-    args['output_filename'] = output
     args['prompt'] = newprompt if text else lipsync
-    args['image_refs'] = [media, end_image] if end_image else [media]
-    args["audio_guide"] = fixed_audio
+    args['image_refs'] = [norm(media), norm(end_image)] if end_image else [norm(media)]
+    args["audio_guide"] = norm(fixed_audio)
     args["audio_prompt_type"] = "A"
     args["video_prompt_type"] = "I"
     args["multi_prompts_gen_type"] = "FG"
@@ -361,8 +365,6 @@ f''' After speaking, <Subject 1> {prompt} They continue to move naturally for th
     args["embedded_guidance_scale"] = 1.5
     args['resolution'] = f'{width}x{height}'
     args['video_length'] = (((duration_sec * 24) // 17) * 17) + 5
-
-    args['resolution'] = f'{width}x{height}'
     print(args)
     job_id = requests.post("http://127.0.0.1:8080/run", json=args).json()
     print(job_id)
