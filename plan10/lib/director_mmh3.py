@@ -237,7 +237,7 @@ class SmartVideoPromptBuilder:
         if not desc:
             print(f"Analyzing {image_path} as {'character' if is_character else 'background'}...")
             desc = self._analyze_image(image_path, is_character=is_character)
-            director_save_metadata_(cache_key, desc)
+            director_save_metadata(cache_key, desc)
         else:
             print(f"Loaded cached description for {image_path}.")
         
