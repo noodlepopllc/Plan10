@@ -37,7 +37,7 @@ if MMH3:
 
 def norm(p):
     if not p:
-        return None
+        return ''
     return str(Path(p).resolve())
 
 tool_dialog = "ltx2_22B_distilled_1_1" if DISTILLED else "ltx2_22B_1_1"
