@@ -203,6 +203,73 @@ def DesignVoice(voice=None, output='output.wav', seed=-1, long=False):
         "prompt": voice
     }
 
+def VoiceDesignSchema():
+    return {
+        "type": "function",
+        "function": {
+            "name": "design_voice",
+            "description": "Generate speech using a synthetic designed voice.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "voice": {
+                        "type": "string",
+                        "description": "Voice description (timbre, pitch, accent, energy, etc.)."
+                    },
+                    "output": {
+                        "type": "string",
+                        "description": "Output WAV file path."
+                    },
+                    "duration": {
+                        "type": "number",
+                        "description": "Optional target duration in seconds default is 10 seconds"
+                    },
+                    "seed": {
+                        "type": "integer",
+                        "description": "Optional seed for deterministic output."
+                    }
+                },
+                "required": ["voice", "output"]
+            }
+        }
+    }
+
+def VoiceCloneSchema():
+    return {
+        "type": "function",
+        "function": {
+            "name": "clone_voice",
+            "description": "Generate speech using a cloned voice from reference audio.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "text": {
+                        "type": "string",
+                        "description": "The text to speak."
+                    },
+                    "audio": {
+                        "type": "string",
+                        "description": "Path to reference audio file."
+                    },
+                    "ref_text": {
+                        "type": "string",
+                        "description": "Optional transcription of the reference audio."
+                    },
+                    "output": {
+                        "type": "string",
+                        "description": "Output WAV file path."
+                    },
+                    "seed": {
+                        "type": "integer",
+                        "description": "Optional seed for deterministic output."
+                    }
+                },
+                "required": ["text", "audio", "output"]
+            }
+        }
+    }
+
+
 def main():
     import argparse, math
     import sys, json
