@@ -24,6 +24,41 @@ from plan10.lib.image_analysis import AnalyzeImage
 import os
 from plan10.lib.image_analysis import AnalyzeImage
 
+def director_load_metadata(image_path: str) -> str:
+    """Checks if the image already has a cached VLM description."""
+    try:
+        if image_path.lower().endswith('.png'):
+            img = Image.open(image_path)
+            return getattr(img, 'info', {}).get("SubjectDescription", "")
+        else:
+            meta_path = image_path.rsplit('.', 1)[0] + '.meta.json'
+            if os.path.exists(meta_path):
+                with open(meta_path, 'r') as f:
+                    return json.load(f).get("SubjectDescription", "")
+    except Exception:
+        pass
+    return ""
+
+def director_save_metadata(image_path: str, desc: str):
+    """Embeds the VLM description into the image metadata or a sidecar file."""
+    try:
+        if image_path.lower().endswith('.png'):
+            img = Image.open(image_path)
+            metadata = load_metadata(img)
+            if hasattr(img, 'info'):
+                for k, v in img.text.items():
+                    metadata.add_text(k, v)
+            metadata.add_text("SubjectDescription", desc)
+            img.save(image_path, pnginfo=metadata)
+        else:
+            meta_path = image_path.rsplit('.', 1)[0] + '.meta.json'
+            with open(meta_path, 'w') as f:
+                json.dump({"SubjectDescription": desc}, f, indent=2)
+    except Exception as e:
+        print(f"[Warning] Failed to embed metadata in {image_path}: {e}")
+        with open(image_path + ".desc.txt", "w") as f:
+            f.write(desc)
+
 class PortraitReferenceManager:
     """
     Manages portrait references that attach to existing character subjects.
@@ -41,7 +76,9 @@ class PortraitReferenceManager:
         prompt = """Provide a single, concise sentence describing ONLY the character's
         facial features, hair, and identity-defining appearance. Ignore background,
         props, and lighting. Do not include introductory phrases."""
-        desc = AnalyzeImage(image_path, prompt)['analysis']
+        desc = director_load_metadata(image_path)
+        if not desc:
+            desc = AnalyzeImage(image_path, prompt)['analysis']
         if desc:
             desc = desc[0].lower() + desc[1:]
         return desc
@@ -174,41 +211,6 @@ class SmartVideoPromptBuilder:
         minutes, seconds = divmod(seconds, 60)
         return f"{minutes:02d}:{seconds:02d}.{milliseconds:03d}"
 
-    def _load_metadata(self, image_path: str) -> str:
-        """Checks if the image already has a cached VLM description."""
-        try:
-            if image_path.lower().endswith('.png'):
-                img = Image.open(image_path)
-                return getattr(img, 'text', {}).get("SubjectDescription", "")
-            else:
-                meta_path = image_path.rsplit('.', 1)[0] + '.meta.json'
-                if os.path.exists(meta_path):
-                    with open(meta_path, 'r') as f:
-                        return json.load(f).get("SubjectDescription", "")
-        except Exception:
-            pass
-        return ""
-
-    def _save_metadata(self, image_path: str, desc: str):
-        """Embeds the VLM description into the image metadata or a sidecar file."""
-        try:
-            if image_path.lower().endswith('.png'):
-                img = Image.open(image_path)
-                metadata = load_metadata(img)
-                if hasattr(img, 'text'):
-                    for k, v in img.text.items():
-                        metadata.add_text(k, v)
-                metadata.add_text("SubjectDescription", desc)
-                img.save(image_path, pnginfo=metadata)
-            else:
-                meta_path = image_path.rsplit('.', 1)[0] + '.meta.json'
-                with open(meta_path, 'w') as f:
-                    json.dump({"SubjectDescription": desc}, f, indent=2)
-        except Exception as e:
-            print(f"[Warning] Failed to embed metadata in {image_path}: {e}")
-            with open(image_path + ".desc.txt", "w") as f:
-                f.write(desc)
-
     def _analyze_image(self, image_path: str, is_character: bool = False) -> str:
         if is_character:
             prompt = """Provide a single, concise sentence describing ONLY the character's physical appearance, 
@@ -229,13 +231,13 @@ class SmartVideoPromptBuilder:
         sub_id = self._subject_counter
         pic_tag = f"<Picture {sub_id}>"
             
-        cache_key = f"{image_path}_{'char' if is_character else 'bg'}"
-        desc = self._load_metadata(cache_key)
+        cache_key = image_path
+        desc = director_load_metadata(cache_key)
         
         if not desc:
             print(f"Analyzing {image_path} as {'character' if is_character else 'background'}...")
             desc = self._analyze_image(image_path, is_character=is_character)
-            self._save_metadata(cache_key, desc)
+            director_save_metadata_(cache_key, desc)
         else:
             print(f"Loaded cached description for {image_path}.")
         
