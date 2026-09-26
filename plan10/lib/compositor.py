@@ -91,7 +91,7 @@ def CompositeBackground(
     return status
 
 
-def CompositeScene(
+def CompositeSceneGeneric(
     background_path: str,
     characters: list[str],
     shot_type: str = "medium",
@@ -302,6 +302,12 @@ def _run_generation(task, ref_paths, output, width, height, seed, shot_type, sty
         status['description'] = analysis['analysis']
     status['prompt'] = task
     return status
+
+if os.environ.get("IMAGE_EDIT", "KLEIN") == "QWEN2":
+    from plan10.lib/compositor_qwen import CompositeSceneQwen
+    CompositeScene = CompositeSceneQwen
+else:
+    CompositeScene = CompositeSceneGeneric
 
 def CompositeBackgroundSchema():
     return {
