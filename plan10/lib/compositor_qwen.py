@@ -181,16 +181,12 @@ def CompositeSceneQwen(
     char_paths = [Path(c) for c in characters]
 
     # --- 1) Background description ---
-    bg_desc = describe_background_from_image(bg)
+    bg_desc = truncate(describe_background_from_image(bg))
 
     # --- 2) Character descriptions ---
-    char_descs = [describe_character_from_image(c) for c in char_paths]
+    char_descs = [truncate(describe_character_from_image(c)) for c in chars_paths]
 
     # --- 3) Physical action rewrite ---
-    action_physical = rewrite_action_physical(action)
-
-    bg_desc = truncate(describe_background_from_image(bg))
-    char_descs = [truncate(describe_character_from_image(c)) for c in chars]
     action_physical = truncate(rewrite_action_physical(action))
 
     # --- 4) Camera description ---
@@ -245,17 +241,13 @@ def main():
         if not c.exists():
             raise FileNotFoundError(f"Character ref not found: {c}")
 
-    # 1) Background description
-    bg_desc = describe_background_from_image(bg)
-
-    # 2) Character descriptions
-    char_descs = [describe_character_from_image(c) for c in chars]
-
-    # 3) Physical action rewrite
-    action_physical = rewrite_action_physical(action)
-
+    # --- 1) Background description ---
     bg_desc = truncate(describe_background_from_image(bg))
-    char_descs = [truncate(describe_character_from_image(c)) for c in chars]
+
+    # --- 2) Character descriptions ---
+    char_descs = [truncate(describe_character_from_image(c)) for c in chars_paths]
+
+    # --- 3) Physical action rewrite ---
     action_physical = truncate(rewrite_action_physical(action))
 
     # 4) Camera description
