@@ -21,6 +21,7 @@ def llm_rewrite(media: str | Path, prompt: str) -> str:
     purely physical, Qwen-friendly description.
     """
     output = llm_analyze_media(str(media), prompt)['analysis']
+    print(f'MEDIA: {media}\n PROMPT: "{prompt}"\n OUTPUT: "{output.strip()}"\n')
     return output.strip()
 
 
