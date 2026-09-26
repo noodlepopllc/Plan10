@@ -20,7 +20,7 @@ def llm_rewrite(media: str | Path, prompt: str) -> str:
     Deterministically rewrite a description into a short,
     purely physical, Qwen-friendly description.
     """
-    output = llm_analyze_media(media, prompt)['analysis']
+    output = llm_analyze_media(str(media), prompt)['analysis']
     return output.strip()
 
 
