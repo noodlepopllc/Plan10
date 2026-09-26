@@ -739,7 +739,7 @@ def main():
         Path(args.input.replace('.txt','_prompt.txt')).write_text(final_prompt)
 
     if args.low_vram:
-        for plan10.lib.util import resize_low_vram_png
+        from plan10.lib.util import resize_low_vram_png
         img_refs_resized = []
         for ref in img_refs:
             out = resize_low_vram_png(ref, divisor=args.divisor)
