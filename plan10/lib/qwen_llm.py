@@ -1,5 +1,7 @@
 # qwen_llm.py
 import os
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
 
 from plan10.lib.config import load_environ
 
