@@ -134,7 +134,7 @@ def qwen_generate(
     editor = ImageEditQwen2()
 
     # IMPORTANT: multi-image synthesis mode = pass all images at once
-    images = [background] + characters
+    images = [str(x) for x in [background] + characters]
 
     status = editor.generate(
         prompt=prompt,
