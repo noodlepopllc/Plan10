@@ -742,7 +742,7 @@ def main():
         from plan10.lib.util import resize_low_vram_png
         img_refs_resized = []
         for ref in img_refs:
-            out = resize_low_vram_png(ref, divisor=args.divisor)
+            out = resize_low_vram_png(ref, divisor=32)
             if out:
                 img_refs_resized.append(out)
         img_refs = img_refs_resized
