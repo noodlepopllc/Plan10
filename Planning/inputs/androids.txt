@@ -1,6 +1,9 @@
+Theme/Style:
+futuristic cyberpunk
+
 Characters:
-- Amy: an android with Asian facial features, red plastic panels covering cables, blonde hair in a bobcut, exposed wiring and physical damage visible.
-- Blaire: an android with latinx facial features, blue plastic panels covering cables, long black hair, damage front panel with exposed wiring and missing robootic eye.
+- Amy: an android with Asian facial features, full-body red plastic exoshell; cables only visible where damage exposes them, blonde hair in a bobcut, exposed wiring and physical damage visible.
+- Blaire: an android with latinx facial features, full-body blue plastic exoshell; cables visible only at damaged regions, long black hair, damage front panel with exposed wiring and missing robootic eye.
 - Chad: nerdy guy in the club, wears glasses, suspenders, crew cut and suspenders, red tennis shoes.
 
 Location:
