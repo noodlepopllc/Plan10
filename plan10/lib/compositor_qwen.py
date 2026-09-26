@@ -189,6 +189,8 @@ def CompositeSceneQwen(
         action_physical=action_physical,
     )
 
+    print(f"Compositing with prompt: {prompt}")
+
     # --- 6) Generate composite ---
     status = qwen_generate(
         background=bg,
