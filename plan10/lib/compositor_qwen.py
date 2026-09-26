@@ -14,6 +14,8 @@ SEED = random.randint(0, 100000) if SEED == -1 else SEED
 from plan10.lib.qwen_llm import llm_analyze_media
 from plan10.lib.image_edit import ImageEditQwen2
 
+def truncate(text: str, max_chars: int = 240) -> str:
+    return text[:max_chars].rsplit(" ", 1)[0]
 
 def llm_rewrite(media: str | Path, prompt: str) -> str:
     """
@@ -30,9 +32,11 @@ def describe_background_from_image(bg_path: Path) -> str:
     Describe the background in purely physical terms.
     """
     return llm_rewrite(
-        bg_path,
-        "Describe the background in <Image> using only physical details "
-        "(lighting, space, materials, geometry, style)."
+        bg_path,'''
+Describe the background in <Image> using only physical details.
+Limit the description to 1–2 short sentences.
+Avoid listing objects individually.
+Avoid narrative or interpretation.'''
     )
 
 
@@ -42,9 +46,12 @@ def describe_character_from_image(char_path: Path) -> str:
     """
     return llm_rewrite(
         char_path,
-        "Describe the character in <Image> using only physical details: "
-        "hair, skin tone, clothing, and general appearance. "
-        "Do not mention personality or narrative."
+'''Describe the character in <Image> using only physical details.
+Limit to 1–2 short sentences.
+Do not describe multiple views.
+Do not list every component.
+Do not mention personality or narrative.
+'''
     )
 
 
@@ -53,9 +60,12 @@ def rewrite_action_physical(action: str) -> str:
     Rewrite the action into a purely physical description.
     """
     return llm_rewrite(
-        "",
-        f"Rewrite this action as a purely physical description appropriate for a camera shot. "
-        f"Remove emotion and narrative. Focus on pose, facing direction, mouth, eyes, and simple movement:\n\n{action}"
+        "",'''
+Rewrite this action as a purely physical description.
+Limit to 1–2 short sentences.
+Remove emotion, narrative, and causal logic.
+Describe only pose, facing direction, and simple movement.
+'''
     )
 
 
@@ -179,6 +189,10 @@ def CompositeSceneQwen(
     # --- 3) Physical action rewrite ---
     action_physical = rewrite_action_physical(action)
 
+    bg_desc = truncate(describe_background_from_image(bg))
+    char_descs = [truncate(describe_character_from_image(c)) for c in chars]
+    action_physical = truncate(rewrite_action_physical(action))
+
     # --- 4) Camera description ---
     camera_desc = shot_type_to_camera_description(shot_type)
 
@@ -239,6 +253,10 @@ def main():
 
     # 3) Physical action rewrite
     action_physical = rewrite_action_physical(action)
+
+    bg_desc = truncate(describe_background_from_image(bg))
+    char_descs = [truncate(describe_character_from_image(c)) for c in chars]
+    action_physical = truncate(rewrite_action_physical(action))
 
     # 4) Camera description
     camera_desc = shot_type_to_camera_description(shot_type)
