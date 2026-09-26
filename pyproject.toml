@@ -19,7 +19,9 @@ dependencies = [
     "num2words",
     "diffsynth[quant]",
     "faster-qwen3-tts",
-    "rembg"
+    "rembg",
+    "triton; platform_system != 'Windows'",
+    "triton-windows; platform_system == 'Windows'"
 ]
 
 [tool.uv]
