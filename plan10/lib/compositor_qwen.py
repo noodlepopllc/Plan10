@@ -46,11 +46,11 @@ def describe_character_from_image(char_path: Path) -> str:
     """
     return llm_rewrite(
         char_path,
-'''Describe the character in <Image> using only physical details.
+'''The image is a character sheet. Describe only the character’s identity and appearance.
 Limit to 1–2 short sentences.
-Do not describe multiple views.
-Do not list every component.
-Do not mention personality or narrative.
+Do NOT describe poses, front/back views, multiple angles, or any specific stance.
+Do NOT mention that the sheet shows different views.
+Focus only on stable identity traits: hair, skin tone, outfit, and overall style.
 '''
     )
 
