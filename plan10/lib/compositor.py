@@ -304,7 +304,7 @@ def _run_generation(task, ref_paths, output, width, height, seed, shot_type, sty
     return status
 
 if os.environ.get("IMAGE_EDIT", "KLEIN") == "QWEN2":
-    from plan10.lib/compositor_qwen import CompositeSceneQwen
+    from plan10.lib.compositor_qwen import CompositeSceneQwen
     CompositeScene = CompositeSceneQwen
 else:
     CompositeScene = CompositeSceneGeneric
