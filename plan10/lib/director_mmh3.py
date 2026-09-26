@@ -667,6 +667,7 @@ def main():
     parser.add_argument('-H', '--height', type=int, default=int(os.environ.get("HEIGHT", "576")))
     parser.add_argument('-S', '--steps', type=int, default=4)
     parser.add_argument('--wangp', action="store_true")
+    parser.add_argument('--low-vram', action='store_true')
     args = parser.parse_args()
 
     # Override environment first
@@ -736,7 +737,16 @@ def main():
     #width and height must be multiples of 32, 1344x768, 864x480 minimal
     if args.input:
         Path(args.input.replace('.txt','_prompt.txt')).write_text(final_prompt)
-    
+
+    if args.low_vram:
+        for plan10.lib.util import resize_low_vram_png
+        img_refs_resized = []
+        for ref in img_refs:
+            out = resize_low_vram_png(ref, divisor=args.divisor)
+            if out:
+                img_refs_resized.append(out)
+        img_refs = img_refs_resized
+
     if args.wangp:
         send(
             final_prompt, 

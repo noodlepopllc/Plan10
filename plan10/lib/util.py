@@ -209,32 +209,26 @@ def extract_frame(media_path, width, height, output_path=None, last_frame=True):
         img = Image.open(media_path)
         return img, media_path
 
-def resize_image(img, max_dim=640, aspect_ratio=None, return_pil=False):
-    """Resizes image keeping aspect ratio so the largest side is max_dim.
-    If aspect_ratio is provided (e.g., 16/9), crops to that ratio first.
-    If return_pil=True, returns PIL Image instead of numpy array."""
-    
+def resize_image(img, max_dim=640, aspect_ratio=None, divisor=32, return_pil=False):
     if isinstance(img, Image.Image):
         img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
-    
+
     h, w = img.shape[:2]
-    
+
     # Crop to target aspect ratio if specified
     if aspect_ratio is not None:
         current_ratio = w / h
         if current_ratio > aspect_ratio:
-            # Too wide, crop width
             new_w = int(h * aspect_ratio)
             left = (w - new_w) // 2
             img = img[:, left:left + new_w]
         else:
-            # Too tall, crop height
             new_h = int(w / aspect_ratio)
             top = (h - new_h) // 2
             img = img[top:top + new_h, :]
         h, w = img.shape[:2]
-    
-    # Resize to max_dim
+
+    # Resize longest side to max_dim
     if max(h, w) <= max_dim:
         result = img
         scale = 1.0
@@ -242,10 +236,76 @@ def resize_image(img, max_dim=640, aspect_ratio=None, return_pil=False):
         scale = max_dim / float(max(h, w))
         new_w, new_h = int(w * scale), int(h * scale)
         result = cv2.resize(img, (new_w, new_h), interpolation=cv2.INTER_AREA)
-    
-    # Convert back to PIL if requested
+
+    # Snap to divisor (16, 32, 64)
+    snapped_h = (result.shape[0] // divisor) * divisor
+    snapped_w = (result.shape[1] // divisor) * divisor
+    result = cv2.resize(result, (snapped_w, snapped_h), interpolation=cv2.INTER_AREA)
+
     if return_pil:
         result = Image.fromarray(cv2.cvtColor(result, cv2.COLOR_BGR2RGB))
-    
+
     return result, scale
 
+LOW_VRAM_RES = {
+    "1:1":  (512, 512),
+    "16:9": (512, 288),
+    "9:16": (288, 512),
+    "4:3":  (512, 384),
+    "3:4":  (384, 512),
+    "3:2":  (480, 320),
+    "2:3":  (320, 480),
+    "2:1":  (512, 256),
+    "1:2":  (256, 512),
+}
+
+def classify_ratio(w, h):
+    ratio = w / h
+    targets = {
+        "1:1": 1.0,
+        "16:9": 16/9,
+        "9:16": 9/16,
+        "4:3": 4/3,
+        "3:4": 3/4,
+        "3:2": 3/2,
+        "2:3": 2/3,
+        "2:1": 2.0,
+        "1:2": 0.5,
+    }
+    return min(targets, key=lambda k: abs(ratio - targets[k]))
+
+def resize_low_vram_png(ref_path, divisor=32):
+    p = Path(ref_path)
+
+    # Only PNG allowed
+    if p.suffix.lower() != ".png":
+        return None
+
+    # Deterministic cache filename
+    resized = p.with_name(p.stem + "_resized.png")
+
+    # Reuse cached version
+    if resized.exists():
+        return str(resized)
+
+    # Load original
+    img = Image.open(p)
+    w, h = img.size
+
+    # Classify ratio
+    key = classify_ratio(w, h)
+    target_w, target_h = LOW_VRAM_RES[key]
+
+    # Resize
+    out, _ = resize_image(
+        img,
+        max_dim=max(target_w, target_h),
+        aspect_ratio=target_w / target_h,
+        divisor=divisor,
+        return_pil=True
+    )
+
+    # Save resized PNG
+    out.save(resized)
+    return str(resized)
+    
