@@ -303,13 +303,16 @@ if __name__ == '__main__':
     if len(sys.argv) < 2:
         print("Usage: python story_to_script.py <directory_path>")
         sys.exit(1)
-        
-    dir_path = sys.argv[1]
+    if len(sys.argv) == 3:
+        seed = Path(sys.argv[1]).read_text()
+        dir_path = sys.argv[2]
+    else:
+        dir_path = sys.argv[1]
     prompt_path = './Planning/prompts'
     WORLD = Path(f'{prompt_path}/scriptwriter/world.txt').read_text()
     BIOGRAPHY = Path(f'{prompt_path}/scriptwriter/biography.txt').read_text()
     story_input = Path(f'{dir_path}/story.txt').read_text()
-    world = run_prompt(story_input, WORLD, f'{dir_path}/world.txt')
+    world = run_prompt(f'SEED FILE: \n{seed}\n STORY FILE: \n{story_input}', WORLD, f'{dir_path}/world.txt')
     biography_text = run_prompt(world, BIOGRAPHY, f'{dir_path}/registry.json')
     world_text = format_compact_world(json.loads(biography_text))
     
