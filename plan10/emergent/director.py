@@ -299,15 +299,15 @@ Do NOT infer identity from:
 
 VALIDATION RULES:
 
-# HARD ERRORS — require full retry
+# HARD ERRORS — retry required
 If ACTUAL SCENE STATE shows:
-- duplicated characters
-- wrong character performing action
-- wrong speaker attribution
 - missing intended physical action
-- hallucinated figures
-- empty/black frame
+- wrong character performing the action
+- duplicated characters
+- hallucinated characters
+- empty/black/corrupted frame
 - broken camera angle
+- unintended turning away, walking off-frame, or exiting
 
 Then:
     MATCH: NO
@@ -315,24 +315,42 @@ Then:
     SETUP: NONE
     GOAL_PROGRESS: NONE
     SCENE_TRANSITION: NO
-    NEW_LOCATION:
-    Stop here.
 
-# SOFT ERRORS — semantic mismatch, no retry
+
+# SOFT ERRORS — partial match, continue
 If ACTUAL SCENE STATE shows:
-- severe warping/morphing
+- minor warping/morphing
 - expression mismatch
-- tonal inversion
+- gesture mismatch (action still occurred)
 - missing micro-actions
-- gesture misinterpretation
+- emotional tone mismatch
+- slight facing-direction mismatch
+- background/crowd variation
 
 Then:
     MATCH: PARTIAL
-    NEXT_ACTION: [corrected action]
+    NEXT_ACTION: [corrected physical action]
     SETUP: [corrected setup]
-    GOAL_PROGRESS: [continue]
+    GOAL_PROGRESS: continue
     SCENE_TRANSITION: NO
 
+
+# FULL MATCH — move on
+If ACTUAL SCENE STATE shows:
+- intended physical action occurred
+- correct character performed it
+- pose matches
+- facing matches
+- camera matches
+- no unintended turning/walking/exiting
+
+Then:
+    MATCH: YES
+    ISSUES: none
+    NEXT_ACTION: continue
+    SETUP: NONE
+    GOAL_PROGRESS: continue
+    SCENE_TRANSITION: NO
 
 Output format (STRICTLY follow this, no extra text or markdown formatting):
 MATCH: [YES/PARTIAL/NO]
