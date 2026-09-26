@@ -1,5 +1,6 @@
 import sys
 sys.stdout.reconfigure(encoding='utf-8')
+
 import argparse
 from pathlib import Path
 import os, traceback, re
@@ -453,7 +454,11 @@ def main():
             beat_out = pending_job['output_path'].replace('.mp4', '_script.txt')
             converted = converter.run(beat_out, style='', use_descriptions=False)
             print(converted)
-            Path(beat_out.replace('.txt', '_ltx.txt')).write_text(f'RUNLENGTH (s):{converter.run_length}\n{converted}')
+            Path(beat_out.replace('.txt', '_ltx.txt')).write_text(
+                f'RUNLENGTH (s):{converter.run_length}\n{converted}',
+                encoding='utf-8'
+            )
+
         
         # Mark as complete and update current_media
         pending_job['status'] = 'complete'
