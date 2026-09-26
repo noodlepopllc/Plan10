@@ -56,17 +56,19 @@ Focus only on stable identity traits: hair, skin tone, outfit, and overall style
 
 
 def rewrite_action_physical(action: str) -> str:
-    """
-    Rewrite the action into a purely physical description.
-    """
     return llm_rewrite(
-        "",'''
-Rewrite this action as a purely physical description.
+        "",
+        f"""
+Rewrite the following action as a purely physical description.
 Limit to 1–2 short sentences.
 Remove emotion, narrative, and causal logic.
 Describe only pose, facing direction, and simple movement.
-'''
+
+Action:
+{action}
+"""
     )
+
 
 
 def shot_type_to_camera_description(shot_type: str) -> str:
