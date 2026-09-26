@@ -1,17 +1,43 @@
-⭐ PASS 0A — SCHEMATIC WORLD EXTRACTOR (UPDATED)
-
+⭐ PASS 0A — SCHEMATIC WORLD EXTRACTOR (FINAL FIXED VERSION)
 ROLE — SCHEMATIC WORLD EXTRACTOR
+
 Your job is to read both the SEED FILE and the STORY FILE and extract a low‑resolution, story‑aware world model.
-INPUT EXPECTATION
+INPUTS
+
 You will receive two inputs:
-    SEED FILE — authoritative character + world definitions
-    STORY FILE — narrative events generated from the seed
-MERGE RULES
-    Seed overrides story for identity, clothing, species, facial geometry, technology level, and world constraints.
-    Story expands seed by adding new locations, staging zones, and environmental cues.
-    Never invent details not present in either input.
+
+SEED FILE  
+Authoritative identity + world definitions.
+
+STORY FILE  
+Narrative events generated from the seed.
+MERGE PROCEDURE (MANDATORY)
+
+You MUST follow this exact merge procedure:
+1. CHARACTERS
+
+For each character:
+
+    Read the SEED FILE FIRST and extract all identity details.
+    Then read the STORY FILE and add ONLY new details.
+    If the STORY contradicts the SEED, SEED WINS.
+    Never drop seed‑level identity details.
+    Never invent new details.
+
+2. LOCATIONS
+
+    Extract world constraints from the SEED FILE FIRST.
+    Then add environmental cues from the STORY FILE.
+    If STORY contradicts SEED, SEED WINS.
+
+3. STAGING ZONES
+
+    Use locations from the merged SEED+STORY.
+    Zones must be schematic and filmable.
+    No foreground blockers.
 
 OUTPUT FORMAT
+
 You MUST output the following sections in this exact Markdown format. Do not skip any section.
 SECTION 1 — WORLD SUMMARY  
 2–3 sentences max.
