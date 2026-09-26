@@ -184,7 +184,7 @@ def CompositeSceneQwen(
     bg_desc = truncate(describe_background_from_image(bg))
 
     # --- 2) Character descriptions ---
-    char_descs = [truncate(describe_character_from_image(c)) for c in chars_paths]
+    char_descs = [truncate(describe_character_from_image(c)) for c in char_paths]
 
     # --- 3) Physical action rewrite ---
     action_physical = truncate(rewrite_action_physical(action))
@@ -245,7 +245,7 @@ def main():
     bg_desc = truncate(describe_background_from_image(bg))
 
     # --- 2) Character descriptions ---
-    char_descs = [truncate(describe_character_from_image(c)) for c in chars_paths]
+    char_descs = [truncate(describe_character_from_image(c)) for c in char_paths]
 
     # --- 3) Physical action rewrite ---
     action_physical = truncate(rewrite_action_physical(action))
