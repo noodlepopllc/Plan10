@@ -664,7 +664,7 @@ def CreateBackground(prompt='', output='location_tmp.png', seed=-1, override=Non
         width, height = override if override else (1664,928)
     else:
         width, height = override if override else (1920,1088)
-    status = gen.generate(prompt, output, width, height, seed)
+    status = gen.generate(final_prompt, output, width, height, seed)
     del gen
     status['description'] = add_metadata_loc(output, final_prompt, seed)
     status['prompt'] = final_prompt
