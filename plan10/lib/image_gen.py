@@ -689,7 +689,7 @@ def CreateBackground(prompt='', output='location_tmp.png', seed=-1, override=Non
 
     user_part = prompt.strip() if prompt else "empty atmospheric location"
 
-    if ambience and classification["should_populate"]:
+    if ambience:
         user_part += (
             f"ambient silhouettes with {classification['density']} density, "
             f"background motion suggesting {classification['activity']}, "
