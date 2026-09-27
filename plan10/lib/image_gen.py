@@ -643,11 +643,11 @@ Rules:
 
 Return ONLY a JSON object with the following fields:
 
-{
+{{
   "should_populate": true | false,
   "density": "none" | "low" | "medium" | "high",
   "activity": "none" | "talking" | "dancing" | "walking" | "jogging" | "browsing" | "milling" | "working" | "sitting"
-}
+}}
 
 Environment description:
 "{prompt}"
