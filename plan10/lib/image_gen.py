@@ -679,7 +679,7 @@ Environment description:
 def CreateBackground(prompt='', output='location_tmp.png', seed=-1, override=None, ambience=True):
     seed = int(seed)
     classification = crowd_density(prompt)
-    print(json.dumps(classification,indent=4))
+    print(classification)
     print("CREATE BACKGROUND")
     
     base_prompt = (
@@ -711,6 +711,8 @@ def CreateBackground(prompt='', output='location_tmp.png', seed=-1, override=Non
     )
     
     final_prompt = (combined + environmental_suffix).strip()
+
+    print(final_prompt)
     
     gen = ImageGen()
     if isinstance(gen, ImageGenQwen):
