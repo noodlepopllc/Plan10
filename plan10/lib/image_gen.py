@@ -655,7 +655,9 @@ Return ONLY a JSON object with the following fields:
 Environment description:
 "{prompt}"
 '''
-    return json.loads(llm_analyze_media('',question)['analysis'])
+    answer = llm_analyze_media('',question)['analysis']
+    print(answer)
+    return json.loads(anser)
 
 def CreateBackground(prompt='', output='location_tmp.png', seed=-1, override=None, ambience=True):
     seed = int(seed)
