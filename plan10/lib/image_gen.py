@@ -631,12 +631,11 @@ def CreateCharacterSheet(prompt='', output='character_tmp.png', seed=-1, imagege
     return status
 
 def crowd_density(prompt=""):
-    question = f'''You are a classification engine. 
-Your job is to analyze an environment description and determine:
+    question = f'''
+You are a strict JSON classification engine.
 
-1. Whether the environment is normally populated.
-2. The typical population density.
-3. The typical background activity type.
+Analyze the environment description and return ONLY a JSON object.
+No explanation. No prose. No backticks. No comments. No trailing commas.
 
 Rules:
 - Do NOT invent specific people.
@@ -644,20 +643,26 @@ Rules:
 - Only describe ambient crowd behavior (silhouettes, blobs, motion).
 - If the environment is normally empty, set density to "none" and activity to "none".
 
-Return ONLY a JSON object with the following fields:
+Return EXACTLY this JSON structure:
 
 {{
-  "should_populate": true | false,
-  "density": "none" | "low" | "medium" | "high",
-  "activity": "none" | "talking" | "dancing" | "walking" | "jogging" | "browsing" | "milling" | "working" | "sitting"
+  "should_populate": true,
+  "density": "none",
+  "activity": "none"
 }}
+
+Where:
+- "should_populate" is true or false
+- "density" is one of: "none", "low", "medium", "high"
+- "activity" is one of: "none", "talking", "dancing", "walking", "jogging", "browsing", "milling", "working", "sitting"
 
 Environment description:
 "{prompt}"
 '''
+
     answer = llm_analyze_media('',question)['analysis']
     print(answer)
-    return json.loads(anser)
+    return json.loads(answer)
 
 def CreateBackground(prompt='', output='location_tmp.png', seed=-1, override=None, ambience=True):
     seed = int(seed)
