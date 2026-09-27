@@ -26,6 +26,62 @@ def llm_rewrite(media: str | Path, prompt: str) -> str:
     print(f'MEDIA: {media}\n PROMPT: "{prompt}"\n OUTPUT: "{output.strip()}"\n')
     return output.strip()
 
+def extract_mood(text: str) -> str:
+    """
+    Extract a simple mood label from an action or expression string.
+    Returns a single word like: angry, sad, happy, fearful, disgusted, surprised, neutral.
+    """
+    output = llm_rewrite(
+        "",
+        f"""
+You are a deterministic mood classifier.
+
+Task:
+- Read the following description (action or expression).
+- Classify the dominant emotional mood.
+- Respond with ONE word from this set:
+  angry, sad, happy, fearful, disgusted, surprised, neutral.
+
+Description:
+{text}
+"""
+    )
+    return output.strip().lower()
+
+def mood_to_facial_description(mood: str) -> str:
+    """
+    Map a mood label into a physical facial description.
+    No emotion words, only anatomy: brows, eyes, mouth, jaw, head angle.
+    """
+    return llm_rewrite(
+        "",
+        f"""
+You are a deterministic facial-expression mapper.
+
+Task:
+- Convert the given mood into a physical facial description.
+- Describe only brows, eyes, mouth, jaw, and head angle.
+- No emotion words, no narrative, no backstory.
+- 1–2 short sentences.
+
+Mood:
+{mood}
+"""
+    )
+
+def determine_mood(action: Optional[str], expression: Optional[str]) -> str:
+    """
+    Priority:
+    1) If action exists, mood comes from action.
+    2) Else if expression exists, mood comes from expression.
+    3) Else, neutral.
+    """
+    if action:
+        return extract_mood(action)
+    if expression:
+        return extract_mood(expression)
+    return "neutral"
+
 
 def describe_background_from_image(bg_path: Path) -> str:
     """
@@ -103,10 +159,8 @@ def build_qwen_prompt(
     char_descs: List[str],
     camera_desc: str,
     action_physical: str,
+    face_descs: Optional[List[str]] = None,
 ) -> str:
-    """
-    Build the global Qwen-friendly prompt.
-    """
     lines = []
     lines.append("A composite scene using the provided background and character reference images.")
     lines.append("")
@@ -119,6 +173,8 @@ def build_qwen_prompt(
     lines.append("CHARACTERS:")
     for i, desc in enumerate(char_descs, start=1):
         lines.append(f"{i}. {desc}")
+        if face_descs and i <= len(face_descs) and face_descs[i-1]:
+            lines.append(f"   FACIAL EXPRESSION: {face_descs[i-1]}")
     lines.append("")
     lines.append("ACTION:")
     lines.append(f"- {action_physical}")
@@ -130,6 +186,7 @@ def build_qwen_prompt(
     lines.append("- Realistic.")
 
     return "\n".join(lines)
+
 
 
 def qwen_generate(
@@ -170,41 +227,41 @@ def CompositeSceneQwen(
     width: int = WIDTH,
     height: int = HEIGHT,
 ):
-    """
-    Drop-in replacement for the old Flux compositor.
-    Now uses the Qwen-native global synthesis compositor.
-    """
-
-    # Resolve seed
-    if seed == -1:
-        seed = random.randint(0, 100000)
-
+    # seed, paths...
     bg = Path(background_path)
     char_paths = [Path(c) for c in characters]
 
-    # --- 1) Background description ---
     bg_desc = truncate(describe_background_from_image(bg))
-
-    # --- 2) Character descriptions ---
     char_descs = [truncate(describe_character_from_image(c)) for c in char_paths]
-
-    # --- 3) Physical action rewrite ---
     action_physical = truncate(rewrite_action_physical(action))
-
-    # --- 4) Camera description ---
     camera_desc = shot_type_to_camera_description(shot_type)
 
-    # --- 5) Build global Qwen prompt ---
+    # mood from action (for now)
+    mood = extract_mood(action)
+
+    # facial descriptions per character
+    face_descs: List[str] = []
+
+    if shot_type == "ots" and len(char_paths) == 2:
+        # char 1 foreground → no face
+        face_descs.append("")  # or None
+        # char 2 background → face described
+        face_descs.append(truncate(mood_to_facial_description(mood)))
+    else:
+        # all characters get a face description
+        for _ in char_paths:
+            face_descs.append(truncate(mood_to_facial_description(mood)))
+
     prompt = build_qwen_prompt(
         bg_desc=bg_desc,
         char_descs=char_descs,
         camera_desc=camera_desc,
         action_physical=action_physical,
+        face_descs=face_descs,
     )
 
     print(f"Compositing with prompt: {prompt}")
 
-    # --- 6) Generate composite ---
     status = qwen_generate(
         background=bg,
         characters=char_paths,
@@ -216,6 +273,7 @@ def CompositeSceneQwen(
     )
 
     return status
+
 
 
 def main():
@@ -247,7 +305,7 @@ def main():
     bg_desc = truncate(describe_background_from_image(bg))
 
     # --- 2) Character descriptions ---
-    char_descs = [truncate(describe_character_from_image(c)) for c in char_paths]
+    char_descs = [truncate(describe_character_from_image(c)) for c in chars]
 
     # --- 3) Physical action rewrite ---
     action_physical = truncate(rewrite_action_physical(action))
