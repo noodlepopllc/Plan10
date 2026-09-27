@@ -627,16 +627,25 @@ def CreateCharacterSheet(prompt='', output='character_tmp.png', seed=-1, imagege
     status['prompt'] = eprompt
     return status
 
-def CreateBackground(prompt='', output='location_tmp.png', seed=-1, override=None):
+def CreateBackground(prompt='', output='location_tmp.png', seed=-1, override=None, ambience=True):
     seed = int(seed)
     print("CREATE BACKGROUND")
     
-    # Environment-agnostic base prompt
     base_prompt = (
-        "Empty environmental background plate, wide-angle establishing shot, "
+        "Environmental background plate, wide-angle establishing shot, "
         "detailed scenery, atmospheric lighting, spatial composition, "
-        "unoccupied space, still life environment, no people, no characters. "
+        "no characters. "
     )
+
+    if not ambience:
+        base_prompt += "unoccupied space, no people. "
+    else:
+        base_prompt += (
+            "allow ambient silhouettes and low-detail crowd shapes; "
+            "these are NOT people, no faces, no anatomy, no identity; "
+            "they exist only as lighting occlusion and motion ambience. "
+        )
+
     
     user_part = prompt.strip() if prompt else "empty atmospheric location"
     combined = f"{base_prompt} {user_part}"
