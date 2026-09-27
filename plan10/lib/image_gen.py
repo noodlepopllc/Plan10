@@ -692,11 +692,11 @@ def CreateBackground(prompt='', output='location_tmp.png', seed=-1, override=Non
         user_part += (
             f"ambient silhouettes with {classification['density']} density, "
             f"background motion suggesting {classification['activity']}, "
-            #"no faces, no anatomy, no identity; "
+            "no faces, no anatomy, no identity; "
             "silhouettes only as lighting occlusion and ambient motion."
         )
     else:
-        user_part += "no characters, unoccupied space, no people."
+        user_part += "no characters, unoccupied space, no people, no silhouettes."
 
     combined = f"{base_prompt} {user_part}"
     
