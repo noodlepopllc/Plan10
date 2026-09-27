@@ -7,14 +7,17 @@ from diffsynth.pipelines.sensenova_u1_image import SenseNovaU1ImagePipeline, Mod
 import gc
 import torch
 import os, random, json
-from plan10.lib.image_analysis import AnalyzeImage, EnhancePrompt
+
 from plan10.lib.config import load_environ
+load_environ()
 from PIL import Image
 from rembg import remove
 
+from plan10.lib.image_analysis import AnalyzeImage, EnhancePrompt
+from plan10.lib.qwen_llm import llm_analyze_media
 from plan10.lib.util import load_metadata
 
-load_environ()
+
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
 SEED = int(os.environ.get("SEED", "-1"))
