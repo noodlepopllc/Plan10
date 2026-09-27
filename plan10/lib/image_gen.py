@@ -667,7 +667,7 @@ Environment description:
 def CreateBackground(prompt='', output='location_tmp.png', seed=-1, override=None, ambience=True):
     seed = int(seed)
     crowded = crowd_density(prompt)
-    print(json.dumps(crowded),indent=4)
+    print(json.dumps(crowded,indent=4))
     print("CREATE BACKGROUND")
     
     base_prompt = (
