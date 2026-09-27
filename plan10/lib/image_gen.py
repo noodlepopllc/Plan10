@@ -643,18 +643,17 @@ def sanitize_json(text):
 
 def crowd_density(prompt=""):
     question = f'''
-You are a strict JSON classification engine.
+You are a classification engine.
 
-Analyze the environment description and return ONLY a JSON object.
-No explanation. No prose. No backticks. No comments. No trailing commas.
+Determine whether this environment is *normally* populated, 
+based on its type, NOT based on whether the description happens 
+to depict it empty.
 
-Rules:
-- Do NOT invent specific people.
-- Do NOT describe faces, anatomy, identity, or individuals.
-- Only describe ambient crowd behavior (silhouettes, blobs, motion).
-- If the environment is normally empty, set density to "none" and activity to "none".
+Only return "should_populate": false if the prompt explicitly 
+forbids people (e.g., "empty", "unoccupied", "no people", 
+"clear of crowd", "unobstructed floor").
 
-Return EXACTLY this JSON structure:
+Otherwise, use the environment's typical population pattern.
 
 {{
   "should_populate": true,
