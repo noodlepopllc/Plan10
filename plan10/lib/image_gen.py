@@ -627,8 +627,37 @@ def CreateCharacterSheet(prompt='', output='character_tmp.png', seed=-1, imagege
     status['prompt'] = eprompt
     return status
 
+def crowd_density(prompt=""):
+    question = f'''You are a classification engine. 
+Your job is to analyze an environment description and determine:
+
+1. Whether the environment is normally populated.
+2. The typical population density.
+3. The typical background activity type.
+
+Rules:
+- Do NOT invent specific people.
+- Do NOT describe faces, anatomy, identity, or individuals.
+- Only describe ambient crowd behavior (silhouettes, blobs, motion).
+- If the environment is normally empty, set density to "none" and activity to "none".
+
+Return ONLY a JSON object with the following fields:
+
+{
+  "should_populate": true | false,
+  "density": "none" | "low" | "medium" | "high",
+  "activity": "none" | "talking" | "dancing" | "walking" | "jogging" | "browsing" | "milling" | "working" | "sitting"
+}
+
+Environment description:
+"{prompt}"
+'''
+    return json.loads(llm_analyze_media('',question)['analysis'])
+
 def CreateBackground(prompt='', output='location_tmp.png', seed=-1, override=None, ambience=True):
     seed = int(seed)
+    crowded = crowd_density(prompt)
+    print(json.dumps(crowded),indent=4)
     print("CREATE BACKGROUND")
     
     base_prompt = (
