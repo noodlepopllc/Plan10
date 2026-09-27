@@ -645,29 +645,29 @@ def crowd_density(prompt=""):
     question = f'''
 You are a classification engine.
 
-Determine whether this environment is *normally* populated, 
-based on its type, NOT based on whether the description happens 
-to depict it empty.
+Your job has two steps:
 
-Only return "should_populate": false if the prompt explicitly 
-forbids people (e.g., "empty", "unoccupied", "no people", 
-"clear of crowd", "unobstructed floor").
+1. Identify the environment type being described.
+   Return a single noun such as "nightclub", "warehouse", "forest",
+   "gym", "museum", "street", "office", "hangar", etc.
+   Ignore architectural emptiness, camera framing, and layout details.
 
-Otherwise, use the environment's typical population pattern.
+2. Infer the typical human population density and typical background
+   activity for that environment based on real-world knowledge.
+   Do NOT use the prompt's emptiness or layout to suppress population.
+   The ambience flag will handle suppression separately.
+
+Return ONLY this JSON:
 
 {{
-  "should_populate": true,
-  "density": "none",
-  "activity": "none"
+  "environment": "<environment_type>",
+  "density": "none" | "low" | "medium" | "high",
+  "activity": "<inferred typical background activity>"
 }}
-
-Where:
-- "should_populate" is true or false
-- "density" is one of: "none", "low", "medium", "high"
-- "activity" is one of: "none", "talking", "dancing", "walking", "jogging", "browsing", "milling", "working", "sitting"
 
 Environment description:
 "{prompt}"
+
 '''
 
     answer = llm_analyze_media('',question)['analysis']
