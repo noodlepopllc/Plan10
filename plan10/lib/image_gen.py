@@ -689,11 +689,9 @@ def CreateBackground(prompt='', output='location_tmp.png', seed=-1, override=Non
     user_part = prompt.strip() if prompt else "empty atmospheric location"
 
     if ambience:
-        user_part += (
-            f"ambient silhouettes with {classification['density']} density, "
-            f"background motion suggesting {classification['activity']}, "
-            "no faces, no anatomy, no identity; "
-            "silhouettes only as lighting occlusion and ambient motion."
+        user_part += (f'''ambient background figures with {classification['density']} density, rendered out-of-focus and low-detail to preserve anonymity; 
+lighting and atmosphere determine whether figures appear as silhouettes or soft blurred shapes; 
+background motion suggesting {classification['activity']}, no faces, no anatomy, no identity.'''
         )
     else:
         user_part += "no characters, unoccupied space, no people, no silhouettes."
