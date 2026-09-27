@@ -12,7 +12,7 @@ fi
 
 
 if [[ ! -f "$output/script.txt" || ! -f "$output/world.txt" ]]; then
-    python $basepath/builders/script.py -S $1 $output
+    python $basepath/builders/script.py $1 $output
 fi
 
 if [[ ! -f "$output/complete.json" ]]; then
