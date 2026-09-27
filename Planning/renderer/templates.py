@@ -8,6 +8,8 @@ load_environ()
 class CommandBuffer:
     def __init__(self):
         self.identity = []
+        self.backgrounds = []
+        self.voices = []
         self.videos = []
         self.images = []
         self.video_images = []
@@ -23,8 +25,13 @@ class CommandBuffer:
         mode = mode.lower()
         for c in self.identity:
             print(c)
-        for c in self.images:
+        for c in self.backgrounds:
             print(c)
+        if mode not in ("minimum"):
+            for c in self.images:
+                print(c)
+            for c in self.voices:
+                print(c)
         if mode in ("images"):
             for c in self.video_images:
                 print(c)
@@ -79,7 +86,7 @@ create a character sheet of {description}, Seed: {self.SEED}
 """)
 
     def voice_design(self, alias, voice_desc):
-        self.buffer.identity.append(f"""
+        self.buffer.voices.append(f"""
 >> ALIAS: {alias}_VOICE
 design a voice for {voice_desc}
 """)
@@ -89,7 +96,7 @@ design a voice for {voice_desc}
     # ---------------------------------------------------------
 
     def background(self, alias, architecture, definition, anchored):
-        self.buffer.images.append(f"""
+        self.buffer.backgrounds.append(f"""
 >> ALIAS: {alias}_BACKGROUND
 create_background cinematic composition with tighter framing focused on the primary functional area,
 minimize negative space at the frame edges,
