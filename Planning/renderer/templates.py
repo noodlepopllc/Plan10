@@ -28,8 +28,6 @@ class CommandBuffer:
         if mode in ("images"):
             for c in self.video_images:
                 print(c)
-            for c in self.dialog_images:
-                print(c)
             for c in self.closeup_images:
                 print(c)
             for c in self.medium_images:
