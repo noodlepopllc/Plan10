@@ -630,6 +630,17 @@ def CreateCharacterSheet(prompt='', output='character_tmp.png', seed=-1, imagege
     status['prompt'] = eprompt
     return status
 
+def sanitize_json(text):
+    text = text.strip()
+    # Remove backticks if present
+    if text.startswith("```"):
+        text = text.strip("`")
+    # Remove accidental prose before/after JSON
+    start = text.find("{")
+    end = text.rfind("}") + 1
+    return text[start:end]
+
+
 def crowd_density(prompt=""):
     question = f'''
 You are a strict JSON classification engine.
@@ -662,12 +673,13 @@ Environment description:
 
     answer = llm_analyze_media('',question)['analysis']
     print(answer)
-    return json.loads(answer)
+    return json.loads(sanitize_json(answer))
+
 
 def CreateBackground(prompt='', output='location_tmp.png', seed=-1, override=None, ambience=True):
     seed = int(seed)
-    crowded = crowd_density(prompt)
-    print(json.dumps(crowded,indent=4))
+    classification = crowd_density(prompt)
+    print(json.dumps(classification,indent=4))
     print("CREATE BACKGROUND")
     
     base_prompt = (
@@ -676,14 +688,16 @@ def CreateBackground(prompt='', output='location_tmp.png', seed=-1, override=Non
         "no characters. "
     )
 
-    if not ambience:
-        base_prompt += "unoccupied space, no people. "
-    else:
+    if ambience and classification["should_populate"]:
         base_prompt += (
-            "allow ambient silhouettes and low-detail crowd shapes; "
-            "these are NOT people, no faces, no anatomy, no identity; "
-            "they exist only as lighting occlusion and motion ambience. "
+            f"ambient silhouettes with {classification['density']} density, "
+            f"background motion suggesting {classification['activity']}, "
+            "no faces, no anatomy, no identity; "
+            "silhouettes only as lighting occlusion and ambient motion."
         )
+    else:
+        base_prompt += "unoccupied space, no people."
+
 
     
     user_part = prompt.strip() if prompt else "empty atmospheric location"
