@@ -327,14 +327,17 @@ def run_prompt(prompt, system, pth, max_tokens=8192):
             media="",
             prompt=prompt,
             system=system,
-            max_tokens=max_tokens)['analysis']
-        with open(pth, 'w') as out_f:
-            out_f.write(result)
+            max_tokens=max_tokens
+        )['analysis']
+
+        Path(pth).write_text(result, encoding='utf-8')
         print(f'Wrote {pth}')
         return result
+
     else:
         print(f'{pth} Exists')
-        return Path(pth).read_text()
+        return Path(pth).read_text(encoding='utf-8')
+
 
 # ============================================================================
 # MAIN
@@ -368,7 +371,7 @@ if __name__ == '__main__':
         token_budget = 8192   # Action scenes need less
 
     if args.seed:
-        seed_text = Path(args.seed).read_text()
+        seed_text = Path(args.seed).read_text(encoding='utf-8')
         print(f'Using seed from {args.seed}')
 
     if args.topical:
