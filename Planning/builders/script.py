@@ -19,18 +19,18 @@ CURRENT BEAT (raw story text):
 {beat_text}
 
 OUTPUT FORMAT (JSON ONLY):
-{
+{{
   "zone": "Exact zone name from WORLD CONTEXT",
   "summary": "One-sentence visual description of the moment.",
   "characters": [
-    {
+    {{
       "name": "CHARACTER NAME",
       "delivery": "ONE WORD describing how the dialog is spoken (e.g., suspicious, weary, hopeful, neutral)",
       "dialog": "spoken words or null",
       "action": "action description or null"
-    }
+    }}
   ]
-}
+}}
 
 RULES:
 1. Use PREVIOUS CONTEXT to maintain continuity across beats.
@@ -52,8 +52,6 @@ RULES:
    - Must describe the visual moment.
    - Should be consistent with PREVIOUS CONTEXT unless the beat explicitly changes the scene.
 9. Output ONLY raw JSON."""
-
-
 
 
 # ═══════════════════════════════════════════════════════════════
