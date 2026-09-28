@@ -364,18 +364,41 @@ def canonical_key(location_name: str, zone_name: str) -> str:
     return f"{key}_BACKGROUND"
 
 def fix_locations(base, lines, registry, context):
+    # 1. Build location → zones map from registry
+    locations = {}
+    for location in registry['locations']:
+        name = location['name']
+        zones = [z['zone_name'] for z in location['zones']]
+        locations[name] = zones
+
+    # 2. For each line, infer location from zone and assign background
     for line in lines:
-        loc = line['location']
         zone = line['zone']
 
+        # Find which location this zone belongs to
+        loc = None
+        for location_name, zone_list in locations.items():
+            if zone in zone_list:
+                loc = location_name
+                break
+
+        if loc is None:
+            raise KeyError(f"Zone '{zone}' not found in any registry location")
+
+        # Persist inferred location on the line
+        line['location'] = loc
+
+        # 3. Reconstruct canonical background key
         full_key = canonical_key(loc, zone)
 
         if full_key not in context['assets']:
-            raise KeyError(f"Background key '{full_key}' not found in registry")
+            raise KeyError(f"Background key '{full_key}' not found in assets")
 
+        # 4. Assign resolved background path
         line['background'] = str((base / Path(context['assets'][full_key]['path'])).resolve())
 
     return lines
+
 
 
 def get_characters(base, registry, context):
