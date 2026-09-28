@@ -162,7 +162,7 @@ def update_state(state, analyzed_beat):
 # ═══════════════════════════════════════════════════════════════
 def story_to_script(story_path, world_text, output_path, llm_call_func):
     # Load story
-    story_text = Path(story_path).read_text()
+    story_text = Path(story_path).read_text(encoding='utf-8')
 
     # Split into beats
     beats = split_into_beats(story_text)
@@ -273,7 +273,7 @@ def run_prompt(prompt, system, pth):
       return result
     else:
       print(f'{pth} Exists')
-      return Path(pth).read_text()
+      return Path(pth).read_text(encoding='utf-8')
 
 def extract_zone_differentiators(world_json):
     """Programmatically find shared vs unique elements across zones."""
@@ -363,14 +363,14 @@ if __name__ == '__main__':
         print("Usage: python story_to_script.py <directory_path>")
         sys.exit(1)
     if len(sys.argv) == 3:
-        seed = Path(sys.argv[1]).read_text()
+        seed = Path(sys.argv[1]).read_text(encoding='utf-8')
         dir_path = sys.argv[2]
     else:
         dir_path = sys.argv[1]
     prompt_path = './Planning/prompts'
-    WORLD = Path(f'{prompt_path}/scriptwriter/world.txt').read_text()
-    BIOGRAPHY = Path(f'{prompt_path}/scriptwriter/biography.txt').read_text()
-    story_input = Path(f'{dir_path}/story.txt').read_text()
+    WORLD = Path(f'{prompt_path}/scriptwriter/world.txt').read_text(encoding='utf-8')
+    BIOGRAPHY = Path(f'{prompt_path}/scriptwriter/biography.txt').read_text(encoding='utf-8')
+    story_input = Path(f'{dir_path}/story.txt').read_text(encoding='utf-8')
     world = run_prompt(f'SEED FILE: \n{seed}\n STORY FILE: \n{story_input}', WORLD, f'{dir_path}/world.txt')
     biography_text = run_prompt(world, BIOGRAPHY, f'{dir_path}/registry.json')
     world_text = format_compact_world(json.loads(biography_text))
