@@ -32,11 +32,7 @@ def parse_script_txt(path):
             # -------------------------
             # ZONE
             # -------------------------
-            m = re.match(r'
-
-\[ZONE:\s*(.+?)\]
-
-', line)
+            m = re.match(r'\[ZONE:\s*(.+?)\]', line)
             if m:
                 beat["zone"] = m.group(1).strip()
                 continue
