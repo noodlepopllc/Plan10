@@ -5,9 +5,9 @@ from plan10.lib.qwen_llm import llm_analyze_media
 from pathlib import Path
 
 prompt_path = './Planning/prompts'
-WORLD = Path(f'{prompt_path}/scriptwriter/world.txt').read_text()
-BIOGRAPHY = Path(f'{prompt_path}/scriptwriter/biography.txt').read_text()
-SCREENPLAY = Path(f'{prompt_path}/screenplay.txt').read_text()
+WORLD = Path(f'{prompt_path}/scriptwriter/world.txt').read_text(encoding='utf-8')
+BIOGRAPHY = Path(f'{prompt_path}/scriptwriter/biography.txt').read_text(encoding='utf-8')
+SCREENPLAY = Path(f'{prompt_path}/screenplay.txt').read_text(encoding='utf-8')
 
 REQUIRED_FIELDS = ['actor', 'speaker', 'action', 'dialog', 'location', 'zone', 'posture', 'facial']
 
@@ -82,13 +82,13 @@ def run_prompt(prompt, system, pth):
           system=system,
           max_tokens=8192,
           temperature=0.2)['analysis']
-      with open(pth, 'w') as out_f:
+      with open(pth, 'w', encoding='utf-8') as out_f:
         out_f.write(result)
       print(f'Wrote {pth}')
       return result
     else:
       print(f'{pth} Exists')
-      return Path(pth).read_text()
+      return Path(pth).read_text(encoding='utf-8')
 
 def extract_metadata_from_screenplay(screenplay_text):
     """Extract tag line, location, and character intros from screenplay header."""
@@ -337,9 +337,9 @@ def build_script(user_input_path, outpath):
     # Read user input
     #user_input = Path(user_input_path).read_text()
     
-    screenplay = Path(f'{outpath}/script.txt').read_text()
+    screenplay = Path(f'{outpath}/script.txt').read_text(encoding='utf-8')
     
-    biography_text = Path(f'{outpath}/registry.json').read_text()
+    biography_text = Path(f'{outpath}/registry.json').read_text(encoding='utf-8')
     
     # Parse biography JSON
     try:
