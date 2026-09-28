@@ -6,23 +6,7 @@ from plan10.lib.util import video_to_img, to_absolute
 from plan10.lib.image_gen import add_metadata_loc
 from PIL import Image
 
-def normalize_zone_name(zone: str) -> str:
-    """
-    Convert human-readable zone names into the slug format used by background registry.
-    """
-    z = zone.upper()
 
-    # Replace slashes with underscores (NOT spaces)
-    z = z.replace("/", "_")
-
-    # Replace spaces with underscores
-    z = z.replace(" ", "_")
-
-    # Collapse multiple underscores deterministically
-    while "__" in z:
-        z = z.replace("__", "_")
-
-    return z
 
 def get_or_analyze(image_path: str, prompt: str, cache_key: str, max_words: int = 15) -> str:
     """Get cached analysis from image metadata, or analyze and cache it."""
@@ -372,6 +356,23 @@ def filter_empty(entry):
         vals.add(entry[x])
     return not len(vals) <= 1
 
+def slugify(label: str) -> str:
+    """
+    Deterministically normalize ANY location/zone label into the exact slug
+    format used by your background registry.
+    """
+    z = label.upper()
+
+    # Replace separators
+    z = z.replace("/", "_")
+    z = z.replace(" ", "_")
+
+    # Collapse multiple underscores
+    while "__" in z:
+        z = z.replace("__", "_")
+
+    return z
+
 def fix_locations(base, lines, registry, context):
     locations = {}
     for location in registry['locations']:
@@ -395,10 +396,11 @@ def fix_locations(base, lines, registry, context):
     for line in lines:
         for k, v in locations.items():
             if line['zone'] in v:
-                line['location'] = k
-                normalized_zone = normalize_zone_name(line['zone']) + "_BACKGROUND"
-                line['background'] = location_info[k][normalized_zone]
+                location_slug = slugify(k)
+                zone_slug = slugify(line['zone'])
+                full_key = f"{location_slug}_{zone_slug}_BACKGROUND"
 
+                line['background'] = location_info[k][full_key]
     return lines
 
 def get_characters(base, registry, context):
