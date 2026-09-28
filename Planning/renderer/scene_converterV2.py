@@ -6,6 +6,24 @@ from plan10.lib.util import video_to_img, to_absolute
 from plan10.lib.image_gen import add_metadata_loc
 from PIL import Image
 
+def normalize_zone_name(zone: str) -> str:
+    """
+    Convert human-readable zone names into the slug format used by background registry.
+    """
+    z = zone.upper()
+
+    # Replace slashes with underscores (NOT spaces)
+    z = z.replace("/", "_")
+
+    # Replace spaces with underscores
+    z = z.replace(" ", "_")
+
+    # Collapse multiple underscores deterministically
+    while "__" in z:
+        z = z.replace("__", "_")
+
+    return z
+
 def get_or_analyze(image_path: str, prompt: str, cache_key: str, max_words: int = 15) -> str:
     """Get cached analysis from image metadata, or analyze and cache it."""
     img = Image.open(image_path)
@@ -378,7 +396,9 @@ def fix_locations(base, lines, registry, context):
         for k, v in locations.items():
             if line['zone'] in v:
                 line['location'] = k
-                line['background'] = location_info[k][line['zone']]
+                normalized_zone = normalize_zone_name(line['zone']) + "_BACKGROUND"
+                line['background'] = location_info[k][normalized_zone]
+
     return lines
 
 def get_characters(base, registry, context):
