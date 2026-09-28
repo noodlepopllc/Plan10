@@ -35,6 +35,9 @@ def split_action_into_units(action: str):
     Heuristic: ~12–18 words ≈ 10–15 seconds.
     """
 
+    if not action:
+        return ""
+
     # Split on common sequential connectors
     chunks = re.split(r'\b(?:and|then|,)\b', action)
     units = []
