@@ -443,6 +443,9 @@ def main():
     else:
         mode = os.environ.get("MODE", "all")
 
+    with open(f"{basepath}/output/registry.json") as ass:
+        assets = json.load(ass)
+
     T = Templates()   # ← ONE OBJECT
 
     get_identity(assets, T)
@@ -454,8 +457,7 @@ def main():
         render_beats_dialog(assets, actions, mappings, T, backdrop_position)
 
 
-        with open(f"{basepath}/output/registry.json") as ass:
-            assets = json.load(ass)
+
         actions = []
         if not Path(f"{basepath}/output/complete_segmented.json").exists():
             with open(f"{basepath}/output/narrative.json") as act:
