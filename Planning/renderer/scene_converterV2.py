@@ -364,34 +364,19 @@ def canonical_key(location_name: str, zone_name: str) -> str:
     return f"{key}_BACKGROUND"
 
 def fix_locations(base, lines, registry, context):
-    locations = {}
-    for location in registry['locations']:
-        name = location['name']
-        locations[name] = []
-        for zone in location['zones']:
-            locations[name].append(zone['zone_name'])
-    #print(locations)
-
-    location_info = {}
-    for asset in context['assets']:
-        if 'BACKGROUND' in asset:
-            print(asset)
-            for location in locations:
-                if asset.startswith(location.replace(' ','_').upper()):
-                    if location not in location_info:
-                        location_info[location] = {}
-                    for zone in locations[location]:
-                        if zone.replace(' ','_').upper() in asset:
-                            location_info[location][zone] = str((base / Path(context['assets'][asset]['path'])).resolve())
     for line in lines:
-        for k, v in locations.items():
-            if line['zone'] in v:
-                if line['zone'] in v:
-                    line['location'] = k
-                    full_key = canonical_key(line['location'], line['zone'])
-                    line['background'] = registry[full_key]['path']
+        loc = line['location']
+        zone = line['zone']
+
+        full_key = canonical_key(loc, zone)
+
+        if full_key not in context['assets']:
+            raise KeyError(f"Background key '{full_key}' not found in registry")
+
+        line['background'] = str((base / Path(context['assets'][full_key]['path'])).resolve())
 
     return lines
+
 
 def get_characters(base, registry, context):
     characters = {}
