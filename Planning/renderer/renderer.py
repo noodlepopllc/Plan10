@@ -438,40 +438,41 @@ def main():
     else:
         backdrop_position = "ANY"
 
-    with open(f"{basepath}/output/registry.json") as ass:
-        assets = json.load(ass)
-    actions = []
-    if not Path(f"{basepath}/output/complete_segmented.json").exists():
-        with open(f"{basepath}/output/narrative.json") as act:
-            for line in act:
-                actions.append(json.loads(line))
-
-        threshold = 32 if os.environ.get('WGP','False') == 'True' or os.environ.get('LTX','False') == 'True' else 16
-        threshold = 16 if os.environ.get('MMH3','False') != 'False' else threshold
-        
-        actions = split_dialog_sentences(actions, assets, threshold)
-
-        with open(f"{basepath}/output/complete_segmented.json", 'w') as act:
-            json.dump(actions,act,indent=4)
-    else:
-        actions = json.loads(Path(f"{basepath}/output/complete_segmented.json").read_text())
-
-    T = Templates()   # ← ONE OBJECT
-
-    get_identity(assets, T)
-    mappings = create_backdrop_mapping(assets, actions)
-    get_backgrounds(assets, mappings, T)
-
-    render_beats_actions(assets, actions, mappings, T, backdrop_position)
-    render_beats_dialog(assets, actions, mappings, T, backdrop_position)
-
     if len(sys.argv) > 2 and sys.argv[2] in ("images", "all", "videos", "identity", "dialog", "full", "closeup", "medium", "ots", "minimum"):
         mode = sys.argv[2]
     else:
         mode = os.environ.get("MODE", "all")
 
-    T.buffer.dump(mode)
+    T = Templates()   # ← ONE OBJECT
 
+    get_identity(assets, T)
+    mappings = create_backdrop_mapping(assets)
+    get_backgrounds(assets, mappings, T)
+
+    if mode != "minimum":
+        render_beats_actions(assets, actions, mappings, T, backdrop_position)
+        render_beats_dialog(assets, actions, mappings, T, backdrop_position)
+
+
+        with open(f"{basepath}/output/registry.json") as ass:
+            assets = json.load(ass)
+        actions = []
+        if not Path(f"{basepath}/output/complete_segmented.json").exists():
+            with open(f"{basepath}/output/narrative.json") as act:
+                for line in act:
+                    actions.append(json.loads(line))
+
+            threshold = 32 if os.environ.get('WGP','False') == 'True' or os.environ.get('LTX','False') == 'True' else 16
+            threshold = 16 if os.environ.get('MMH3','False') != 'False' else threshold
+            
+            actions = split_dialog_sentences(actions, assets, threshold)
+
+            with open(f"{basepath}/output/complete_segmented.json", 'w') as act:
+                json.dump(actions,act,indent=4)
+        else:
+            actions = json.loads(Path(f"{basepath}/output/complete_segmented.json").read_text())
+
+    T.buffer.dump(mode)
 
 if __name__ == "__main__":
     main()

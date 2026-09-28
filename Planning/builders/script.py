@@ -17,97 +17,85 @@ BEAT:
 
 OUTPUT FORMAT (JSON ONLY):
 {{
+  "zone": "Exact zone name from WORLD CONTEXT",
+  "summary": "One-sentence visual description of the moment (from the beat).",
   "characters": [
     {{
       "name": "CHARACTER NAME",
-      "posture": "ONE WORD (sitting/standing/walking)",
-      "posture_changed": true or false,
-      "emotion": "ONE WORD",
+      "delivery": "ONE WORD describing how the dialog is spoken (e.g., suspicious, weary, hopeful, neutral)",
       "dialog": "spoken words or null",
       "action": "action description or null"
     }}
-  ],
-  "zone": "Exact zone name from WORLD CONTEXT",
-  "shot_setup": "Brief visual description of ALL characters and props (max 20 words)."
+  ]
 }}
 
-CRITICAL RULES:
-1. ZONE SELECTION: Look for explicit zone references in the beat (props, background elements, actions). Match them to the VALID ZONES list. If the beat mentions "greasy steel table" or "hard drive on table", use "Greasy Steel Table Zone". If it mentions "damp concrete floor" or "pivoting on floor", use "Damp Concrete Floor Zone". If it mentions "crates against wall", use "Perimeter Wall Zone".
-2. CHARACTERS: Extract ALL characters present in the beat, not just the speaker.
-3. For each character, extract their individual posture, emotion, dialog, and action.
-4. POSTURE_CHANGED: Set to true ONLY if that specific character's posture explicitly changes.
-5. DIALOG: Extract ONLY words inside quotation marks. Strip quotes. Preserve punctuation.
-6. SHOT_SETUP: Describe the visual setup including ALL characters present.
-7. Output ONLY the raw JSON."""
+RULES:
+1. ZONE SELECTION: Choose the zone that best matches environmental cues, props, terrain, or background elements mentioned in the beat.
+2. SUMMARY: Extract the beat’s visual moment description. If unclear, infer from actions and environmental cues.
+3. CHARACTERS: Include ALL characters present in the beat, even if they have no dialog or action.
+4. DELIVERY: ONE WORD describing how the dialog is spoken. If no dialog, infer tone from context or set to "neutral".
+5. DIALOG: Extract ONLY text inside quotes. Strip quotes. If none, set to null.
+6. ACTION: Extract physical actions performed by the character. If none, set to null.
+7. Output ONLY raw JSON."""
+
 
 # ═══════════════════════════════════════════════════════════════
 # PROMPT 2: FORMATTER (Strict Templating)
 # ═══════════════════════════════════════════════════════════════
-FORMATTER_PROMPT = """Format this beat as a script line using data from BEAT DATA.
+FORMATTER_PROMPT = """Format this beat as a script line using BEAT DATA.
 
 BEAT DATA:
 {beat_data_json}
 
 OUTPUT FORMAT:
 [ZONE: <zone>]
->> <shot_setup>
+>> <summary>
 
-<CHARACTER> (<posture>, <emotion>)
+<CHARACTER> (<delivery>)
 "<dialog>"
 <action>
 
 RULES:
-1. If dialog exists, wrap it in QUOTES: "dialog text here"
+1. If dialog exists, wrap it in QUOTES: "dialog text here".
 2. If dialog is null/empty, omit the dialog line entirely.
-3. Action line has NO quotes.
-4. If action is null/empty, omit the action line entirely.
-5. Character name MUST be the EXACT full name from BEAT DATA. NEVER abbreviate or shorten names.
-6. Character name in ALL CAPS.
-7. Output ONLY the formatted text."""
+3. If action is null/empty, omit the action line entirely.
+4. Character name MUST be the EXACT full name from BEAT DATA, in ALL CAPS.
+5. Output ONLY the formatted text."""
+
 
 # ═══════════════════════════════════════════════════════════════
 # PYTHON STATE TRACKER (Deterministic Logic)
 # ═══════════════════════════════════════════════════════════════
 def update_state(state, analyzed_beat):
-    """Handle multiple characters per beat."""
+    """Track only zone, active characters, last speaker, last actor."""
     new_state = state.copy()
-    
-    if 'character_postures' not in new_state:
-        new_state['character_postures'] = {}
-    
-    # Process each character in the beat
+
+    # Track active characters
+    if 'active_characters' not in new_state:
+        new_state['active_characters'] = []
+
     for char_data in analyzed_beat.get('characters', []):
         char = char_data.get('name')
         if not char:
             continue
-            
+
         # Add to active characters
         if char not in new_state['active_characters']:
             new_state['active_characters'].append(char)
-        
-        # Check if posture changed
-        posture_changed = char_data.get('posture_changed', False)
-        
-        if posture_changed:
-            # Analyzer detected a change, use the new posture
-            new_state['character_postures'][char] = char_data['posture']
-        elif char in state['character_postures']:
-            # No change detected, enforce continuity with previous posture
-            char_data['posture'] = state['character_postures'][char]
-        else:
-            # First time seeing this character, use analyzer's posture
-            new_state['character_postures'][char] = char_data['posture']
-        
-        # Track last speaker/actor
+
+        # Track last speaker
         if char_data.get('dialog'):
             new_state['last_speaker'] = char
+
+        # Track last actor
         if char_data.get('action'):
             new_state['last_actor'] = char
-    
-    # Update zone
-    if analyzed_beat.get('zone') and analyzed_beat['zone'] != 'Unknown':
-        new_state['zone'] = analyzed_beat['zone']
-    
+
+    # Update zone if valid
+    zone = analyzed_beat.get('zone')
+    if zone and zone != "Unknown":
+        new_state['zone'] = zone
+
     return new_state
 
 # ═══════════════════════════════════════════════════════════════

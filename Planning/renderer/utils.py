@@ -84,7 +84,7 @@ def create_zone_mapping(registry, story):
 
 # utils.py
 
-def create_backdrop_mapping(assets, actions):
+def create_backdrop_mapping(assets):
     """Create mapping from beat backdrop names to generated asset aliases."""
     mappings = {}
     
