@@ -386,8 +386,9 @@ def fix_locations(base, lines, registry, context):
     for line in lines:
         for k, v in locations.items():
             if line['zone'] in v:
-                full_key = canonical_key(line['location'], line['zone'])
-                line['background'] = registry[full_key]['path']
+                if line['zone'] in v:
+                    full_key = canonical_key(line['location'], line['zone'])
+                    line['background'] = registry[full_key]['path']
 
     return lines
 
