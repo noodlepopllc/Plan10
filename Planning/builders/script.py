@@ -215,7 +215,7 @@ def story_to_script(story_path, world_text, output_path, llm_call_func):
         script_line = llm_call_func(formatter_prompt, temperature=0.1)
 
         # 4. Write to script file
-        with open(output_file, 'a') as f:
+        with open(output_file, 'a', encoding='utf-8') as f:
             f.write(script_line.strip() + '\n\n')
 
         print(f"Processed beat {i+1}/{len(beats)} | Zone: {state.get('zone', 'Unknown')}")
@@ -267,7 +267,7 @@ def run_prompt(prompt, system, pth):
           system=system,
           max_tokens=8192,
           temperature=0.2)['analysis']
-      with open(pth, 'w') as out_f:
+      with open(pth, 'w', encoding='utf-8') as out_f:
         out_f.write(result)
       print(f'Wrote {pth}')
       return result

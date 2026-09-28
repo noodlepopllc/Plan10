@@ -391,14 +391,15 @@ def main():
     context = json.loads((Path(scene_base) / 'scene/context.json').read_text())
     base = Path(scene_base).parent
     registry = json.loads((Path(scene_base) / 'output/registry.json').read_text())
-    lines = [json.loads(x) for x in (Path(scene_base) / 'output/narrative.json').read_text().split('\n') if x]
-    lines = [line for line in lines if filter_empty(line)]
+    lines = json.loads((Path(scene_base) / 'output/bleh.json').read_text())
+    #lines = [line for line in lines if filter_empty(line)]
     characters = get_characters(base, registry, context)
     lines = fix_locations(base, lines, registry, context)
     character_refs =  [characters[x]['reference_path'] for x in characters]
     visual_ids = [characters[x]['Visual_Id'] for x in characters]
     character_names=[x for x in characters]
     for beat, line in enumerate(lines, start=1):
+        print(line)
         script = h3_ref(line['background'], None, character_refs, None, to_h3_prompt(line, characters), duration=10.0, visual_ids=visual_ids, char_names=character_names)
         (Path(scene_base) / f'beat_{beat:03d}.txt').write_text(script)
         print(script)
