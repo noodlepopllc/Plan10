@@ -1,4 +1,7 @@
 # story_to_script.py
+import sys
+sys.stdout.reconfigure(encoding='utf-8')
+
 import re
 import json
 from pathlib import Path
