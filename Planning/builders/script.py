@@ -12,31 +12,48 @@ ANALYZER_PROMPT = """Extract structured data from this story beat.
 WORLD CONTEXT:
 {world_text}
 
-BEAT:
+PREVIOUS CONTEXT (for continuity):
+{history}
+
+CURRENT BEAT (raw story text):
 {beat_text}
 
 OUTPUT FORMAT (JSON ONLY):
-{{
+{
   "zone": "Exact zone name from WORLD CONTEXT",
-  "summary": "One-sentence visual description of the moment (from the beat).",
+  "summary": "One-sentence visual description of the moment.",
   "characters": [
-    {{
+    {
       "name": "CHARACTER NAME",
       "delivery": "ONE WORD describing how the dialog is spoken (e.g., suspicious, weary, hopeful, neutral)",
       "dialog": "spoken words or null",
       "action": "action description or null"
-    }}
+    }
   ]
-}}
+}
 
 RULES:
-1. ZONE SELECTION: Choose the zone that best matches environmental cues, props, terrain, or background elements mentioned in the beat.
-2. SUMMARY: Extract the beat’s visual moment description. If unclear, infer from actions and environmental cues.
-3. CHARACTERS: Include ALL characters present in the beat, even if they have no dialog or action.
-4. DELIVERY: ONE WORD describing how the dialog is spoken. If no dialog, infer tone from context or set to "neutral".
-5. DIALOG: Extract ONLY text inside quotes. Strip quotes. If none, set to null.
-6. ACTION: Extract physical actions performed by the character. If none, set to null.
-7. Output ONLY raw JSON."""
+1. Use PREVIOUS CONTEXT to maintain continuity across beats.
+2. If the beat does not explicitly change zone, inherit the previous zone.
+3. If the beat does not explicitly change spatial layout, inherit the previous summary.
+4. DELIVERY:
+   - If dialog exists, infer delivery from tone.
+   - If unclear, inherit delivery from PREVIOUS CONTEXT.
+5. DIALOG:
+   - Extract ONLY text inside quotes.
+   - Strip quotes.
+   - If none, set to null.
+6. ACTION:
+   - Extract physical actions performed by the character.
+   - If none, set to null.
+7. CHARACTERS:
+   - Include ALL characters present in the beat, even if silent.
+8. SUMMARY:
+   - Must describe the visual moment.
+   - Should be consistent with PREVIOUS CONTEXT unless the beat explicitly changes the scene.
+9. Output ONLY raw JSON."""
+
+
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -62,93 +79,146 @@ RULES:
 4. Character name MUST be the EXACT full name from BEAT DATA, in ALL CAPS.
 5. Output ONLY the formatted text."""
 
+def build_history_context(state, max_beats=5):
+    history = {
+        "last_zone": state.get("zone", None),
+        "last_summary": state.get("last_summary", None),
+        "recent_beats": state.get("history_beats", [])[-max_beats:],
+        "characters": {}
+    }
+
+    for char in state.get("active_characters", []):
+        history["characters"][char] = {
+            "delivery": state.get("character_delivery", {}).get(char),
+            "last_dialog": state.get("character_dialog", {}).get(char),
+            "last_action": state.get("character_action", {}).get(char)
+        }
+
+    return history
+
+
 
 # ═══════════════════════════════════════════════════════════════
 # PYTHON STATE TRACKER (Deterministic Logic)
 # ═══════════════════════════════════════════════════════════════
 def update_state(state, analyzed_beat):
-    """Track only zone, active characters, last speaker, last actor."""
     new_state = state.copy()
 
-    # Track active characters
-    if 'active_characters' not in new_state:
-        new_state['active_characters'] = []
+    new_state.setdefault("active_characters", [])
+    new_state.setdefault("character_delivery", {})
+    new_state.setdefault("character_dialog", {})
+    new_state.setdefault("character_action", {})
+    new_state.setdefault("history_beats", [])
 
-    for char_data in analyzed_beat.get('characters', []):
-        char = char_data.get('name')
-        if not char:
+    zone = analyzed_beat.get("zone")
+    if zone and zone != "Unknown":
+        new_state["zone"] = zone
+
+    summary = analyzed_beat.get("summary")
+    if summary:
+        new_state["last_summary"] = summary
+
+    beat_chars = []
+    for char_data in analyzed_beat.get("characters", []):
+        name = char_data.get("name")
+        if not name:
             continue
 
-        # Add to active characters
-        if char not in new_state['active_characters']:
-            new_state['active_characters'].append(char)
+        if name not in new_state["active_characters"]:
+            new_state["active_characters"].append(name)
 
-        # Track last speaker
-        if char_data.get('dialog'):
-            new_state['last_speaker'] = char
+        delivery = char_data.get("delivery")
+        dialog = char_data.get("dialog")
+        action = char_data.get("action")
 
-        # Track last actor
-        if char_data.get('action'):
-            new_state['last_actor'] = char
+        if delivery:
+            new_state["character_delivery"][name] = delivery
+        if dialog:
+            new_state["character_dialog"][name] = dialog
+        if action:
+            new_state["character_action"][name] = action
 
-    # Update zone if valid
-    zone = analyzed_beat.get('zone')
-    if zone and zone != "Unknown":
-        new_state['zone'] = zone
+        beat_chars.append({
+            "name": name,
+            "delivery": delivery,
+            "dialog": dialog,
+            "action": action
+        })
+
+    # append compact beat snapshot
+    new_state["history_beats"].append({
+        "zone": new_state.get("zone"),
+        "summary": new_state.get("last_summary"),
+        "characters": beat_chars
+    })
 
     return new_state
+
+
 
 # ═══════════════════════════════════════════════════════════════
 # MAIN PROCESSING FUNCTION
 # ═══════════════════════════════════════════════════════════════
 def story_to_script(story_path, world_text, output_path, llm_call_func):
-    # Load files
+    # Load story
     story_text = Path(story_path).read_text()
-    
-    # Split into beats (paragraphs)
-    #beats = [b.strip() for b in re.split(r'\n\s*\n', story_text) if b.strip() and 'COLD OPEN END' not in b]
+
+    # Split into beats
     beats = split_into_beats(story_text)
-    
-    # Initialize output file
+
+    # Prepare output file
     output_file = Path(output_path)
     output_file.parent.mkdir(parents=True, exist_ok=True)
     if output_file.exists():
         output_file.unlink()
-    
-    # Initial state
+
+    # Initial continuity state
     state = {
-        'zone': 'Unknown',
-        'active_characters': [],
-        'last_speaker': None,
-        'last_actor': None,
-        'character_postures': {}
+        "zone": "Unknown",
+        "last_summary": None,
+        "active_characters": [],
+        "character_delivery": {},
+        "character_dialog": {},
+        "character_action": {},
+        "history_beats": []  # NEW
     }
-    
+
+
     # Process each beat
     for i, beat in enumerate(beats):
-        # 1. Analyze (LLM does semantic extraction)
-        analyzer_prompt = ANALYZER_PROMPT.format(world_text=world_text, beat_text=beat)
+
+        # Build history context
+        history_context = build_history_context(state)
+
+        # 1. Analyze beat with continuity
+        analyzer_prompt = ANALYZER_PROMPT.format(
+            world_text=world_text,
+            beat_text=beat,
+            history=json.dumps(history_context, indent=2)
+        )
+
         analyzed_text = llm_call_func(analyzer_prompt, temperature=0.1)
         analyzed_beat = safe_json_load(analyzed_text)
-        
+
         if not analyzed_beat:
             print(f"WARNING: Beat {i+1} failed analysis, skipping.")
             continue
-            
-        # 2. Track State (Python does deterministic tracking)
+
+        # 2. Update continuity state
         state = update_state(state, analyzed_beat)
-        
-        # 3. Format (LLM does strict templating)
+
+        # 3. Format beat
         formatter_prompt = FORMATTER_PROMPT.format(
             beat_data_json=json.dumps(analyzed_beat, indent=2)
         )
         script_line = llm_call_func(formatter_prompt, temperature=0.1)
-        
-        # Append to file
+
+        # 4. Write to script file
         with open(output_file, 'a') as f:
             f.write(script_line.strip() + '\n\n')
-            
+
         print(f"Processed beat {i+1}/{len(beats)} | Zone: {state.get('zone', 'Unknown')}")
+
 
 def safe_json_load(text):
     """Safely extract JSON from LLM output."""
