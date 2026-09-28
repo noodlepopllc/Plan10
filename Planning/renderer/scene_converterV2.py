@@ -6,8 +6,6 @@ from plan10.lib.util import video_to_img, to_absolute
 from plan10.lib.image_gen import add_metadata_loc
 from PIL import Image
 
-
-
 def get_or_analyze(image_path: str, prompt: str, cache_key: str, max_words: int = 15) -> str:
     """Get cached analysis from image metadata, or analyze and cache it."""
     img = Image.open(image_path)
@@ -399,8 +397,6 @@ def fix_locations(base, lines, registry, context):
 
     return lines
 
-
-
 def get_characters(base, registry, context):
     characters = {}
     for key in context['assets']:
@@ -451,6 +447,7 @@ def to_h3_prompt(entry, characters):
 
 def main():
     from parse_script import parse_script_txt
+    from director import build_director_entries
     scene_base = sys.argv[1]
     context = json.loads((Path(scene_base) / 'scene/context.json').read_text(encoding='utf-8'))
     base = Path(scene_base).parent
@@ -461,7 +458,6 @@ def main():
     character_refs =  [characters[x]['reference_path'] for x in characters]
     visual_ids = [characters[x]['Visual_Id'] for x in characters]
     character_names=[x for x in characters]
-    from director import build_director_entries
 
     for beat, line in enumerate(lines, start=1):
         director_entries = build_director_entries(line)
