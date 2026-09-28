@@ -258,73 +258,67 @@ def expand_to_shots(prompt: str,
     # 3. REWRITTEN SHOT-GENERATOR PROMPT
     # ------------------------------------------------------------
     llm_prompt = f"""
-You are an expert cinematic video director breaking a scene into sequential shots.
+You are a deterministic video director generating Minimax‑friendly shots.
 
 INPUT DATA:
 - Characters: {char_list}
 - Background: {bg_label}
-- {duration_hint}
 - Scene description: {prompt}
+- Target duration: {int(duration)} seconds (approximate)
 
 CHARACTER MAPPING:
 {mapping}{scene_context}
 
-TASK:
-Generate a sequence of cinematic shots that follow the scene description and maintain visual continuity.
+GOAL:
+Produce a sequence of SHORT, STABLE, NON‑DRIFTING shots that Minimax H3 can render without filler motion.
 
-STRICT RULE: Produce BETWEEN 2 AND 5 SHOTS.
-Never produce fewer than 2 shots.
-Never exceed 5 shots.
+SHOT COUNT RULE:
+- Generate 3–7 shots depending on action complexity.
+- More shots with shorter durations are preferred.
+- Never produce fewer than 3 shots.
 
-DURATION RULES:
-- Avoid 1-second shots unless the shot contains short dialog (≤5 words).
-- Prefer 2–4 second shots for stability.
-- Combine sequential minor actions into a single continuous shot.
-- Use longer takes instead of additional cuts whenever possible.
-- Total duration should approximate the target duration without exceeding 5 shots.
+DURATION RULES (Minimax‑optimized):
+- DEFAULT shot duration: 2 seconds.
+- Only exceed 3 seconds when multiple distinct physical phases occur.
+- NEVER exceed 4 seconds.
+- Do NOT attempt to match the target duration exactly; prioritize stability.
 
-SHOT CONDENSATION RULES:
-- If the director’s action describes a single continuous motion, represent it with 1–2 shots, not 3–5.
-- Merge small physical beats (turning, glancing, breathing, shifting stance) into the nearest major shot.
-- Only split shots when the director’s action contains distinct physical phases (e.g., “runs → jumps → lands”).
-
-REACTION SHOT RULES:
-- Only generate reaction shots when the director’s action explicitly implies another character is observing.
-- Do NOT add reaction shots automatically.
-- If a reaction shot is needed, limit it to ONE per beat.
-
-CONTINUITY RULES:
-- Maintain character posture, gaze direction, and spatial position across shots unless the director’s action changes them.
-- Lighting, shadows, and weather remain identical.
-- Characters do NOT teleport, rotate 180°, or change stance between shots unless described.
-- Clothing, props, and environmental elements remain consistent.
-
-SILENCE RULES (when no dialogue is present):
-- Every shot MUST describe the character's mouth/jaw state explicitly:
-  "lips pressed together", "jaw clenched", "mouth shut firmly", "breathing through nose"
-- Focus audio attention on ENVIRONMENT and PHYSICAL EXERTION:
-  heavy breathing, exertion sounds, environmental foley
-- Never describe characters facing each other in neutral medium shot without a physical mouth state.
+ACTION DENSITY RULES:
+- Split shots when the action contains distinct phases (e.g., “runs → jumps → lands”).
+- Merge micro‑actions (glancing, shifting stance, breathing) into the nearest major shot.
+- Avoid long continuous shots; Minimax destabilizes after ~3 seconds.
 
 CAMERA RULES:
-1. Shot 1 may include camera movement (pan, tilt, dolly) at slow speed.
-2. All subsequent shots MUST use static medium framing.
-3. Medium shot = waist/chest upward, environment visible.
+- Shot 1 may include slow camera movement (pan/tilt/dolly).
+- All subsequent shots MUST use static medium framing.
+- Medium shot = waist/chest upward, environment visible.
+- No sudden angle changes between shots unless described.
+
+CONTINUITY RULES:
+- Maintain character posture, gaze direction, and spatial position across shots unless explicitly changed.
+- No teleporting, no 180° rotations, no spontaneous stance changes.
+- Lighting, shadows, and environment remain identical.
+
+MOUTH/EXPRESSION RULES (when no dialogue):
+- Every shot MUST specify mouth/jaw state:
+  “lips pressed together”, “jaw clenched”, “mouth shut firmly”, “breathing through nose”
+- No neutral faces without mouth description.
 
 DIALOGUE RULES:
 - Dialogue format: charX speaks [English] "text"
 - Max 15 words per shot.
-- Do NOT add filler actions after speaking.
-- If dialogue is present, place it near the end of the shot.
+- Place dialogue near the end of the shot.
+- No filler actions after speaking.
 
 FOLEY RULES:
 - EVERY shot MUST begin with a foley cue.
-- Foley must match the environment and physical action.
+- Foley must match environment + physical action.
+- No silence unless explicitly described.
 
 FORMAT:
 shot | foley + description | duration_seconds
 
-NOW GENERATE THE SHOTS FOR THE INPUT DATA ABOVE.
+NOW GENERATE THE SHOTS.
 """
 
     # ------------------------------------------------------------

@@ -131,18 +131,6 @@ DEFINITIONS:
 - {hair color} is the observed color.
 '''
 
-BG_PROMPT = '''
-Return ONE sentence in this exact format:
-
-"The scene shows {environment description} with {key visual element}."
-
-Use ONLY these slots. Do not reorder them.
-
-DEFINITIONS:
-- {environment description} is a short phrase describing the empty environment (no characters).
-- {key visual element} is one notable object, structure, or terrain feature.
-- Keep the entire sentence brief (under ~12 words naturally).
-'''
 def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0, visual_ids=[], char_names=[]):
     script = ""
     
