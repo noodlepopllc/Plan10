@@ -356,22 +356,12 @@ def filter_empty(entry):
         vals.add(entry[x])
     return not len(vals) <= 1
 
-def slugify(label: str) -> str:
-    """
-    Deterministically normalize ANY location/zone label into the exact slug
-    format used by your background registry.
-    """
-    z = label.upper()
-
-    # Replace separators
-    z = z.replace("/", "_")
-    z = z.replace(" ", "_")
-
-    # Collapse multiple underscores
-    while "__" in z:
-        z = z.replace("__", "_")
-
-    return z
+def canonical_key(location_name: str, zone_name: str) -> str:
+    key = f"{location_name}_{zone_name}"
+    key = key.replace(' ', '_')
+    key = key.replace('/', '_')
+    key = key.upper()
+    return f"{key}_BACKGROUND"
 
 def fix_locations(base, lines, registry, context):
     locations = {}
@@ -396,11 +386,9 @@ def fix_locations(base, lines, registry, context):
     for line in lines:
         for k, v in locations.items():
             if line['zone'] in v:
-                location_slug = slugify(k)
-                zone_slug = slugify(line['zone'])
-                full_key = f"{location_slug}_{zone_slug}_BACKGROUND"
+                full_key = canonical_key(line['location'], line['zone'])
+                line['background'] = registry[full_key]['path']
 
-                line['background'] = location_info[k][full_key]
     return lines
 
 def get_characters(base, registry, context):
