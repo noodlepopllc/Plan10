@@ -7,7 +7,7 @@ def parse_script_txt(path):
     One beat = one ZONE + all following fragments until next ZONE.
     """
 
-    raw = Path(path).read_text()
+    raw = Path(path).read_text(encoding='utf-8')
 
     lines = [ln.rstrip() for ln in raw.split("\n")]
 

@@ -1,7 +1,34 @@
 import sys, json
 from pathlib import Path
-from plan10.lib.image_analysis import AnalyzeImage
-#from plan10.emergent.video_runner import h3_ref
+from plan10.lib.image_analysis import EnhancePrompt, AnalyzeImage, translate_to_audio_prompt
+from plan10.lib.qwen_llm import llm_analyze_media
+from plan10.lib.util import video_to_img, to_absolute
+from plan10.lib.image_gen import add_metadata_loc
+from PIL import Image
+
+def get_or_analyze(image_path: str, prompt: str, cache_key: str, max_words: int = 15) -> str:
+    """Get cached analysis from image metadata, or analyze and cache it."""
+    img = Image.open(image_path)
+    cached = img.info.get(cache_key)
+    if cached:
+        img.close()
+        return cached
+    
+    result = AnalyzeImage(image_path, prompt=prompt, backend='')['analysis']
+    img.close()
+    from plan10.lib.util import load_metadata
+    
+    # Cache it
+    img = Image.open(image_path)
+    metadata = load_metadata(img)
+    for key, value in img.info.items():
+        if isinstance(value, str):
+            metadata.add_text(key, value)
+    metadata.add_text(cache_key, result)
+    img.save(image_path, pnginfo=metadata)
+    img.close()
+    
+    return result
 
 def voice_prompt(gender, age):
     import random
@@ -190,108 +217,124 @@ def normalize_shot_characters(shot_text: str, char_labels: list) -> str:
 
 import os
 
-def expand_to_shots(prompt: str, bg_label: str, char_labels: list, duration: float, first_frame_path: str = None) -> str:
-    """Returns raw shot lines ready to append to your script, grounded in the actual first frame."""
+def expand_to_shots(prompt: str,
+                    bg_label: str,
+                    char_labels: list,
+                    duration: float,
+                    first_frame_path: str = None) -> str:
+    """
+    Returns raw shot lines ready to append to your script,
+    grounded in the actual first frame.
+    """
 
+    # ------------------------------------------------------------
+    # 1. Optional first-frame analysis (your existing logic)
+    # ------------------------------------------------------------
     scene_context = ""
     if first_frame_path and os.path.exists(first_frame_path):
-        # Assuming AnalyzeImage is defined elsewhere in your code
         analysis = AnalyzeImage(first_frame_path, prompt="""
             Describe this exact frame for video generation:
             Where are the characters positioned? What are their poses and expressions?
             What is the camera angle? Be specific about spatial relationships.
             DO NOT describe clothing colors or minor details, just the layout and action.
         """)['analysis']
-        scene_context = f"\n\nVISUAL CONTEXT (This is the EXACT starting frame at 00:00.000):\n{analysis}\n"
 
-    char_tokens = [f"char{i+1}" for i in range(len(char_labels))]
-    char_list = ", ".join(char_tokens)
-    mapping = "\n".join([f"- {char_tokens[i]} = {char_labels[i]}" for i in range(len(char_labels))])
+        scene_context = (
+            "\n\nVISUAL CONTEXT (This is the EXACT starting frame at 00:00.000):\n"
+            f"{analysis}\n"
+        )
 
-    formatted_prompt = f"""You are an expert cinematic video director breaking a scene into sequential shots.
+    # ------------------------------------------------------------
+    # 2. Character mapping string
+    # ------------------------------------------------------------
+    mapping = ""
+    for idx, label in enumerate(char_labels, start=1):
+        mapping += f"char{idx} = {label}\n"
+
+    char_list = ", ".join(char_labels)
+    duration_hint = f"Target duration: {int(duration)} seconds (approximate)."
+
+    # ------------------------------------------------------------
+    # 3. REWRITTEN SHOT-GENERATOR PROMPT
+    # ------------------------------------------------------------
+    llm_prompt = f"""
+You are an expert cinematic video director breaking a scene into sequential shots.
 
 INPUT DATA:
 - Characters: {char_list}
 - Background: {bg_label}
-- Target duration: {int(duration)} seconds (approximate)
+- {duration_hint}
 - Scene description: {prompt}
 
 CHARACTER MAPPING:
-{mapping}
-{scene_context}
+{mapping}{scene_context}
 
 TASK:
-Generate a sequence of cinematic shots that follow the scene description and maintain visual continuity. 
-CRITICAL CONSTRAINT: You must summarize and condense the action. Generate a STRICT MAXIMUM of 5 shots. Do not exceed 5 shots under any circumstances. Combine minor actions into continuous takes and focus only on the most crucial narrative beats.
+Generate a sequence of cinematic shots that follow the scene description and maintain visual continuity.
 
-SHOT DURATION GUIDELINES:
-- Adjust shot durations to approximate the total target duration, but NEVER exceed 5 shots total.
-- Quick dialogue (1-5 words): 1-2 seconds
-- Medium dialogue (6-15 words): 2-3 seconds
-- Simple actions (turn, look, gesture): 2-3 seconds
-- Complex actions (crawl, stand up, walk): 3-5 seconds (Use longer takes to fill time instead of adding cuts)
-- Reaction shots: 1-2 seconds
+STRICT RULE: Produce BETWEEN 2 AND 5 SHOTS.
+Never produce fewer than 2 shots.
+Never exceed 5 shots.
 
-GLOBAL RULES:
+DURATION RULES:
+- Avoid 1-second shots unless the shot contains short dialog (≤5 words).
+- Prefer 2–4 second shots for stability.
+- Combine sequential minor actions into a single continuous shot.
+- Use longer takes instead of additional cuts whenever possible.
+- Total duration should approximate the target duration without exceeding 5 shots.
+
+SHOT CONDENSATION RULES:
+- If the director’s action describes a single continuous motion, represent it with 1–2 shots, not 3–5.
+- Merge small physical beats (turning, glancing, breathing, shifting stance) into the nearest major shot.
+- Only split shots when the director’s action contains distinct physical phases (e.g., “runs → jumps → lands”).
+
+REACTION SHOT RULES:
+- Only generate reaction shots when the director’s action explicitly implies another character is observing.
+- Do NOT add reaction shots automatically.
+- If a reaction shot is needed, limit it to ONE per beat.
+
+CONTINUITY RULES:
+- Maintain character posture, gaze direction, and spatial position across shots unless the director’s action changes them.
+- Lighting, shadows, and weather remain identical.
+- Characters do NOT teleport, rotate 180°, or change stance between shots unless described.
+- Clothing, props, and environmental elements remain consistent.
 
 SILENCE RULES (when no dialogue is present):
 - Every shot MUST describe the character's mouth/jaw state explicitly:
   "lips pressed together", "jaw clenched", "mouth shut firmly", "breathing through nose"
 - Focus audio attention on ENVIRONMENT and PHYSICAL EXERTION:
   heavy breathing, exertion sounds, environmental foley
-- Never describe characters facing each other in neutral medium shot without a physical mouth state
+- Never describe characters facing each other in neutral medium shot without a physical mouth state.
 
-1. Use MEDIUM SHOTS as the default framing for dialogue and action.
-   - Characters visible from waist/chest upward.
-   - Environment must remain visible.
+CAMERA RULES:
+1. Shot 1 may include camera movement (pan, tilt, dolly) at slow speed.
+2. All subsequent shots MUST use static medium framing.
+3. Medium shot = waist/chest upward, environment visible.
 
-2. Camera movement is ONLY allowed in Shot 1 (establishing).
-   - After Shot 1, camera remains static or uses minimal drift.
+DIALOGUE RULES:
+- Dialogue format: charX speaks [English] "text"
+- Max 15 words per shot.
+- Do NOT add filler actions after speaking.
+- If dialogue is present, place it near the end of the shot.
 
-3. Dialogue:
-   - Dialogue format: char speaks [English] "text"
-   - DO NOT add padding like "closes mouth" or "is silent" after speaking
-   - Keep dialogue shots tight and natural
-
-4. Physicality:
-   - Dialogue shots MAY include a brief physical action before speaking (turns, breath)
-   - DO NOT force physical actions after speaking - this creates padding
-
-5. Dialogue length:
-   - Max 15 words per shot. Break long dialogue into multiple shots (but remember the 5-shot total limit!).
-
-6. Foley:
-   - EVERY shot MUST begin with a foley cue.
-
-7. Continuity:
-   - Lighting, shadows, and weather remain identical.
-   - Actions flow continuously between shots.
-
-8. Pacing & Summarization:
-   - Prioritize the core emotional or narrative beat of the scene.
-   - Combine sequential minor actions (e.g., walking over and picking up an object) into a single shot instead of cutting.
+FOLEY RULES:
+- EVERY shot MUST begin with a foley cue.
+- Foley must match the environment and physical action.
 
 FORMAT:
 shot | foley + description | duration_seconds
 
-EXAMPLE:
-shot | Low wind through rafters. Medium shot. char1 shifts her stance, glancing toward char2. | 2
-shot | Soft creak of wood. Medium shot of char1 facing char2. char1 speaks [English] "Stay back." | 1
-shot | Distant hoofbeats. Medium shot. char2 reacts with a quick blink. | 2
-
-NOW, generate the shots for the INPUT DATA provided above (REMEMBER: STRICT MAX 5 SHOTS):
+NOW GENERATE THE SHOTS FOR THE INPUT DATA ABOVE.
 """
-    
-    response = llm_analyze_media('', prompt=formatted_prompt, max_tokens=8192, temperature=0.4)['analysis']
 
-    lines = []
-    for line in response.strip().split("\n"):
-        line = line.strip()
-        if line.startswith("shot |"):
-            line = normalize_shot_characters(line, char_labels)
-            lines.append(line)
+    # ------------------------------------------------------------
+    # 4. Call your LLM
+    # ------------------------------------------------------------
 
-    return "\n".join(lines)
+    response = llm_analyze_media('', prompt=llm_prompt, max_tokens=8192, temperature=0.4)['analysis']
+
+    return response
+
 
 def get_visual_id(ref_path):
         prompt = """Analyze this image and extract a complete profile for character ONLY.
@@ -387,22 +430,38 @@ def to_h3_prompt(entry, characters):
     ] if x)
 
 def main():
+    from parse_script import parse_script_txt
     scene_base = sys.argv[1]
-    context = json.loads((Path(scene_base) / 'scene/context.json').read_text())
+    context = json.loads((Path(scene_base) / 'scene/context.json').read_text(encoding='utf-8'))
     base = Path(scene_base).parent
-    registry = json.loads((Path(scene_base) / 'output/registry.json').read_text())
-    lines = json.loads((Path(scene_base) / 'output/bleh.json').read_text())
-    #lines = [line for line in lines if filter_empty(line)]
+    registry = json.loads((Path(scene_base) / 'output/registry.json').read_text(encoding='utf-8'))
+    lines = parse_script_txt(Path(scene_base) / 'output/script.txt')
     characters = get_characters(base, registry, context)
     lines = fix_locations(base, lines, registry, context)
     character_refs =  [characters[x]['reference_path'] for x in characters]
     visual_ids = [characters[x]['Visual_Id'] for x in characters]
     character_names=[x for x in characters]
+    from director import build_director_entries
+
     for beat, line in enumerate(lines, start=1):
-        print(line)
-        script = h3_ref(line['background'], None, character_refs, None, to_h3_prompt(line, characters), duration=10.0, visual_ids=visual_ids, char_names=character_names)
-        (Path(scene_base) / f'beat_{beat:03d}.txt').write_text(script)
-        print(script)
+        director_entries = build_director_entries(line)
+
+        for subbeat, dentry in enumerate(director_entries, start=1):
+            prompt = to_h3_prompt(dentry, characters)
+            script = h3_ref(
+                dentry['background'],
+                None,
+                character_refs,
+                None,
+                prompt,
+                duration=10.0,
+                visual_ids=visual_ids,
+                char_names=character_names
+            )
+
+            outname = f"beat_{beat:03d}_{subbeat:02d}.txt"
+            (Path(scene_base) / outname).write_text(script, encoding='utf-8')
+            print(script)
 
 if __name__ == '__main__':
     main()
