@@ -20,8 +20,8 @@ fi
 
 python $basepath/renderer/renderer.py $2 minimum > $2/scene.txt
 
-bot.sh $2/scene.txt
+./bot.sh $2/scene.txt
 
-python $basepath/renderer/scene_analyzer.py $2
+python $basepath/renderer/scene_converter.py $2
 
 echo "✅ Pipeline complete: scene $2"
