@@ -81,13 +81,13 @@ def run_prompt(prompt, system, pth):
           system=system,
           max_tokens=8192,
           temperature=0.1)['analysis']
-      with open(pth, 'w') as out_f:
+      with open(pth, 'w', encoding='utf-8') as out_f:
         out_f.write(result)
       print(f'Wrote {pth}')
       return result
     else:
       print(f'{pth} Exists')
-      return Path(pth).read_text()
+      return Path(pth).read_text(encoding='utf-8')
 
 FOCUS = 'DIALOG-HEAVY,ACTION-HEAVY,EMOTIONAL SUBTEXT,MULTI-CHARACTER,PROP PASSING,SPACE EXPLORATION,POWER DYNAMIC,INTIMACY ESCALATION,MISUNDERSTANDING,TIME PRESSURE'.split(',')
 GENRES = 'Medieval Fantasy,Cyberpunk,Post-Apocalyptic,Victorian,Sci-Fi Space Station,1920s Noir,Modern Urban,Ancient Mythological,Steampunk,Western'.split(',')
