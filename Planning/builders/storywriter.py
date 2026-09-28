@@ -1,4 +1,6 @@
 import json, sys, argparse, random
+sys.stdout.reconfigure(encoding='utf-8')
+
 from plan10.lib.qwen_llm import llm_analyze_media
 from pathlib import Path
 
