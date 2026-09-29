@@ -72,6 +72,25 @@ Copy dialog exactly.
 
 Do not rewrite dialog.
 
+If the director shot plan indicates speech,
+the final shot MUST contain the exact quoted dialog.
+
+A speaking shot without quoted dialog is invalid.
+
+Do not describe speech progression using:
+
+- opening the line
+- mid-line
+- continuing speech
+- second sentence
+- final syllables
+
+Use either:
+
+- exact dialog text
+or
+- silent physical behavior
+
 4. Audio Preservation
 
 Use only ambient audio explicitly present in the
@@ -324,6 +343,24 @@ by the scene description, remove it.
 
 When uncertain, prefer the scene description over the
 camera log.
+
+Dialog Validation Rule
+
+If a shot contains speaking:
+
+- The exact dialog text must appear in the shot.
+
+- A shot may not describe:
+  "speaking"
+  "delivering a line"
+  "mid-line"
+  "continuing speech"
+  "finishing sentence"
+
+unless the actual quoted dialog is also present.
+
+Shots that contain speech with no quoted dialog
+are invalid and must be corrected.
 
 ------------------------------------------------------------
 DIRECTOR RULES (TIGHTENED)
@@ -595,7 +632,19 @@ def direct(beat_entry: dict, notes=''):
     if notes: 
         notes = summarize_continuity_from_director_shots(notes)
     director_entries = build_director_entries(beat_entry)
-    scene_description = " ".join([d["action"] for d in director_entries])
+    scene_parts = []
+
+    for d in director_entries:
+        if d["action"]:
+            scene_parts.append(d["action"])
+
+        if d["dialog"]:
+            scene_parts.append(
+                f'DIALOG: "{d["dialog"]}"'
+            )
+
+    scene_description = " ".join(scene_parts)
+
     camera_log = run_camera_operator(scene_description, beat_entry['characters'], beat_entry['background'], notes)
     director_shots = llm(
         director_prompt.format(
