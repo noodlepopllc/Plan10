@@ -75,7 +75,7 @@ DEFINITIONS:
 - {hair color} is the observed color.
 '''
 
-def h3_ref(bg, refs, prompt, duration=10.0, visual_ids=[], char_names=[], shots):
+def h3_ref(bg, refs, prompt, duration=10.0, visual_ids=[], char_names=[], shots=''):
     script = ""
     
     # 1. Background - CACHED
@@ -426,8 +426,6 @@ def main():
     character_names=[x for x in characters]
     notes = ''
     for beat, line in enumerate(lines, start=1):
-        print(line)
-        break
         #director_entries = build_director_entries(line)
         shots, notes = direct(line, notes)
 
@@ -436,10 +434,11 @@ def main():
         script = h3_ref(
             line['background'],
             character_refs,
-            shots,
+            line['summary'],
             duration=10.0,
             visual_ids=visual_ids,
-            char_names=character_names
+            char_names=character_names,
+            shots=shots
         )
 
         outname = f"beat_{beat:03d}.txt"
