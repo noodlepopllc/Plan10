@@ -111,7 +111,7 @@ class LTXPipeline:
     def analyze_background(self, path: str):
         result = AnalyzeImage(
             path,
-            prompt="Describe the background, in detail include any structures",
+            prompt="Describe the background, include any structures, 10 - 15 words",
             backend=self.backend
         )
         return result['analysis'].replace('\n', ' ')
