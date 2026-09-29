@@ -115,10 +115,8 @@ This is NOT a shot list.
 This is the raw temporal plan the director will use to build the shot list.
 
 TEMPORAL RULES
-- Most moments should be 2-4 seconds.
-- Only exceed 4 seconds for uninterrupted speech
-  or continuous physical action.
-- Maximum 6 seconds.
+- Most moments should be 2 seconds.
+- Maximum 3 seconds.
 
 ------------------------------------------------------------
 CAMERA BEST PRACTICES (TIGHTENED)
@@ -129,11 +127,24 @@ CAMERA BEST PRACTICES (TIGHTENED)
    - Only the first moment may include a slow pan/tilt.
 
 2. Dialog Coverage
-   - If someone speaks:
-       • Camera MUST isolate speaker in medium-close or close-up.
-       • Speaker MUST be centered or dominant in frame.
-       • Other characters may appear visually but MUST NOT perform actions.
-       • Passive characters MUST be described with STATIC language only.
+    Dialog Shot Rule
+
+    When a character speaks:
+
+    - Frame only the speaker.
+    - Do not show listeners unless explicitly required.
+    - Prefer close-up or medium-close coverage.
+    - Do not show listeners in the same frame.
+    - Use over-the-shoulder framing only if required by the scene.
+
+    Conversation Eyeline Rule
+
+    If character A is speaking to character B:
+
+    - Character A looks toward B.
+    - Character A never addresses the camera.
+    - Character A never looks directly into lens unless the script
+    explicitly specifies breaking the fourth wall.
 
 3. Actor Isolation
    - A moment may contain ONLY ONE active character.
@@ -159,17 +170,24 @@ CAMERA BEST PRACTICES (TIGHTENED)
    - Only natural diegetic sounds.
    - No invented foley.
 
-------------------------------------------------------------
-CHARACTER ACTIONS
-------------------------------------------------------------
-You may add small natural actions if they fit the environment:
-- waitress wipes table
-- bartender hands menu
-- character adjusts clothing
-- character shifts weight
-- character reacts physically
+Action Economy Rule
 
-These actions must be plausible and consistent with the scene.
+Characters perform actions only when
+those actions advance the scene.
+
+Do not add idle motions simply to create movement.
+
+A stationary character is preferred over an unnecessary action.
+
+Character Action Source Rule
+
+Do not invent new actions.
+
+Only use actions explicitly stated in:
+- Scene description
+- Context notes
+
+If an action is not provided, the character remains still.
 
 ------------------------------------------------------------
 AUDIO NOTES
@@ -211,6 +229,21 @@ INPUTS:
 
 Your output is NOT the final shot list.
 Your output is the semantic shot plan the shot planner will use.
+
+DEFAULT STATE OF ALL CHARACTERS:
+
+motionless
+neutral posture
+maintaining eyeline
+
+until an explicit action is specified.
+
+Action Preservation Rule
+
+Do not create new actions.
+
+A director shot may only contain actions
+explicitly present in the camera log.
 
 ------------------------------------------------------------
 DIRECTOR RULES (TIGHTENED)
@@ -258,7 +291,15 @@ DIRECTOR RULES (TIGHTENED)
    - Each shot must have a clear purpose.
 
 If someone speaks, the camera isolates them into a close-up or medium-close.
-Other characters may appear but must not perform actions.
+When a character speaks:
+
+- The speaker is the ONLY moving subject.
+- Any other visible character is frozen in a neutral pose.
+- No background actions.
+- No object interactions.
+- No clothing adjustments.
+- No gaze shifts.
+- No reactions.
 
 ------------------------------------------------------------
 OUTPUT FORMAT
