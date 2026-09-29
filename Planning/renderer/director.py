@@ -51,6 +51,7 @@ SHOT PLANNER RULES
    - If the director indicates dialog, format it as:
      char speaks [English] "text"
    - After speaking: "They close their mouth and are silent."
+   
 
 6. Duration
    - Use the director’s duration.
@@ -120,6 +121,9 @@ CAMERA BEST PRACTICES
    - Ensure clear view of the speaker’s face.
    - Include the listener’s reaction (OS, two-shot, or slight angle shift).
    - Avoid rapid cutting; hold stable angles for clarity.
+
+   If someone speaks, the camera isolates them into a close-up or medium-close.
+Other characters may appear but must not perform actions.
 
 4. Camera Movement
    - Movement must be slow, intentional, and motivated.
@@ -214,6 +218,9 @@ DIRECTOR RULES
      • show motion
      • show dialog
      • show reaction
+
+If someone speaks, the camera isolates them into a close-up or medium-close.
+Other characters may appear but must not perform actions.
 
 ------------------------------------------------------------
 OUTPUT FORMAT
