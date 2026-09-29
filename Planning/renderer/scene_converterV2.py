@@ -411,6 +411,50 @@ def to_h3_prompt(entry, characters):
         camera_line
     ] if x)
 
+def group_shots_by_duration_preserve_order(shots, min_total=5, max_total=15):
+    """
+    shots: list of shot text blocks (already parsed)
+    Returns a list of groups, where each group is a list of shots.
+    Each group's total duration is guaranteed to be between min_total and max_total.
+    Order is strictly preserved.
+    """
+
+    def extract_duration(shot):
+        for line in shot.splitlines():
+            if line.lower().startswith("duration:"):
+                return int(line.split()[1])
+        return 0
+
+    groups = []
+    current_group = []
+    current_total = 0
+
+    for shot in shots:
+        dur = extract_duration(shot)
+
+        # If adding this shot exceeds max_total, finalize current group
+        if current_total + dur > max_total:
+            if current_group:
+                groups.append(current_group)
+            current_group = [shot]
+            current_total = dur
+        else:
+            current_group.append(shot)
+            current_total += dur
+
+        # If group is valid (>= min_total), finalize it
+        if current_total >= min_total:
+            groups.append(current_group)
+            current_group = []
+            current_total = 0
+
+    # Add leftover group if it exists
+    if current_group:
+        groups.append(current_group)
+
+    return groups
+
+
 def main():
     from parse_script import parse_script_txt
     from director import build_director_entries, direct
@@ -429,19 +473,19 @@ def main():
         #director_entries = build_director_entries(line)
         shots, notes = direct(line, notes)
 
-        #for subbeat, dentry in enumerate(director_entries, start=1):
+        for subbeat, dentry in enumerate(group_shots_by_duration_preserve_order(shots), start=1):
             #prompt = to_h3_prompt(dentry, characters)
-        script = h3_ref(
-            line['background'],
-            character_refs,
-            line['summary'],
-            duration=10.0,
-            visual_ids=visual_ids,
-            char_names=character_names,
-            shots=shots
-        )
+            script = h3_ref(
+                line['background'],
+                character_refs,
+                line['summary'],
+                duration=10.0,
+                visual_ids=visual_ids,
+                char_names=character_names,
+                shots=dentry
+            )
 
-        outname = f"beat_{beat:03d}.txt"
+        outname = f"beat_{beat:03d}_{subbeat:03d}.txt"
         (Path(scene_base) / outname).write_text(script, encoding='utf-8')
         print(script)
 
