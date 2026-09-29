@@ -75,7 +75,7 @@ DEFINITIONS:
 - {hair color} is the observed color.
 '''
 
-def h3_ref(bg, refs, shots, duration=10.0, visual_ids=[], char_names=[]):
+def h3_ref(bg, refs, prompt, duration=10.0, visual_ids=[], char_names=[], shots):
     script = ""
     
     # 1. Background - CACHED
@@ -127,7 +127,7 @@ def h3_ref(bg, refs, shots, duration=10.0, visual_ids=[], char_names=[]):
             script += f"audio | voice_{ndx} | {wav_path} | {label} | {','.join(voice_profile)}\n"
     
     script += portrait_entries
-    script += f"summary | {[x for x in prompt.split('\n') if 'Action:' in x][0].replace('Action:','').strip()}\n"
+    script += f"summary | {prompt}\n"
     script += f"soundscape | {translate_to_audio_prompt(bg_desc)}\n"
     script += shots + "\n"
 
@@ -426,6 +426,8 @@ def main():
     character_names=[x for x in characters]
     notes = ''
     for beat, line in enumerate(lines, start=1):
+        print(line)
+        break
         #director_entries = build_director_entries(line)
         shots, notes = direct(line, notes)
 
