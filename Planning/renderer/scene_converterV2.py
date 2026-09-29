@@ -411,34 +411,6 @@ def to_h3_prompt(entry, characters):
         camera_line
     ] if x)
 
-def group_shots_pop_front(shots, min_total=5, max_total=15):
-    def extract_duration(shot):
-        for line in shot.splitlines():
-            if line.lower().startswith("duration:"):
-                try:
-                    return int(line.split()[1])
-                except:
-                    return 0
-        return 0
-
-    durations = [extract_duration(s) for s in shots]
-    total = sum(durations)
-
-    # If everything fits, return one bucket
-    if total <= max_total:
-        return ['\n'.join(shots)]
-
-    # Pop from the front until the remainder fits
-    idx = 0
-    while idx < len(shots) and sum(durations[idx:]) > max_total:
-        idx += 1
-
-    bucket1 = shots[:idx]
-    bucket2 = shots[idx:]
-
-    return ['\n'.join(bucket1), '\n'.join(bucket2)]
-
-
 def main():
     from parse_script import parse_script_txt
     from director import build_director_entries, direct
@@ -457,19 +429,19 @@ def main():
         #director_entries = build_director_entries(line)
         shots, notes = direct(line, notes)
 
-        for subbeat, dentry in enumerate(group_shots_by_duration_preserve_order(shots), start=1):
+        #for subbeat, dentry in enumerate(shots, start=1):
             #prompt = to_h3_prompt(dentry, characters)
-            script = h3_ref(
-                line['background'],
-                character_refs,
-                line['summary'],
-                duration=10.0,
-                visual_ids=visual_ids,
-                char_names=character_names,
-                shots='\n'.join(dentry)
-            )
+        script = h3_ref(
+            line['background'],
+            character_refs,
+            line['summary'],
+            duration=10.0,
+            visual_ids=visual_ids,
+            char_names=character_names,
+            shots=shots
+        )
 
-        outname = f"beat_{beat:03d}_{subbeat:03d}.txt"
+        outname = f"beat_{beat:03d}.txt"
         (Path(scene_base) / outname).write_text(script, encoding='utf-8')
         print(script)
 
