@@ -75,21 +75,15 @@ DEFINITIONS:
 - {hair color} is the observed color.
 '''
 
-def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0, visual_ids=[], char_names=[]):
+def h3_ref(bg, refs, shots, duration=10.0, visual_ids=[], char_names=[]):
     script = ""
     
-    # 1. First Frame - NO CACHE
-    if ff:
-        ff_desc = AnalyzeImage(ff, prompt='Briefly describe the scene composition, character positions, and environment. Max 15 words.')['analysis']
-        script += f"ff | ff | {ff} | {ff_desc}\n"
-    
-    # 2. Background - CACHED
+    # 1. Background - CACHED
     bg_desc = add_metadata_loc(bg, prompt='', seed=-1, brief=True, update=False)
     script += f"bg | bg | {bg} | {bg_desc}\n"
     
     # 3. Generate shots FIRST to know who speaks
     char_labels = [f"char{ndx}" for ndx in range(1, len(refs) + 1)]
-    shots = expand_to_shots(prompt, bg, char_labels, duration, first_frame_path=ff)
 
     shots = replace_character_names(shots, char_names)
 
@@ -116,13 +110,9 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0, visual_ids=[], char_n
         char_desc = get_or_analyze(ref, CHAR_PROMPT, 'Description', max_words=100)
         script += f"char | {label} | {ref} | {char_desc}\n"
 
-        if portraits:
-            portrait_desc = get_or_analyze(portraits[ndx-1], FACE_PROMPT, 'Description', max_words=100)
-            portrait_entries += f"portrait | portrait_{ndx} | {portraits[ndx-1]} | {label} | {portrait_desc}\n"
-        else:
-            port_path = os.path.splitext(ref)[0] + '_portrait.png'
-            portrait_desc = get_or_analyze(ref, FACE_PROMPT, 'Description', max_words=100)
-            portrait_entries += f"portrait | portrait_{ndx} | {port_path} | {label} | A portrait of {label}\n"
+        port_path = os.path.splitext(ref)[0] + '_portrait.png'
+        portrait_desc = get_or_analyze(ref, FACE_PROMPT, 'Description', max_words=100)
+        portrait_entries += f"portrait | portrait_{ndx} | {port_path} | {label} | A portrait of {label}\n"
         
         # Only generate audio if this character speaks
         if label in speaking_chars:
@@ -220,32 +210,14 @@ import os
 def expand_to_shots(prompt: str,
                     bg_label: str,
                     char_labels: list,
-                    duration: float,
-                    first_frame_path: str = None) -> str:
+                    duration: float) -> str:
     """
     Returns raw shot lines ready to append to your script,
     grounded in the actual first frame.
     """
 
     # ------------------------------------------------------------
-    # 1. Optional first-frame analysis (your existing logic)
-    # ------------------------------------------------------------
-    scene_context = ""
-    if first_frame_path and os.path.exists(first_frame_path):
-        analysis = AnalyzeImage(first_frame_path, prompt="""
-            Describe this exact frame for video generation:
-            Where are the characters positioned? What are their poses and expressions?
-            What is the camera angle? Be specific about spatial relationships.
-            DO NOT describe clothing colors or minor details, just the layout and action.
-        """)['analysis']
-
-        scene_context = (
-            "\n\nVISUAL CONTEXT (This is the EXACT starting frame at 00:00.000):\n"
-            f"{analysis}\n"
-        )
-
-    # ------------------------------------------------------------
-    # 2. Character mapping string
+    # 1. Character mapping string
     # ------------------------------------------------------------
     mapping = ""
     for idx, label in enumerate(char_labels, start=1):
@@ -255,7 +227,7 @@ def expand_to_shots(prompt: str,
     duration_hint = f"Target duration: {int(duration)} seconds (approximate)."
 
     # ------------------------------------------------------------
-    # 3. REWRITTEN SHOT-GENERATOR PROMPT
+    # 2. REWRITTEN SHOT-GENERATOR PROMPT
     # ------------------------------------------------------------
     llm_prompt = f"""
 You are a deterministic video director generating Minimax‑friendly shots.
@@ -267,7 +239,7 @@ INPUT DATA:
 - Target duration: {int(duration)} seconds (approximate)
 
 CHARACTER MAPPING:
-{mapping}{scene_context}
+{mapping}
 
 GOAL:
 Produce a sequence of SHORT, STABLE, NON‑DRIFTING shots that Minimax H3 can render without filler motion.
@@ -441,7 +413,7 @@ def to_h3_prompt(entry, characters):
 
 def main():
     from parse_script import parse_script_txt
-    from director import build_director_entries
+    from director import build_director_entries, direct
     scene_base = sys.argv[1]
     context = json.loads((Path(scene_base) / 'scene/context.json').read_text(encoding='utf-8'))
     base = Path(scene_base).parent
@@ -452,18 +424,18 @@ def main():
     character_refs =  [characters[x]['reference_path'] for x in characters]
     visual_ids = [characters[x]['Visual_Id'] for x in characters]
     character_names=[x for x in characters]
-
+    notes = ''
     for beat, line in enumerate(lines, start=1):
-        director_entries = build_director_entries(line)
+        #director_entries = build_director_entries(line)
+        shots, notes = direct(line, notes)
+        break
 
         for subbeat, dentry in enumerate(director_entries, start=1):
-            prompt = to_h3_prompt(dentry, characters)
+            #prompt = to_h3_prompt(dentry, characters)
             script = h3_ref(
                 dentry['background'],
-                None,
                 character_refs,
-                None,
-                prompt,
+                shots,
                 duration=10.0,
                 visual_ids=visual_ids,
                 char_names=character_names
