@@ -454,66 +454,6 @@ def group_shots_by_duration_preserve_order(shots, min_total=5, max_total=15):
 
     return groups
 
-def group_shots_balanced_preserve_order(shots, min_total=5, max_total=15):
-    def extract_duration(shot):
-        for line in shot.splitlines():
-            if line.lower().startswith("duration:"):
-                try:
-                    return int(line.split()[1])
-                except:
-                    return 0
-        return 0
-
-    durations = [extract_duration(s) for s in shots]
-    total = sum(durations)
-
-    # If total duration is zero, grouping is meaningless → return one bucket
-    if total == 0:
-        return [shots]
-
-    import math
-    min_buckets = math.ceil(total / max_total)
-
-    # Ensure bucket_count is never zero
-    if min_buckets < 1:
-        min_buckets = 1
-
-    for bucket_count in range(min_buckets, len(shots) + 1):
-        target = total / bucket_count
-
-        groups = []
-        current_group = []
-        current_total = 0
-
-        for dur, shot in zip(durations, shots):
-            if current_total + dur > max_total:
-                groups.append(current_group)
-                current_group = [shot]
-                current_total = dur
-            else:
-                current_group.append(shot)
-                current_total += dur
-
-            if current_total >= target or current_total >= min_total:
-                groups.append(current_group)
-                current_group = []
-                current_total = 0
-
-        if current_group:
-            groups.append(current_group)
-
-        # Validate
-        valid = all(
-            min_total <= sum(extract_duration(s) for s in g) <= max_total
-            for g in groups
-        )
-
-        if valid:
-            return groups
-
-    return [shots]
-
-
 def main():
     from parse_script import parse_script_txt
     from director import build_director_entries, direct
@@ -532,7 +472,7 @@ def main():
         #director_entries = build_director_entries(line)
         shots, notes = direct(line, notes)
 
-        for subbeat, dentry in enumerate(group_shots_balanced_preserve_order(shots), start=1):
+        for subbeat, dentry in enumerate(group_shots_by_duration_preserve_order(shots), start=1):
             #prompt = to_h3_prompt(dentry, characters)
             script = h3_ref(
                 line['background'],
