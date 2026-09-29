@@ -454,38 +454,38 @@ def group_shots_by_duration_preserve_order(shots, min_total=5, max_total=15):
 
     return groups
 
-def group_shots_balanced(shots, min_total=5, max_total=15):
-    """
-    Groups shots into the fewest buckets possible while:
-    - preserving order
-    - keeping each bucket's total duration between min_total and max_total
-    - making bucket durations as close to equal as possible
-    """
-
+def group_shots_balanced_preserve_order(shots, min_total=5, max_total=15):
     def extract_duration(shot):
         for line in shot.splitlines():
             if line.lower().startswith("duration:"):
-                return int(line.split()[1])
+                try:
+                    return int(line.split()[1])
+                except:
+                    return 0
         return 0
 
     durations = [extract_duration(s) for s in shots]
     total = sum(durations)
 
-    # Compute ideal number of buckets
-    # Each bucket must be <= max_total, so minimum buckets = ceil(total / max_total)
+    # If total duration is zero, grouping is meaningless → return one bucket
+    if total == 0:
+        return [shots]
+
     import math
     min_buckets = math.ceil(total / max_total)
 
-    # Try bucket counts from min_buckets upward until a valid grouping is found
+    # Ensure bucket_count is never zero
+    if min_buckets < 1:
+        min_buckets = 1
+
     for bucket_count in range(min_buckets, len(shots) + 1):
-        target = total / bucket_count  # ideal bucket duration
+        target = total / bucket_count
 
         groups = []
         current_group = []
         current_total = 0
 
         for dur, shot in zip(durations, shots):
-            # If adding this shot exceeds max_total, start new bucket
             if current_total + dur > max_total:
                 groups.append(current_group)
                 current_group = [shot]
@@ -494,24 +494,25 @@ def group_shots_balanced(shots, min_total=5, max_total=15):
                 current_group.append(shot)
                 current_total += dur
 
-            # If bucket is already >= target or >= min_total, finalize it
             if current_total >= target or current_total >= min_total:
                 groups.append(current_group)
                 current_group = []
                 current_total = 0
 
-        # Add leftover
         if current_group:
             groups.append(current_group)
 
-        # Validate all groups
-        valid = all(min_total <= sum(extract_duration(s) for s in g) <= max_total for g in groups)
+        # Validate
+        valid = all(
+            min_total <= sum(extract_duration(s) for s in g) <= max_total
+            for g in groups
+        )
 
         if valid:
             return groups
 
-    # Fallback: greedy grouping
-    return group_shots_by_duration_preserve_order(shots, min_total, max_total)
+    return [shots]
+
 
 def main():
     from parse_script import parse_script_txt
@@ -531,7 +532,7 @@ def main():
         #director_entries = build_director_entries(line)
         shots, notes = direct(line, notes)
 
-        for subbeat, dentry in enumerate(group_shots_balanced(shots), start=1):
+        for subbeat, dentry in enumerate(group_shots_balanced_preserve_order(shots), start=1):
             #prompt = to_h3_prompt(dentry, characters)
             script = h3_ref(
                 line['background'],
