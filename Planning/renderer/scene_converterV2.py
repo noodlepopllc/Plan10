@@ -139,9 +139,11 @@ def h3_ref(bg, refs, prompt, duration=10.0, visual_ids=[], char_names=[], shots=
 import re
 import unicodedata
 
+import re
+
 def replace_character_names(script, char_names):
-    # Normalize Unicode punctuation (curly quotes, fancy apostrophes)
-    script = unicodedata.normalize("NFKC", script)
+    # Normalize only apostrophes, not quotes
+    script = script.replace("’", "'").replace("‘", "'")
 
     # Split into quoted and non-quoted segments
     segments = re.split(r'(".*?"|\'.*?\')', script)
@@ -150,11 +152,10 @@ def replace_character_names(script, char_names):
     for cndx, name in enumerate(char_names, 1):
         token = f"char{cndx}"
 
-        # Whole-word replacement (case-insensitive)
+        # Whole-word replacement
         pattern = re.compile(rf"\b{re.escape(name)}\b", re.IGNORECASE)
 
-        # Possessive replacement:
-        # Handles: Sora's, Sora’s, SORA’S, sora’s
+        # Possessive replacement: Sora's, Sora’s, SORA’S
         pattern_possessive = re.compile(
             rf"\b{re.escape(name)}['’]s\b",  # ASCII ' or Unicode ’
             re.IGNORECASE
@@ -171,6 +172,7 @@ def replace_character_names(script, char_names):
             segments[idx] = segment
 
     return ''.join(segments)
+
 
 def normalize_shot_characters(shot_text: str, char_labels: list) -> str:
     """Replace character names with char tokens in a single shot, excluding quoted strings."""
