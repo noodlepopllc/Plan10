@@ -590,6 +590,8 @@ def direct(beat_entry: dict, notes=''):
         parts = line.split('|')
 
         dialog_words = quoted_word_count(line)
+        if len(parts) != 3:
+            continue
         total_words = len(parts[1].split())
 
         if dialog_words:
