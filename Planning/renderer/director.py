@@ -68,28 +68,30 @@ Do not:
 
 3. Dialog Preservation
 
+Dialog Source Rule
+
+If the scene description contains:
+
+DIALOG: "..."
+
+that exact quoted dialog is the only spoken audio.
+
+Do not paraphrase.
+Do not summarize.
+Do not refer to it as:
+- speaking
+- mid-line
+- continuing speech
+- delivering a sentence
+
+Include the exact quoted dialog.
+
 Copy dialog exactly.
 
 Do not rewrite dialog.
 
 If the director shot plan indicates speech,
 the final shot MUST contain the exact quoted dialog.
-
-A speaking shot without quoted dialog is invalid.
-
-Do not describe speech progression using:
-
-- opening the line
-- mid-line
-- continuing speech
-- second sentence
-- final syllables
-
-Use either:
-
-- exact dialog text
-or
-- silent physical behavior
 
 4. Audio Preservation
 
@@ -174,6 +176,45 @@ This is the raw temporal plan the director will use to build the shot list.
 TEMPORAL RULES
 - Most moments should be 2 seconds.
 - Maximum 3 seconds.
+
+A speaking shot without quoted dialog is invalid.
+
+Do not describe speech progression using:
+
+- opening the line
+- mid-line
+- continuing speech
+- second sentence
+- final syllables
+
+Use either:
+
+- exact dialog text
+or
+- silent physical behavior
+
+Observable Reality Rule
+
+Describe only things directly observable by
+the camera or microphone.
+
+Do not describe:
+
+- beginning speech
+- continuing speech
+- ending speech
+- first sentence
+- second sentence
+- final syllables
+- delivering a line
+
+Use either:
+
+visual:
+mouth moving
+
+audio:
+exact quoted dialog
 
 ------------------------------------------------------------
 CAMERA BEST PRACTICES (TIGHTENED)
@@ -361,6 +402,22 @@ unless the actual quoted dialog is also present.
 
 Shots that contain speech with no quoted dialog
 are invalid and must be corrected.
+
+Audio Verification Rule
+
+If speech is present:
+
+- audio must contain exact quoted dialog.
+
+The following are invalid:
+
+- speaking
+- talking
+- continuing dialogue
+- delivering a line
+- finishes speaking
+
+unless accompanied by the exact quoted text.
 
 ------------------------------------------------------------
 DIRECTOR RULES (TIGHTENED)
@@ -577,7 +634,7 @@ def build_director_entries(entry: dict):
             'characters': characters,
             'background': background,   # <-- REQUIRED FIX
             'action': padded_action,
-            'dialog': dialog if dialog and len(action_units) == 1 else None
+            'dialog': dialog if dialog  None
         })
 
     return director_entries
