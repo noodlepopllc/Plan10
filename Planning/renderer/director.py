@@ -1,4 +1,4 @@
-import re
+import re, math
 from plan10.lib.qwen_llm import llm_analyze_media
 
 def llm(prompt):
@@ -36,6 +36,17 @@ SHOT PLANNER RULES (TIGHTENED)
    - Use EXACT camera angle/movement from director.
    - No new moves.
    - No reframing not in director plan.
+
+   Each camera moment should be as short as possible.
+
+    Target:
+    2-4 seconds
+
+    Only exceed 4 seconds if:
+    - uninterrupted speech requires it
+    - complex continuous action requires it
+
+    Maximum 6 seconds.
 
 4. Physical Description
    - Describe ONLY the active character’s visible actions.
@@ -103,16 +114,11 @@ what the camera is doing, what is visible, and what is audibly notable.
 This is NOT a shot list.  
 This is the raw temporal plan the director will use to build the shot list.
 
-------------------------------------------------------------
 TEMPORAL RULES
-------------------------------------------------------------
-- Break the scene into sequential camera moments.
-- Each moment must be between 2 and 8 seconds long.
-- A moment ends when:
-  • the camera changes angle or position
-  • a character enters or exits frame
-  • a major action phase completes
-  • a new conversational turn begins
+- Most moments should be 2-4 seconds.
+- Only exceed 4 seconds for uninterrupted speech
+  or continuous physical action.
+- Maximum 6 seconds.
 
 ------------------------------------------------------------
 CAMERA BEST PRACTICES (TIGHTENED)
@@ -211,11 +217,15 @@ DIRECTOR RULES (TIGHTENED)
 ------------------------------------------------------------
 
 1. Shot Boundaries
-   Start a new shot when:
-   - camera angle changes
-   - a character enters/exits frame
-   - a new conversational turn begins
-   - a major action phase begins
+   Prefer shorter shots.
+
+    Start a new shot whenever:
+    - action intent changes
+    - gaze target changes
+    - speech begins
+    - speech ends
+    - object interaction begins
+    - object interaction ends
 
 2. Shot Merging
    Merge ONLY IF:
@@ -331,7 +341,7 @@ def split_action_into_units(action: str):
             current = chunk
 
         # If unit is too long, finalize it
-        if len(current.split()) >= 18:  # ~15 seconds
+        if len(current.split()) >= 8:  # ~15 seconds
             units.append(current.strip())
             current = ""
 
@@ -377,7 +387,8 @@ def build_director_entries(entry: dict):
     director_entries = []
 
     for idx, unit in enumerate(action_units):
-        padded_action = pad_if_too_short(unit)
+        #padded_action = pad_if_too_short(unit)
+        padded_action = unit
 
         director_entries.append({
             'location': location,
@@ -430,6 +441,11 @@ def summarize_continuity_from_director_shots(director_shots_text: str) -> str:
 
     return continuity_summary.strip()
 
+import re
+
+def quoted_word_count(text):
+    quotes = re.findall(r'"([^"]*)"', text)
+    return sum(len(q.split()) for q in quotes)
 
 def direct(beat_entry: dict, notes=''):
     if notes: 
@@ -452,8 +468,19 @@ def direct(beat_entry: dict, notes=''):
             director_shot_plan=director_shots
         )
     )
-    return final_shotlist, director_shots
+    fixed_shotlist = []
+    for line in final_shotlist.split('\n'):
+        parts = line.split('|')
 
+        dialog_words = quoted_word_count(line)
+        total_words = len(parts[1].split())
 
+        if dialog_words:
+            duration = max(2, min(6, math.ceil(dialog_words / 2.5)))
+        else:
+            duration = max(2, min(5, math.ceil(total_words / 10)))
 
+        fixed_shotlist.append('|'.join(parts[:-1] + [str(duration)]))
+
+    return '\n'.join(fixed_shotlist), director_shots
 
