@@ -428,7 +428,6 @@ def main():
     for beat, line in enumerate(lines, start=1):
         #director_entries = build_director_entries(line)
         shots, notes = direct(line, notes)
-        break
 
         for subbeat, dentry in enumerate(director_entries, start=1):
             #prompt = to_h3_prompt(dentry, characters)
