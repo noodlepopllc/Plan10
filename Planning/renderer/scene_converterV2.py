@@ -412,26 +412,35 @@ def to_h3_prompt(entry, characters):
         camera_line
     ] if x)
 
-def group_pop_front(shots_text: str, max_total=15):
-    # Temporarily split into lines; each line is one shot
-    lines = [ln for ln in shots_text.split("\n") if ln.strip()]
-    durations = [math.ceil(float(ln.split("|")[-1])) for ln in lines]
+import math
 
+def group_pop_front(shots_text: str, max_total=15):
+    lines = [ln for ln in shots_text.split("\n") if ln.strip()]
+
+    fixed = []
+    for line in lines:
+        parts = line.split('|')
+        final = math.ceil(float(parts.pop()))
+        fixed.append('|'.join(parts + [str(final)]))
+
+    shots_text = '\n'.join(fixed)
+    lines = fixed
+
+    durations = [int(ln.split("|")[-1]) for ln in lines]
     total = sum(durations)
-    # If everything fits, return the original string as a single bucket
+
     if total <= max_total:
         return [shots_text]
 
-    # Otherwise, peel shots from the front until the remainder fits
+    remaining = total
     idx = 0
-    while idx < len(lines) and sum(durations[idx:]) > max_total:
+
+    while idx < len(lines) and remaining > max_total:
+        remaining -= durations[idx]
         idx += 1
 
-    bucket1_lines = lines[:idx]
-    bucket2_lines = lines[idx:]
-
-    bucket1 = "\n".join(bucket1_lines)
-    bucket2 = "\n".join(bucket2_lines)
+    bucket1 = "\n".join(lines[:idx])
+    bucket2 = "\n".join(lines[idx:])
 
     return [bucket1, bucket2]
 
