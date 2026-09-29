@@ -89,7 +89,7 @@ def get_backgrounds(assets, mappings, T, output_dir="backdrops_tmp"):
             elements = zone.get('visible_background_elements', [])
             
             # Create canonical zone key
-            zone_key = f"{location_name}_{zone_name}".replace(' ', '_').replace('/','_').upper()
+            zone_key = f"{location_name}_{zone_name}".replace('"','').replace(' ', '_').replace('/','_').upper()
 
             elements = [] #elements[:3] if len(elements) > 3 else elements
             

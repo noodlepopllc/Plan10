@@ -325,6 +325,7 @@ def canonical_key(location_name: str, zone_name: str) -> str:
     key = f"{location_name}_{zone_name}"
     key = key.replace(' ', '_')
     key = key.replace('/', '_')
+    key = key.replace('"','')
     key = key.upper()
     return f"{key}_BACKGROUND"
 
