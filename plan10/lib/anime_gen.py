@@ -872,6 +872,8 @@ def CreateBackground(
     weather=None           # optional: 'clear', 'cloudy', 'rain', 'snow', 'fog', 'cherry_blossoms', 'autumn_leaves'
     seed = int(seed)
     print("CREATE BACKGROUND")
+    if os.environ.get('FORCE_OVERRIDE', 'False') != 'False':
+        override = (WIDTH, HEIGHT)
 
     # 1. Style anchor — the single most important line
     style_anchor = ANIME_BG_STYLES.get(style, ANIME_BG_STYLES["default"])
