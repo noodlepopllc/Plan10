@@ -15,51 +15,64 @@ INPUT:
 Your output IS the final shot list the renderer will use.
 
 ------------------------------------------------------------
-SHOT PLANNER RULES
+SHOT PLANNER RULES (TIGHTENED)
 ------------------------------------------------------------
+
 1. Format
-   Each shot must be written as:
+   Each shot MUST be a single line:
 
-   shot | foley + physical description + camera angle | duration_seconds
+   shot | foley. camera description. physical description. dialog (if any). | duration_seconds
 
-   Every output line MUST begin with the literal prefix: "shot |".
-   Even if the director’s input already resembles a shot line.
+   - MUST begin with literal prefix: "shot |"
+   - Duration MUST be the final pipe-delimited integer (e.g., | 6)
+   - Do NOT output "duration:" lines.
 
 2. Foley
-   - Use a single short, natural ambient cue at the start of each shot.
-   - Examples: "soft wind", "quiet footsteps", "glass clinks", "chair creaks".
-   - Foley must match the environment described by the director.
-   - Do NOT invent unrealistic or dramatic sounds.
+   - One short ambient cue only.
+   - No invented or dramatic sounds.
+   - Must match environment.
 
 3. Camera
-   - Use the camera angle and movement described by the director.
-   - Do NOT add new camera moves.
-   - Do NOT change the shot type (medium, wide, close, etc.).
+   - Use EXACT camera angle/movement from director.
+   - No new moves.
+   - No reframing not in director plan.
 
 4. Physical Description
-   - Describe only what the director says is visible.
-   - Include small natural actions (blink, shift weight, adjust clothing).
-   - Do NOT add new major actions.
-   - Do NOT add new characters.
+   - Describe ONLY the active character’s visible actions.
+   - Passive characters may appear visually but MUST NOT perform actions.
+   - Passive characters MUST be described with STATIC language:
+       “visible at frame edge, static”
+       “background presence only”
+       “unmoving silhouette”
+       “still, no actions”
 
 5. Dialog
-   - If the director indicates dialog, format it as:
-     char speaks [English] "text"
-   - After speaking: "They close their mouth and are silent."
+   - If a character speaks:
+       • They MUST be the ONLY active character.
+       • Other characters may appear visually but MUST NOT act.
+       • Format:
+         char speaks [English] "text"
+         They close their mouth and are silent.
 
-   If a character speaks, isolate them as the only active character in that shot.
-Other characters may appear visually but must not perform actions.
-   
+6. Actor Isolation (CRITICAL)
+   - A shot may contain ONLY ONE active character.
+   - A second character may appear ONLY IF:
+       • they perform ZERO actions, and
+       • they are described with STATIC language.
 
-6. Duration
-   - Use the director’s duration.
-   - Do NOT change it.
-   - Do NOT exceed 10 seconds.
+   - Two active characters are allowed ONLY IF they share ONE synchronized physical action
+     (e.g., both running together, both lifting an object together).
+   - If they are not sharing an action, isolate them into separate shots.
 
-7. Continuity
-   - Maintain consistent lighting, weather, and environment.
-   - Maintain consistent character positions.
-   - Maintain consistent camera angle across merged moments.
+7. Duration
+   - Use director’s duration.
+   - MUST be 2–10 seconds.
+   - Do NOT change duration.
+
+8. Continuity
+   - Maintain lighting, environment, character positions.
+   - Maintain camera angle across merged moments.
+
 
 ------------------------------------------------------------
 OUTPUT FORMAT
@@ -102,32 +115,43 @@ TEMPORAL RULES
   • a new conversational turn begins
 
 ------------------------------------------------------------
-CAMERA BEST PRACTICES
+CAMERA BEST PRACTICES (TIGHTENED)
 ------------------------------------------------------------
+
 1. Establishing Shot
-   - Begin with a wide or medium-wide shot showing environment + characters.
-   - Slow pan or tilt allowed only in the first moment.
+   - First moment MUST be wide or medium-wide.
+   - Only the first moment may include a slow pan/tilt.
 
-2. Introducing Characters
-   - When a character enters frame, describe:
-     • where they enter from
-     • how the camera adjusts (pan, tilt, slight dolly)
-     • how they settle into the composition
+2. Dialog Coverage
+   - If someone speaks:
+       • Camera MUST isolate speaker in medium-close or close-up.
+       • Speaker MUST be centered or dominant in frame.
+       • Other characters may appear visually but MUST NOT perform actions.
+       • Passive characters MUST be described with STATIC language only.
 
-3. Dialog Coverage
-   - Use medium or medium-close framing.
-   - Ensure clear view of the speaker’s face.
-   - Include the listener’s reaction (OS, two-shot, or slight angle shift).
-   - Avoid rapid cutting; hold stable angles for clarity.
+3. Actor Isolation
+   - A moment may contain ONLY ONE active character.
+   - If two characters appear:
+       • Only ONE may perform actions.
+       • The other MUST be static, passive, unmoving.
 
-   If someone speaks, the camera isolates them into a close-up or medium-close.
-Other characters may appear but must not perform actions.
+   - Two active characters allowed ONLY IF they share ONE synchronized physical action.
 
 4. Camera Movement
-   - Movement must be slow, intentional, and motivated.
-   - No sudden angle changes.
-   - No whip-pans or fast reframes.
-   - After the establishing shot, prefer static framing unless action demands movement.
+   - Slow, intentional, motivated.
+   - No sudden reframes.
+   - No new moves not implied by scene.
+
+5. Visual Description
+   - Describe ONLY what the camera sees.
+   - Passive characters MUST be described with STATIC language:
+       “visible at frame edge, static”
+       “background presence only”
+       “still, no actions”
+
+6. Audio Notes
+   - Only natural diegetic sounds.
+   - No invented foley.
 
 ------------------------------------------------------------
 CHARACTER ACTIONS
@@ -183,39 +207,45 @@ Your output is NOT the final shot list.
 Your output is the semantic shot plan the shot planner will use.
 
 ------------------------------------------------------------
-DIRECTOR RULES
+DIRECTOR RULES (TIGHTENED)
 ------------------------------------------------------------
+
 1. Shot Boundaries
-   - Start a new shot when:
-     • the camera angle changes
-     • a character enters or exits frame
-     • a new conversational turn begins
-     • a major action phase begins
+   Start a new shot when:
+   - camera angle changes
+   - a character enters/exits frame
+   - a new conversational turn begins
+   - a major action phase begins
 
 2. Shot Merging
-   - Merge consecutive moments when:
-     • camera angle is similar
-     • motion is part of the same phase
-     • dialog belongs to the same turn
-     • no character enters/exits
+   Merge ONLY IF:
+   - camera angle is identical
+   - motion is part of same phase
+   - dialog belongs to same turn
+   - no character enters/exits
+   - only ONE active character is present
 
-3. Shot Duration
-   - Duration = sum of merged moment durations
-   - Clamp duration to 2–10 seconds
-   - Long shots (7–10s) only allowed when ≥4 distinct phases exist
+3. Actor Isolation (CRITICAL)
+   - A shot may contain ONLY ONE active character.
+   - If someone speaks:
+       • They MUST be the ONLY active character.
+       • Other characters may appear visually but MUST NOT act.
+       • Passive characters MUST be described with STATIC language.
+
+   - Two active characters allowed ONLY IF they share ONE synchronized physical action.
 
 4. Shot Type
-   - establishing: wide or medium-wide, introduces environment
-   - dialog: someone speaks, show face + listener reaction
-   - action: physical movement dominates
-   - reaction: emotional or physical response dominates
+   - establishing: wide/medium-wide
+   - dialog: speaker isolated
+   - action: one active performer
+   - reaction: one active performer
 
-5. Purpose
-   - Each shot must have a clear purpose:
-     • introduce environment
-     • show motion
-     • show dialog
-     • show reaction
+5. Duration
+   - Sum of merged moments.
+   - Clamp to 2–10 seconds.
+
+6. Purpose
+   - Each shot must have a clear purpose.
 
 If someone speaks, the camera isolates them into a close-up or medium-close.
 Other characters may appear but must not perform actions.
