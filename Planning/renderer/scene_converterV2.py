@@ -150,12 +150,14 @@ def replace_character_names(script, char_names):
     for cndx, name in enumerate(char_names, 1):
         token = f"char{cndx}"
 
-        # Whole-word replacement
+        # Whole-word replacement (case-insensitive)
         pattern = re.compile(rf"\b{re.escape(name)}\b", re.IGNORECASE)
 
-        # Possessive replacement (Sora's, Lindsy's)
+        # Possessive replacement:
+        # Handles: Sora's, Sora’s, SORA’S, sora’s
         pattern_possessive = re.compile(
-            rf"\b{re.escape(name)}'s\b", re.IGNORECASE
+            rf"\b{re.escape(name)}['’]s\b",  # ASCII ' or Unicode ’
+            re.IGNORECASE
         )
 
         for idx, segment in enumerate(segments):
@@ -164,15 +166,11 @@ def replace_character_names(script, char_names):
                 continue
 
             # Apply replacements only outside quotes
-            segment = pattern.sub(token, segment)
             segment = pattern_possessive.sub(f"{token}'s", segment)
+            segment = pattern.sub(token, segment)
             segments[idx] = segment
 
     return ''.join(segments)
-
-
-
-import re
 
 def normalize_shot_characters(shot_text: str, char_labels: list) -> str:
     """Replace character names with char tokens in a single shot, excluding quoted strings."""
