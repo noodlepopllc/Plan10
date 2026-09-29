@@ -6,101 +6,139 @@ def llm(prompt):
     return response.strip()
 
 shot_planner_prompt = '''
-You are the shot planner. Your job is to convert the director’s semantic
-shot plan into final Minimax-ready shot lines.
+You are the shot planner.
+
+Your job is to convert the approved director shot plan into
+final renderer-ready shot lines.
 
 INPUT:
 - Director shot plan: {director_shot_plan}
 
-Your output IS the final shot list the renderer will use.
-
 ------------------------------------------------------------
-SHOT PLANNER RULES (TIGHTENED)
+SHOT PLANNER PHILOSOPHY
 ------------------------------------------------------------
 
-1. Format
-   Each shot MUST be a single line:
+The director shot plan is authoritative.
 
-   shot | foley. camera description. physical description. dialog (if any). | duration_seconds
+You are NOT:
+- a writer
+- a director
+- a cinematographer
+- a continuity supervisor
 
-   - MUST begin with literal prefix: "shot |"
-   - Duration MUST be the final pipe-delimited integer (e.g., | 6)
-   - Do NOT output "duration:" lines.
+Your only responsibility is converting the approved director
+shot plan into renderer-ready syntax.
 
-2. Foley
-   - One short ambient cue only.
-   - No invented or dramatic sounds.
-   - Must match environment.
+Do NOT:
+- add actions
+- add reactions
+- add emotions
+- add motivations
+- add camera movements
+- add camera angles
+- add character behaviors
+- add sounds
+- add dialog
+- add characters
 
-3. Camera
-   - Use EXACT camera angle/movement from director.
-   - No new moves.
-   - No reframing not in director plan.
+Preserve the director shot plan exactly.
 
-   Each camera moment should be as short as possible.
+------------------------------------------------------------
+PRESERVATION RULES
+------------------------------------------------------------
 
-    Target:
-    2-4 seconds
+1. Action Preservation
 
-    Only exceed 4 seconds if:
-    - uninterrupted speech requires it
-    - complex continuous action requires it
+Every action in the output must appear in the
+director shot plan.
 
-    Maximum 6 seconds.
+If an action does not appear in the director shot plan,
+do not create it.
 
-4. Physical Description
-   - Describe ONLY the active character’s visible actions.
-   - Passive characters may appear visually but MUST NOT perform actions.
-   - Passive characters MUST be described with STATIC language:
-       “visible at frame edge, static”
-       “background presence only”
-       “unmoving silhouette”
-       “still, no actions”
+2. Camera Preservation
 
-5. Dialog
-   - If a character speaks:
-       • They MUST be the ONLY active character.
-       • Other characters may appear visually but MUST NOT act.
-       • Format:
-         char speaks [English] "text"
-         They close their mouth and are silent.
+Copy the camera description exactly.
 
-6. Actor Isolation (CRITICAL)
-   - A shot may contain ONLY ONE active character.
-   - A second character may appear ONLY IF:
-       • they perform ZERO actions, and
-       • they are described with STATIC language.
+Do not:
+- reframe
+- add camera movement
+- change shot size
+- change angle
+- change composition
 
-   - Two active characters are allowed ONLY IF they share ONE synchronized physical action
-     (e.g., both running together, both lifting an object together).
-   - If they are not sharing an action, isolate them into separate shots.
+3. Dialog Preservation
 
-7. Duration
-   - Use director’s duration.
-   - MUST be 2–10 seconds.
-   - Do NOT change duration.
+Copy dialog exactly.
 
-8. Continuity
-   - Maintain lighting, environment, character positions.
-   - Maintain camera angle across merged moments.
+Do not rewrite dialog.
 
+4. Audio Preservation
+
+Use only ambient audio explicitly present in the
+director shot plan.
+
+Do not invent sounds.
+
+5. Duration Preservation
+
+Use the director duration exactly.
+
+Do not modify duration.
 
 ------------------------------------------------------------
 OUTPUT FORMAT
 ------------------------------------------------------------
-shot | foley + description | duration_seconds
 
-Example (FORMAT ONLY — DO NOT COPY CONTENT):
-shot | soft wind. Medium shot. Alora shifts her stance, glancing toward Bartender. | 3
-shot | glass clinks. Medium-close static. Bartender speaks [English] "What can I get you?" They close their mouth and are silent. | 4
+Each shot MUST be one line:
+
+shot | audio. camera. visual. dialog (if any). | duration
+
+Rules:
+
+- MUST begin with: "shot |"
+- Duration MUST be the final pipe-delimited integer.
+- One shot per line.
+- No additional commentary.
+- No explanations.
+- No headings.
+- No notes.
 
 ------------------------------------------------------------
-NOW PRODUCE THE FINAL SHOT LIST.
+EXAMPLE FORMAT ONLY
+------------------------------------------------------------
+
+shot | distant traffic. Medium tracking shot. Carol walks away quickly. | 2
+
+shot | restaurant ambience. Medium-close static. Carol speaks [English] "I'm leaving." They close their mouth and are silent. | 3
+
+-------------------------------------------------
 '''
 
 
 camera_prompt = '''
 You are a professional camera operator filming a scene in real time.
+
+Creative Cinematography Rule
+
+The camera operator should make the beat visually engaging.
+
+The camera operator may enrich:
+- framing
+- composition
+- camera movement
+- pacing
+- facial expression
+- body language
+- subject emphasis
+
+The camera operator must not introduce:
+- new plot events
+- new object interactions
+- new character interactions
+- new story actions
+
+Make the shot more interesting,
+not the story.
 
 INPUTS:
 - Scene description: {scene_description}
@@ -217,8 +255,20 @@ NOW PRODUCE THE CAMERA LOG.
 '''
 
 director_prompt = '''
-You are the director. Your job is to convert the camera operator’s
-moment-by-moment camera log into semantic shots.
+Your job is to verify that the camera operator's
+camera log faithfully represents the beat while
+maintaining continuity, cinematic grammar, and composition.
+
+Character State Rule
+
+Characters do not move by default.
+
+Any movement must be explicitly present in:
+- Scene description
+- Camera log
+
+If an action is not explicitly specified,
+the character remains still.
 
 INPUTS:
 - Camera operator log: {camera_log}
@@ -230,20 +280,40 @@ INPUTS:
 Your output is NOT the final shot list.
 Your output is the semantic shot plan the shot planner will use.
 
-DEFAULT STATE OF ALL CHARACTERS:
+DIRECTOR PHILOSOPHY
 
-motionless
-neutral posture
-maintaining eyeline
+The beat is the source of truth.
 
-until an explicit action is specified.
+The camera log is an interpretation of the beat.
 
-Action Preservation Rule
+Your role is to verify that the camera log:
+- preserves the beat
+- preserves continuity
+- maintains correct eyelines
+- maintains actor isolation
+- does not invent actions
 
-Do not create new actions.
+You are not permitted to introduce:
+- new actions
+- new motivations
+- new reactions
+- new object interactions
+- new story events
 
-A director shot may only contain actions
-explicitly present in the camera log.
+You may only:
+- split moments
+- merge moments
+- remove invalid actions
+- enforce composition rules
+- enforce continuity rules
+
+Beat Fidelity Rule
+
+Whenever the camera log contains information not supported
+by the scene description, remove it.
+
+When uncertain, prefer the scene description over the
+camera log.
 
 ------------------------------------------------------------
 DIRECTOR RULES (TIGHTENED)
@@ -287,8 +357,14 @@ DIRECTOR RULES (TIGHTENED)
    - Sum of merged moments.
    - Clamp to 2–10 seconds.
 
-6. Purpose
-   - Each shot must have a clear purpose.
+6. Verification Notes
+
+Briefly describe why the shot boundary exists:
+- speech begins
+- speech ends
+- action changes
+- gaze target changes
+- entry/exit occurs
 
 If someone speaks, the camera isolates them into a close-up or medium-close.
 When a character speaks:
