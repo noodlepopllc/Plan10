@@ -411,6 +411,30 @@ def to_h3_prompt(entry, characters):
         camera_line
     ] if x)
 
+def group_pop_front(shots_text: str, max_total=15):
+    # Temporarily split into lines; each line is one shot
+    lines = [ln for ln in shots_text.split("\n") if ln.strip()]
+    durations = [int(ln.split("|")[-1]) for ln in lines]
+
+    total = sum(durations)
+    # If everything fits, return the original string as a single bucket
+    if total <= max_total:
+        return [shots_text]
+
+    # Otherwise, peel shots from the front until the remainder fits
+    idx = 0
+    while idx < len(lines) and sum(durations[idx:]) > max_total:
+        idx += 1
+
+    bucket1_lines = lines[:idx]
+    bucket2_lines = lines[idx:]
+
+    bucket1 = "\n".join(bucket1_lines)
+    bucket2 = "\n".join(bucket2_lines)
+
+    return [bucket1, bucket2]
+
+
 def main():
     from parse_script import parse_script_txt
     from director import build_director_entries, direct
@@ -429,21 +453,21 @@ def main():
         #director_entries = build_director_entries(line)
         shots, notes = direct(line, notes)
 
-        #for subbeat, dentry in enumerate(shots, start=1):
+        for subbeat, dentry in enumerate(group_pop_front(shots), start=1):
             #prompt = to_h3_prompt(dentry, characters)
-        script = h3_ref(
-            line['background'],
-            character_refs,
-            line['summary'],
-            duration=10.0,
-            visual_ids=visual_ids,
-            char_names=character_names,
-            shots=shots
-        )
+            script = h3_ref(
+                line['background'],
+                character_refs,
+                line['summary'],
+                duration=10.0,
+                visual_ids=visual_ids,
+                char_names=character_names,
+                shots=dentry
+            )
 
-        outname = f"beat_{beat:03d}.txt"
-        (Path(scene_base) / outname).write_text(script, encoding='utf-8')
-        print(script)
+            outname = f"beat_{beat:03d}_{subbeat:03d}.txt"
+            (Path(scene_base) / outname).write_text(script, encoding='utf-8')
+            print(script)
 
 if __name__ == '__main__':
     main()
