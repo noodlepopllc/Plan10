@@ -22,6 +22,10 @@ SHOT PLANNER RULES
 
    shot | foley + physical description + camera angle | duration_seconds
 
+   Every output line MUST begin with the literal prefix: "shot |".
+   Even if the director’s input already resembles a shot line.
+
+
 2. Foley
    - Use a single short, natural ambient cue at the start of each shot.
    - Examples: "soft wind", "quiet footsteps", "glass clinks", "chair creaks".
