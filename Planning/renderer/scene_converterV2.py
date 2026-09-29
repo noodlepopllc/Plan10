@@ -432,7 +432,7 @@ def main():
         #for subbeat, dentry in enumerate(director_entries, start=1):
             #prompt = to_h3_prompt(dentry, characters)
         script = h3_ref(
-            dentry['background'],
+            line['background'],
             character_refs,
             shots,
             duration=10.0,
