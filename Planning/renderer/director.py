@@ -634,7 +634,7 @@ def build_director_entries(entry: dict):
             'characters': characters,
             'background': background,   # <-- REQUIRED FIX
             'action': padded_action,
-            'dialog': dialog if dialog  None
+            'dialog': dialog if dialog  else None
         })
 
     return director_entries
