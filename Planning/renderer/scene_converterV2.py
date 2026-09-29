@@ -5,6 +5,7 @@ from plan10.lib.qwen_llm import llm_analyze_media
 from plan10.lib.util import video_to_img, to_absolute
 from plan10.lib.image_gen import add_metadata_loc
 from PIL import Image
+import math
 
 def get_or_analyze(image_path: str, prompt: str, cache_key: str, max_words: int = 15) -> str:
     """Get cached analysis from image metadata, or analyze and cache it."""
@@ -414,7 +415,7 @@ def to_h3_prompt(entry, characters):
 def group_pop_front(shots_text: str, max_total=15):
     # Temporarily split into lines; each line is one shot
     lines = [ln for ln in shots_text.split("\n") if ln.strip()]
-    durations = [int(ln.split("|")[-1]) for ln in lines]
+    durations = [math.ceil(float(ln.split("|")[-1])) for ln in lines]
 
     total = sum(durations)
     # If everything fits, return the original string as a single bucket
