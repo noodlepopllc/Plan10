@@ -51,6 +51,9 @@ SHOT PLANNER RULES
    - If the director indicates dialog, format it as:
      char speaks [English] "text"
    - After speaking: "They close their mouth and are silent."
+
+   If a character speaks, isolate them as the only active character in that shot.
+Other characters may appear visually but must not perform actions.
    
 
 6. Duration
