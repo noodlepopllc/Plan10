@@ -169,20 +169,30 @@ CAMERA BEST PRACTICES (TIGHTENED)
 
     When a character speaks:
 
-    - Frame only the speaker.
-    - Do not show listeners unless explicitly required.
-    - Prefer close-up or medium-close coverage.
-    - Do not show listeners in the same frame.
-    - Use over-the-shoulder framing only if required by the scene.
+    Frame only the speaker.
+
+    The listener is typically just off-camera.
+    The speaker's eyeline should fall slightly
+    left or right of lens.
+
+    Do not stage the listener behind the speaker
+    unless required by the scene.
 
     Conversation Eyeline Rule
 
     If character A is speaking to character B:
 
     - Character A looks toward B.
-    - Character A never addresses the camera.
-    - Character A never looks directly into lens unless the script
-    explicitly specifies breaking the fourth wall.
+    - Character B may be off-camera.
+    - The position of B should be implied to exist
+    just outside frame near the camera side.
+
+    - Do NOT place B behind A unless explicitly
+    specified in the scene.
+
+    - Prefer natural conversational eyelines where
+    B would occupy screen space adjacent to the
+    camera.
 
 3. Actor Isolation
    - A moment may contain ONLY ONE active character.
@@ -376,6 +386,23 @@ When a character speaks:
 - No clothing adjustments.
 - No gaze shifts.
 - No reactions.
+
+Eyeline Validation Rule
+
+When a character speaks to another character:
+
+- Verify the listener's implied position is
+  spatially consistent.
+
+- Reject staging that places the listener
+  directly behind the speaker unless the
+  scene description explicitly requires it.
+
+- Prefer traditional shot/reverse-shot
+  conversational geography.
+
+- Correct invalid eyelines before generating
+  the shot plan.
 
 ------------------------------------------------------------
 OUTPUT FORMAT
