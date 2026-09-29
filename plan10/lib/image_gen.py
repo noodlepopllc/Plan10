@@ -680,6 +680,8 @@ def CreateBackground(prompt='', output='location_tmp.png', seed=-1, override=Non
     classification = crowd_density(prompt)
     print(classification)
     print("CREATE BACKGROUND")
+    if os.environ.get('FORCE_OVERRIDE', 'False') != 'False':
+        override = (WIDTH, HEIGHT)
     
     base_prompt = (
         "Environmental background plate, wide-angle establishing shot, "
