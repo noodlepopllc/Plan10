@@ -429,20 +429,20 @@ def main():
         #director_entries = build_director_entries(line)
         shots, notes = direct(line, notes)
 
-        for subbeat, dentry in enumerate(director_entries, start=1):
+        #for subbeat, dentry in enumerate(director_entries, start=1):
             #prompt = to_h3_prompt(dentry, characters)
-            script = h3_ref(
-                dentry['background'],
-                character_refs,
-                shots,
-                duration=10.0,
-                visual_ids=visual_ids,
-                char_names=character_names
-            )
+        script = h3_ref(
+            dentry['background'],
+            character_refs,
+            shots,
+            duration=10.0,
+            visual_ids=visual_ids,
+            char_names=character_names
+        )
 
-            outname = f"beat_{beat:03d}_{subbeat:02d}.txt"
-            (Path(scene_base) / outname).write_text(script, encoding='utf-8')
-            print(script)
+        outname = f"beat_{beat:03d}.txt"
+        (Path(scene_base) / outname).write_text(script, encoding='utf-8')
+        print(script)
 
 if __name__ == '__main__':
     main()
