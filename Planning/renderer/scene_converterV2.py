@@ -411,48 +411,33 @@ def to_h3_prompt(entry, characters):
         camera_line
     ] if x)
 
-def group_shots_by_duration_preserve_order(shots, min_total=5, max_total=15):
-    """
-    shots: list of shot text blocks (already parsed)
-    Returns a list of groups, where each group is a list of shots.
-    Each group's total duration is guaranteed to be between min_total and max_total.
-    Order is strictly preserved.
-    """
-
+def group_shots_pop_front(shots, min_total=5, max_total=15):
     def extract_duration(shot):
         for line in shot.splitlines():
             if line.lower().startswith("duration:"):
-                return int(line.split()[1])
+                try:
+                    return int(line.split()[1])
+                except:
+                    return 0
         return 0
 
-    groups = []
-    current_group = []
-    current_total = 0
+    durations = [extract_duration(s) for s in shots]
+    total = sum(durations)
 
-    for shot in shots:
-        dur = extract_duration(shot)
+    # If everything fits, return one bucket
+    if total <= max_total:
+        return ['\n'.join(shots)]
 
-        # If adding this shot exceeds max_total, finalize current group
-        if current_total + dur > max_total:
-            if current_group:
-                groups.append(current_group)
-            current_group = [shot]
-            current_total = dur
-        else:
-            current_group.append(shot)
-            current_total += dur
+    # Pop from the front until the remainder fits
+    idx = 0
+    while idx < len(shots) and sum(durations[idx:]) > max_total:
+        idx += 1
 
-        # If group is valid (>= min_total), finalize it
-        if current_total >= min_total:
-            groups.append(current_group)
-            current_group = []
-            current_total = 0
+    bucket1 = shots[:idx]
+    bucket2 = shots[idx:]
 
-    # Add leftover group if it exists
-    if current_group:
-        groups.append(current_group)
+    return ['\n'.join(bucket1), '\n'.join(bucket2)]
 
-    return groups
 
 def main():
     from parse_script import parse_script_txt
