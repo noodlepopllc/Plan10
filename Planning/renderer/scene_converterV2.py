@@ -433,10 +433,12 @@ def group_pop_front(shots_text: str, max_total=15):
         return [shots_text]
 
     remaining = total
+    added = 0
     idx = 0
 
-    while idx < len(lines) and remaining > max_total:
+    while idx < len(lines) and remaining > max_total and added < 5:
         remaining -= durations[idx]
+        added += durations[idx]
         idx += 1
 
     bucket1 = "\n".join(lines[:idx])
