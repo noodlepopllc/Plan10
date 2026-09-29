@@ -25,11 +25,6 @@ SHOT PLANNER RULES
    Every output line MUST begin with the literal prefix: "shot |".
    Even if the director’s input already resembles a shot line.
 
-   “Every shot MUST include a duration line in the format:
-    duration: <integer>  
-    If duration is missing, the output is invalid.”
-
-
 2. Foley
    - Use a single short, natural ambient cue at the start of each shot.
    - Examples: "soft wind", "quiet footsteps", "glass clinks", "chair creaks".
