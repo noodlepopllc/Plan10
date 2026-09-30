@@ -736,7 +736,7 @@ def direct(beat_entry: dict, notes=''):
             context_notes=notes
             ), processor=p_ctx, model=m_ctx
         )  # returns camera log text
-        print("Camera Done: {camera_log}")
+        print(f"Camera Done: {camera_log}")
         director_shots = llm(
             director_prompt.format(
                 camera_log=camera_log,
@@ -746,14 +746,14 @@ def direct(beat_entry: dict, notes=''):
                 context_notes=notes
             ), processor=p_ctx, model=m_ctx
         )
-        print("Director Done: {director_shots}")
+        print(f"Director Done: {director_shots}")
 
         final_shotlist = llm(
             shot_planner_prompt.format(
                 director_shot_plan=director_shots
             ), processor=p_ctx, model=m_ctx
         )
-        print("Shotlist Done: {final_shotlist}")
+        print(f"Shotlist Done: {final_shotlist}")
     fixed_shotlist = []
     for line in final_shotlist.split('\n'):
         parts = line.split('|')
