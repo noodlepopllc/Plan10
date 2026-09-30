@@ -1,7 +1,12 @@
 import re, math
-from plan10.lib.qwen_llm import llm_analyze_media
+from plan10.lib.qwen_llm import llm_analyze_media, time
+from plan10.lib.config import load_config
+load_config()
 
-def llm(prompt):
+def llm(prompt, cooloff=8):
+    if os.environ.get("LLM_BACKEND", "transformers") == "ollama":
+        print(f'Cool off period: {cooloff} seconds')
+        time.sleep(cooloff)
     response = llm_analyze_media('', prompt=prompt, max_tokens=8192, temperature=0.4)['analysis']
     return response.strip()
 
