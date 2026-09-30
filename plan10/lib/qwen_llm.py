@@ -17,6 +17,7 @@ if BACKEND == "ollama":
         llm_analyze_media
     )
 elif BACKEND == "transformers":
+
     import gc, json, re, torch
     from pathlib import Path
     from transformers import AutoProcessor, Qwen3_5ForConditionalGeneration, BitsAndBytesConfig
@@ -28,6 +29,57 @@ elif BACKEND == "transformers":
             bnb_4bit_use_double_quant=True,
             bnb_4bit_quant_type="nf4"
         )
+
+    class LLMContext:
+        def __init__(self):
+            self.processor = None
+            self.model = None
+
+        def __enter__(self):
+            # 1. Clear out memory before allocating fresh weights
+            gc.collect()
+            torch.cuda.empty_cache()
+
+            # 2. Initialize and load model/processor
+            self.processor = AutoProcessor.from_pretrained(os.environ["QWEN"])
+
+            # Note: Replace 'Qwen3_5ForConditionalGeneration' with your exact imported model class
+            self.model = Qwen3_5ForConditionalGeneration.from_pretrained(
+                os.environ["QWEN"],
+                torch_dtype=torch.float16,
+                quantization_config=get_bnb_config() if os.environ["BITSNBYTES"] == "True" else None,
+                device_map="cuda:0",
+                trust_remote_code=True
+            )
+
+            self.model.eval()
+            
+            # This returns the tuple to the 'as' variable in the 'with' block
+            return self.processor, self.model
+
+        def __exit__(self, exc_type, exc_val, exc_tb):
+            # This block ALWAYS runs, even if model.generate() crashes
+            print("[Memory Guard] Unloading model from memory and purging VRAM...")
+            
+            if self.model:
+                self.model.to('cpu')
+                del self.model
+                self.model = None
+                
+            if self.processor:
+                del self.processor
+                self.processor = None
+
+            # Force aggressive garbage collection and clear CUDA allocations
+            gc.collect()
+            torch.cuda.empty_cache()
+            torch.cuda.ipc_collect()
+            
+            # Returning False ensures any underlying exceptions are raised normally 
+            # instead of being silently swallowed.
+            return False
+
+
 
     def _system_prompt(fn="system/bot.txt"):
         if not os.path.exists(fn):
@@ -118,68 +170,73 @@ elif BACKEND == "transformers":
     # 2) Media analysis / prompt enhancement
     # ─────────────────────────────────────────
 
-    def llm_analyze_media(media, prompt="Describe this.", system=None, max_tokens=1024, temperature=0.1):
+    def llm_analyze_media(media, prompt="Describe this.", system=None, max_tokens=1024, temperature=0.1, processor=None, model=None):
         from plan10.lib.util import video_to_img
         import torch
 
         image = None
         if os.path.exists(media):
             image = video_to_img(media)
+            
         messages = []
         if system:
             messages.append({"role": "system", "content": [{"type": "text", "text": system}]})
 
         messages.append({
             "role": "user",
-            "content": [
-                {"type": "text", "text": prompt}
-            ]
+            "content": [{"type": "text", "text": prompt}]
         })
+        
         if image is not None:
             ndx = 1 if system else 0
             messages[ndx]['content'].append({"type": "image", "image": image})
         
-        processor, model = _load_llm()
-
-        # ✅ Processor handles tokenization + image preprocessing in ONE call
-        inputs = processor.apply_chat_template(
-            messages,
-            tokenize=True,          # ← Critical: must be True
-            add_generation_prompt=True,
-            return_dict=True,       # ← Returns dict with input_ids, pixel_values, etc.
-            return_tensors="pt",     # ← Returns PyTorch tensors
-            enable_thinking=False
-        )
-        inputs = inputs.to(model.device)
-        
-        with torch.no_grad():
-            generated_ids = model.generate(
-                **inputs, 
-                max_new_tokens=max_tokens, 
-                temperature=temperature, 
-                top_p=0.9, 
-                do_sample=True, 
-                pad_token_id=processor.tokenizer.eos_token_id
+        # Inner logic execution
+        def _execute_inference(p_instance, m_instance):
+            inputs = p_instance.apply_chat_template(
+                messages,
+                tokenize=True,          
+                add_generation_prompt=True,
+                return_dict=True,       
+                return_tensors="pt",     
+                enable_thinking=False
             )
-        
-        # ✅ Trim input tokens to decode ONLY the generated response
-        input_ids = inputs["input_ids"]
-        generated_ids_trimmed = [
-            out_ids[len(in_ids):] 
-            for in_ids, out_ids in zip(input_ids, generated_ids)
-        ]
-        
-        output_text = processor.batch_decode(
-            generated_ids_trimmed, 
-            skip_special_tokens=True, 
-            clean_up_tokenization_spaces=False
-        )[0]
+            inputs = inputs.to(m_instance.device)
+            
+            with torch.no_grad():
+                generated_ids = m_instance.generate(
+                    **inputs, 
+                    max_new_tokens=max_tokens, 
+                    temperature=temperature, 
+                    top_p=0.9, 
+                    do_sample=True, 
+                    pad_token_id=p_instance.tokenizer.eos_token_id
+                )
+            
+            input_ids = inputs["input_ids"]
+            generated_ids_trimmed = [
+                out_ids[len(in_ids):] 
+                for in_ids, out_ids in zip(input_ids, generated_ids)
+            ]
+            
+            output_text = p_instance.batch_decode(
+                generated_ids_trimmed, 
+                skip_special_tokens=True, 
+                clean_up_tokenization_spaces=False
+            )[0]
+            
+            return output_text.strip()
 
-        _unload_llm(model, processor)
-        
-        return {"status": "success", "analysis": output_text.strip()}
-
-
+        # Dynamic Lifecycle Fork:
+        if processor is not None and model is not None:
+            # Scenario A: Bypasses model management entirely, uses your shared instance
+            analysis_text = _execute_inference(processor, model)
+        else:
+            # Scenario B: Manages own memory context automatically
+            with LLMContext() as (local_processor, local_model):
+                analysis_text = _execute_inference(local_processor, local_model)
+                
+        return {"status": "success", "analysis": analysis_text}
 else:
     raise ValueError(
         f"Invalid LLM_BACKEND='{BACKEND}'. Must be 'transformers' or 'ollama'."
