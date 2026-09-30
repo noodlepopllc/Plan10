@@ -177,7 +177,7 @@ not the story.
 
 INPUTS:
 - Scene description: {scene_description}
-- Characters present: {character_list}
+- Characters: {character_list}
 - Background / environment: {background_label}
 - Additional context: {context_notes}
 
@@ -272,9 +272,27 @@ CAMERA BEST PRACTICES (TIGHTENED)
    - A moment may contain ONLY ONE active character.
    - If two characters appear:
        • Only ONE may perform actions.
-       • The other MUST be static, passive, unmoving.
 
    - Two active characters allowed ONLY IF they share ONE synchronized physical action.
+
+   Frame Economy Rule
+
+    The camera is not required to show every character.
+    Characters not relevant to the current shot may remain completely offscreen.
+    Offscreen characters should not be described.
+    Do not add passive background versions of characters solely because they exist in the scene.
+
+    Preferred behavior:
+
+    One active character visible.
+    All other characters remain offscreen unless the scene description explicitly requires them to be visible.
+
+    Visibility Rule
+
+    A character may exist in the scene without being visible.
+    Do not visually account for every character.
+    Offscreen characters must not be described.
+`
 
 4. Camera Movement
    - Slow, intentional, motivated.
@@ -357,7 +375,7 @@ the character remains still.
 INPUTS:
 - Camera operator log: {camera_log}
 - Scene description: {scene_description}
-- Characters present: {character_list}
+- Characters: {character_list}
 - Background / environment: {background_label}
 - Additional context (previous beat continuity): {context_notes}
 
