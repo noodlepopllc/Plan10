@@ -368,7 +368,7 @@ if __name__ == '__main__':
     elif args.topical:
         token_budget = 16384  # Topical needs more room for 20-40 beats
     else:
-        token_budget = 8092   # Action scenes need less
+        token_budget = 8192   # Action scenes need less
 
     if args.seed:
         seed_text = Path(args.seed).read_text(encoding='utf-8')
