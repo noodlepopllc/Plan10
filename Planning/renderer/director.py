@@ -93,6 +93,15 @@ Do not rewrite dialog.
 If the director shot plan indicates speech,
 the final shot MUST contain the exact quoted dialog.
 
+Renderer Dialog Format
+
+All spoken dialog MUST be emitted as:
+
+<character> speaks [English] "exact dialog"
+They close their mouth and are silent.
+
+Always include [English].
+
 4. Audio Preservation
 
 Use only ambient audio explicitly present in the
