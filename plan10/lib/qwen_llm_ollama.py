@@ -175,6 +175,7 @@ def _call_ollama(messages, max_tokens=8192, temperature=0.5, top_p=1.0, tools=No
             return response.json()
             
         except requests.exceptions.HTTPError as e:
+            print(e)
             if response.status_code == 500 and attempt < 2:  # ← Retry on attempts 0 and 1
                 print(f"Warning: Attempt {attempt + 1} failed (USB I/O bottleneck). Warming cache and retrying...")
                 time.sleep(0.5)
@@ -237,5 +238,17 @@ def llm_analyze_media(media, prompt="Describe this.", system=None, max_tokens=81
     output_text = res.get("message", {}).get("content", "").strip()
 
     return {"status": "success", "analysis": output_text}
+
+
+        res = _call_ollama(messages, max_tokens=max_tokens, temperature=temperature, top_p=1.0)
+    raw_output = res.get("message", {}).get("content", "")
     
+    print("="*50)
+    print("RAW OLLAMA OUTPUT START")
+    print(raw_output[:1000]) # Print first 1000 chars to see the prefix
+    print("RAW OLLAMA OUTPUT END")
+    print("="*50)
+    
+    output_text = raw_output.strip()
+    return {"status": "success", "analysis": output_text}
 
