@@ -25,7 +25,7 @@ fi
 
 python $basepath/renderer/renderer.py $2 minimum > $2/scene.txt
 
-./bot.sh $2/scene.txt
+uv run bot "$2/scene.txt" -F --max-steps 3
 
 python $basepath/renderer/scene_converterV2.py $2
 
