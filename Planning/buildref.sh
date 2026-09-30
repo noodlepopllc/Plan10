@@ -6,7 +6,7 @@ output="$2/output"
 
 basepath="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
-echo "$SCRIPT_DIR"
+echo "$basepath"
 
 if [[ ! -f "$output/story.txt" ]]; then
     python $basepath/builders/storywriter.py -S $1 -O $output/story.txt
