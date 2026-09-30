@@ -4,6 +4,9 @@ load_config()
 from plan10.lib.image_analysis import AnalyzeImage
 import re, os, math
 
+from pathlib import Path
+import json
+
 BACKEND=os.environ.get('VISION_BACKEND','qwen')
 
 BG_PROMPT = """
@@ -54,6 +57,8 @@ class LTXPipeline:
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.run_length = 10.0
+        # Inside your initialization block:
+        self.cache_file = "ltx_cache.json"
 
     # -----------------------------
     # Parsing
@@ -191,17 +196,50 @@ SHOTS:
         bg_desc = ''
 
         for asset in beatdata:
+            cache_updated = False
+            
+            # Normalize the path string so Linux and Windows match perfectly
+            # Example: "assets\chars/hero.png" -> "assets/chars/hero.png"
+            norm_path = str(Path(asset['path']).as_posix())
+
             if asset['type'] == 'bg':
                 if not use_descriptions:
-                    bg_desc = self.analyze_background(asset['path'])
+                    if norm_path in self.ltx_cache["bg"]:
+                        bg_desc = self.ltx_cache["bg"][norm_path]
+                    else:
+                        bg_desc = self.analyze_background(asset['path'])
+                        self.ltx_cache["bg"][norm_path] = bg_desc
+                        cache_updated = True
                 else:
                     bg_desc = asset['description']
+
             elif asset['type'] == 'char':
+                asset_id = asset['id']
+                
+                # 1. Handle Character Appearance Description
                 if not use_descriptions:
-                    char_descs[asset['id']] = self.analyze_character(asset['path'])
+                    if norm_path in self.ltx_cache["char"]:
+                        char_descs[asset_id] = self.ltx_cache["char"][norm_path]
+                    else:
+                        char_descs[asset_id] = self.analyze_character(asset['path'])
+                        self.ltx_cache["char"][norm_path] = char_descs[asset_id]
+                        cache_updated = True
                 else:
-                    char_descs[asset['id']] = asset['description']
-                briefs[asset['id']] = self.analyze_brief(asset['path'])
+                    char_descs[asset_id] = asset['description']
+                
+                # 2. Handle Brief Analysis
+                if norm_path in self.ltx_cache["brief"]:
+                    briefs[asset_id] = self.ltx_cache["brief"][norm_path]
+                else:
+                    briefs[asset_id] = self.analyze_brief(asset['path'])
+                    self.ltx_cache["brief"][norm_path] = briefs[asset_id]
+                    cache_updated = True
+
+            # Commit immediately to disk on updates
+            if cache_updated:
+                with open(self.cache_file, "w") as f:
+                    json.dump(self.ltx_cache, f, indent=4)
+
 
         shots = self.extract_shots(raw_beats)
         formatted_shots = self.format_shots(shots, briefs)
