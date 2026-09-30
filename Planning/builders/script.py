@@ -369,8 +369,8 @@ if __name__ == '__main__':
     else:
         dir_path = sys.argv[1]
 
-    SCRIPT_DIR = Path(__file__).resolve().parent
-    prompt_path = str(SCRIPT_DIR / "prompts")
+    PLANNING_DIR = Path(__file__).resolve().parent.parent
+    prompt_path = str(PLANNING_DIR / "prompts")
     WORLD = Path(f'{prompt_path}/scriptwriter/world.txt').read_text(encoding='utf-8')
     BIOGRAPHY = Path(f'{prompt_path}/scriptwriter/biography.txt').read_text(encoding='utf-8')
     story_input = Path(f'{dir_path}/story.txt').read_text(encoding='utf-8')

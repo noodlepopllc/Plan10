@@ -4,7 +4,8 @@ sys.stdout.reconfigure(encoding='utf-8')
 from plan10.lib.qwen_llm import llm_analyze_media
 from pathlib import Path
 
-prompt_path = './Planning/prompts'
+PLANNING_DIR = Path(__file__).resolve().parent.parent
+prompt_path = str(PLANNING_DIR / "prompts")
 WORLD = Path(f'{prompt_path}/scriptwriter/world.txt').read_text(encoding='utf-8')
 BIOGRAPHY = Path(f'{prompt_path}/scriptwriter/biography.txt').read_text(encoding='utf-8')
 SCREENPLAY = Path(f'{prompt_path}/screenplay.txt').read_text(encoding='utf-8')
