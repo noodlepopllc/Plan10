@@ -3,7 +3,7 @@ from plan10.lib.qwen_llm import llm_analyze_media
 from plan10.lib.config import load_config
 load_config()
 
-def llm(prompt, cooloff=15):
+def llm(prompt, cooloff=10):
     if os.environ.get("LLM_BACKEND", "transformers") == "ollama":
         print(f'Cool off period: {cooloff} seconds')
         time.sleep(cooloff)
