@@ -58,7 +58,15 @@ class LTXPipeline:
         self.max_tokens = max_tokens
         self.run_length = 10.0
         # Inside your initialization block:
-        self.ltx_cache = "ltx_cache.json"
+        self.cache_file = "ltx_cache.json"
+        self.ltx_cache = load_create_cache()
+
+    def load_create_cache(self):
+        cache = {}
+        if Path(self.cache_file).exists():
+            with open(self.cache_file, 'r') as cache:
+                cache = json.load(cache)
+        return cache
 
     # -----------------------------
     # Parsing
