@@ -198,6 +198,8 @@ def story_to_script(story_path, world_text, output_path, llm_call_func):
             history=json.dumps(history_context, indent=2)
         )
 
+        print("BEAT", analyzer_prompt)
+
         analyzed_text = llm_call_func(analyzer_prompt, temperature=0.1)
         analyzed_beat = safe_json_load(analyzed_text)
 
@@ -213,7 +215,6 @@ def story_to_script(story_path, world_text, output_path, llm_call_func):
             beat_data_json=json.dumps(analyzed_beat, indent=2)
         )
 
-        print("BEAT", formatter_prompt)
         script_line = llm_call_func(formatter_prompt, temperature=0.1)
 
         # 4. Write to script file
