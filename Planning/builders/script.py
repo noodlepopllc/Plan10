@@ -266,7 +266,7 @@ def run_prompt(prompt, system, pth):
           media="", 
           prompt=prompt,
           system=system,
-          max_tokens=8092,
+          max_tokens=8192,
           temperature=0.2)['analysis']
       with open(pth, 'w', encoding='utf-8') as out_f:
         out_f.write(result)
@@ -357,7 +357,7 @@ if __name__ == '__main__':
     from plan10.lib.qwen_llm import llm_analyze_media
     
     def my_llm_call(prompt, temperature=0.1):
-        result = llm_analyze_media('', prompt=prompt, system=None, max_tokens=8092, temperature=temperature)
+        result = llm_analyze_media('', prompt=prompt, system=None, max_tokens=8192, temperature=temperature)
         return result['analysis'] 
     
     if len(sys.argv) < 2:
