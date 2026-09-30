@@ -19,7 +19,7 @@ if [[ ! -f "$output/script.txt" || ! -f "$output/world.txt" ]]; then
     python $basepath/builders/script.py $1 $output
 fi
 
-if [[ ! -f "$output/complete.json" ]]; then
+if [[ ! -f "$output/narrative.json" ]]; then
     python $basepath/builders/scriptwriter.py $1 $output
 fi
 
