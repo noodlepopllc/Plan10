@@ -265,7 +265,7 @@ def run_prompt(prompt, system, pth):
           media="", 
           prompt=prompt,
           system=system,
-          max_tokens=16384,
+          max_tokens=8192,
           temperature=0.2)['analysis']
       with open(pth, 'w', encoding='utf-8') as out_f:
         out_f.write(result)
