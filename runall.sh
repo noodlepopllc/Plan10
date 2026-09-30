@@ -6,6 +6,7 @@ source .env
 IN="$1"
 
 for f in $IN/beat*.txt; do
+    [[ $f == *prompt* ]] && continue
     if [[ $LTX != "False" ]]; then
         OUT="${f/.txt/_ltx.mp4}"
         if [[ ! -f $OUT ]]; then 
