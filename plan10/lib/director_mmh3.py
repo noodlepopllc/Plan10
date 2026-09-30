@@ -691,10 +691,14 @@ def main():
         'audio': partial(DesignVoice, long=True),
         'portrait': CreatePortrait
     }
+    final_prompt = ''
 
     output_filename = f"{args.input.replace('.txt','.mp4')}" if args.input else f"{base_dir}/output.mp4"
     if args.input:
-        script = Path(args.input).read_text()
+        if args.input.endswith('.mmh3'):
+            final_prompt = Path(args.input).read_text()
+        else:
+            script = Path(args.input).read_text()
     else:
         # --- THE COMPLETE SELF-CONTAINED SCRIPT ---
         script = """
@@ -721,10 +725,10 @@ def main():
         shot | Sounds of cows mooing, Camera pushes in on red as she speaks [English] "You spoil him." She finishes speaking standing with her mouth closed for a static shot.
         """
 
-    # Build and execute
-    builder = SmartVideoPromptBuilder().load_script(script, base_dir=base_dir, generators=generators)
-    
-    final_prompt = builder.generate()
+    if not final_prompt:
+        # Build and execute
+        builder = SmartVideoPromptBuilder().load_script(script, base_dir=base_dir, generators=generators)
+        final_prompt = builder.generate()
     print(final_prompt)
     if args.debug:
         sys.exit()
