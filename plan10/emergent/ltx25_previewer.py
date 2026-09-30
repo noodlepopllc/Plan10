@@ -58,7 +58,7 @@ class LTXPipeline:
         self.max_tokens = max_tokens
         self.run_length = 10.0
         # Inside your initialization block:
-        self.cache_file = "ltx_cache.json"
+        self.ltx_cache = "ltx_cache.json"
 
     # -----------------------------
     # Parsing
