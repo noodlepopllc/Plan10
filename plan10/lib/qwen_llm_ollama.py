@@ -234,14 +234,8 @@ def llm_analyze_media(media, prompt="Describe this.", system=None, max_tokens=81
     messages.append({"role": "user", "content": user_content})
 
     res = _call_ollama(messages, max_tokens=max_tokens, temperature=temperature, top_p=1.0)
-    raw_output = res.get("message", {}).get("content", "")
-    
-    print("="*50)
-    print("RAW OLLAMA OUTPUT START")
-    print(raw_output[:1000]) # Print first 1000 chars to see the prefix
-    print("RAW OLLAMA OUTPUT END")
-    print("="*50)
-    
-    output_text = raw_output.strip()
+    output_text = res.get("message", {}).get("content", "").strip()
+
     return {"status": "success", "analysis": output_text}
+    
 
