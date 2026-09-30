@@ -743,7 +743,7 @@ def direct(beat_entry: dict, notes=''):
             scene_description=scene_description,
             character_list=beat_entry['characters'],
             background_label=beat_entry['background'],
-            context_notes=context_notes
+            context_notes=notes
             ), p_ctx, m_ctx
         )  # returns camera log text
         director_shots = llm(
