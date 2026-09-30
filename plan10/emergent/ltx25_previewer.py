@@ -59,7 +59,7 @@ class LTXPipeline:
         self.run_length = 10.0
         # Inside your initialization block:
         self.cache_file = "ltx_cache.json"
-        self.ltx_cache = load_create_cache()
+        self.ltx_cache = self.load_create_cache()
 
     def load_create_cache(self):
         cache = {}
