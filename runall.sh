@@ -11,7 +11,7 @@ for f in $IN/beat*.txt; do
         OUT="${f/.txt/_ltx.mp4}"
         if [[ ! -f $OUT ]]; then 
             uv run previewer -B "$f"
-            ARG="${f/.txt/.ltx}"
+            ARG="${f/.txt/.lt25}"
             uv run image_to_video \
                 -P "$(tail -n +2 "$ARG")" \
                 -D "$(head -n 1 "$ARG" | cut -d':' -f2 | xargs)" \
