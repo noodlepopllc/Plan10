@@ -62,7 +62,7 @@ class LTXPipeline:
         self.ltx_cache = self.load_create_cache()
 
     def load_create_cache(self):
-        cache = {}
+        cache = {'bg':{},'char':{},'brief':{}}
         if Path(self.cache_file).exists():
             with open(self.cache_file, 'r') as cache:
                 cache = json.load(cache)
