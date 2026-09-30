@@ -212,6 +212,8 @@ def story_to_script(story_path, world_text, output_path, llm_call_func):
         formatter_prompt = FORMATTER_PROMPT.format(
             beat_data_json=json.dumps(analyzed_beat, indent=2)
         )
+
+        print(formatter_prompt)
         script_line = llm_call_func(formatter_prompt, temperature=0.1)
 
         # 4. Write to script file

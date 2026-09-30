@@ -115,7 +115,7 @@ def dummy_request():
         import traceback
         traceback.print_exc()
 
-def _call_ollama(messages, max_tokens=8192, temperature=0.5, top_p=1.0, tools=None, thinking=THINKING):
+def _call_ollama(messages, max_tokens=8192, temperature=0.5, top_p=0.9, tools=None, thinking=THINKING):
     ollama_messages = _normalize_for_ollama(messages)
     
     # Map max_tokens to num_predict
