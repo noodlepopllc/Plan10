@@ -736,7 +736,7 @@ def main():
 
     #width and height must be multiples of 32, 1344x768, 864x480 minimal
     if args.input:
-        Path(args.input.replace('.txt','_prompt.txt')).write_text(final_prompt)
+        Path(args.input.replace('.txt','.mmh3')).write_text(final_prompt)
 
     if args.low_vram:
         from plan10.lib.util import resize_low_vram_png
