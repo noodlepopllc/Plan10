@@ -167,9 +167,6 @@ def _call_ollama(messages, max_tokens=8192, temperature=0.5, top_p=0.9, tools=No
                 timeout=(10, 600),
                 proxies={"http": None, "https": None}
             )
-
-            print(f"HTTP_STATUS: {response.status_code}")
-            print(f"RESPONSE_TEXT: {response.text[:500]}")
             
             # Handle 400 errors immediately
             if response.status_code == 400:
@@ -242,12 +239,6 @@ def llm_analyze_media(media, prompt="Describe this.", system=None, max_tokens=81
 
     res = _call_ollama(messages, max_tokens=max_tokens, temperature=temperature, top_p=0.9)
     raw_output = res.get("message", {}).get("content", "")
-    
-    print("="*50)
-    print("RAW OLLAMA OUTPUT START")
-    print(raw_output[:1000]) # Print first 1000 chars to see the prefix
-    print("RAW OLLAMA OUTPUT END")
-    print("="*50)
     
     output_text = raw_output.strip()
     return {"status": "success", "analysis": output_text}
