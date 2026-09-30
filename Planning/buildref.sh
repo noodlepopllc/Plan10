@@ -1,6 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
+uv run config -R
+source .env
+
 mkdir -p $2/output
 output="$2/output"
 
