@@ -156,6 +156,8 @@ def _call_ollama(messages, max_tokens=8192, temperature=0.5, top_p=1.0, tools=No
     if tools:
         payload["tools"] = tools
 
+    
+
     # Retry up to 3 times
     for attempt in range(3):
         try:
@@ -183,6 +185,7 @@ def _call_ollama(messages, max_tokens=8192, temperature=0.5, top_p=1.0, tools=No
             else:
                 raise
         except Exception as e:
+            print(e)
             raise
 
 # ─────────────────────────────────────────
