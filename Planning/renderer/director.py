@@ -551,16 +551,6 @@ audio: summary of notable sounds
 NOW PRODUCE THE DIRECTOR SHOT PLAN.
 '''
 
-def run_camera_operator(scene_description, characters, background, context_notes):
-    prompt = camera_prompt.format(
-        scene_description=scene_description,
-        character_list=characters,
-        background_label=background,
-        context_notes=context_notes
-    )
-    return llm(prompt)  # returns camera log text
-
-
 def extract_dialog(entry):
     """
     Returns the dialog line if any character in the beat speaks.
@@ -744,7 +734,7 @@ def direct(beat_entry: dict, notes=''):
             character_list=beat_entry['characters'],
             background_label=beat_entry['background'],
             context_notes=notes
-            ), p_ctx, m_ctx
+            ), processor=p_ctx, model=m_ctx
         )  # returns camera log text
         director_shots = llm(
             director_prompt.format(
@@ -753,13 +743,13 @@ def direct(beat_entry: dict, notes=''):
                 character_list=beat_entry["characters"],
                 background_label=beat_entry["background"],
                 context_notes=notes
-            ), p_ctx, m_ctx
+            ), processor=p_ctx, model=m_ctx
         )
 
         final_shotlist = llm(
             shot_planner_prompt.format(
                 director_shot_plan=director_shots
-            ), p_ctx, m_ctx
+            ), processor=p_ctx, model=m_ctx
         )
     fixed_shotlist = []
     for line in final_shotlist.split('\n'):
