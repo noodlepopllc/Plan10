@@ -1,13 +1,13 @@
 import re, math, time, os
-from plan10.lib.qwen_llm import llm_analyze_media
+from plan10.lib.qwen_llm import llm_analyze_media, LLMContext
 from plan10.lib.config import load_config
 load_config()
 
-def llm(prompt, cooloff=10):
+def llm(prompt, cooloff=10, processor=None, model=None):
     if os.environ.get("LLM_BACKEND", "transformers") == "ollama":
         print(f'Cool off period: {cooloff} seconds')
         time.sleep(cooloff)
-    response = llm_analyze_media('', prompt=prompt, max_tokens=8192, temperature=0.4)['analysis']
+    response = llm_analyze_media('', prompt=prompt, max_tokens=8192, temperature=0.4, processor=processor, model=model)['analysis']
     return response.strip()
 
 shot_planner_prompt = '''
@@ -738,23 +738,29 @@ def direct(beat_entry: dict, notes=''):
             )
 
     scene_description = " ".join(scene_parts)
-
-    camera_log = run_camera_operator(scene_description, beat_entry['characters'], beat_entry['background'], notes)
-    director_shots = llm(
-        director_prompt.format(
-            camera_log=camera_log,
+    with LLMContext() as (p_ctx, m_ctx):
+        camera_log = llm(camera_prompt.format(
             scene_description=scene_description,
-            character_list=beat_entry["characters"],
-            background_label=beat_entry["background"],
-            context_notes=notes
+            character_list=beat_entry['characters'],
+            background_label=beat_entry['background'],
+            context_notes=context_notes
+            ), p_ctx, m_ctx
+        )  # returns camera log text
+        director_shots = llm(
+            director_prompt.format(
+                camera_log=camera_log,
+                scene_description=scene_description,
+                character_list=beat_entry["characters"],
+                background_label=beat_entry["background"],
+                context_notes=notes
+            ), p_ctx, m_ctx
         )
-    )
 
-    final_shotlist = llm(
-        shot_planner_prompt.format(
-            director_shot_plan=director_shots
+        final_shotlist = llm(
+            shot_planner_prompt.format(
+                director_shot_plan=director_shots
+            ), p_ctx, m_ctx
         )
-    )
     fixed_shotlist = []
     for line in final_shotlist.split('\n'):
         parts = line.split('|')

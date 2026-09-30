@@ -20,6 +20,17 @@ SEED = os.environ.get("SEED","-1")
 SEED = random.randint(0,1000000) if SEED == "-1" else int(SEED)  
 THINKING = os.environ.get("THINKING", "False") != "False"
 
+class LLMContext:
+    def __init__(self):
+        self.processor = None
+        self.model = None
+
+    def __enter__(self):
+        return self.processor, self.model
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        return False
+
 def _system_prompt(fn="system/bot.txt"):
     if not os.path.exists(fn):
         repo_root = Path(__file__).parent.parent
@@ -205,7 +216,7 @@ def llm_chat(messages, tools=None, max_tokens=8192, temperature=0.7, enable_thin
 # ─────────────────────────────────────────
 # 2) Media analysis
 # ─────────────────────────────────────────
-def llm_analyze_media(media, prompt="Describe this.", system=None, max_tokens=8192, temperature=0.1):
+def llm_analyze_media(media, prompt="Describe this.", system=None, max_tokens=8192, temperature=0.1, processor=None, model=None):
     from plan10.lib.util import video_to_img
 
     image = None
