@@ -167,6 +167,9 @@ def _call_ollama(messages, max_tokens=8192, temperature=0.5, top_p=0.9, tools=No
                 timeout=(10, 600),
                 proxies={"http": None, "https": None}
             )
+
+            print(f"HTTP_STATUS: {response.status_code}")
+            print(f"RESPONSE_TEXT: {response.text[:500]}")
             
             # Handle 400 errors immediately
             if response.status_code == 400:
