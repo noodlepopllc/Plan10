@@ -270,7 +270,7 @@ def main():
         print("You are a horrible person, beats are required. Shame, Shame on you.")
         sys.exit()
     if not output:
-        output = args.beat.replace('.txt', '_ltx.txt')
+        output = args.beat.replace('.txt', '.ltx')
     converter = LTXPipeline()
     converted = converter.run(args.beat, style=args.style, use_descriptions=args.use_descriptions)
     print(converted)
