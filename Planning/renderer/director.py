@@ -93,14 +93,19 @@ Do not rewrite dialog.
 If the director shot plan indicates speech,
 the final shot MUST contain the exact quoted dialog.
 
-Renderer Dialog Format
+Dialog Formatting Rule
 
-All spoken dialog MUST be emitted as:
+When converting director dialog into renderer syntax,
+format all spoken dialog as:
 
-<character> speaks [English] "exact dialog"
+character speaks [English] "dialog text"
 They close their mouth and are silent.
 
-Always include [English].
+[English] is renderer formatting metadata and must be added
+to all dialog lines.
+
+This formatting does not constitute modifying the dialog.
+Only the quoted dialog text must be preserved exactly.
 
 4. Audio Preservation
 
