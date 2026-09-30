@@ -134,7 +134,7 @@ def _call_ollama(messages, max_tokens=8192, temperature=0.5, top_p=0.9, tools=No
         "stream": False,
         "keep_alive": "1m",
         "options": {
-            #"num_ctx": max_tokens,  # ← Output + room for input
+            "num_ctx": 32768,  # ← Output + room for input
             "num_predict": max_tokens,
             "temperature": temperature,
             "top_p": top_p,
