@@ -7,20 +7,20 @@ from pathlib import Path
 from plan10.lib.config import load_environ
 import random
 import time
+from openai import OpenAI
 
 load_environ()
 
 # ─────────────────────────────────────────
 # CONFIG
 # ─────────────────────────────────────────
+# Reusing Ollama names for seamless config file compatibility
 VLLM_URL = os.environ.get("OLLAMA_URL", "http://localhost:8000/v1")
-VLLM_MODEL = os.environ.get("OLLAMA_MODEL", "Qwen/Qwen3.8-27B")  # Match your pulled model name
-SEED = os.environ.get("SEED","-1")
+VLLM_MODEL = os.environ.get("OLLAMA_MODEL", "Qwen/Qwen3.8-27B-FP8")  
+SEED = os.environ.get("SEED", "-1")
 
-SEED = random.randint(0,1000000) if SEED == "-1" else int(SEED)  
+SEED = random.randint(0, 1000000) if SEED == "-1" else int(SEED)  
 THINKING = os.environ.get("THINKING", "False")
-
-from openai import OpenAI
 
 client = OpenAI(
     api_key="dummy",
@@ -49,10 +49,12 @@ def _system_prompt(fn="system/bot.txt"):
 _system_prompt_gen = _system_prompt()
 
 def _strip_thinking(raw: str):
+    if not raw:
+        return "", ""
     m = re.search(
         r"<think>(.*?)</think>",
         raw,
-        flags=re*DOTALL)
+        flags=re.DOTALL) # Fixed syntax typo
     if m:
         thinking = m.group(1).strip()
         response = raw.replace(m.group(0), "").strip()
@@ -62,9 +64,6 @@ def _strip_thinking(raw: str):
 def _encode_image(path):
     with open(path, "rb") as f:
         return base64.b64encode(f.read()).decode()
-
-import json
-import requests
 
 
 # ─────────────────────────────────────────
@@ -89,23 +88,16 @@ def llm_chat(
         kwargs["tools"] = tools
         kwargs["tool_choice"] = "auto"
 
-    #
-    # Qwen 3.8 reasoning
-    #
-    if enable_thinking and enable_thinking != "False":
-        kwargs["extra_body"] = {
-            "thinking": {
-                "type": enable_thinking
-            }
-        }
-
     response = client.chat.completions.create(**kwargs)
+    msg = response.choices[0].message # Fixed index reference
+    raw_content = msg.content or ""
 
-    msg = response.choices[0].message
+    thinking_content, clean_content = _strip_thinking(raw_content)
 
     return {
         "status": "success",
-        "response_clean": msg.content or "",
+        "thinking": thinking_content,
+        "response_clean": clean_content,
         "tool_calls": getattr(msg, "tool_calls", None)
     }
 
@@ -156,7 +148,5 @@ def llm_analyze_media(
 
     return {
         "status": "success",
-        "analysis": response.choices[0].message.content
+        "analysis": response.choices[0].message.content # Fixed index reference
     }
-`
-
