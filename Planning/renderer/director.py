@@ -383,6 +383,43 @@ You may NOT invent:
 - Reactions not implied by the scene description
 - Object interactions not mentioned
 
+------------------------------------------------------------
+CONTINUOUS MOTION (CRITICAL)
+------------------------------------------------------------
+
+The camera moves THROUGH the scene, not between static positions.
+
+1. FLOW PRINCIPLE
+   - Each moment connects to the next through motivated camera movement
+   - The camera follows action, it does not jump between positions
+   - Movement should be continuous: pan, tilt, dolly, track
+   - Avoid abrupt cuts unless motivated by action change
+
+2. MOTIVATED MOVEMENT
+   Camera moves only when motivated by:
+   - Character movement (follow the action)
+   - Gaze shift (pan to where character looks)
+   - Spatial relationship (reveal the environment)
+   - Emotional beat (push in for intimacy, pull back for isolation)
+
+3. TRANSITION RULES
+   - Do not cut between static compositions
+   - If the camera must change angle, show the movement
+   - Example: instead of "medium shot → close-up", use "camera pushes in from medium to close-up"
+   - Example: instead of "wide left → wide right", use "camera pans left to right following character"
+
+4. MOMENT CONNECTION
+   Each moment should end where the next moment begins:
+   - If moment 1 ends with character at frame left, moment 2 should start from that position
+   - If moment 1 ends with camera at eye level, moment 2 should continue from eye level
+   - Avoid discontinuous jumps in framing, angle, or position
+
+5. ACTION TRACKING
+   When a character performs a multi-part action:
+   - The camera follows the action continuously
+   - Do not cut mid-action unless there's a clear emotional or narrative reason
+   - Example: character lifts hand, reaches for object, grasps it → camera tracks the hand through the entire motion
+
 INPUTS:
 - Scene description: {scene_description}
 - Characters: {character_list}
