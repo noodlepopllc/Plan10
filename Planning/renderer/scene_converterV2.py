@@ -1,4 +1,4 @@
-import sys, json
+import sys, json, os
 from pathlib import Path
 from plan10.lib.image_analysis import EnhancePrompt, AnalyzeImage, translate_to_audio_prompt
 from plan10.lib.qwen_llm import llm_analyze_media
