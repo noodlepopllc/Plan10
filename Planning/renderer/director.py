@@ -391,6 +391,14 @@ TEMPORAL RULES
 - Never describe speech progression as "opening", "mid-line", "continuing", "final syllables"
 
 ------------------------------------------------------------
+DIALOG EXTRACTION
+------------------------------------------------------------
+When scene_description contains DIALOG: "..." lines:
+- Extract the exact quoted text verbatim
+- Include it in audio notes when describing speech
+- Never use placeholders like "[DIALOG TEXT PENDING]"
+
+------------------------------------------------------------
 FRAMING & COMPOSITION
 ------------------------------------------------------------
 
@@ -649,6 +657,14 @@ VERIFICATION RULES
    - Audio must contain exact quoted dialog when speech is present
    - Shots describing speech without quoted text are invalid
 
+------------------------------------------------------------
+DIALOG VERIFICATION
+------------------------------------------------------------
+When scene_description contains DIALOG: "..." lines:
+- Extract the exact quoted text from scene_description
+- Verify every dialog shot contains the exact quoted text
+- Reject shots with "[DIALOG TEXT PENDING]" placeholders
+
 3. ACTOR ISOLATION (CRITICAL)
    - One active character per shot (exception: synchronized shared action)
    - When someone speaks: they are the ONLY moving subject
@@ -678,6 +694,7 @@ Merge shots ONLY if:
 - Dialog belongs to same turn
 - No character enters/exits
 - Only ONE active character present
+
 
 ------------------------------------------------------------
 SHOT TYPES
