@@ -388,7 +388,7 @@ def main():
         actor_identities = []
 
         for actor in characters_in_scene:
-            actor_upper = actor.strip().upper()
+            actor_upper = actor['name'].strip().upper()
             if actor_upper in name_to_idx:
                 idx = name_to_idx[actor_upper]
                 actor_refs.append(character_refs[idx])
