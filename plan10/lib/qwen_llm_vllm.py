@@ -14,9 +14,16 @@ load_environ()
 # ─────────────────────────────────────────
 # CONFIG
 # ─────────────────────────────────────────
-# Reusing Ollama names for seamless config file compatibility
-VLLM_URL = os.environ.get("OLLAMA_URL", "http://localhost:8000/v1")
-VLLM_MODEL = os.environ.get("OLLAMA_MODEL", "Qwen/Qwen3.8-27B-FP8")  
+raw_url = os.environ.get("OLLAMA_URL", "http://localhost:8000")
+
+# Safely append /v1 if the environment variable omitted it
+if not raw_url.endswith("/v1") and not raw_url.endswith("/v1/"):
+    VLLM_URL = f"{raw_url.rstrip('/')}/v1"
+else:
+    VLLM_URL = raw_url
+
+VLLM_MODEL = os.environ.get("VLLM_MODEL", "Qwen/Qwen3.8-27B-FP8")
+
 SEED = os.environ.get("SEED", "-1")
 
 SEED = random.randint(0, 1000000) if SEED == "-1" else int(SEED)  
@@ -194,7 +201,9 @@ def llm_analyze_media(
         }
 
     response = client.chat.completions.create(**kwargs)
-    msg = response.choices.message
+    
+    # Fixed: Access the first element [0] of the choices list
+    msg = response.choices[0].message
     raw_content = msg.content or ""
 
     # Parse out thinking tags if present
@@ -205,3 +214,4 @@ def llm_analyze_media(
         "thinking": thinking_content,
         "analysis": clean_content
     }
+
