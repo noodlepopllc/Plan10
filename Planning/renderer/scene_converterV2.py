@@ -205,95 +205,6 @@ def normalize_shot_characters(shot_text: str, char_labels: list) -> str:
     # Reassemble the text
     return ''.join(segments)
 
-
-import os
-
-def expand_to_shots(prompt: str,
-                    bg_label: str,
-                    char_labels: list,
-                    duration: float) -> str:
-    """
-    Returns raw shot lines ready to append to your script,
-    grounded in the actual first frame.
-    """
-
-    # ------------------------------------------------------------
-    # 1. Character mapping string
-    # ------------------------------------------------------------
-    mapping = ""
-    for idx, label in enumerate(char_labels, start=1):
-        mapping += f"char{idx} = {label}\n"
-
-    char_list = ", ".join(char_labels)
-    duration_hint = f"Target duration: {int(duration)} seconds (approximate)."
-
-    # ------------------------------------------------------------
-    # 2. REWRITTEN SHOT-GENERATOR PROMPT
-    # ------------------------------------------------------------
-    llm_prompt = f"""
-You are a deterministic video director generating Minimax‑friendly shots.
-
-INPUT DATA:
-- Characters: {char_list}
-- Background: {bg_label}
-- Scene description: {prompt}
-- Target duration: {int(duration)} seconds (approximate)
-
-CHARACTER MAPPING:
-{mapping}
-
-GOAL:
-Produce a sequence of SHORT, STABLE, NON‑DRIFTING shots that Minimax H3 can render without filler motion.
-
-SHOT COUNT RULE:
-- Generate 3–7 shots depending on action complexity.
-- More shots with shorter durations are preferred.
-- Never produce fewer than 3 shots.
-
-DURATION RULES (Minimax‑optimized):
-- DEFAULT shot duration: 2 seconds.
-- Only exceed 3 seconds when multiple distinct physical phases occur.
-- NEVER exceed 4 seconds.
-- Do NOT attempt to match the target duration exactly; prioritize stability.
-
-ACTION DENSITY RULES:
-- Split shots when the action contains distinct phases (e.g., “runs → jumps → lands”).
-- Merge micro‑actions (glancing, shifting stance, breathing) into the nearest major shot.
-- Avoid long continuous shots; Minimax destabilizes after ~3 seconds.
-
-CAMERA RULES:
-- Shot 1 may include slow camera movement (pan/tilt/dolly).
-- All subsequent shots MUST use static medium framing.
-- Medium shot = waist/chest upward, environment visible.
-- No sudden angle changes between shots unless described.
-
-CONTINUITY RULES:
-- Maintain character posture, gaze direction, and spatial position across shots unless explicitly changed.
-- No teleporting, no 180° rotations, no spontaneous stance changes.
-- Lighting, shadows, and environment remain identical.
-
-MOUTH/EXPRESSION RULES (when no dialogue):
-- Every shot MUST specify mouth/jaw state:
-  “lips pressed together”, “jaw clenched”, “mouth shut firmly”, “breathing through nose”
-- No neutral faces without mouth description.
-
-DIALOGUE RULES:
-- Dialogue format: charX speaks [English] "text"
-- Max 15 words per shot.
-- Place dialogue near the end of the shot.
-- No filler actions after speaking.
-
-FOLEY RULES:
-- EVERY shot MUST begin with a foley cue.
-- Foley must match environment + physical action.
-- No silence unless explicitly described.
-
-FORMAT:
-shot | foley + description | duration_seconds
-
-NOW GENERATE THE SHOTS.
-"""
-
     # ------------------------------------------------------------
     # 4. Call your LLM
     # ------------------------------------------------------------
@@ -450,12 +361,12 @@ def group_pop_front(shots_text: str, max_total=15):
 
 def main():
     from parse_script import parse_script_txt
-    from director import build_director_entries, direct
+    from director import build_director_entries, direct, build_beat_character_list
     scene_base = sys.argv[1]
     context = json.loads((Path(scene_base) / 'scene/context.json').read_text(encoding='utf-8'))
     base = Path(scene_base).parent
     registry = json.loads((Path(scene_base) / 'output/registry.json').read_text(encoding='utf-8'))
-    lines = parse_script_txt(Path(scene_base) / 'output/script.txt')
+    lines = parse_script_txt(Path(scene_base) / 'output/script.txt', (Path(scene_base) / 'output/registry.json'))
     characters = get_characters(base, registry, context)
     lines = fix_locations(base, lines, registry, context)
     character_refs =  [characters[x]['reference_path'] for x in characters]
@@ -463,18 +374,35 @@ def main():
     character_names=[x for x in characters]
     notes = ''
     for beat, line in enumerate(lines, start=1):
+        #print(json.dumps(line, indent=4))
+        #continue
         #director_entries = build_director_entries(line)
         shots, notes = direct(line, notes)
+        characters_in_scene = build_beat_character_list(line)
+
+        # Build name→index lookup once (outside the loop)
+        name_to_idx = {name.strip().upper(): i for i, name in enumerate(character_names)}
+
+        actor_refs = []
+        actor_names = []
+        actor_identities = []
+
+        for actor in characters_in_scene:
+            actor_upper = actor.strip().upper()
+            if actor_upper in name_to_idx:
+                idx = name_to_idx[actor_upper]
+                actor_refs.append(character_refs[idx])
+                actor_names.append(character_names[idx])
+                actor_identities.append(visual_ids[idx])
 
         for subbeat, dentry in enumerate(group_pop_front(shots), start=1):
-            #prompt = to_h3_prompt(dentry, characters)
             script = h3_ref(
                 line['background'],
-                character_refs,
+                actor_refs,
                 line['summary'],
                 duration=10.0,
-                visual_ids=visual_ids,
-                char_names=character_names,
+                visual_ids=actor_identities,  # ← comma added
+                char_names=actor_names,
                 shots=dentry
             )
 

@@ -712,12 +712,54 @@ def quoted_word_count(text):
     quotes = re.findall(r'"([^"]*)"', text)
     return sum(len(q.split()) for q in quotes)
 
+def build_beat_character_list(beat_entry: dict) -> list:
+    """
+    Extract only the characters actually present in this beat.
+    Returns a list of dicts with minimal info for prompt consumption.
+    """
+    characters = []
+    seen_names = set()
+    
+    # Active characters (speaking/acting)
+    for char in beat_entry.get('active_characters', []):
+        name = char['name']
+        if name not in seen_names:
+            seen_names.add(name)
+            characters.append({
+                'name': name,
+                'role': 'active',
+                'delivery': char.get('delivery'),
+                'has_dialog': bool(char.get('dialog')),
+                'has_action': bool(char.get('action'))
+            })
+    
+    # Passive characters (mentioned but not active)
+    for char in beat_entry.get('passive_characters', []):
+        name = char['name']
+        if name not in seen_names:
+            seen_names.add(name)
+            characters.append({
+                'name': name,
+                'role': 'passive',
+                'source': char.get('source'),
+                'mentioned_by': char.get('mentioned_by')
+            })
+    
+    return characters
+
 def direct(beat_entry: dict, notes=''):
     if notes: 
         notes = summarize_continuity_from_director_shots(notes)
+
+    beat_characters = build_beat_character_list(beat_entry)
     director_entries = build_director_entries(beat_entry)
     scene_parts = []
-
+    
+    # 1. Start with summary for overall scene context
+    if beat_entry.get('summary'):
+        scene_parts.append(beat_entry['summary'])
+    
+    # 2. Add specific actions and dialog from director entries
     for d in director_entries:
         if d["action"]:
             scene_parts.append(d["action"])
@@ -731,7 +773,7 @@ def direct(beat_entry: dict, notes=''):
     with LLMContext() as (p_ctx, m_ctx):
         camera_log = llm(camera_prompt.format(
             scene_description=scene_description,
-            character_list=beat_entry['characters'],
+            character_list=beat_characters,
             background_label=beat_entry['background'],
             context_notes=notes
             ), processor=p_ctx, model=m_ctx
@@ -741,7 +783,7 @@ def direct(beat_entry: dict, notes=''):
             director_prompt.format(
                 camera_log=camera_log,
                 scene_description=scene_description,
-                character_list=beat_entry["characters"],
+                character_list=beat_characters,
                 background_label=beat_entry["background"],
                 context_notes=notes
             ), processor=p_ctx, model=m_ctx
