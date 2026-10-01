@@ -530,6 +530,8 @@ def direct(beat_entry: dict, notes=''):
             ), processor=p_ctx, model=m_ctx
         )
         print(f"Shotlist Done: \n{final_shotlist}")
+    return final_shotlist, director_shots
+    '''
     fixed_shotlist = []
     for line in final_shotlist.split('\n'):
         parts = line.split('|')
@@ -548,4 +550,5 @@ def direct(beat_entry: dict, notes=''):
         fixed_shotlist.append('|'.join(parts[:-1] + [str(duration)]))
 
     return '\n'.join(fixed_shotlist), director_shots
+    '''
 
