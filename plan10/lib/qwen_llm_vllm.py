@@ -124,17 +124,15 @@ def llm_chat(
 # 2) Media analysis
 # ─────────────────────────────────────────
 def llm_analyze_media(
-    media,
+    media=None,              
     prompt="Describe this.",
     system=None,
     max_tokens=8192,
     temperature=0.1,
     processor=None,
     model=None,
-    enable_thinking=THINKING  # Reads global THINKING ("low", "medium", "xhigh", "False")
+    enable_thinking=THINKING  
 ):
-    image_b64 = _encode_image(media)
-
     messages = []
 
     if system:
@@ -143,20 +141,32 @@ def llm_analyze_media(
             "content": system
         })
 
+    user_content = []
+
+    if media:
+        # Enforce strict PNG validation if media is passed
+        media_path = Path(media)
+        if media_path.suffix.lower() != ".png":
+            raise ValueError(f"Unsupported file format: '{media_path.suffix}'. Only .png files are accepted.")
+            
+        image_b64 = _encode_image(media)
+        user_content.append({
+            "type": "image_url",
+            "image_url": {
+                # Updated MIME type from image/jpeg to image/png
+                "url": f"data:image/png;base64,{image_b64}"
+            }
+        })
+
+    # Always append the text prompt
+    user_content.append({
+        "type": "text",
+        "text": prompt
+    })
+
     messages.append({
         "role": "user",
-        "content": [
-            {
-                "type": "image_url",
-                "image_url": {
-                    "url": f"data:image/jpeg;base64,{image_b64}"
-                }
-            },
-            {
-                "type": "text",
-                "text": prompt
-            }
-        ]
+        "content": user_content
     })
 
     # Prepare standard request options
@@ -168,14 +178,12 @@ def llm_analyze_media(
         "seed": SEED,
     }
 
-    #
-    # Qwen Vision-Language Reasoning Settings
-    #
+    # Qwen Reasoning Settings
     if enable_thinking and enable_thinking != "False":
         kwargs["extra_body"] = {
             "chat_template_kwargs": {
                 "enable_thinking": True,
-                "reasoning_effort": enable_thinking  # Passes "low", "medium", or "xhigh"
+                "reasoning_effort": enable_thinking  
             }
         }
     else:
@@ -186,10 +194,10 @@ def llm_analyze_media(
         }
 
     response = client.chat.completions.create(**kwargs)
-    msg = response.choices[0].message
+    msg = response.choices.message
     raw_content = msg.content or ""
 
-    # Parse out thinking tags if present from the visual reasoning pass
+    # Parse out thinking tags if present
     thinking_content, clean_content = _strip_thinking(raw_content)
 
     return {
@@ -197,4 +205,3 @@ def llm_analyze_media(
         "thinking": thinking_content,
         "analysis": clean_content
     }
-
