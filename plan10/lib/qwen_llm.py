@@ -17,6 +17,12 @@ if BACKEND == "ollama":
         llm_analyze_media,
         LLMContext
     )
+elif BACKEND == "vllm":
+    from plan10.lib.qwen_llm_vllm import {
+        llm_chat, 
+        llm_analyze_media,
+        LLMContext
+    }
 elif BACKEND == "transformers":
 
     import gc, json, re, torch

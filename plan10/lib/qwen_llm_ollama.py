@@ -18,7 +18,7 @@ OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "qwen3.5:latest")  # Match your pu
 SEED = os.environ.get("SEED","-1")
 
 SEED = random.randint(0,1000000) if SEED == "-1" else int(SEED)  
-THINKING = os.environ.get("THINKING", "False") != "False"
+THINKING = os.environ.get("THINKING", "False")
 
 class LLMContext:
     def __init__(self):
@@ -147,7 +147,7 @@ def _call_ollama(messages, max_tokens=8192, temperature=0.5, top_p=0.9, tools=No
     }
     
     # Set thinking parameters correctly
-    if '3.8' in OLLAMA_MODEL and thinking:
+    if '3.8' in OLLAMA_MODEL and thinking != 'False':
         payload['think'] = thinking if thinking in ("low","medium","xhigh") else "low"
         payload['options']["preserve_thinking"] = True
     
