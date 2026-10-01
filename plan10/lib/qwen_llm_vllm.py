@@ -74,7 +74,7 @@ def llm_chat(
     tools=None,
     max_tokens=8192,
     temperature=0.7,
-    enable_thinking=THINKING
+    enable_thinking=THINKING  # e.g., "low", "medium", "xhigh", or "False"
 ):
     sys_msg = next(_system_prompt_gen)
     kwargs = {
@@ -82,14 +82,32 @@ def llm_chat(
         "messages": sys_msg + messages,
         "max_tokens": max_tokens,
         "temperature": temperature,
+        "seed": SEED,
     }
 
     if tools:
         kwargs["tools"] = tools
         kwargs["tool_choice"] = "auto"
 
+    #
+    # Qwen 3.8 Native Reasoning Configurations
+    #
+    if enable_thinking and enable_thinking != "False":
+        kwargs["extra_body"] = {
+            "chat_template_kwargs": {
+                "enable_thinking": True,
+                "reasoning_effort": enable_thinking  # Passes "low", "medium", or "xhigh"
+            }
+        }
+    else:
+        kwargs["extra_body"] = {
+            "chat_template_kwargs": {
+                "enable_thinking": False
+            }
+        }
+
     response = client.chat.completions.create(**kwargs)
-    msg = response.choices[0].message # Fixed index reference
+    msg = response.choices[0].message
     raw_content = msg.content or ""
 
     thinking_content, clean_content = _strip_thinking(raw_content)
@@ -101,6 +119,7 @@ def llm_chat(
         "tool_calls": getattr(msg, "tool_calls", None)
     }
 
+
 # ─────────────────────────────────────────
 # 2) Media analysis
 # ─────────────────────────────────────────
@@ -111,7 +130,8 @@ def llm_analyze_media(
     max_tokens=8192,
     temperature=0.1,
     processor=None,
-    model=None
+    model=None,
+    enable_thinking=THINKING  # Reads global THINKING ("low", "medium", "xhigh", "False")
 ):
     image_b64 = _encode_image(media)
 
@@ -139,14 +159,42 @@ def llm_analyze_media(
         ]
     })
 
-    response = client.chat.completions.create(
-        model=VLLM_MODEL,
-        messages=messages,
-        max_tokens=max_tokens,
-        temperature=temperature
-    )
+    # Prepare standard request options
+    kwargs = {
+        "model": VLLM_MODEL,
+        "messages": messages,
+        "max_tokens": max_tokens,
+        "temperature": temperature,
+        "seed": SEED,
+    }
+
+    #
+    # Qwen Vision-Language Reasoning Settings
+    #
+    if enable_thinking and enable_thinking != "False":
+        kwargs["extra_body"] = {
+            "chat_template_kwargs": {
+                "enable_thinking": True,
+                "reasoning_effort": enable_thinking  # Passes "low", "medium", or "xhigh"
+            }
+        }
+    else:
+        kwargs["extra_body"] = {
+            "chat_template_kwargs": {
+                "enable_thinking": False
+            }
+        }
+
+    response = client.chat.completions.create(**kwargs)
+    msg = response.choices[0].message
+    raw_content = msg.content or ""
+
+    # Parse out thinking tags if present from the visual reasoning pass
+    thinking_content, clean_content = _strip_thinking(raw_content)
 
     return {
         "status": "success",
-        "analysis": response.choices[0].message.content # Fixed index reference
+        "thinking": thinking_content,
+        "analysis": clean_content
     }
+
