@@ -557,7 +557,7 @@ def extract_dialog(entry):
     If multiple characters speak, return the first one.
     If none speak, return None.
     """
-    for char in entry['characters']:
+    for char in entry['active_characters']:
         if char.get('dialog'):
             return char['dialog']
     return None
@@ -567,7 +567,7 @@ def extract_action(entry):
     Returns the first non-empty action from the characters list.
     If none exist, returns None.
     """
-    for char in entry['characters']:
+    for char in entry['active_characters']:
         if char.get('action'):
             return char['action']
     return None
@@ -642,7 +642,7 @@ def pad_if_too_short(action: str):
 def build_director_entries(entry: dict):
     location = entry['location']
     zone = entry['zone']
-    characters = entry['characters']
+    #characters = entry['characters']
     background = entry['background']
 
     dialog = extract_dialog(entry)
