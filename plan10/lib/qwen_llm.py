@@ -14,7 +14,8 @@ THINKING = os.environ.get("THINKING","False") != "False"
 if BACKEND == "ollama":
     from plan10.lib.qwen_llm_ollama import (
         llm_chat,
-        llm_analyze_media
+        llm_analyze_media,
+        LLMContext
     )
 elif BACKEND == "transformers":
 
