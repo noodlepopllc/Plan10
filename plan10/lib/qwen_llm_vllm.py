@@ -22,7 +22,7 @@ if not raw_url.endswith("/v1") and not raw_url.endswith("/v1/"):
 else:
     VLLM_URL = raw_url
 
-VLLM_MODEL = os.environ.get("VLLM_MODEL", "Qwen/Qwen3.8-27B-FP8")
+VLLM_MODEL = os.environ.get("VLLM_MODEL", "nvidia/Qwen3.8-27B-NVFP4")
 
 SEED = os.environ.get("SEED", "-1")
 
