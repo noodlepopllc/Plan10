@@ -381,6 +381,16 @@ INPUTS:
 Your job: produce a moment-by-moment camera log describing what the camera sees and hears.
 This is NOT a shot list — it's the raw temporal plan for the director.
 
+CHARACTER PRESENCE RULE
+The character_list is the ONLY authoritative source for who is present in this beat.
+
+Do NOT introduce characters mentioned in context_notes unless they also appear in character_list.
+Characters not in character_list are NOT present — do not reference them by name,
+do not describe their position, do not describe eyelines toward them.
+
+context_notes provides continuity of tone, emotion, and physical state only.
+It does NOT grant character presence.
+
 ------------------------------------------------------------
 TEMPORAL RULES
 ------------------------------------------------------------
