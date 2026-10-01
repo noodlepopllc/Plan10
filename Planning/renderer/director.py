@@ -235,6 +235,10 @@ mouth moving
 audio:
 exact quoted dialog
 
+IMPORTANT: The scene_description is the authoritative account of what happens. 
+Do not invent "before" or "after" states that contradict it. 
+Break the described action into shots, but do not add actions not mentioned in the summary.
+
 ------------------------------------------------------------
 CAMERA BEST PRACTICES (TIGHTENED)
 ------------------------------------------------------------
