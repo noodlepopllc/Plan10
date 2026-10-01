@@ -408,6 +408,18 @@ When scene_description contains DIALOG: "..." lines:
 - Include it in audio notes when describing speech
 - Never use placeholders like "[DIALOG TEXT PENDING]"
 
+Dialog Coverage:
+- The speaker is the primary subject of the frame
+- The speaker's eyeline MUST be directed toward the listener's physical position in the scene
+- If the listener is present in the scene (in character_list):
+    • The speaker looks TOWARD the listener, NOT at the camera
+    • The listener may be at frame edge, over-the-shoulder, or just off-frame
+    • The speaker's gaze angle must match the spatial relationship described in the scene
+    • Example: if characters sit across a table, the speaker looks across the table, not at the lens
+- If the listener is NOT present in the scene:
+    • The speaker's eyeline falls slightly left or right of lens
+- Do NOT have characters speak directly into the camera unless the scene explicitly describes breaking the fourth wall
+
 ------------------------------------------------------------
 FRAMING & COMPOSITION
 ------------------------------------------------------------
@@ -686,6 +698,14 @@ When scene_description contains DIALOG: "..." lines:
    - Do not place listener directly behind speaker unless scene requires it
    - Prefer traditional shot/reverse-shot conversational geography
    - Correct invalid eyelines before generating shot plan
+
+   Eyeline Correction:
+    - If both speaker and listener are in character_list, verify the speaker's gaze
+    is directed toward the listener's position, NOT toward the camera
+    - "Looking at camera" or "directed at lens" is INVALID when the listener
+    is present in the scene
+    - Correct any shot where the speaker appears to address the audience
+    instead of the other character
 
 ------------------------------------------------------------
 SHOT BOUNDARY RULES
