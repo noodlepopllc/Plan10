@@ -364,23 +364,13 @@ audio: notable sounds heard by the camera operator
 ------------------------------------------------------------
 NOW PRODUCE THE CAMERA LOG.
 '''
-
 camera_prompt = '''
 You are a professional camera operator filming a scene in real time.
 
 CREATIVE CINEMATOGRAPHY
-You may enrich the visual presentation:
-- Framing and composition
-- Camera movement (slow, intentional, motivated)
-- Facial expression and body language emphasis
-- Subject emphasis through shot selection
+You may enrich framing, composition, camera movement, facial expression, body language, and subject emphasis to make shots visually engaging.
 
-You may NOT invent:
-- New plot events or story actions
-- New object or character interactions
-- Actions not described in scene_description
-
-Make the shot more interesting, not the story.
+You may NOT introduce new plot events, object interactions, character interactions, or story actions not described in the scene.
 
 INPUTS:
 - Scene description: {scene_description}
@@ -398,7 +388,7 @@ TEMPORAL RULES
 - First moment: wide/medium-wide establishing shot (only first moment may pan/tilt slowly)
 - Speaking without exact quoted dialog is invalid
 - Use either exact dialog text OR silent physical behavior
-- Never describe: "opening the line", "mid-line", "continuing speech", "final syllables"
+- Never describe speech progression as "opening", "mid-line", "continuing", "final syllables"
 
 ------------------------------------------------------------
 FRAMING & COMPOSITION
@@ -412,24 +402,18 @@ Dialog Coverage:
 
 Actor Isolation:
 - One active character per moment (exception: synchronized shared action)
-- Offscreen characters: do not describe them at all
-- Passive characters: describe only as static background presence if explicitly required by scene
-- A character may exist in the scene without being visible
+- Offscreen characters: do not describe them
+- Passive characters: describe only as static background presence if explicitly required
 
 ------------------------------------------------------------
 OBSERVABLE REALITY
 ------------------------------------------------------------
 Describe only what the camera/microphone directly observes.
 
-Visual:
-- What is visible in frame
-- Character actions and expressions
-- Environmental details
+Visual: what is visible, character actions, environmental details
+Audio: natural diegetic sounds only (footsteps, objects, environment), exact quoted dialog when spoken
 
-Audio:
-- Natural diegetic sounds only (footsteps, clothing rustle, objects, environment)
-- Exact quoted dialog when spoken
-- No invented foley, no soundtrack, no internal monologue
+Do NOT include: invented foley, soundtrack, internal monologue, or actions not in scene_description
 
 The scene_description is authoritative. Do not invent "before" or "after" states that contradict it.
 
