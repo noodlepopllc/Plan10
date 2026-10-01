@@ -984,7 +984,7 @@ def direct(beat_entry: dict, notes=''):
         # Action shots should be 2-3 seconds max
         duration = max(2, min(3, math.ceil(total_words / 20)))
 
-        fixed_shotlist.append('|'.join(parts[:-1] + [str(duration)]))
+    fixed_shotlist.append('|'.join(parts[:-1] + [str(duration)]))
 
     return '\n'.join(fixed_shotlist), director_shots
 
