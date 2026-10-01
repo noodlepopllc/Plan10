@@ -374,7 +374,7 @@ def main():
     character_names=[x for x in characters]
     notes = ''
     for beat, line in enumerate(lines, start=1):
-        #print(json.dumps(line, indent=4))
+        print(json.dumps(line, indent=4))
         #continue
         #director_entries = build_director_entries(line)
         shots, notes = direct(line, notes)
