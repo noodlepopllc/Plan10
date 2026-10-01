@@ -81,12 +81,23 @@ def llm_chat(
     tools=None,
     max_tokens=8192,
     temperature=0.7,
-    enable_thinking=THINKING  # e.g., "low", "medium", "xhigh", or "False"
+    enable_thinking=THINKING
 ):
     sys_msg = next(_system_prompt_gen)
+    
+    # ⚠️ vLLM / OpenAI compliance: Intercept incoming history.
+    # If the last step was a tool execution, ensure the required OpenAI schema properties exist.
+    sanitized_messages = []
+    for msg in (sys_msg + messages):
+        msg_copy = msg.copy()
+        if msg_copy.get("role") == "tool" and "tool_call_id" not in msg_copy:
+            # Inject a mock validation ID to keep vLLM happy without exposing it to the brain
+            msg_copy["tool_call_id"] = "call_auto_generated_id"
+        sanitized_messages.append(msg_copy)
+
     kwargs = {
         "model": VLLM_MODEL,
-        "messages": sys_msg + messages,
+        "messages": sanitized_messages,
         "max_tokens": max_tokens,
         "temperature": temperature,
         "seed": SEED,
@@ -96,14 +107,12 @@ def llm_chat(
         kwargs["tools"] = tools
         kwargs["tool_choice"] = "auto"
 
-    #
-    # Qwen 3.8 Native Reasoning Configurations
-    #
+    # Qwen 3.8 Reasoning Parameters nested safely
     if enable_thinking and enable_thinking != "False":
         kwargs["extra_body"] = {
             "chat_template_kwargs": {
                 "enable_thinking": True,
-                "reasoning_effort": enable_thinking  # Passes "low", "medium", or "xhigh"
+                "reasoning_effort": enable_thinking
             }
         }
     else:
@@ -113,18 +122,33 @@ def llm_chat(
             }
         }
 
+    # Execute request against vLLM server
     response = client.chat.completions.create(**kwargs)
     msg = response.choices[0].message
     raw_content = msg.content or ""
 
     thinking_content, clean_content = _strip_thinking(raw_content)
 
+    # ⚠️ Translation Layer: Standardize tool schema output to match what your brain expects.
+    formatted_tool_calls = []
+    if getattr(msg, "tool_calls", None):
+        for tc in msg.tool_calls:
+            # Translate native OpenAI tool block to your uniform dict structure
+            formatted_tool_calls.append({
+                "function": {
+                    "name": tc.function.name,
+                    "arguments": tc.function.arguments  # Keeps string/dict format intact
+                }
+            })
+
+    # Returns the exact object layout your agent loop is built to expect
     return {
         "status": "success",
         "thinking": thinking_content,
         "response_clean": clean_content,
-        "tool_calls": getattr(msg, "tool_calls", None)
+        "tool_calls": formatted_tool_calls if formatted_tool_calls else None
     }
+
 
 
 # ─────────────────────────────────────────
