@@ -286,86 +286,74 @@ INPUTS:
 Your output is the semantic shot plan for the shot planner.
 
 ------------------------------------------------------------
-VERIFICATION RULES
+BEAT FIDELITY
 ------------------------------------------------------------
 
-1. BEAT FIDELITY
-   - Remove any action, reaction, or object interaction not in scene_description
-   - Characters remain still unless explicitly described in scene
-   - When uncertain, prefer scene_description over camera_log
-   - Do not invent: new actions, motivations, reactions, or story events
-
-2. DIALOG VALIDATION
-   - Shots with speech MUST contain exact quoted dialog
-   - Invalid without exact text: "speaking", "delivering a line", "mid-line", "continuing", "finishing"
-   - Audio must contain exact quoted dialog when speech is present
-   - Shots describing speech without quoted text are invalid
+Keep all actions, reactions, and object interactions strictly aligned with scene_description.
+Characters remain still unless explicitly described in the scene.
+When uncertain, prefer scene_description over camera_log.
+Enhance the cinematic framing while preserving the source material.
 
 ------------------------------------------------------------
-DIALOG VERIFICATION
+DIALOG EXTRACTION AND VERIFICATION
 ------------------------------------------------------------
-When scene_description contains DIALOG: "..." lines:
-- Extract the exact quoted text from scene_description
-- Verify every dialog shot contains the exact quoted text
-- Reject shots with "[DIALOG TEXT PENDING]" placeholders
 
-3. ACTOR ISOLATION (CRITICAL)
-   - One active character per shot (exception: synchronized shared action)
-   - When someone speaks: they are the ONLY moving subject
-   - Other visible characters: frozen, static, no reactions, no gaze shifts, no actions
-   - Passive characters: described with static language only
+Extract exact quoted dialog verbatim from DIALOG: "..." lines in scene_description.
+Include exact quoted dialog in every shot describing speech.
+Use exact quoted dialog text for all speaking moments.
+Speaking moments require exact quoted dialog to be valid.
 
-4. EYELINE VALIDATION
-   - Listener's implied position must be spatially consistent
-   - Do not place listener directly behind speaker unless scene requires it
-   - Prefer traditional shot/reverse-shot conversational geography
-   - Correct invalid eyelines before generating shot plan
+------------------------------------------------------------
+ACTOR ISOLATION
+------------------------------------------------------------
 
-   Eyeline & Spatial Validation (CRITICAL):
-    - Verify the speaker's eyeline points toward the listener's established screen position
-    - Reject any shot where the speaker appears to address the camera directly
-    - Reject any shot where the speaker looks behind them (180° violation)
-    - If both characters are in character_list, ensure consistent screen direction across all shots
-    - Correct any spatial violations before generating the shot plan
+Feature one active character per shot.
+Two characters may both be active only when performing one synchronized physical action together.
+When a character speaks, they are the sole moving subject.
+Other visible characters remain frozen and static during speech.
+Passive characters appear with static language only.
 
-   Eyeline Correction:
-    - If both speaker and listener are in character_list, verify the speaker's gaze
-    is directed toward the listener's position, NOT toward the camera
-    - "Looking at camera" or "directed at lens" is INVALID when the listener
-    is present in the scene
-    - Correct any shot where the speaker appears to address the audience
-    instead of the other character
+------------------------------------------------------------
+SPATIAL AND EYELINE VALIDATION
+------------------------------------------------------------
+
+Direct the speaker's eyeline toward the listener's established screen position.
+Maintain consistent screen direction for each character across all shots.
+Keep the camera on one consistent side of the axis of action.
+Angle the speaker's gaze just past the lens when the listener is off-screen.
+Match the speaker's gaze direction to the spatial relationship in scene_description.
 
 ------------------------------------------------------------
 SHOT BOUNDARY RULES
 ------------------------------------------------------------
 
-Start new shot when:
+Start a new shot when:
 - Action intent changes
 - Gaze target changes
 - Speech begins or ends
 - Object interaction begins or ends
 - Character enters or exits
 
-You are merging MOMENTS into SHOTS (2-10 seconds each).
+Merge moments into shots of 2-10 seconds each.
 Sum the durations of merged moments.
 
-Merge shots ONLY if:
-- Camera angle identical
-- Motion part of same phase
-- Dialog belongs to same turn
-- No character enters/exits
-- Only ONE active character present
+Merge moments only when:
+- Camera angle remains identical
+- Motion continues as part of the same phase
+- Dialog belongs to the same turn
+- No character enters or exits
+- Only one active character is present
 
 ------------------------------------------------------------
 SHOT TYPES
 ------------------------------------------------------------
-- establishing: wide/medium-wide
-- dialog: speaker isolated
+
+- establishing: wide or medium-wide framing
+- dialog: speaker isolated in frame
 - action: one active performer
 - reaction: one active performer
 
-Duration: sum of merged moments, clamped to 2-10 seconds
+Duration: sum of merged moments, clamped to 2-10 seconds.
 
 ------------------------------------------------------------
 OUTPUT FORMAT
@@ -375,10 +363,10 @@ type: establishing / action / dialog / reaction
 moments: [list of moment numbers]
 duration: estimated duration
 purpose: what this shot accomplishes
-camera: summary of angles/movement
+camera: summary of angles and movement
 visual: summary of visible elements
 audio: summary of notable sounds
-verification: why this shot boundary exists (speech begins/ends, action changes, gaze changes, entry/exit)
+verification: why this shot boundary exists
 
 ------------------------------------------------------------
 NOW PRODUCE THE DIRECTOR SHOT PLAN.
