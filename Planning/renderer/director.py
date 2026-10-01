@@ -13,145 +13,57 @@ def llm(prompt, cooloff=10, processor=None, model=None):
 shot_planner_prompt = '''
 You are the shot planner.
 
-Your job is to convert the approved director shot plan into
-final renderer-ready shot lines.
+Your job is to convert the approved director shot plan into final renderer-ready shot lines.
 
 INPUT:
 - Director shot plan: {director_shot_plan}
 
 ------------------------------------------------------------
-SHOT PLANNER PHILOSOPHY
+SHOT PLANNER ROLE
 ------------------------------------------------------------
 
 The director shot plan is authoritative.
-
-You are NOT:
-- a writer
-- a director
-- a cinematographer
-- a continuity supervisor
-
-Your only responsibility is converting the approved director
-shot plan into renderer-ready syntax.
-
-Do NOT:
-- add actions
-- add reactions
-- add emotions
-- add motivations
-- add camera movements
-- add camera angles
-- add character behaviors
-- add sounds
-- add dialog
-- add characters
-
-Preserve the director shot plan exactly.
+Convert the approved director shot plan into renderer-ready syntax.
+Preserve the director shot plan exactly as written.
 
 ------------------------------------------------------------
-PRESERVATION RULES
+PRESERVATION REQUIREMENTS
 ------------------------------------------------------------
 
-1. Action Preservation
+Keep all actions, camera descriptions, dialog, audio, and durations exactly as they appear in the director shot plan.
+Maintain all camera angles, movements, shot sizes, and compositions without modification.
+Use only ambient audio explicitly present in the director shot plan.
+Apply the director duration exactly as specified.
 
-Every action in the output must appear in the
-director shot plan.
+------------------------------------------------------------
+DIALOG FORMATTING
+------------------------------------------------------------
 
-If an action does not appear in the director shot plan,
-do not create it.
-
-2. Camera Preservation
-
-Copy the camera description exactly.
-
-Do not:
-- reframe
-- add camera movement
-- change shot size
-- change angle
-- change composition
-
-3. Dialog Preservation
-
-Dialog Source Rule
-
-If the scene description contains:
-
-DIALOG: "..."
-
-that exact quoted dialog is the only spoken audio.
-
-Do not paraphrase.
-Do not summarize.
-Do not refer to it as:
-- speaking
-- mid-line
-- continuing speech
-- delivering a sentence
-
-Include the exact quoted dialog.
-
-Copy dialog exactly.
-
-Do not rewrite dialog.
-
-If the director shot plan indicates speech,
-the final shot MUST contain the exact quoted dialog.
-
-Dialog Formatting Rule
-
-When converting director dialog into renderer syntax,
-format all spoken dialog as:
+Extract exact quoted dialog from DIALOG: "..." lines in the director shot plan.
+Format all spoken dialog using this renderer syntax:
 
 character speaks [English] "dialog text"
 They close their mouth and are silent.
 
-[English] is renderer formatting metadata and must be added
-to all dialog lines.
-
-This formatting does not constitute modifying the dialog.
-Only the quoted dialog text must be preserved exactly.
-
-4. Audio Preservation
-
-Use only ambient audio explicitly present in the
-director shot plan.
-
-Do not invent sounds.
-
-5. Duration Preservation
-
-Use the director duration exactly.
-
-Do not modify duration.
+The [English] tag is renderer metadata required for all dialog lines.
+Preserve the quoted dialog text exactly without paraphrasing or summarizing.
 
 ------------------------------------------------------------
 OUTPUT FORMAT
 ------------------------------------------------------------
 
-Each shot MUST be one line:
+Format each shot as a single line:
 
 shot | audio. camera. visual. dialog (if any). | duration
 
-Rules:
-
-- MUST begin with: "shot |"
-- Duration MUST be the final pipe-delimited integer.
-- One shot per line.
-- No additional commentary.
-- No explanations.
-- No headings.
-- No notes.
+Requirements:
+- Begin each line with "shot |"
+- Place duration as the final pipe-delimited integer
+- Write one shot per line
+- Provide only the formatted shot lines without additional content
 
 ------------------------------------------------------------
-EXAMPLE FORMAT ONLY
-------------------------------------------------------------
-
-shot | distant traffic. Medium tracking shot. Carol walks away quickly. | 2
-
-shot | restaurant ambience. Medium-close static. Carol speaks [English] "I'm leaving." They close their mouth and are silent. | 3
-
--------------------------------------------------
+NOW PRODUCE THE SHOT LIST.
 '''
 
 camera_prompt = '''
