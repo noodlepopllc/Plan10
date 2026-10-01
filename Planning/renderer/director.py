@@ -658,7 +658,8 @@ def build_director_entries(entry: dict):
         director_entries.append({
             'location': location,
             'zone': zone,
-            'characters': characters,
+            'active_characters': entry['active_characters'],
+            'passive_characters': entry['passive_characters'],
             'background': background,   # <-- REQUIRED FIX
             'action': padded_action,
             'dialog': dialog if dialog  else None
