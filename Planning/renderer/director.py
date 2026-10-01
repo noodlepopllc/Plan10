@@ -978,13 +978,13 @@ def direct(beat_entry: dict, notes=''):
             continue
         total_words = len(parts[1].split())
 
-    if dialog_words:
-        duration = max(2, min(6, math.ceil(dialog_words / 2.5)))
-    else:
-        # Action shots should be 2-3 seconds max
-        duration = max(2, min(3, math.ceil(total_words / 20)))
+        if dialog_words:
+            duration = max(2, min(6, math.ceil(dialog_words / 2.5)))
+        else:
+            # Action shots should be 2-3 seconds max
+            duration = max(2, min(3, math.ceil(total_words / 20)))
 
-    fixed_shotlist.append('|'.join(parts[:-1] + [str(duration)]))
+        fixed_shotlist.append('|'.join(parts[:-1] + [str(duration)]))
 
     return '\n'.join(fixed_shotlist), director_shots
 
