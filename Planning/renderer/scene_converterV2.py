@@ -332,7 +332,7 @@ def group_pop_front(shots_text: str, max_total=15):
     fixed = []
     for line in lines:
         parts = line.split('|')
-        final = math.ceil(float(parts.pop()))
+        final = math.ceil(float(''.join([x for x in parts.pop() if x in '0123456789.'])))
         fixed.append('|'.join(parts + [str(final)]))
 
     shots_text = '\n'.join(fixed)
