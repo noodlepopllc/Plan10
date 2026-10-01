@@ -420,6 +420,51 @@ The camera moves THROUGH the scene, not between static positions.
    - Do not cut mid-action unless there's a clear emotional or narrative reason
    - Example: character lifts hand, reaches for object, grasps it → camera tracks the hand through the entire motion
 
+------------------------------------------------------------
+MOTIVATION RULE (CRITICAL)
+------------------------------------------------------------
+
+Every camera movement must answer "why?"
+
+Before choosing a camera move, identify its motivation:
+
+1. CHARACTER MOTIVATION
+   - The camera moves because the character moves
+   - Example: character stands up → camera tilts up to follow
+   - Example: character leans forward → camera pushes in slightly
+   - Example: character turns away → camera holds, letting them exit frame
+
+2. EMOTIONAL MOTIVATION
+   - The camera moves to reflect an emotional shift
+   - Example: character becomes vulnerable → camera pushes in for intimacy
+   - Example: character withdraws → camera pulls back to create distance
+   - Example: tension builds → camera slowly tightens framing over multiple moments
+
+3. SPATIAL MOTIVATION
+   - The camera moves to reveal information about the space
+   - Example: character mentions something off-screen → camera pans to reveal it
+   - Example: two characters interact → camera establishes their spatial relationship
+   - Example: new object enters scene → camera acknowledges it
+
+4. NARRATIVE MOTIVATION
+   - The camera moves to shift audience attention
+   - Example: focus shifts from speaker to listener → camera reframes
+   - Example: a reaction matters more than the action → camera cuts to reaction
+
+INVALID MOTIVATIONS (reject these):
+- "It looks cool" — not a motivation
+- "To add visual interest" — not a motivation
+- "Because the scene is long" — not a motivation
+- Arbitrary crane-ups, dollies, or spirals without narrative purpose
+
+APPLICATION:
+- A crane-up during speech is VALID if the character is rising emotionally, gaining confidence, or the scene is shifting power dynamics
+- A crane-up during speech is INVALID if it's just decorative
+- A slow push-in is VALID if the moment is becoming more intimate or tense
+- A slow push-in is INVALID if the emotional register hasn't changed
+
+When in doubt, choose a simpler move. A static frame with strong composition beats a motivated-but-confusing camera move.
+
 INPUTS:
 - Scene description: {scene_description}
 - Characters: {character_list}
