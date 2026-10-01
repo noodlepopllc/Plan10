@@ -619,6 +619,93 @@ audio: summary of notable sounds
 NOW PRODUCE THE DIRECTOR SHOT PLAN.
 '''
 
+director_prompt = '''
+Your job: verify the camera log faithfully represents the beat while maintaining continuity and cinematic grammar.
+
+The beat is the source of truth. The camera log is an interpretation. Your role is to verify and correct.
+
+INPUTS:
+- Camera operator log: {camera_log}
+- Scene description: {scene_description}
+- Characters: {character_list}
+- Background: {background_label}
+- Context notes: {context_notes}
+
+Your output is the semantic shot plan for the shot planner.
+
+------------------------------------------------------------
+VERIFICATION RULES
+------------------------------------------------------------
+
+1. BEAT FIDELITY
+   - Remove any action, reaction, or object interaction not in scene_description
+   - Characters remain still unless explicitly described in scene
+   - When uncertain, prefer scene_description over camera_log
+   - Do not invent: new actions, motivations, reactions, or story events
+
+2. DIALOG VALIDATION
+   - Shots with speech MUST contain exact quoted dialog
+   - Invalid without exact text: "speaking", "delivering a line", "mid-line", "continuing", "finishing"
+   - Audio must contain exact quoted dialog when speech is present
+   - Shots describing speech without quoted text are invalid
+
+3. ACTOR ISOLATION (CRITICAL)
+   - One active character per shot (exception: synchronized shared action)
+   - When someone speaks: they are the ONLY moving subject
+   - Other visible characters: frozen, static, no reactions, no gaze shifts, no actions
+   - Passive characters: described with static language only
+
+4. EYELINE VALIDATION
+   - Listener's implied position must be spatially consistent
+   - Do not place listener directly behind speaker unless scene requires it
+   - Prefer traditional shot/reverse-shot conversational geography
+   - Correct invalid eyelines before generating shot plan
+
+------------------------------------------------------------
+SHOT BOUNDARY RULES
+------------------------------------------------------------
+
+Start new shot when:
+- Action intent changes
+- Gaze target changes
+- Speech begins or ends
+- Object interaction begins or ends
+- Character enters or exits
+
+Merge shots ONLY if:
+- Camera angle identical
+- Motion part of same phase
+- Dialog belongs to same turn
+- No character enters/exits
+- Only ONE active character present
+
+------------------------------------------------------------
+SHOT TYPES
+------------------------------------------------------------
+- establishing: wide/medium-wide
+- dialog: speaker isolated
+- action: one active performer
+- reaction: one active performer
+
+Duration: sum of merged moments, clamped to 2-10 seconds
+
+------------------------------------------------------------
+OUTPUT FORMAT
+------------------------------------------------------------
+shot N
+type: establishing / action / dialog / reaction
+moments: [list of moment numbers]
+duration: estimated duration
+purpose: what this shot accomplishes
+camera: summary of angles/movement
+visual: summary of visible elements
+audio: summary of notable sounds
+verification: why this shot boundary exists (speech begins/ends, action changes, gaze changes, entry/exit)
+
+------------------------------------------------------------
+NOW PRODUCE THE DIRECTOR SHOT PLAN.
+'''
+
 def extract_dialog(entry):
     """
     Returns the dialog line if any character in the beat speaks.
