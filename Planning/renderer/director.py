@@ -408,27 +408,54 @@ When scene_description contains DIALOG: "..." lines:
 - Include it in audio notes when describing speech
 - Never use placeholders like "[DIALOG TEXT PENDING]"
 
-Dialog Coverage:
-- The speaker is the primary subject of the frame
-- The speaker's eyeline MUST be directed toward the listener's physical position in the scene
-- If the listener is present in the scene (in character_list):
-    • The speaker looks TOWARD the listener, NOT at the camera
-    • The listener may be at frame edge, over-the-shoulder, or just off-frame
-    • The speaker's gaze angle must match the spatial relationship described in the scene
-    • Example: if characters sit across a table, the speaker looks across the table, not at the lens
-- If the listener is NOT present in the scene:
-    • The speaker's eyeline falls slightly left or right of lens
-- Do NOT have characters speak directly into the camera unless the scene explicitly describes breaking the fourth wall
+------------------------------------------------------------
+SPATIAL BLOCKING (CRITICAL)
+------------------------------------------------------------
+
+Before framing any shot, establish the spatial relationship between characters:
+
+1. CHARACTER POSITIONS
+   - Identify where each character is physically located in the scene
+   - Use scene_description to determine: "across the table", "at the bar counter", "by the doorway"
+   - Map these positions to screen directions: "screen left", "screen right", "center"
+
+2. 180° RULE (AXIS OF ACTION)
+   - Establish an imaginary line between the two interacting characters
+   - The camera must stay on ONE SIDE of this line for the entire conversation
+   - Never cross the line unless there's a clear camera movement that shows the transition
+   - This ensures characters maintain consistent screen direction (Character A always screen left, Character B always screen right)
+
+3. CONVERSATION GEOMETRY
+   - When Character A speaks to Character B:
+     • Character A's eyeline must point toward Character B's screen position
+     • If Character B is screen right, Character A looks screen right
+     • If Character B is screen left, Character A looks screen left
+   - The speaker NEVER looks directly at the camera unless breaking the fourth wall
+   - The speaker NEVER looks at someone behind them (180° violation)
+
+4. SHOT TYPES FOR CONVERSATIONS
+   - Establishing two-shot: Both characters visible, spatial relationship clear
+   - Over-the-shoulder (OTS): Speaker in foreground, listener's shoulder/back in background
+   - Close-up: Speaker framed alone, eyeline directed toward listener's off-screen position
+   - Reverse shot: Camera flips to other side of conversation (maintains 180° rule)
 
 ------------------------------------------------------------
 FRAMING & COMPOSITION
 ------------------------------------------------------------
 
 Dialog Coverage:
-- Frame only the speaker
-- Listener is typically off-camera, positioned just outside frame near camera side
-- Speaker's eyeline falls slightly left or right of lens
-- Do NOT place listener behind speaker unless scene requires it
+- The speaker is the primary subject of the frame
+- The speaker's eyeline MUST be directed toward the listener's established screen position
+- If both characters are present in character_list:
+    • Use the spatial blocking established above
+    • The speaker looks TOWARD the listener, NOT at the camera
+    • The listener may be at frame edge, over-the-shoulder, or just off-frame
+    • The speaker's gaze angle must match the spatial relationship
+    • Example: if characters sit across a table, the speaker looks across the table
+- If the listener is NOT present in character_list:
+    • The speaker's eyeline falls slightly left or right of lens
+- Do NOT have characters speak directly into the camera
+- Do NOT have characters look behind them (180° violation)
 
 Actor Isolation:
 - One active character per moment (exception: synchronized shared action)
@@ -698,6 +725,13 @@ When scene_description contains DIALOG: "..." lines:
    - Do not place listener directly behind speaker unless scene requires it
    - Prefer traditional shot/reverse-shot conversational geography
    - Correct invalid eyelines before generating shot plan
+
+   Eyeline & Spatial Validation (CRITICAL):
+    - Verify the speaker's eyeline points toward the listener's established screen position
+    - Reject any shot where the speaker appears to address the camera directly
+    - Reject any shot where the speaker looks behind them (180° violation)
+    - If both characters are in character_list, ensure consistent screen direction across all shots
+    - Correct any spatial violations before generating the shot plan
 
    Eyeline Correction:
     - If both speaker and listener are in character_list, verify the speaker's gaze
