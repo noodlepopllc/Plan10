@@ -814,27 +814,27 @@ def pad_if_too_short(action: str):
 def build_director_entries(entry: dict):
     location = entry['location']
     zone = entry['zone']
-    #characters = entry['characters']
     background = entry['background']
 
     dialog = extract_dialog(entry)
     action = extract_action(entry)
 
-    action_units = split_action_into_units(action)
+    # If there's no action, treat it as a single empty unit so the loop still runs
+    if action is None:
+        action_units = [None]
+    else:
+        action_units = split_action_into_units(action)
+
     director_entries = []
-
     for idx, unit in enumerate(action_units):
-        #padded_action = pad_if_too_short(unit)
-        padded_action = unit
-
         director_entries.append({
             'location': location,
             'zone': zone,
             'active_characters': entry['active_characters'],
             'passive_characters': entry['passive_characters'],
-            'background': background,   # <-- REQUIRED FIX
-            'action': padded_action,
-            'dialog': dialog if dialog  else None
+            'background': background,
+            'action': unit,
+            'dialog': dialog if idx == 0 else None  # attach dialog to first entry only
         })
 
     return director_entries
