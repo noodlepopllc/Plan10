@@ -405,16 +405,16 @@ It does NOT grant character presence.
 ------------------------------------------------------------
 TEMPORAL RULES
 ------------------------------------------------------------
+CAMERA LOG STAGE (camera_prompt):
+You are planning MOMENTS (2-3 seconds each).
+These moments will be merged into SHOTS by the director.
+
 - Each moment: 2 seconds (max 3 seconds)
 - Most moments should be 2 seconds. Maximum 3 seconds.
 - First moment: wide/medium-wide establishing shot (only first moment may pan/tilt slowly)
 - Speaking without exact quoted dialog is invalid
 - Use either exact dialog text OR silent physical behavior
 - Never describe speech progression as "opening", "mid-line", "continuing", "final syllables"
-
-CAMERA LOG STAGE (camera_prompt):
-You are planning MOMENTS (2-3 seconds each).
-These moments will be merged into SHOTS by the director.
 
 ------------------------------------------------------------
 DIALOG EXTRACTION

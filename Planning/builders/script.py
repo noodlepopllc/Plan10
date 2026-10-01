@@ -2,6 +2,9 @@
 import sys
 sys.stdout.reconfigure(encoding='utf-8')
 
+from plan10.lib.config import load_config
+load_config()
+
 import re
 import json
 from pathlib import Path
@@ -161,6 +164,7 @@ def update_state(state, analyzed_beat):
 # MAIN PROCESSING FUNCTION
 # ═══════════════════════════════════════════════════════════════
 def story_to_script(story_path, world_text, output_path, llm_call_func):
+    from plan10.lib.qwen_llm import LLMContext
     # Load story
     story_text = Path(story_path).read_text(encoding='utf-8')
 
@@ -184,42 +188,42 @@ def story_to_script(story_path, world_text, output_path, llm_call_func):
         "history_beats": []  # NEW
     }
 
+    with LLMContext() as (p_ctx, m_ctx):
+        # Process each beat
+        for i, beat in enumerate(beats):
 
-    # Process each beat
-    for i, beat in enumerate(beats):
+            # Build history context
+            history_context = build_history_context(state)
 
-        # Build history context
-        history_context = build_history_context(state)
+            # 1. Analyze beat with continuity
+            analyzer_prompt = ANALYZER_PROMPT.format(
+                world_text=world_text,
+                beat_text=beat,
+                history=json.dumps(history_context, indent=2)
+            )
 
-        # 1. Analyze beat with continuity
-        analyzer_prompt = ANALYZER_PROMPT.format(
-            world_text=world_text,
-            beat_text=beat,
-            history=json.dumps(history_context, indent=2)
-        )
+            analyzed_text = llm_call_func(analyzer_prompt, temperature=0.1, processor=p_ctx, model=m_ctx)
+            analyzed_beat = safe_json_load(analyzed_text)
 
-        analyzed_text = llm_call_func(analyzer_prompt, temperature=0.1)
-        analyzed_beat = safe_json_load(analyzed_text)
+            if not analyzed_beat:
+                print(f"WARNING: Beat {i+1} failed analysis, skipping.")
+                continue
 
-        if not analyzed_beat:
-            print(f"WARNING: Beat {i+1} failed analysis, skipping.")
-            continue
+            # 2. Update continuity state
+            state = update_state(state, analyzed_beat)
 
-        # 2. Update continuity state
-        state = update_state(state, analyzed_beat)
+            # 3. Format beat
+            formatter_prompt = FORMATTER_PROMPT.format(
+                beat_data_json=json.dumps(analyzed_beat, indent=2)
+            )
 
-        # 3. Format beat
-        formatter_prompt = FORMATTER_PROMPT.format(
-            beat_data_json=json.dumps(analyzed_beat, indent=2)
-        )
+            script_line = llm_call_func(formatter_prompt, temperature=0.1, processor=p_ctx, model=m_ctx)
 
-        script_line = llm_call_func(formatter_prompt, temperature=0.1)
+            # 4. Write to script file
+            with open(output_file, 'a', encoding='utf-8') as f:
+                f.write(script_line.strip() + '\n\n')
 
-        # 4. Write to script file
-        with open(output_file, 'a', encoding='utf-8') as f:
-            f.write(script_line.strip() + '\n\n')
-
-        print(f"Processed beat {i+1}/{len(beats)} | Zone: {state.get('zone', 'Unknown')}")
+            print(f"Processed beat {i+1}/{len(beats)} | Zone: {state.get('zone', 'Unknown')}")
 
 
 def safe_json_load(text):
@@ -356,8 +360,8 @@ if __name__ == '__main__':
     import json
     from plan10.lib.qwen_llm import llm_analyze_media
     
-    def my_llm_call(prompt, temperature=0.1):
-        result = llm_analyze_media('', prompt=prompt, system=None, max_tokens=8192, temperature=temperature)
+    def my_llm_call(prompt, temperature=0.1, processor=None, model=None):
+        result = llm_analyze_media('', prompt=prompt, system=None, max_tokens=8192, temperature=temperature, processor=None, model=None)
         return result['analysis'] 
     
     if len(sys.argv) < 2:
