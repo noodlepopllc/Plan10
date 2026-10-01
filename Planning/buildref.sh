@@ -11,6 +11,9 @@ basepath="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "$basepath"
 
+TMP_THINKING="$THINKING"
+THINKING="False"
+
 if [[ ! -f "$output/story.txt" ]]; then
     python $basepath/builders/storywriter.py -S $1 -O $output/story.txt
 fi
@@ -26,6 +29,8 @@ fi
 python $basepath/renderer/renderer.py $2 minimum > $2/scene.txt
 
 uv run bot "$2/scene.txt" -F --max-steps 3
+
+THINKING=$TMP_THINKING
 
 python $basepath/renderer/scene_converterV2.py $2
 
