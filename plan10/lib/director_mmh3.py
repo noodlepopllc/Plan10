@@ -43,7 +43,7 @@ def director_save_metadata(image_path: str, desc: str):
     """Embeds the VLM description into the image metadata or a sidecar file."""
     try:
         if image_path.lower().endswith('.png'):
-            with Image.open(imgpath) as img:
+            with Image.open(img_path) as img:
                 metadata = load_metadata(img)
                 if hasattr(img, 'info'):
                     for k, v in img.text.items():
