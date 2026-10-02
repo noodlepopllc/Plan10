@@ -340,7 +340,7 @@ class SmartVideoPromptBuilder:
         
         return processed_text
 
-    def load_script(self, script_text: str, base_dir: str = "", generators: dict = None):
+    def load_script(self, script_text: str, base_dir: str = "", generators: dict = None, low_vram=False):
         if generators is None:
             generators = {}
             
@@ -722,7 +722,7 @@ def main():
 
     if not final_prompt:
         # Build and execute
-        builder = SmartVideoPromptBuilder().load_script(script, base_dir=base_dir, generators=generators)
+        builder = SmartVideoPromptBuilder().load_script(script, base_dir=base_dir, generators=generators, low_vram=args.low_vram)
         final_prompt = builder.generate(args.low_vram)
     print(final_prompt)
     if args.debug:
