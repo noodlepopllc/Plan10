@@ -3,11 +3,10 @@ load_config()
 
 from plan10.lib.image_analysis import AnalyzeImage
 import re, os, math
-
 from pathlib import Path
 import json
 
-BACKEND=os.environ.get('VISION_BACKEND','qwen')
+BACKEND = os.environ.get('VISION_BACKEND', 'qwen')
 
 BG_PROMPT = """
 Describe only what is visible in the image in 80–120 words.
@@ -39,7 +38,6 @@ DEFINITIONS:
   Examples: "red satin shirt", "blue denim jeans", "black leather jacket", "tan canvas shorts".
 - {accessory list} includes material when relevant.
   Examples: "silver metal collar", "brown leather satchel", "chrome visor".
-
 '''
 
 BRIEF_PROMPT = '''
@@ -57,15 +55,17 @@ class LTXPipeline:
         self.temperature = temperature
         self.max_tokens = max_tokens
         self.run_length = 10.0
-        # Inside your initialization block:
         self.cache_file = "ltx_cache.json"
         self.ltx_cache = self.load_create_cache()
 
     def load_create_cache(self):
-        cache = {'bg':{},'char':{},'brief':{}}
+        cache = {'bg': {}, 'char': {}, 'brief': {}}
         if Path(self.cache_file).exists():
-            with open(self.cache_file, 'r') as cache:
-                cache = json.load(cache)
+            try:
+                with open(self.cache_file, 'r', encoding='utf-8') as f:
+                    cache = json.load(f)
+            except Exception:
+                pass  # Fallback to default empty cache if corrupted
         return cache
 
     # -----------------------------
@@ -83,7 +83,7 @@ class LTXPipeline:
                 continue
 
             asset_type = parts[0]
-            asset_id   = parts[1]
+            asset_id = parts[1]
             asset_path = parts[2]
             description = parts[3]
 
@@ -167,36 +167,48 @@ class LTXPipeline:
                 f'{timestamp:05.2f}-{end_timestamp:05.2f} ( Shot {i+1} ) : {description}'
             )
             timestamp = end_timestamp
-        self.run_length = math.ceil(end_timestamp)
-
+        
+        self.run_length = math.ceil(end_timestamp) if end_timestamp > 0 else 10.0
         return '\n'.join(shot_lines)
 
     def build_ltx_prompt(self, style, bg_desc, char_descs, shots):
         characters = []
         for k, v in char_descs.items():
-            characters.append(f'{k} - {v}')
+            characters.append(f'- {k}: {v}')
+        
+        # Enforce a strict, consistent preview style to prevent wild deviations (claymation, anime, etc.)
+        base_style = "Neutral 3D animatic preview style, realistic human proportions, clear spatial composition, neutral lighting, no stylized rendering, no claymation, no anime, no artistic filters. Focus strictly on blocking, camera movement, and character action."
+        
+        if style and style.strip():
+            enforced_style = f"Theme: {style.strip()}. RENDER EXECUTION: {base_style}"
+        else:
+            enforced_style = base_style
 
         return f'''
-ART STYLE/THEME:
-{style}
+ART STYLE/THEME (STRICTLY ENFORCED FOR ALL SHOTS):
+{enforced_style}
 
 ENVIRONMENT:
 {bg_desc}
         
 CHARACTERS:
-{'\n\n'.join(characters)}
+{'\n'.join(characters)}
 
 SHOTS:
 {shots}
-        '''
+
+GLOBAL RENDER RULES:
+- Maintain absolute visual consistency across every single shot. 
+- Do not deviate into claymation, anime, watercolor, or other stylized renders.
+- Prioritize clear spatial composition, camera blocking, and character action over artistic flair.
+- Treat this strictly as a technical pre-visualization (previz) animatic.
+'''
 
     # -----------------------------
     # Main Execution
     # -----------------------------
     def run(self, beat_path: str, style: str, use_descriptions=False):
-        from pathlib import Path
-
-        raw_beats = Path(beat_path).read_text()
+        raw_beats = Path(beat_path).read_text(encoding='utf-8')
         beatdata = self.parse_beat_assets(raw_beats)
 
         char_descs = {}
@@ -207,7 +219,6 @@ SHOTS:
             cache_updated = False
             
             # Normalize the path string so Linux and Windows match perfectly
-            # Example: "assets\chars/hero.png" -> "assets/chars/hero.png"
             norm_path = str(Path(asset['path']).as_posix())
 
             if asset['type'] == 'bg':
@@ -245,36 +256,40 @@ SHOTS:
 
             # Commit immediately to disk on updates
             if cache_updated:
-                with open(self.cache_file, "w") as f:
+                with open(self.cache_file, "w", encoding='utf-8') as f:
                     json.dump(self.ltx_cache, f, indent=4)
-
 
         shots = self.extract_shots(raw_beats)
         formatted_shots = self.format_shots(shots, briefs)
 
         return self.build_ltx_prompt(style, bg_desc, char_descs, formatted_shots)
 
+
 def main():
-    import argparse, sys, json
+    import argparse, sys
     from pathlib import Path
 
     parser = argparse.ArgumentParser(description='Convert beats to videos using LTX2.5')
     parser.add_argument('-B', '--beat', type=str, default='', help='Story beat to render')
     parser.add_argument('-O', '--output', type=str, default=None, help='file to output')
     parser.add_argument('-U', '--use-descriptions', action='store_true')
-    parser.add_argument('-S', '--style', type=str, help='art style')
+    parser.add_argument('-S', '--style', type=str, default='', help='Content theme (will be forced into animatic preview style for consistency)')
     args = parser.parse_args()
+    
     output = args.output
 
     if not args.beat:
         print("You are a horrible person, beats are required. Shame, Shame on you.")
-        sys.exit()
+        sys.exit(1)
+        
     if not output:
         output = args.beat.replace('.txt', '.lt25')
+        
     converter = LTXPipeline()
     converted = converter.run(args.beat, style=args.style, use_descriptions=args.use_descriptions)
+    
     print(converted)
-    Path(output).write_text(f'RUNLENGTH (s):{converter.run_length}\n{converted}')
+    Path(output).write_text(f'RUNLENGTH (s):{converter.run_length}\n{converted}', encoding='utf-8')
 
 if __name__ == '__main__':
     main()
