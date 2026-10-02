@@ -524,18 +524,18 @@ def CreatePortrait(prompt='', reference='', output='character_tmp.png',
 
 
 def prompt_metadata(imgpath, prompt=''):
-    target_image = Image.open(imgpath)
-    if prompt:
-        metadata = load_metadata(target_image)
-        metadata.add_text("GenerationPrompt", prompt)
-        target_image.save(imgpath, pnginfo=metadata)
-        return prompt
-    else:
-        return target_image.info.get("GenerationPrompt", "")
+    with Image.open(imgpath) as target_image:
+        if prompt:
+            metadata = load_metadata(target_image)
+            metadata.add_text("GenerationPrompt", prompt)
+            target_image.save(imgpath, pnginfo=metadata)
+            return prompt
+        else:
+            return target_image.info.get("GenerationPrompt", "")
 
 def add_metadata_char(imgpath, prompt='', seed=-1):
-    target_image = Image.open(imgpath)
-    metadata = load_metadata(target_image)
+    with Image.open(imgpath) as target_image:
+        metadata = load_metadata(target_image)
 
     combined_prompt = (
         '''
@@ -759,8 +759,8 @@ def add_metadata_char(imgpath, prompt='', seed=-1):
     return clean_string
     
 def add_metadata_loc(imgpath, prompt='', seed=-1, brief=False, update=True):
-    target_image = Image.open(imgpath)
-    metadata = load_metadata(target_image)
+    with Image.open(imgpath) as target_image:
+        metadata = load_metadata(target_image)
 
     loc_prompt = (
         "You are analyzing an ANIME background illustration (no characters present). "

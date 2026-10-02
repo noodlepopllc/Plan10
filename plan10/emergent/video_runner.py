@@ -22,25 +22,23 @@ ANIME = os.environ.get('ANIME', 'False') != 'False'
 
 def get_or_analyze(image_path: str, prompt: str, cache_key: str, max_words: int = 15) -> str:
     """Get cached analysis from image metadata, or analyze and cache it."""
-    img = Image.open(image_path)
-    cached = img.info.get(cache_key)
-    if cached:
-        img.close()
-        return cached
-    
-    result = AnalyzeImage(image_path, prompt=prompt, backend='')['analysis']
-    img.close()
+    with Image.open(image_path) as img:
+        cached = img.info.get(cache_key)
+        if cached:
+            return cached
+        
+        result = AnalyzeImage(image_path, prompt=prompt, backend='')['analysis']
+
     from plan10.lib.util import load_metadata
     
     # Cache it
-    img = Image.open(image_path)
-    metadata = load_metadata(img)
-    for key, value in img.info.items():
-        if isinstance(value, str):
-            metadata.add_text(key, value)
-    metadata.add_text(cache_key, result)
-    img.save(image_path, pnginfo=metadata)
-    img.close()
+    with Image.open(image_path) as img:
+        metadata = load_metadata(img)
+        for key, value in img.info.items():
+            if isinstance(value, str):
+                metadata.add_text(key, value)
+        metadata.add_text(cache_key, result)
+        img.save(image_path, pnginfo=metadata)
     
     return result
 

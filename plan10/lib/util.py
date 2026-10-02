@@ -62,8 +62,10 @@ def transcribe(path, detailed=False):
     return transcription if detailed else segs
 
 def load_metadata(img):
+    img.load()
+    data = img.copy()
     metadata = PngInfo()
-    for key, value in img.info.items():
+    for key, value in data.info.items():
         if isinstance(value, str):
             metadata.add_text(key, value)
     return metadata

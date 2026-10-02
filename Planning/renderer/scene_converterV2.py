@@ -20,14 +20,13 @@ def get_or_analyze(image_path: str, prompt: str, cache_key: str, max_words: int 
     from plan10.lib.util import load_metadata
     
     # Cache it
-    img = Image.open(image_path)
-    metadata = load_metadata(img)
-    for key, value in img.info.items():
-        if isinstance(value, str):
-            metadata.add_text(key, value)
-    metadata.add_text(cache_key, result)
-    img.save(image_path, pnginfo=metadata)
-    img.close()
+    with Image.open(image_path) as img:
+        metadata = load_metadata(img)
+        for key, value in img.info.items():
+            if isinstance(value, str):
+                metadata.add_text(key, value)
+        metadata.add_text(cache_key, result)
+        img.save(image_path, pnginfo=metadata)
     
     return result
 

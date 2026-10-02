@@ -24,22 +24,24 @@ QWEN2 = os.environ.get('IMAGE_GEN', 'False') == 'QWEN2'
 
 def get_or_create_visual_id(character_image: str, goal: str) -> str:
     """Get cached visual ID or generate and cache it."""
-    img = Image.open(character_image)
-    visual_id = img.info.get("VisualID")
-    
-    if not visual_id:
-        profile = CharacterProfile(character_image, goal)
-        visual_id = profile.get_visual_id(0)
+
+    with Image.open(character_image) as img:
+        img.load()
+        loaded = img.copy()
+        visual_id = img.info.get("VisualID")
         
-        # Cache it
-        metadata = load_metadata(img)
-        for key, value in img.info.items():
-            if isinstance(value, str):
-                metadata.add_text(key, value)
-        metadata.add_text("VisualID", visual_id)
-        img.save(character_image, pnginfo=metadata)
-    
-    return visual_id, profile.get_character_name(0)
+        if not visual_id:
+            profile = CharacterProfile(character_image, goal)
+            visual_id = profile.get_visual_id(0)
+            
+            metadata = load_metadata(loaded)
+            for key, value in img.info.items():
+                if isinstance(value, str):
+                    metadata.add_text(key, value)
+            metadata.add_text("VisualID", visual_id)
+            img.save(character_image, pnginfo=metadata)
+        
+        return visual_id, profile.get_character_name(0)
 
 if ANIME:
     from plan10.lib.anime_gen import GenerateImage, prompt_metadata

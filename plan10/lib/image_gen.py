@@ -409,14 +409,14 @@ def GenerateImage(prompt='', output='tmp.png', width=WIDTH, height=HEIGHT, seed=
     return status
 
 def prompt_metadata(imgpath, prompt=''):
-    target_image = Image.open(imgpath)
-    if prompt:
-        metadata = load_metadata(target_image)
-        metadata.add_text("GenerationPrompt", prompt)
-        target_image.save(imgpath, pnginfo=metadata)
-        return prompt
-    else:
-        return target_image.info.get("GenerationPrompt", "")
+    with Image.open(imgpath) as target_image:
+        if prompt:
+            metadata = load_metadata(target_image)
+            metadata.add_text("GenerationPrompt", prompt)
+            target_image.save(imgpath, pnginfo=metadata)
+            return prompt
+        else:
+            return target_image.info.get("GenerationPrompt", "")
 
 def CreatePortrait(prompt='', reference='', output='character_tmp.png',
                     seed=-1, imagegen=None):
@@ -485,8 +485,8 @@ def CreatePortrait(prompt='', reference='', output='character_tmp.png',
 
 
 def add_metadata_char(imgpath, prompt='', seed=-1, generation_prompt=None):
-    target_image = Image.open(imgpath)
-    metadata = load_metadata(target_image)
+    with Image.open(imgpath) as target_image:
+        metadata = load_metadata(target_image)
 
     base_instructions = '''
         Analyze the subject and describe ONLY clearly visible, literal traits. Return a single comma-separated string in this exact order: 
@@ -561,8 +561,8 @@ def add_metadata_char(imgpath, prompt='', seed=-1, generation_prompt=None):
     return clean_string
 
 def add_metadata_loc(imgpath, prompt='', seed=-1, brief=False, update=True):
-    target_image = Image.open(imgpath)
-    metadata = load_metadata(target_image)
+    with Image.open(imgpath) as target_image:
+        metadata = load_metadata(target_image)
     analysis_prompt = '''
 Extract a structured spatial description of this BACKGROUND image.
 CRITICAL: This image contains NO PEOPLE. Describe ONLY the environment.
