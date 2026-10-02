@@ -760,7 +760,7 @@ def main():
         script = """
         # --- ASSETS (with generation prompts) ---
         bg   | barn    | images/rustic_barn.png    | the inside of a rustic barn, with a large open doorway allowing light to spill in
-        char | blondie | images/blonde_woman.png   | a medium shot of a blonde woman, white sundress, white tennis shoes
+        char | blondie | -                         | a medium shot of a blonde woman, white sundress, white tennis shoes
         char | red     | images/red_woman.png      | a medium shot of a red haired woman, blue jeans, tshirt, cowboy boots
         item | dog     | images/samoyed_dog.png    | a samoyed dog
         
