@@ -120,11 +120,26 @@ Using the structured seed below, write a single continuous scene consisting of:
 EXPANDING THE SEED
 ------------------------------------------------------------
 
-The seed is intentionally vague. Your job is to INVENT specificity:
+The seed is intentionally vague. Your job is to INVENT specificity to drive the scene:
+- Invent a specific, observable goal (e.g., "Elara wants Nadia to sit for 5 minutes").
+- Invent a clear resolution condition (e.g., "Scene ends when Nadia finds an excuse to escape, or reluctantly sits down").
+- Identify the friction: How do their contrasting motivations clash? (e.g., oblivious enthusiasm vs. polite panic).
 
-- If motivations are vague (e.g., "wants friendly connection"), invent a specific, observable goal (e.g., "wants the other character to sit and talk for 5 minutes")
-- If the story goal is open-ended, invent a clear resolution condition (e.g., "scene ends when X happens or Y happens")
-- Use character relationships to create escalating tension throughout the scene
+------------------------------------------------------------
+THEME / STYLE / TONE (IF PROVIDED IN SEED)
+------------------------------------------------------------
+
+If the seed includes a theme, style, or tone, weave it into EVERY layer of the scene. 
+- THEME/STYLE dictates the physical world and vocabulary (materials, tech level, era).
+- TONE dictates the emotional weight, pacing, and subtext of the characters' reactions.
+
+Examples of combined adaptation:
+- SPACE OPERA (Theme) + HEROIC/GRAND (Tone): Polished tech, cosmic awe. Dialog is formal, measured, or inspiring. Actions involve consoles or star charts. Reactions are stoic or resolute. Atmosphere: engine drones, recycled air, distant comms.
+- DRAMATIC CYBERPUNK (Theme/Style) + CYNICAL/PARANOID (Tone): Gritty, high-tech/low-life, neon, rain-slick. Dialog is clipped, slang-heavy, defensive. Actions involve jacking into ports or checking blind spots. Reactions are flinches, narrowed eyes, or defensive posturing. Atmosphere: synth hum, acid rain, muffled sirens.
+- MEDIEVAL DETECTIVE (Theme) + GRITTY/SUSPENSEFUL (Tone): Mud, candlelight, tactile investigation. Dialog is sharp, layered with subtext and accusation. Actions involve examining wounds or gripping weapon hilts. Reactions are tense silence, shifting weight, or calculated stares. Atmosphere: dripping stone, woodsmoke, hushed whispers.
+- FANTASY TAVERN (Theme) + LIGHTHEARTED SITCOM / TRAGICOMIC (Tone): Warm hearth, scarred wood, spilled ale. Dialog is overly eager vs. desperately polite. Actions are broad and observable (enthusiastic leaning in vs. slow, polite inching backward). Reactions are forced smiles, wide-eyed panic, or awkward pauses.
+
+If no theme/style/tone is provided, default to the seed's implied setting, but still apply rich, specific sensory details and a consistent emotional throughline.
 
 ------------------------------------------------------------
 COLD OPEN (MANDATORY — DOES NOT COUNT TOWARD BEAT TOTAL)
@@ -134,15 +149,15 @@ The cold open is a rich prose snapshot of the initial situation from the seed.
 Write it as literary prose — atmospheric, detailed, story-like.
 
 REQUIRED ELEMENTS:
-- Environment: lighting, textures, atmosphere, time of day
-- Each character: species/ethnicity (if in seed), build, face, clothing, hair, current position
-- What each character is caught in the middle of doing (from seed's "Initial Situation")
+- Environment: lighting, textures, atmosphere, time of day (filtered through the Theme/Style/Tone).
+- Each character: species/ethnicity (if in seed), build, face, clothing, hair, current position.
+- What each character is caught in the middle of doing (from seed's "Initial Situation").
 
 FORBIDDEN:
-- Any action that advances the plot
-- Characters moving toward goals
-- Conflict escalation
-- Dialog beyond ambient/greeting
+- Any action that advances the plot.
+- Characters moving toward goals.
+- Conflict escalation.
+- Dialog beyond ambient/greeting.
 
 CRITICAL: After the cold open, output this exact marker on its own line:
 ******* COLD OPEN END ****
@@ -151,49 +166,50 @@ CRITICAL: After the cold open, output this exact marker on its own line:
 STORY BEATS (8–12 TOTAL)
 ------------------------------------------------------------
 
-A beat is a moment of story progression: a character takes an action or speaks dialog that advances the scene toward the goal.
+A beat is a moment of progression: an action or line of dialog, immediately followed by the other character's observable reaction. 
 
-Each beat must:
-- Advance tension through action or dialog
-- Escalate conflict based on character relationships
-- End when the action/dialog is complete and the next beat begins
+The drama/comedy lives in the reaction, filtered through the requested Tone. Each beat must:
+- Feature one character taking an action or speaking (the setup).
+- Feature the other character's physical or verbal reaction to it (the payoff).
+- Escalate the friction between their contrasting goals in a way that matches the Tone.
+- End when the reaction is complete and the next beat begins.
 
 BEAT STRUCTURE:
-- 1-2 active characters performing visible actions
-- Dialog appears every 2-3 beats
-- Dialog must advance story (goals, conflict, commands)
-- Scene ends when the invented resolution condition is met
+- 1-2 active characters per beat.
+- Dialog must appear every 2-3 beats.
+- Scene ends when the invented resolution condition is met.
 
-ENRICHED MACRO ACTIONS:
-Each action should be a clear, visible movement WITH descriptive context.
-Structure: [verb] + [object] + [quality/manner]
+ENRICHED MACRO & REACTIVE ACTIONS:
+Actions must be clear, visible movements WITH descriptive context, emphasizing the Tone (e.g., physical comedy, dramatic irony, paranoia, or grandeur).
+Structure: [verb] + [object] + [quality/manner/reaction]
 Examples:
-- "grasps cylinder" → "grasps heavy metal cylinder with both hands"
-- "steps forward" → "steps forward with determined stride"
+- "grasps cylinder" → "grasps heavy metal cylinder with both hands, knuckles white"
+- "steps forward" → "steps forward with determined stride, completely missing the other's flinch"
+- Reactive example: "forces a strained, polite smile while slowly inching backward toward the door"
 
 Rules:
-- Include physical qualities: weight, texture, temperature
-- Include manner: speed, force, direction
-- Keep actions macro-level (visible body movements, not subtle gestures)
+- Include physical qualities: weight, texture, temperature.
+- Include manner: speed, force, direction, or hesitation.
+- Keep actions macro-level (visible body movements, facial expressions, posture shifts).
 
 ------------------------------------------------------------
 DIALOG RULES
 ------------------------------------------------------------
 
 Dialog must appear every 2-3 beats.
-Dialog must advance the story (state goals, create conflict, give commands).
-Every dialog line must be paired with a physical action.
+Dialog should highlight the contrast in character motivations and match the Theme/Style/Tone register.
+Every dialog line must be paired with a physical action or reaction.
 
 Characters may REFERENCE past events in dialog, but they must NOT tell full stories within the scene.
 ❌ FORBIDDEN: "Let me tell you about the time I fought bandits. It started when I was walking through the Darkwood Forest..."
-✔ ALLOWED: "I fought bandits last week. Nasty business."
+✔ ALLOWED: "I fought bandits last week. Nasty business." (Said while aggressively polishing a glass).
 
 ------------------------------------------------------------
 PHYSICAL GROUNDING
 ------------------------------------------------------------
 
-Keep the scene physically anchored in location.
-Express internal states strictly through observable physical behavior.
+Keep the scene physically anchored in the location.
+Express internal states (awkwardness, desperation, obliviousness, suspicion, awe) strictly through observable physical behavior and reactive body language.
 
 ------------------------------------------------------------
 OUTPUT FORMAT
