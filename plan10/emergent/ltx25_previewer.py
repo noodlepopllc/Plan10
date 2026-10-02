@@ -177,7 +177,7 @@ class LTXPipeline:
             characters.append(f'- {k}: {v}')
         
         # Enforce a strict, consistent preview style to prevent wild deviations (claymation, anime, etc.)
-        base_style = "Neutral 3D animatic preview style, realistic human proportions, clear spatial composition, neutral lighting, no stylized rendering, no claymation, no anime, no artistic filters. Focus strictly on blocking, camera movement, and character action."
+        base_style = "Flat color anime style, clean 2D animation cel, crisp black outlines, solid color fills, zero gradients, no shading, minimal details, classic 90s anime layout."
         
         if style and style.strip():
             enforced_style = f"Theme: {style.strip()}. RENDER EXECUTION: {base_style}"
