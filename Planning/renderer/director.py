@@ -284,122 +284,6 @@ verification: why this shot boundary exists
 NOW PRODUCE THE DIRECTOR SHOT PLAN.
 '''
 
-def extract_dialog(entry):
-    """
-    Returns the dialog line if any character in the beat speaks.
-    If multiple characters speak, return the first one.
-    If none speak, return None.
-    """
-    for char in entry['active_characters']:
-        if char.get('dialog'):
-            return char['dialog']
-    return None
-
-def extract_action(entry):
-    """
-    Returns the first non-empty action from the characters list.
-    If none exist, returns None.
-    """
-    for char in entry['active_characters']:
-        if char.get('action'):
-            return char['action']
-    return None
-
-
-# ------------------------------------------------------------
-# 1. Split long actions into 5–15 second units
-# ------------------------------------------------------------
-
-def split_action_into_units(action: str):
-    """
-    Splits a long action into multiple units based on major verbs
-    and conjunctions. Each unit should roughly map to 5–15 seconds
-    of screen time.
-
-    Heuristic: ~12–18 words ≈ 10–15 seconds.
-    """
-
-    if not action:
-        return ""
-
-    # Split on common sequential connectors
-    chunks = re.split(r'\b(?:and|then|,)\b', action)
-    units = []
-
-    current = ""
-    for chunk in chunks:
-        chunk = chunk.strip()
-        if not chunk:
-            continue
-
-        # Add chunk to current unit
-        if current:
-            current += " " + chunk
-        else:
-            current = chunk
-
-        # If unit is too long, finalize it
-        if len(current.split()) >= 8:  # ~15 seconds
-            units.append(current.strip())
-            current = ""
-
-    # Add final unit
-    if current.strip():
-        units.append(current.strip())
-
-    return units
-
-
-# ------------------------------------------------------------
-# 2. Pad short actions (<5 seconds)
-# ------------------------------------------------------------
-
-def pad_if_too_short(action: str):
-    """
-    Pads an action if it is too short to fill 5 seconds.
-    Heuristic: ~8 words ≈ 5 seconds.
-    """
-
-    if len(action.split()) >= 8:
-        return action
-
-    # Safe, continuity-friendly padding
-    padding = ", steadying herself as the wind pushes against her"
-    return action + padding
-
-
-# ------------------------------------------------------------
-# 3. Build director-ready entries
-# ------------------------------------------------------------
-
-def build_director_entries(entry: dict):
-    location = entry['location']
-    zone = entry['zone']
-    background = entry['background']
-
-    dialog = extract_dialog(entry)
-    action = extract_action(entry)
-
-    # If there's no action, treat it as a single empty unit so the loop still runs
-    if action is None:
-        action_units = [None]
-    else:
-        action_units = split_action_into_units(action)
-
-    director_entries = []
-    for idx, unit in enumerate(action_units):
-        director_entries.append({
-            'location': location,
-            'zone': zone,
-            'active_characters': entry['active_characters'],
-            'passive_characters': entry['passive_characters'],
-            'background': background,
-            'action': unit,
-            'dialog': dialog if idx == 0 else None  # attach dialog to first entry only
-        })
-
-    return director_entries
-
 def summarize_continuity_from_director_shots(director_shots_text: str) -> str:
     """
     Produces a short continuity summary from the previous beat's director output.
@@ -486,33 +370,30 @@ def direct(beat_entry: dict, notes=''):
         notes = summarize_continuity_from_director_shots(notes)
 
     beat_characters = build_beat_character_list(beat_entry)
-    director_entries = build_director_entries(beat_entry)
     scene_parts = []
     
-    # 1. Start with summary for overall scene context
+    # 1. Overall scene context
     if beat_entry.get('summary'):
         scene_parts.append(beat_entry['summary'])
     
-    # 2. Add specific actions and dialog from director entries
-    for d in director_entries:
-        if d["action"]:
-            scene_parts.append(d["action"])
-
-        if d["dialog"]:
-            scene_parts.append(
-                f'DIALOG: "{d["dialog"]}"'
-            )
-
+    # 2. ALL actions and dialogs from ALL active characters
+    for char in beat_entry.get('active_characters', []):
+        if char.get('action'):
+            scene_parts.append(f"{char['name']}: {char['action']}")
+        if char.get('dialog'):
+            scene_parts.append(f'{char["name"]} DIALOG: "{char["dialog"]}"')
+    
     scene_description = " ".join(scene_parts)
+
     with LLMContext() as (p_ctx, m_ctx):
         camera_log = llm(camera_prompt.format(
             scene_description=scene_description,
             character_list=beat_characters,
             background_label=beat_entry['background'],
             context_notes=notes
-            ), processor=p_ctx, model=m_ctx
-        )  # returns camera log text
+        ), processor=p_ctx, model=m_ctx)
         print(f"Camera Done: \n{camera_log}")
+
         director_shots = llm(
             director_prompt.format(
                 camera_log=camera_log,
@@ -530,6 +411,7 @@ def direct(beat_entry: dict, notes=''):
             ), processor=p_ctx, model=m_ctx
         )
         print(f"Shotlist Done: \n{final_shotlist}")
+
     return final_shotlist, director_shots
     '''
     fixed_shotlist = []

@@ -369,7 +369,11 @@ def main():
     context = json.loads((Path(scene_base) / 'scene/context.json').read_text(encoding='utf-8'))
     base = Path(scene_base).parent
     registry = json.loads((Path(scene_base) / 'output/registry.json').read_text(encoding='utf-8'))
-    lines = parse_script_txt(Path(scene_base) / 'output/script.txt', (Path(scene_base) / 'output/registry.json'))
+    if (Path(scene_base) / 'output/script.json').exists():
+        lines = json.loads((Path(scene_base) / 'output/script.json').read_text(encoding='utf-8'))
+    else:
+        lines = parse_script_txt(Path(scene_base) / 'output/script.txt', (Path(scene_base) / 'output/registry.json'))
+        (Path(scene_base) / 'output/script.json').write_text(json.dumps(lines, indent=4), encoding='utf-8')
     characters = get_characters(base, registry, context)
     lines = fix_locations(base, lines, registry, context)
     character_refs =  [characters[x]['reference_path'] for x in characters]
@@ -377,9 +381,9 @@ def main():
     character_names=[x for x in characters]
     notes = ''
     for beat, line in enumerate(lines, start=1):
-        #print(json.dumps(line, indent=4))
-        #continue
-        #director_entries = build_director_entries(line)
+        outname = f"beat_{beat:03d}_{subbeat:03d}.txt"
+        if Path(scene_base) / outname).exists():
+            continue
         shots, notes = direct(line, notes)
         characters_in_scene = build_beat_character_list(line)
 
@@ -409,7 +413,6 @@ def main():
                 shots=dentry
             )
 
-            outname = f"beat_{beat:03d}_{subbeat:03d}.txt"
             (Path(scene_base) / outname).write_text(script, encoding='utf-8')
             print(script)
 

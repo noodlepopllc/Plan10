@@ -116,69 +116,76 @@ Using the structured seed below, write a single continuous scene consisting of:
 1 COLD OPEN (establishing moment, not counted as a scene beat)
 8–12 SCENE BEATS (action/dialog within this single moment)
 
-CORE DIRECTIVES:
+------------------------------------------------------------
+COLD OPEN (MANDATORY — DOES NOT COUNT TOWARD BEAT TOTAL)
+------------------------------------------------------------
 
-    COLD OPEN (MANDATORY — DOES NOT COUNT TOWARD BEAT TOTAL)
-    The cold open is a STATIC SNAPSHOT of the initial situation from the seed.
-    
-    ✅ ALLOWED in cold open:
-    - Environment description (lighting, textures, atmosphere)
-    - Character physical descriptions (build, face, clothing, hair, current position)
-    - What each character is doing RIGHT NOW (from the seed's "Initial Situation")
-    
-    ❌ FORBIDDEN in cold open:
-    - Any action that advances the plot
-    - Characters moving toward goals
-    - Conflict escalation
-    - Dialog that isn't just ambient/greeting
-    - Any events beyond what the seed's "Initial Situation" describes
-    
-    Think of it as: "Freeze frame of the starting state" → then the story begins.
-    
-    ⭐ SPECIES/ETHNICITY MUST BE EXPLICIT
-    If the seed specifies a species (elf, half-elf, android, etc.), you MUST explicitly state it.
-    ❌ FORBIDDEN: "Elara sits perched on a bench..."
-    ✅ REQUIRED: "Elara, an elf with pointed ears, sits perched on a bench..."
-    
-    CRITICAL MARKER: After the cold open, you MUST output this exact marker on its own line:
-    ******* COLD OPEN END ****
-    
-    NO NESTED STORYTELLING
-    Characters may REFERENCE past events in dialog, but they must NOT tell full stories within the scene.
-        ❌ FORBIDDEN: "Let me tell you about the time I fought bandits. It started when I was walking through the Darkwood Forest..."
-        ✔ ALLOWED: "I fought bandits last week. Nasty business."
-    
-    DIALOG IS MANDATORY EVERY 2-3 BEATS
-    You MUST include at least one spoken line every 2-3 action beats. 
-        Dialog must advance the story (state goals, create conflict, give commands).
-        Every dialog line must be paired with a physical action.
-    
-    HARD BEAT COUNT: EXACTLY 8-12 BEATS
-    After the cold open, count your story beats. When you reach beat 12, STOP IMMEDIATELY. 
-        Beat 12 is the final beat, period.
-    
-    STORY BEATS (8–12 TOTAL)
-    Each beat must advance tension through action or dialog. Escalate the conflict based on the story spark.
-    
-    ⭐ ENRICHED MACRO ACTIONS
-    Each action beat should be a clear, visible movement WITH descriptive context.
-    Structure: [verb] + [object] + [quality/manner]
-    Examples:
-    - "grasps cylinder" → "grasps heavy metal cylinder with both hands"
-    - "steps forward" → "steps forward with determined stride"
-    Rules:
-    - Use the full 12-word allowance
-    - Include physical qualities: weight, texture, temperature
-    - Include manner: speed, force, direction
-    - Keep actions macro-level (visible body movements, not subtle gestures)
-    
-    RESOLVE THE GOAL
-    Stop immediately when the primary character goal is resolved or definitively failed.
-    
-    GROUND IN LOCATION & SHOW, DON'T TELL
-    Keep the scene physically anchored. Express internal states strictly through observable physical behavior.
+The cold open is a rich prose snapshot of the initial situation from the seed.
+Write it as literary prose — atmospheric, detailed, story-like.
 
-OUTPUT FORMAT:
+REQUIRED ELEMENTS:
+- Environment: lighting, textures, atmosphere, time of day
+- Each character: species/ethnicity (if in seed), build, face, clothing, hair, current position
+- What each character is caught in the middle of doing (from seed's "Initial Situation")
+
+FORBIDDEN:
+- Any action that advances the plot
+- Characters moving toward goals
+- Conflict escalation
+- Dialog beyond ambient/greeting
+
+Think of it as: "Characters caught mid-state" → then the story begins.
+
+CRITICAL: After the cold open, output this exact marker on its own line:
+******* COLD OPEN END ****
+
+------------------------------------------------------------
+STORY BEATS (8–12 TOTAL)
+------------------------------------------------------------
+
+Each beat advances tension through action or dialog. Escalate conflict based on the story spark.
+
+BEAT STRUCTURE:
+- 1-2 active characters performing visible actions
+- Dialog appears every 2-3 beats
+- Dialog must advance story (goals, conflict, commands)
+- Beat ends when primary character goal is resolved or definitively failed
+
+ENRICHED MACRO ACTIONS:
+Each action beat should be a clear, visible movement WITH descriptive context.
+Structure: [verb] + [object] + [quality/manner]
+Examples:
+- "grasps cylinder" → "grasps heavy metal cylinder with both hands"
+- "steps forward" → "steps forward with determined stride"
+
+Rules:
+- Include physical qualities: weight, texture, temperature
+- Include manner: speed, force, direction
+- Keep actions macro-level (visible body movements, not subtle gestures)
+
+------------------------------------------------------------
+DIALOG RULES
+------------------------------------------------------------
+
+Dialog must appear every 2-3 beats.
+Dialog must advance the story (state goals, create conflict, give commands).
+Every dialog line must be paired with a physical action.
+
+Characters may REFERENCE past events in dialog, but they must NOT tell full stories within the scene.
+❌ FORBIDDEN: "Let me tell you about the time I fought bandits. It started when I was walking through the Darkwood Forest..."
+✔ ALLOWED: "I fought bandits last week. Nasty business."
+
+------------------------------------------------------------
+PHYSICAL GROUNDING
+------------------------------------------------------------
+
+Keep the scene physically anchored in location.
+Express internal states strictly through observable physical behavior.
+
+------------------------------------------------------------
+OUTPUT FORMAT
+------------------------------------------------------------
+
 Write in standard literary prose. Begin with the cold open (static snapshot only), insert the ******* COLD OPEN END **** marker, then write exactly 8-12 story beats. Dialog must appear every 2-3 beats.
 '''
 
