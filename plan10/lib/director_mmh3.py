@@ -696,7 +696,7 @@ def get_builder(script, output_dir):
     else:
         from plan10.lib.image_gen import GenerateImage, CreateCharacterSheet, CreateBackground, CreatePortrait
     from plan10.lib.dialog import DesignVoice
-    base_dir = f'{os.getcwd()}/{output_dir}'
+    base_dir = str((Path.cwd() / output_dir).resolve())
     generators = {
         'bg': CreateBackground,
         'char': CreateCharacterSheet,
@@ -734,9 +734,9 @@ def main():
     WIDTH = (args.width // 32) * 32
     HEIGHT = (args.height // 32) * 32
 
-    base_dir = f'{os.getcwd()}/{args.output}'
-    Path(f"{base_dir}/images").mkdir(parents=True, exist_ok=True)
-    Path(f"{base_dir}/audio").mkdir(parents=True, exist_ok=True)
+    base_dir = Path.cwd() / args.output
+    (base_dir / "images" ).mkdir(parents=True, exist_ok=True)
+    (base_dir / "audio" ).mkdir(parents=True, exist_ok=True)
     
     # Pass generation functions to the parser
     generators = {
@@ -749,7 +749,7 @@ def main():
     }
     final_prompt = ''
 
-    output_filename = f"{args.input.replace('.txt','.mp4')}" if args.input else f"{base_dir}/output.mp4"
+    output_filename = f"{args.input.replace('.txt','.mp4')}" if args.input else f'{str((base_dir / "output.mp4").resolve())}''
     if args.input:
         if args.input.endswith('.mmh3'):
             final_prompt = Path(args.input).read_text()
@@ -783,7 +783,7 @@ def main():
 
     if not final_prompt:
         # Build and execute
-        builder = SmartVideoPromptBuilder().load_script(script, base_dir=base_dir, generators=generators, low_vram=args.low_vram)
+        builder = SmartVideoPromptBuilder().load_script(script, base_dir=str(base_dir.resolve()), generators=generators, low_vram=args.low_vram)
         final_prompt = builder.generate(args.low_vram)
     print(final_prompt)
     if args.input:
