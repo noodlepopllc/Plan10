@@ -193,16 +193,27 @@ Rules:
 - Keep actions macro-level (visible body movements, facial expressions, posture shifts).
 
 ------------------------------------------------------------
-DIALOG RULES
+DIALOG & PACING RULES
 ------------------------------------------------------------
 
-Dialog must appear every 2-3 beats.
-Dialog should highlight the contrast in character motivations and match the Theme/Style/Tone register.
-Every dialog line must be paired with a physical action or reaction.
+Dialog should emerge naturally from the friction between characters. 
+Do not force it. Some beats may be entirely silent, relying purely on physical reaction and escalating tension. 
 
-Characters may REFERENCE past events in dialog, but they must NOT tell full stories within the scene.
-❌ FORBIDDEN: "Let me tell you about the time I fought bandits. It started when I was walking through the Darkwood Forest..."
-✔ ALLOWED: "I fought bandits last week. Nasty business." (Said while aggressively polishing a glass).
+When dialog does occur, it must be punchy, conversational, and reactive:
+- Keep each dialog turn to 1-2 sentences MAX (under 25 words).
+- Break up dialog with physical action beats and reactions.
+- Characters should interrupt, trail off, or respond directly to each other, not deliver speeches.
+
+❌ FORBIDDEN (Theatrical monologues):
+"Bread can wait. The world, however, cannot. I was just thinking about the time I scaled the cliffs of Aethelgard. The wind there sings like a lullaby for the brave."
+
+✔ ALLOWED (Natural, broken up):
+Elara leans forward, eyes bright. "Bread can wait. Tell me about the cliffs."
+Nadia shifts her weight, eyes darting to the kitchen. "The cliffs, my lady?"
+"The wind there sings." Elara gestures broadly. "For the brave."
+
+Characters may REFERENCE past events, but must NOT tell full stories within the scene.
+✔ ALLOWED: "I fought bandits last week." (Said while aggressively polishing a glass).
 
 ------------------------------------------------------------
 PHYSICAL GROUNDING
