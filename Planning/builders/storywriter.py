@@ -117,6 +117,16 @@ Using the structured seed below, write a single continuous scene consisting of:
 8–12 SCENE BEATS (action/dialog within this single moment)
 
 ------------------------------------------------------------
+EXPANDING THE SEED
+------------------------------------------------------------
+
+The seed is intentionally vague. Your job is to INVENT specificity:
+
+- If motivations are vague (e.g., "wants friendly connection"), invent a specific, observable goal (e.g., "wants the other character to sit and talk for 5 minutes")
+- If the story goal is open-ended, invent a clear resolution condition (e.g., "scene ends when X happens or Y happens")
+- Use character relationships to create escalating tension throughout the scene
+
+------------------------------------------------------------
 COLD OPEN (MANDATORY — DOES NOT COUNT TOWARD BEAT TOTAL)
 ------------------------------------------------------------
 
@@ -134,8 +144,6 @@ FORBIDDEN:
 - Conflict escalation
 - Dialog beyond ambient/greeting
 
-Think of it as: "Characters caught mid-state" → then the story begins.
-
 CRITICAL: After the cold open, output this exact marker on its own line:
 ******* COLD OPEN END ****
 
@@ -143,16 +151,21 @@ CRITICAL: After the cold open, output this exact marker on its own line:
 STORY BEATS (8–12 TOTAL)
 ------------------------------------------------------------
 
-Each beat advances tension through action or dialog. Escalate conflict based on the story spark.
+A beat is a moment of story progression: a character takes an action or speaks dialog that advances the scene toward the goal.
+
+Each beat must:
+- Advance tension through action or dialog
+- Escalate conflict based on character relationships
+- End when the action/dialog is complete and the next beat begins
 
 BEAT STRUCTURE:
 - 1-2 active characters performing visible actions
 - Dialog appears every 2-3 beats
 - Dialog must advance story (goals, conflict, commands)
-- Beat ends when primary character goal is resolved or definitively failed
+- Scene ends when the invented resolution condition is met
 
 ENRICHED MACRO ACTIONS:
-Each action beat should be a clear, visible movement WITH descriptive context.
+Each action should be a clear, visible movement WITH descriptive context.
 Structure: [verb] + [object] + [quality/manner]
 Examples:
 - "grasps cylinder" → "grasps heavy metal cylinder with both hands"
