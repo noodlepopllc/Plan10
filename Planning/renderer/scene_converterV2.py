@@ -141,69 +141,45 @@ import unicodedata
 
 import re
 
-def replace_character_names(script, char_names):
-    # Normalize only apostrophes, not quotes
+def replace_character_names(script: str, char_names: list) -> str:
+    """
+    Replaces character names with charX tokens, skipping quoted segments.
+    Simple word-by-word approach with quote tracking.
+    """
+    # Normalize unicode quotes
     script = script.replace("’", "'").replace("‘", "'")
-
-    # Split into quoted and non-quoted segments
-    segments = re.split(r'(".*?"|\'.*?\')', script)
-
-    # Process only non-quoted segments
-    for cndx, name in enumerate(char_names, 1):
-        token = f"char{cndx}"
-
-        # Whole-word replacement
-        pattern = re.compile(rf"\b{re.escape(name)}\b", re.IGNORECASE)
-
-        # Possessive replacement: Sora's, Sora’s, SORA’S
-        pattern_possessive = re.compile(
-            rf"\b{re.escape(name)}['’]s\b",  # ASCII ' or Unicode ’
-            re.IGNORECASE
-        )
-
-        for idx, segment in enumerate(segments):
-            # Skip quoted segments entirely
-            if segment and segment[0] in {'"', "'"}:
-                continue
-
-            # Apply replacements only outside quotes
-            segment = pattern_possessive.sub(f"{token}'s", segment)
-            segment = pattern.sub(token, segment)
-            segments[idx] = segment
-
-    return ''.join(segments)
-
-
-def normalize_shot_characters(shot_text: str, char_labels: list) -> str:
-    """Replace character names with char tokens in a single shot, excluding quoted strings."""
-    result = shot_text
-
-    # Sort by length descending to avoid partial replacements
-    sorted_labels = sorted(char_labels, key=len, reverse=True)
-
-    # Split into quoted and non-quoted segments, keeping quotes
-    # Matches "..." or '...'
-    segments = re.split(r'(".*?"|\'.*?\')', result)
-
-    # Process only non-quoted segments
-    for i, label in enumerate(sorted_labels, 1):
-        original_index = char_labels.index(label)
-        token = f"char{original_index + 1}"
-
-        for idx, segment in enumerate(segments):
-            # Skip quoted segments (start with " or ')
-            if not segment or segment[0] in {'"', "'"}:
-                continue
-
-            segments[idx] = re.sub(
-                rf'\b{re.escape(label)}\b',
-                token,
-                segment,
-                flags=re.IGNORECASE,
-            )
-
-    # Reassemble the text
-    return ''.join(segments)
+    
+    # Split on whitespace while preserving spaces
+    words = script.split(' ')
+    
+    in_quotes = False
+    result = []
+    
+    for word in words:
+        # Check if this word contains a quote toggle
+        # Count quotes to track state
+        quote_count = word.count('"') + word.count("'")
+        
+        # If odd number of quotes, toggle state
+        if quote_count % 2 == 1:
+            in_quotes = not in_quotes
+        
+        # Only replace if NOT in quotes
+        if not in_quotes:
+            for cndx, name in enumerate(char_names, 1):
+                token = f"char{cndx}"
+                
+                # Simple case-insensitive replacement
+                # Check if word matches the name (with or without punctuation)
+                clean_word = word.strip('.,;:!?')
+                if clean_word.lower() == name.lower():
+                    # Preserve any trailing punctuation
+                    punctuation = word[len(clean_word):]
+                    word = token + punctuation
+        
+        result.append(word)
+    
+    return ' '.join(result)
 
     # ------------------------------------------------------------
     # 4. Call your LLM
