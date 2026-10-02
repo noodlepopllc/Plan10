@@ -414,7 +414,7 @@ class SmartVideoPromptBuilder:
                 
         return self
 
-    def generate(self) -> str:
+    def generate(self, low_vram=False) -> str:
         """Compiles everything into the final structured prompt format."""
         sections = []
         self.used_audio_refs = {} # Reset for safety
@@ -457,7 +457,9 @@ class SmartVideoPromptBuilder:
                 sub_defs.append(
                     f"<Subject {data['id']}> is {data['desc']} in {data['pic_tag']}."
                 )
-        sub_defs = self.portrait_manager.rewrite_with_portraits(sub_defs)
+        
+        if low_vram:
+            sub_defs = self.portrait_manager.rewrite_with_portraits(sub_defs)
 
         audio_defs = []
         for label, data in self.used_audio_refs.items():
@@ -728,14 +730,18 @@ def main():
     if not final_prompt:
         # Build and execute
         builder = SmartVideoPromptBuilder().load_script(script, base_dir=base_dir, generators=generators)
-        final_prompt = builder.generate()
+        final_prompt = builder.generate(args.low_vram)
     print(final_prompt)
     if args.debug:
         sys.exit()
     
     # Extract paths dynamically from the builder instead of hardcoding
-    img_refs = (
-        [data["path"] for data in builder.entities.values()] + builder.portrait_manager.get_paths())
+    if args.low_vram:
+        img_refs = (
+            [data["path"] for data in builder.entities.values()])
+    else:
+        img_refs = (
+            [data["path"] for data in builder.entities.values()] + builder.portrait_manager.get_paths())
     aud_refs = [data["path"] for data in builder.used_audio_refs.values()]
 
     #width and height must be multiples of 32, 1344x768, 864x480 minimal
@@ -745,7 +751,7 @@ def main():
     if args.low_vram:
         from plan10.lib.util import resize_low_vram_png
         img_refs_resized = []
-        for ref in ([data["path"] for data in builder.entities.values()] + builder.portrait_manager.get_paths()):
+        for ref in ([data["path"] for data in builder.entities.values()]):
             out = resize_low_vram_png(ref, divisor=32)
             if out:
                 img_refs_resized.append(out)
