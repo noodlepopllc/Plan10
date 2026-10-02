@@ -44,7 +44,7 @@ def director_save_metadata(image_path: str, desc: str):
     try:
         if image_path.lower().endswith('.png'):
             with Image.open(imgpath) as img:
-                    metadata = load_metadata(img)
+                metadata = load_metadata(img)
                 if hasattr(img, 'info'):
                     for k, v in img.text.items():
                         metadata.add_text(k, v)
