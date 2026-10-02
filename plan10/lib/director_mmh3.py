@@ -567,16 +567,14 @@ However, CHARACTER IDENTITY (facial features, clothing details, body proportions
         
         return "\n".join(sections)
 
-def send(prompt, images, audio, output='output.mp4', width=768, height=448, duration=5.0, steps=4, start_image=True, upscale=os.environ.get('UPSCALE', 'False') != 'False'):
+def send(prompt, images, audio, output='output.mp4', width=768, height=448, duration=5.0, steps=4, start_image=True, upscale=os.environ.get('UPSCALE', 'False') != 'False', debug=False):
 
     #model = "minimax_h3_ref2va_pruned_pdd"
     model = "minimax_h3_ref2va_pruned"
 
     local_server = "http://locathost:8080"
     args = requests.get(f"http://127.0.0.1:8080/defaults/{model}").json()
-    args['output_dir'] = f'{os.getcwd()}/{Path(output).parent}'
-    if args['output_dir'][-1] == '.':
-        args['output_dir'] = args['output_dir'][:-1]
+
 
     args['output_filename'] = Path(output).name
     args['prompt'] = prompt
@@ -613,6 +611,13 @@ def send(prompt, images, audio, output='output.mp4', width=768, height=448, dura
     args['video_length'] = (((duration * 24) // 17) * 17) + 5
     if steps >= 8:
         args["custom_settings"] = { "h3_mask_mode": "grouped_rows", "audio_refinement": "enabled" }
+    if debug:
+        json_filename = output.replace('.mp4','.json')
+        with open(json_filename, 'w') as js:
+            js.write(json.dumps(args, indent=4))
+    args['output_dir'] = f'{os.getcwd()}/{Path(output).parent}'
+    if args['output_dir'][-1] == '.':
+        args['output_dir'] = args['output_dir'][:-1]
     print(args)
     job_id = requests.post("http://127.0.0.1:8080/run", json=args).json()
     print(job_id)
@@ -725,8 +730,8 @@ def main():
         builder = SmartVideoPromptBuilder().load_script(script, base_dir=base_dir, generators=generators, low_vram=args.low_vram)
         final_prompt = builder.generate(args.low_vram)
     print(final_prompt)
-    if args.debug:
-        sys.exit()
+    if args.input:
+        Path(args.input.replace('.txt','.mmh3')).write_text(final_prompt)
     
     # Extract paths dynamically from the builder instead of hardcoding
     if args.low_vram:
@@ -738,8 +743,7 @@ def main():
     aud_refs = [data["path"] for data in builder.used_audio_refs.values()]
 
     #width and height must be multiples of 32, 1344x768, 864x480 minimal
-    if args.input:
-        Path(args.input.replace('.txt','.mmh3')).write_text(final_prompt)
+
 
     if args.low_vram:
         from plan10.lib.util import resize_low_vram_png
@@ -750,6 +754,9 @@ def main():
                 img_refs_resized.append(out)
         img_refs = img_refs_resized
 
+    if args.debug and not args.wangp:
+        sys.exit()
+
     if args.wangp:
         send(
             final_prompt, 
@@ -759,7 +766,9 @@ def main():
             width=args.width, 
             height=args.height, 
             duration=builder.duration,
-            steps=args.steps
+            steps=args.steps,
+            debug=args.debug
+
         )
     else:
         from plan10.lib.mmh3 import compose_video
