@@ -651,7 +651,7 @@ def main():
             current_source.save('tmp.png')
             current_source_path = f'{os.getcwd()}/tmp.png'
             
-        script = h3_ref(bg, current_source_path, refs, portraits, prompt, duration, visual_ids=visual_ids, char_names=char_names)
+        script = h3_ref(bg, None, refs, None, prompt, duration, visual_ids=visual_ids, char_names=char_names)
         Path(pending_job['output_path'].replace('.mp4', '_script.txt')).write_text(script, encoding='utf-8')
 
         if LTX:
