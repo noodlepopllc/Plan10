@@ -43,13 +43,13 @@ def director_save_metadata(image_path: str, desc: str):
     """Embeds the VLM description into the image metadata or a sidecar file."""
     try:
         if image_path.lower().endswith('.png'):
-            img = Image.open(image_path)
-            metadata = load_metadata(img)
-            if hasattr(img, 'info'):
-                for k, v in img.text.items():
-                    metadata.add_text(k, v)
-            metadata.add_text("SubjectDescription", desc)
-            img.save(image_path, pnginfo=metadata)
+            with Image.open(imgpath) as img:
+                    metadata = load_metadata(img)
+                if hasattr(img, 'info'):
+                    for k, v in img.text.items():
+                        metadata.add_text(k, v)
+                metadata.add_text("SubjectDescription", desc)
+                img.save(image_path, pnginfo=metadata)
         else:
             meta_path = image_path.rsplit('.', 1)[0] + '.meta.json'
             with open(meta_path, 'w') as f:
@@ -205,6 +205,28 @@ class SmartVideoPromptBuilder:
         """Returns the total accumulated duration of all added shots in seconds."""
         return (self._current_time_ms / 1000.0) + 1.0
 
+    def add_text_subject(
+        self,
+        label: str,
+        desc: str,
+        is_character: bool = False,
+        is_environment: bool = False
+    ):
+        self._subject_counter += 1
+        sub_id = self._subject_counter
+
+        self.entities[label.lower()] = {
+            "id": sub_id,
+            "path": None,
+            "pic_tag": None,
+            "desc": desc,
+            "is_character": is_character,
+            "is_environment": is_environment,
+            "shots": set(),
+        }
+
+        return self
+
     def _format_time(self, ms: int) -> str:
         """Formats milliseconds into MM:SS.mmm"""
         seconds, milliseconds = divmod(ms, 1000)
@@ -355,8 +377,24 @@ class SmartVideoPromptBuilder:
             try:
                 if cmd in ('bg', 'char', 'item', 'ff'):
                     label = parts[1]
-                    path = os.path.join(base_dir, parts[2])
+                    path_field = parts[2].strip()
                     prompt = parts[3] if len(parts) > 3 else ""
+
+                    if path_field == "-":
+                        if not prompt:
+                            raise ValueError(
+                                f"{cmd} '{label}' uses '-' but no description was provided."
+                            )
+
+                        self.add_text_subject(
+                            label,
+                            prompt,
+                            is_character=(cmd == "char"),
+                            is_environment=(cmd == "bg")
+                        )
+                        continue
+
+                    path = os.path.join(base_dir, path_field)
                     
                     if not os.path.exists(path):
                         if cmd in generators:
@@ -448,15 +486,33 @@ class SmartVideoPromptBuilder:
         sections.append("subject_definitions:")
         sub_defs = []
         for label, data in self.entities.items():
+
+            has_picture = bool(data.get("pic_tag"))
+
             if data.get("is_environment"):
-                sub_defs.append(
-                    #f"<Subject {data['id']}> is the {label} environment in {data['pic_tag']}, featuring {data['desc']}."
-                    f"<Subject {data['id']}> is the background environment in {data['pic_tag']}, featuring {data['desc']}."
-                )
+
+                if has_picture:
+                    sub_defs.append(
+                        f"<Subject {data['id']}> is the background environment "
+                        f"in {data['pic_tag']}, featuring {data['desc']}."
+                    )
+                else:
+                    sub_defs.append(
+                        f"<Subject {data['id']}> is the background environment, "
+                        f"featuring {data['desc']}."
+                    )
+
             else:
-                sub_defs.append(
-                    f"<Subject {data['id']}> is {data['desc']} in {data['pic_tag']}."
-                )
+
+                if has_picture:
+                    sub_defs.append(
+                        f"<Subject {data['id']}> is {data['desc']} "
+                        f"in {data['pic_tag']}."
+                    )
+                else:
+                    sub_defs.append(
+                        f"<Subject {data['id']}> is {data['desc']}."
+                    )
         
         if low_vram:
             sub_defs = self.portrait_manager.rewrite_with_portraits(sub_defs)
@@ -734,12 +790,13 @@ def main():
         Path(args.input.replace('.txt','.mmh3')).write_text(final_prompt)
     
     # Extract paths dynamically from the builder instead of hardcoding
-    if args.low_vram:
-        img_refs = (
-            [data["path"] for data in builder.entities.values()])
-    else:
-        img_refs = (
-            [data["path"] for data in builder.entities.values()] + builder.portrait_manager.get_paths())
+    img_refs = [
+        data["path"]
+        for data in builder.entities.values()
+        if data["path"] is not None
+    ]
+    if not args.low_vram:
+        img_refs = (img_refs + builder.portrait_manager.get_paths())
     aud_refs = [data["path"] for data in builder.used_audio_refs.values()]
 
     #width and height must be multiples of 32, 1344x768, 864x480 minimal
