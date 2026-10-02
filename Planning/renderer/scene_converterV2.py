@@ -364,7 +364,7 @@ def group_pop_front(shots_text: str, max_total=15):
 
 def main():
     from parse_script import parse_script_txt
-    from director import build_director_entries, direct, build_beat_character_list
+    from director import direct, build_beat_character_list
     scene_base = sys.argv[1]
     context = json.loads((Path(scene_base) / 'scene/context.json').read_text(encoding='utf-8'))
     base = Path(scene_base).parent
