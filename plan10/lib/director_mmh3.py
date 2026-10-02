@@ -392,7 +392,7 @@ class SmartVideoPromptBuilder:
                             print(f"[Warning] Audio file not found: {path}")
                     
                     self.add_audio_reference(path, label, target, extra)
-                elif cmd == 'portrait':
+                elif not low_vram and cmd == 'portrait':
                     label = parts[1]
                     path = os.path.join(base_dir, parts[2])
                     target = parts[3]
@@ -479,12 +479,6 @@ class SmartVideoPromptBuilder:
 However, CHARACTER IDENTITY (facial features, clothing details, body proportions, hair texture) must be corrected and overridden by the character reference images to prevent feature degradation. The character references are the source of truth for identity; the first frame is the source of truth for composition."""
             sections.append(ff_rule)
             sections.append("")
-            '''
-        sections.append("""Close-up shots must preserve the environment background and lighting from the
-current scene and <PreviousVideo>. Do NOT switch to portrait background. Do NOT
-crop to the portrait reference. Maintain full scene geometry and environmental
-continuity even during close-up framing.
-""")       '''
             
         if self.scene_style:
             sections.append(self.scene_style)
@@ -563,7 +557,6 @@ continuity even during close-up framing.
         sections.append("\n".join(retention))
         # 4. Process Shots & Build Detailed Description
         sections.append("\ndetailed_description:")
-        #sections.append('''<Subject 1> is the environment anchor and must remain visible in ALL shots, including close-ups. Environment background must override portrait background.''')
         sections.append('\n'.join(scene_shots))
         
         # 6. Soundscape & Music
