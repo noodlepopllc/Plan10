@@ -382,7 +382,7 @@ def main():
     notes = ''
     for beat, line in enumerate(lines, start=1):
         outname = f"beat_{beat:03d}_{subbeat:03d}.txt"
-        if Path(scene_base) / outname).exists():
+        if Path((scene_base) / outname).exists():
             continue
         shots, notes = direct(line, notes)
         characters_in_scene = build_beat_character_list(line)
