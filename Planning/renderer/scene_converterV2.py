@@ -381,9 +381,8 @@ def main():
     character_names=[x for x in characters]
     notes = ''
     for beat, line in enumerate(lines, start=1):
-        outname = f"beat_{beat:03d}_{subbeat:03d}.txt"
-        if Path((scene_base) / outname).exists():
-            continue
+
+
         shots, notes = direct(line, notes)
         characters_in_scene = build_beat_character_list(line)
 
@@ -412,6 +411,8 @@ def main():
                 char_names=actor_names,
                 shots=dentry
             )
+
+            outname = f"beat_{beat:03d}_{subbeat:03d}.txt"
 
             (Path(scene_base) / outname).write_text(script, encoding='utf-8')
             print(script)
