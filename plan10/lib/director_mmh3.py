@@ -749,7 +749,7 @@ def main():
     }
     final_prompt = ''
 
-    output_filename = f"{args.input.replace('.txt','.mp4')}" if args.input else f'{str((base_dir / "output.mp4").resolve())}''
+    output_filename = f"{args.input.replace('.txt','.mp4')}" if args.input else f'{str((base_dir / "output.mp4").resolve())}'
     if args.input:
         if args.input.endswith('.mmh3'):
             final_prompt = Path(args.input).read_text()
