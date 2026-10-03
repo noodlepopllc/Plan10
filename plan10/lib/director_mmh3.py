@@ -14,14 +14,9 @@ load_environ()
 
 from plan10.lib.util import load_metadata
 
-ANIME = os.environ.get("ANIME","False") != "False" 
+ANIME = os.environ.get("ANIME", "False") != "False" 
 SEED = int(os.environ.get("SEED", "-1"))
 
-from plan10.lib.image_analysis import AnalyzeImage
-
-# portrait_manager.py
-
-import os
 from plan10.lib.image_analysis import AnalyzeImage
 
 def director_load_metadata(image_path: str) -> str:
@@ -33,7 +28,7 @@ def director_load_metadata(image_path: str) -> str:
         else:
             meta_path = image_path.rsplit('.', 1)[0] + '.meta.json'
             if os.path.exists(meta_path):
-                with open(meta_path, 'r') as f:
+                with open(meta_path, 'r', encoding='utf-8') as f:
                     return json.load(f).get("SubjectDescription", "")
     except Exception:
         pass
@@ -45,34 +40,25 @@ def director_save_metadata(image_path: str, desc: str):
         if image_path.lower().endswith('.png'):
             with Image.open(image_path) as img:
                 metadata = load_metadata(img)
-                if hasattr(img, 'info'):
+                if hasattr(img, 'text'):
                     for k, v in img.text.items():
                         metadata.add_text(k, v)
                 metadata.add_text("SubjectDescription", desc)
                 img.save(image_path, pnginfo=metadata)
         else:
             meta_path = image_path.rsplit('.', 1)[0] + '.meta.json'
-            with open(meta_path, 'w') as f:
+            with open(meta_path, 'w', encoding='utf-8') as f:
                 json.dump({"SubjectDescription": desc}, f, indent=2)
     except Exception as e:
         print(f"[Warning] Failed to embed metadata in {image_path}: {e}")
-        with open(image_path + ".desc.txt", "w") as f:
+        with open(image_path + ".desc.txt", "w", encoding='utf-8') as f:
             f.write(desc)
 
 class PortraitReferenceManager:
-    """
-    Manages portrait references that attach to existing character subjects.
-    Mirrors the structure of audio_refs but for visual identity reinforcement.
-    """
-
     def __init__(self):
-        # portrait_refs[label] = { id, path, desc, extra_desc, target }
         self.portrait_refs = {}
 
     def analyze_portrait(self, image_path: str) -> str:
-        """
-        Uses your existing VLM analysis pipeline to extract a clean identity description.
-        """
         prompt = """Provide a single, concise sentence describing ONLY the character's
         facial features, hair, and identity-defining appearance. Ignore background,
         props, and lighting. Do not include introductory phrases."""
@@ -86,22 +72,10 @@ class PortraitReferenceManager:
     def add_portrait_reference(self, builder, image_path: str, label: str,
                                target_subject_label: str, extra_desc: str = "",
                                generator=None):
-        """
-        Adds a portrait reference linked to an existing subject in the builder.
-
-        builder: SmartVideoPromptBuilder instance
-        image_path: path to portrait image
-        label: name of this portrait reference
-        target_subject_label: name of the character this portrait belongs to
-        extra_desc: optional fallback description for generation
-        generator: optional function to generate the portrait if missing
-        """
-
         target_key = target_subject_label.lower()
         if target_key not in builder.entities:
             raise ValueError(f"Target subject '{target_subject_label}' not found. Add it first.")
 
-        # Fallback generation if portrait file doesn't exist
         if not os.path.exists(image_path):
             if generator:
                 print(f"Generating portrait {label} at {image_path}...")
@@ -111,36 +85,22 @@ class PortraitReferenceManager:
             else:
                 print(f"[Warning] Portrait file not found: {image_path}")
 
-        # Analyze portrait identity
         desc = self.analyze_portrait(image_path)
-
         target_id = builder.entities[target_key]["id"]
-
-        # Picture index: subjects first, then portraits in append order
         picture_index = len(builder.entities) + len(self.portrait_refs) + 1
 
         self.portrait_refs[target_id] = {
-            "id": target_id,               # subject ID stays the same
+            "id": target_id,
             "path": image_path,
-            "pic_tag": f"<Picture {picture_index}>",  # correct picture ID
+            "pic_tag": f"<Picture {picture_index}>",
             "desc": desc,
             "extra_desc": extra_desc,
             "target": target_subject_label
         }
 
     def rewrite_with_portraits(self, sub_defs):
-        """
-        sub_defs: list of strings from emit_subject_definitions()
-        portrait_refs: dict keyed by subject id or label
-        """
         rewritten = []
         for line in sub_defs:
-            # Extract subject id, e.g. "<Subject 2>"
-            # Simple parse:
-            # prefix = "<Subject "
-            # id_str = line.split(">")[0].split(prefix)[1]
-            # subj_id = int(id_str)
-
             prefix = "<Subject "
             id_part = line.split(">")[0]
             subj_id = int(id_part.split(prefix)[1])
@@ -150,7 +110,6 @@ class PortraitReferenceManager:
                 rewritten.append(line)
                 continue
 
-            # Base subject stays, portrait is added as identity-only
             base_line = line.rstrip(".")
             portrait_line = (
                 f"{base_line}. Facial identity is reinforced by {portrait['pic_tag']}. "
@@ -161,74 +120,41 @@ class PortraitReferenceManager:
                 f"cropping, or background inference."
             )
             rewritten.append(portrait_line)
-
         return rewritten
 
-
-
     def get_paths(self):
-        """
-        Returns all portrait image paths for inclusion in image_refs.
-        """
         return [data["path"] for data in self.portrait_refs.values()]
 
 class SmartVideoPromptBuilder:
     def __init__(self):
-        """
-        Initializes the builder with a VLM client for image analysis.
-        """
         self.portrait_manager = PortraitReferenceManager()
-        
-        # Registry to map user labels to generated IDs and descriptions
         self.entities = {}
         self.audio_refs = {}
         self.used_audio_refs = {} 
         self.summary = ""
-        
         self.shots = []
         self.scene_style = ""
         self.soundscape = "N/A"
         self.non_diegetic_music = "N/A"
-        
         self._subject_counter = 0
         self._picture_counter = 0
-
-        # --- NEW: Timeline tracking ---
         self._current_time_ms = 0
-        self._default_shot_duration_ms = 2000  # 2.0 seconds default
-        
-        # --- NEW: First frame tracking ---
+        self._default_shot_duration_ms = 2000
         self.first_frame_label = None
 
     @property
     def duration(self):
-        """Returns the total accumulated duration of all added shots in seconds."""
         return (self._current_time_ms / 1000.0) + 1.0
 
-    def add_text_subject(
-        self,
-        label: str,
-        desc: str,
-        is_character: bool = False,
-        is_environment: bool = False
-    ):
+    def add_text_subject(self, label: str, desc: str, is_character: bool = False, is_environment: bool = False):
         self._subject_counter += 1
-        sub_id = self._subject_counter
-
         self.entities[label.lower()] = {
-            "id": sub_id,
-            "path": None,
-            "pic_tag": None,
-            "desc": desc,
-            "is_character": is_character,
-            "is_environment": is_environment,
-            "shots": set(),
+            "id": self._subject_counter, "path": None, "pic_tag": None, "desc": desc,
+            "is_character": is_character, "is_environment": is_environment, "shots": set(),
         }
-
         return self
 
     def _format_time(self, ms: int) -> str:
-        """Formats milliseconds into MM:SS.mmm"""
         seconds, milliseconds = divmod(ms, 1000)
         minutes, seconds = divmod(seconds, 60)
         return f"{minutes:02d}:{seconds:02d}.{milliseconds:03d}"
@@ -236,12 +162,10 @@ class SmartVideoPromptBuilder:
     def _analyze_image(self, image_path: str, is_character: bool = False) -> str:
         if is_character:
             prompt = """Provide a single, concise sentence describing ONLY the character's physical appearance, 
-            clothing, and distinguishing features. Ignore the background, setting, props, and other people. 
-            Focus on: face, hair, body type, clothing, accessories. Do not include introductory phrases."""
+            clothing, and distinguishing features. Ignore the background, setting, props, and other people."""
         else:
             prompt = """Provide a single, concise sentence describing the main visual elements, lighting, 
-            atmosphere, and key objects in this environment/scene. Do not include introductory phrases 
-            like 'This image shows' or 'The image features'."""
+            atmosphere, and key objects in this environment/scene."""
         
         desc = AnalyzeImage(image_path, prompt)['analysis']
         if desc:
@@ -253,28 +177,20 @@ class SmartVideoPromptBuilder:
         sub_id = self._subject_counter
         pic_tag = f"<Picture {sub_id}>"
             
-        cache_key = image_path
-        desc = director_load_metadata(cache_key)
-        
+        desc = director_load_metadata(image_path)
         if not desc:
             print(f"Analyzing {image_path} as {'character' if is_character else 'background'}...")
             desc = self._analyze_image(image_path, is_character=is_character)
-            director_save_metadata(cache_key, desc)
+            director_save_metadata(image_path, desc)
         else:
             print(f"Loaded cached description for {image_path}.")
         
         self.entities[label.lower()] = {
-            "id": sub_id,
-            "path": image_path,
-            "pic_tag": pic_tag,
-            "desc": desc,
-            "is_character": is_character,
-            "is_environment": is_environment,
-            "shots": set()
+            "id": sub_id, "path": image_path, "pic_tag": pic_tag, "desc": desc,
+            "is_character": is_character, "is_environment": is_environment, "shots": set()
         }
         return self
 
-    # --- NEW: Dedicated first frame method ---
     def add_firstframe(self, image_path: str, label: str):
         self.add_subject(image_path, label, is_character=False)
         self.first_frame_label = label.lower()
@@ -294,12 +210,9 @@ class SmartVideoPromptBuilder:
         target_key = target_subject_label.lower()
         if target_key not in self.entities:
             raise ValueError(f"Target subject '{target_subject_label}' not found. Add it first.")
-            
         self.audio_refs[label.lower()] = {
-            "id": len(self.audio_refs) + 1,
-            "path": audio_path,
-            "target_id": self.entities[target_key]["id"],
-            "extra_desc": extra_desc
+            "id": len(self.audio_refs) + 1, "path": audio_path,
+            "target_id": self.entities[target_key]["id"], "extra_desc": extra_desc
         }
         return self
 
@@ -309,20 +222,10 @@ class SmartVideoPromptBuilder:
 
     def add_shot(self, raw_text: str, duration: float = None, start_time: float = None):
         duration_ms = int(duration * 1000) if duration is not None else self._default_shot_duration_ms
-        
-        if start_time is not None:
-            current_start_ms = int(start_time * 1000)
-        else:
-            current_start_ms = self._current_time_ms
-            
+        current_start_ms = int(start_time * 1000) if start_time is not None else self._current_time_ms
         timestamp_str = self._format_time(current_start_ms)
         
-        self.shots.append({
-            "raw_text": raw_text, 
-            "timestamp": timestamp_str,
-            "duration_ms": duration_ms
-        })
-        
+        self.shots.append({"raw_text": raw_text, "timestamp": timestamp_str, "duration_ms": duration_ms})
         self._current_time_ms = current_start_ms + duration_ms
         return self
 
@@ -333,36 +236,14 @@ class SmartVideoPromptBuilder:
     def _substitute_labels(self, text: str) -> str:
         processed_text = text
         sorted_labels = sorted(self.entities.keys(), key=len, reverse=True)
-        
         for label in sorted_labels:
             entity = self.entities[label]
             tag = f"<Subject {entity['id']}>"
             pattern = r'\b' + re.escape(label) + r'\b'
             processed_text = re.sub(pattern, tag, processed_text, flags=re.IGNORECASE)
-        
         return processed_text
 
-    def _inject_tags(self, text: str, shot_index: int) -> str:
-        processed_text = self._substitute_labels(text)
-        
-        subject_to_speaker = {}
-        for audio_data in self.audio_refs.values():
-            subject_to_speaker[audio_data['target_id']] = audio_data['speaker_tag']
-        
-        for label in self.entities.keys():
-            entity = self.entities[label]
-            tag = f"<Subject {entity['id']}>"
-            if tag in processed_text:
-                entity["shots"].add(shot_index + 1)
-        
-        for subject_id, speaker_tag in subject_to_speaker.items():
-            subject_tag = f"<Subject {subject_id}>"
-            tagged_subject = f"<Subject {subject_id}> {speaker_tag}"
-            processed_text = processed_text.replace(subject_tag, tagged_subject)
-        
-        return processed_text
-
-    def load_script(self, script_text: str, base_dir: str = "", generators: dict = None, low_vram=False):
+    def load_script(self, script_text: str, base_dir: str = "", input_dir: str = "", generators: dict = None, low_vram=False):
         if generators is None:
             generators = {}
             
@@ -382,63 +263,81 @@ class SmartVideoPromptBuilder:
 
                     if path_field == "-":
                         if not prompt:
-                            raise ValueError(
-                                f"{cmd} '{label}' uses '-' but no description was provided."
-                            )
-
-                        self.add_text_subject(
-                            label,
-                            prompt,
-                            is_character=(cmd == "char"),
-                            is_environment=(cmd == "bg")
-                        )
+                            raise ValueError(f"{cmd} '{label}' uses '-' but no description was provided.")
+                        self.add_text_subject(label, prompt, is_character=(cmd == "char"), is_environment=(cmd == "bg"))
                         continue
 
-                    path = os.path.join(base_dir, path_field)
+                    # ROBUST PATH RESOLUTION: Check multiple likely locations
+                    candidate_paths = [
+                        path_field, # absolute path
+                        os.path.join(input_dir, path_field) if input_dir else "",
+                        os.path.join(os.getcwd(), path_field),
+                        os.path.join(base_dir, path_field)
+                    ]
                     
-                    if not os.path.exists(path):
+                    resolved_path = next((p for p in candidate_paths if p and os.path.exists(p)), None)
+                    if resolved_path is None:
+                        resolved_path = os.path.join(base_dir, path_field) # Fallback for generation
+                        
+                    if not os.path.exists(resolved_path):
                         if cmd in generators:
-                            print(f"Generating {label} at {path}...")
-                            generators[cmd](prompt, path)
+                            print(f"Generating {label} at {resolved_path}...")
+                            generators[cmd](prompt, resolved_path)
                         else:
-                            print(f"[Warning] File not found: {path}")
+                            print(f"[Warning] File not found: {path_field}. Skipping {cmd} '{label}'.")
+                            continue
                     
-                    if cmd == 'bg':
-                        self.add_background(path, label)
-                    elif cmd == 'ff':
-                        self.add_firstframe(path, label)
-                    elif cmd == 'char':
-                        self.add_character(path, label)
-                    elif cmd == 'item':
-                        self.add_subject(path, label, is_character=False)
+                    if cmd == 'bg': self.add_background(resolved_path, label)
+                    elif cmd == 'ff': self.add_firstframe(resolved_path, label)
+                    elif cmd == 'char': self.add_character(resolved_path, label)
+                    elif cmd == 'item': self.add_subject(resolved_path, label, is_character=False)
                         
                 elif cmd == 'summary':
                     self.set_summary(parts[1] if len(parts) > 1 else "")
                         
                 elif cmd == 'audio':
                     label = parts[1]
-                    path = os.path.join(base_dir, parts[2])
+                    path_field = parts[2]
                     target = parts[3] if len(parts) > 3 else ""
                     extra = parts[4] if len(parts) > 4 else ""
                     voice_prompt = parts[5] if len(parts) > 5 else "female"
                     
-                    if not os.path.exists(path):
+                    candidate_paths = [path_field, os.path.join(input_dir, path_field) if input_dir else "", os.path.join(os.getcwd(), path_field), os.path.join(base_dir, path_field)]
+                    resolved_path = next((p for p in candidate_paths if p and os.path.exists(p)), os.path.join(base_dir, path_field))
+
+                    if not os.path.exists(resolved_path):
                         if 'audio' in generators:
-                            print(f"Generating voice {label} at {path}...")
-                            generators['audio'](voice_prompt, path, long=True)
+                            print(f"Generating voice {label} at {resolved_path}...")
+                            generators['audio'](voice_prompt, resolved_path, long=True)
                         else:
-                            print(f"[Warning] Audio file not found: {path}")
+                            print(f"[Warning] Audio file not found: {path_field}. Skipping.")
+                            continue
                     
-                    self.add_audio_reference(path, label, target, extra)
+                    self.add_audio_reference(resolved_path, label, target, extra)
+                    
                 elif not low_vram and cmd == 'portrait':
                     label = parts[1]
-                    path = os.path.join(base_dir, parts[2])
+                    path_field = parts[2]
                     target = parts[3]
                     extra = parts[4] if len(parts) > 4 else ""
 
-                    generator = generators.get('portrait', None)
-                    self.portrait_manager.add_portrait_reference(
-                        self, path, label, target, extra_desc=extra, generator=generator)
+                    candidate_paths = [path_field, os.path.join(input_dir, path_field) if input_dir else "", os.path.join(os.getcwd(), path_field), os.path.join(base_dir, path_field)]
+                    resolved_path = next((p for p in candidate_paths if p and os.path.exists(p)), os.path.join(base_dir, path_field))
+
+                    if not os.path.exists(resolved_path):
+                        generator = generators.get('portrait', None)
+                        if generator:
+                            print(f"Generating portrait {label} at {resolved_path}...")
+                            target_key = target.lower()
+                            char_ref = self.entities.get(target_key, None)
+                            cref_path = char_ref['path'] if char_ref else ''
+                            generator('', cref_path, resolved_path)
+                        else:
+                            print(f"[Warning] Portrait file not found: {path_field}. Skipping.")
+                            continue
+                    
+                    self.portrait_manager.add_portrait_reference(self, resolved_path, label, target, extra_desc=extra, generator=None)
+                    
                 elif cmd == 'prompt':
                     self.set_scene_style(parts[1] if len(parts) > 1 else "")
                 elif cmd == 'soundscape':
@@ -453,66 +352,34 @@ class SmartVideoPromptBuilder:
         return self
 
     def generate(self, low_vram=False) -> str:
-        """Compiles everything into the final structured prompt format."""
         sections = []
-        self.used_audio_refs = {} # Reset for safety
+        self.used_audio_refs = {}
         
-        # 1. PRE-SCAN: Find exactly which subjects are speaking
         used_subject_ids = set()
         for shot in self.shots:
             text = self._substitute_labels(shot["raw_text"])
-            # CRITICAL FIX: Look for [English], [Spanish], etc. NOT <d> tags
-            # because <d> tags haven't been injected yet at this stage
             matches = re.findall(r'<Subject (\d+)>(?=[^<]*\[(?:English|Spanish|French|German|Italian)\])', text)
             used_subject_ids.update(int(m) for m in matches)
         
-        # 2. Build speaker tags ONLY for subjects who actually speak AND have an audio ref
         subject_to_speaker = {}
         speaker_counter = 1
-        
         for label, data in self.audio_refs.items():
             target_id = data['target_id']
-            speaker_tag = None
-
-            if target_id in used_subject_ids:
-                speaker_tag = f"(S{speaker_counter})"
+            speaker_tag = f"(S{speaker_counter})" if target_id in used_subject_ids else None
+            if speaker_tag:
                 subject_to_speaker[target_id] = speaker_tag
                 speaker_counter += 1
-
             data['speaker_tag'] = speaker_tag
             self.used_audio_refs[label] = data
 
-        # 3. Subject & Audio Definitions
         sections.append("subject_definitions:")
         sub_defs = []
         for label, data in self.entities.items():
-
             has_picture = bool(data.get("pic_tag"))
-
             if data.get("is_environment"):
-
-                if has_picture:
-                    sub_defs.append(
-                        f"<Subject {data['id']}> is the background environment "
-                        f"in {data['pic_tag']}, featuring {data['desc']}."
-                    )
-                else:
-                    sub_defs.append(
-                        f"<Subject {data['id']}> is the background environment, "
-                        f"featuring {data['desc']}."
-                    )
-
+                sub_defs.append(f"<Subject {data['id']}> is the background environment " + (f"in {data['pic_tag']}, " if has_picture else "") + f"featuring {data['desc']}.")
             else:
-
-                if has_picture:
-                    sub_defs.append(
-                        f"<Subject {data['id']}> is {data['desc']} "
-                        f"in {data['pic_tag']}."
-                    )
-                else:
-                    sub_defs.append(
-                        f"<Subject {data['id']}> is {data['desc']}."
-                    )
+                sub_defs.append(f"<Subject {data['id']}> is {data['desc']} " + (f"in {data['pic_tag']}." if has_picture else "."))
         
         if low_vram:
             sub_defs = self.portrait_manager.rewrite_with_portraits(sub_defs)
@@ -520,9 +387,8 @@ class SmartVideoPromptBuilder:
         audio_defs = []
         for label, data in self.used_audio_refs.items():
             extra = f", {data['extra_desc']}" if data['extra_desc'] else ""
-            audio_defs.append(
-                f"<Audio {data['id']}> is the voice-timbre reference for <Subject {data['target_id']}> {data['speaker_tag']}{extra}."
-            )
+            speaker = data['speaker_tag'] or ""
+            audio_defs.append(f"<Audio {data['id']}> is the voice-timbre reference for <Subject {data['target_id']}> {speaker}{extra}.")
         sections.append("\n".join(sub_defs + audio_defs))
 
         if self.summary:
@@ -540,82 +406,36 @@ However, CHARACTER IDENTITY (facial features, clothing details, body proportions
             sections.append(self.scene_style)
 
         scene_shots = []
-            
         for i, shot in enumerate(self.shots):
             processed_text = self._substitute_labels(shot["raw_text"])
-            
-            # Track which entities appear in this shot for retention analysis
             for label, entity in self.entities.items():
-                tag = f"<Subject {entity['id']}>"
-                if tag in processed_text:
+                if f"<Subject {entity['id']}>" in processed_text:
                     entity["shots"].add(i + 1)
             
-            # INJECT SPEAKER TAGS: Replace <Subject X> with <Subject X> (S#) ONLY if it precedes <d>
-            # NOTE: At this point, <d> tags still don't exist, so we look for [English] etc.
             def inject_speaker(match):
                 subject_tag = match.group(1)
                 subject_id = int(re.search(r'\d+', subject_tag).group())
-                if subject_id in subject_to_speaker:
-                    return f"{subject_tag} {subject_to_speaker[subject_id]}"
-                return subject_tag
+                return f"{subject_tag} {subject_to_speaker.get(subject_id, '')}"
             
             processed_text = re.sub(r'(<Subject \d+>)(?=[^<]*\[(?:English|Spanish|French|German|Italian)\])', inject_speaker, processed_text)
-
-            # Regex targeting: <Subject 3> speaks [English] "Stay where you are."
             pattern = r'(<Subject \d+>)([^"\[]*?)\[(?:English|Spanish|French|German|Italian)\]\s*("[^"]*")'
+            processed_text = re.sub(pattern, lambda m: f"{m.group(1)}{m.group(2)}{m.group(3)}", processed_text)
 
-            def strip_lang_only(match):
-                subject_tag = match.group(1)   # e.g., "<Subject 3>"
-                verbs = match.group(2)         # e.g., " speaks " or " says "
-                dialogue = match.group(3)      # e.g., '"Stay where you are."'
-                
-                # Drops the [English] chunk entirely and NEVER inserts <d></d> literal text
-                return f"{subject_tag}{verbs}{dialogue}"
-
-            processed_text = re.sub(pattern, strip_lang_only, processed_text)
-
-            '''
-
-            # Wrap dialogue in <d> tags if not already wrapped
-            processed_text = re.sub(
-                r'(\[(?:English|Spanish|French|German|Italian)\]\s*"[^"]*")',
-                r'<d>\1</d>',
-                processed_text
-            )
-            processed_text = re.sub(
-                r'(?<!<d>)(\[(?:English|Spanish|French|German|Italian)\][^"<.!?]*[.!?])',
-                r'<d>\1</d>',
-                processed_text
-            )
-            '''
-            
             time_str = f" At {shot['timestamp']}," if shot.get("timestamp") else ""
             scene_shots.append(f"[Shot {i+1}]{time_str} {processed_text}")
             
-        # 5. Auto-Generate Retention Analysis
         sections.append("\nretention_analysis:")
         retention = []
         for label, data in self.entities.items():
             shots_list = sorted(list(data["shots"]))
             shots_str = ", ".join([f"[Shot {s}]" for s in shots_list])
-            retention.append(
-                f"<Subject {data['id']}> (appears in {shots_str}): fully_preserved - "
-                f"{data['desc']} is retained."
-            )
-            
-        # ONLY list audio refs that were actually used
+            retention.append(f"<Subject {data['id']}> (appears in {shots_str}): fully_preserved - {data['desc']} is retained.")
         for label, data in self.used_audio_refs.items():
-            sections.append(
-                f"<Audio {data['id']}>: reference - its vocal timbre guides the dialogue delivery for <Subject {data['target_id']}>."
-            )
-
-        sections.append("\nretention analysis:")
+            sections.append(f"<Audio {data['id']}>: reference - its vocal timbre guides the dialogue delivery for <Subject {data['target_id']}>.")
         sections.append("\n".join(retention))
-        # 4. Process Shots & Build Detailed Description
+        
         sections.append("\ndetailed_description:")
         sections.append('\n'.join(scene_shots))
-        
-        # 6. Soundscape & Music
         sections.append("\noverall_soundscape:")
         sections.append(self.soundscape)
         sections.append("\nnon_diegetic_music:")
@@ -624,13 +444,8 @@ However, CHARACTER IDENTITY (facial features, clothing details, body proportions
         return "\n".join(sections)
 
 def send(prompt, images, audio, output='output.mp4', width=768, height=448, duration=5.0, steps=4, start_image=True, upscale=os.environ.get('UPSCALE', 'False') != 'False', debug=False):
-
-    #model = "minimax_h3_ref2va_pruned_pdd"
     model = "minimax_h3_ref2va_pruned"
-
-    local_server = "http://locathost:8080"
     args = requests.get(f"http://127.0.0.1:8080/defaults/{model}").json()
-
 
     args['output_filename'] = Path(output).name
     args['prompt'] = prompt
@@ -643,12 +458,18 @@ def send(prompt, images, audio, output='output.mp4', width=768, height=448, dura
         args["audio_guide"] = audio.pop()
         if len(audio):
             args["audio_guide2"] = audio.pop()
+            
     if start_image:
         args["image_prompt_type"] = "S"
-        args["image_start"] = images[0]
-        args['image_refs'] = images[1:]
+        if images:
+            args["image_start"] = images[0]
+            args['image_refs'] = images[1:]
+        else:
+            args["image_prompt_type"] = "T" # Fallback to text-to-video if no images found
+            args['image_refs'] = []
     else:
         args['image_refs'] = images
+        
     if upscale:
         args["spatial_upsampling"] = "ltx25*2"
     args["video_prompt_type"] = "I"
@@ -667,20 +488,23 @@ def send(prompt, images, audio, output='output.mp4', width=768, height=448, dura
     args['video_length'] = (((duration * 24) // 17) * 17) + 5
     if steps >= 8:
         args["custom_settings"] = { "h3_mask_mode": "grouped_rows", "audio_refinement": "enabled" }
+        
     if debug:
-        json_filename = output.replace('.mp4','.json')
-        with open(json_filename, 'w') as js:
+        json_filename = output.replace('.mp4', '.json')
+        with open(json_filename, 'w', encoding='utf-8') as js:
             js.write(json.dumps(args, indent=4))
-    args['output_dir'] = f'{Path(output).parent}'
+            
+    args['output_dir'] = str(Path(output).parent)
     if args['output_dir'][-1] == '.':
         args['output_dir'] = args['output_dir'][:-1]
-    print(args)
+        
+    print(f"[Debug] Sending to API with {len(images) if images else 0} image refs and {len(audio) if audio else 0} audio refs.")
     job_id = requests.post("http://127.0.0.1:8080/run", json=args).json()
-    print(job_id)
+    print(f"Job ID: {job_id}")
 
     last = ''
     dedupe_updates = set([])
-    while status := requests.get(f"http://127.0.0.1:8080/status/{job_id}").json()[-1] in ("pending","running"):
+    while status := requests.get(f"http://127.0.0.1:8080/status/{job_id}").json()[-1] in ("pending", "running"):
         sleep(5)
         update = requests.get(f"http://127.0.0.1:8080/updates/{job_id}").json()
         if update:
@@ -696,27 +520,24 @@ def get_builder(script, output_dir):
     else:
         from plan10.lib.image_gen import GenerateImage, CreateCharacterSheet, CreateBackground, CreatePortrait
     from plan10.lib.dialog import DesignVoice
+    
     base_dir = str((Path.cwd() / output_dir).resolve())
     generators = {
-        'bg': CreateBackground,
-        'char': CreateCharacterSheet,
-        'ff': GenerateImage,
-        'item': GenerateImage,
-        'audio': partial(DesignVoice, long=False),
-        'portrait': CreatePortrait
+        'bg': CreateBackground, 'char': CreateCharacterSheet, 'ff': GenerateImage,
+        'item': GenerateImage, 'audio': partial(DesignVoice, long=False), 'portrait': CreatePortrait
     }
     return SmartVideoPromptBuilder().load_script(script, base_dir=base_dir, generators=generators)
 
 def main():
-    from pathlib import Path
-    import os, argparse, sys
+    import argparse, sys
     if ANIME:
         from plan10.lib.anime_gen import GenerateImage, CreateCharacterSheet, CreateBackground, CreatePortrait
     else:
         from plan10.lib.image_gen import GenerateImage, CreateCharacterSheet, CreateBackground, CreatePortrait
     from plan10.lib.dialog import DesignVoice
+    
     parser = argparse.ArgumentParser(description='Cinematic Director')
-    parser.add_argument('-O', '--output', type=str, default='')
+    parser.add_argument('-O', '--output', type=str, default='feedback_output')
     parser.add_argument('-I', '--input', type=str, default=None)
     parser.add_argument('-D', '--debug', action='store_true')
     parser.add_argument('-W', '--width', type=int, default=int(os.environ.get("WIDTH", "768")))
@@ -726,38 +547,33 @@ def main():
     parser.add_argument('--low-vram', action='store_true')
     args = parser.parse_args()
 
-    # Override environment first
     os.environ['WIDTH'] = str(args.width)
     os.environ['HEIGHT'] = str(args.height)
-
-    # Recompute WIDTH/HEIGHT cleanly
     WIDTH = (args.width // 32) * 32
     HEIGHT = (args.height // 32) * 32
 
     base_dir = Path.cwd() / args.output
-    (base_dir / "images" ).mkdir(parents=True, exist_ok=True)
-    (base_dir / "audio" ).mkdir(parents=True, exist_ok=True)
-    base_input = str((Path.cwd() / args.input).resolve())
+    (base_dir / "images").mkdir(parents=True, exist_ok=True)
+    (base_dir / "audio").mkdir(parents=True, exist_ok=True)
     
-    # Pass generation functions to the parser
-    generators = {
-        'bg': CreateBackground,
-        'char': CreateCharacterSheet,
-        'ff': GenerateImage,
-        'item': GenerateImage,
-        'audio': partial(DesignVoice, long=True),
-        'portrait': CreatePortrait
-    }
-    final_prompt = ''
+    input_dir = str(Path(args.input).parent.resolve()) if args.input else str(Path.cwd())
+    base_input = str((Path.cwd() / args.input).resolve()) if args.input else ""
 
-    output_filename = f"{base_input.replace('.txt','.mp4')}" if args.input else f'{str((base_dir / "output.mp4").resolve())}'
+    generators = {
+        'bg': CreateBackground, 'char': CreateCharacterSheet, 'ff': GenerateImage,
+        'item': GenerateImage, 'audio': partial(DesignVoice, long=True), 'portrait': CreatePortrait
+    }
+    
+    builder = None
+    final_prompt = ''
+    
     if args.input:
         if args.input.endswith('.mmh3'):
-            final_prompt = Path(args.input).read_text()
+            final_prompt = Path(args.input).read_text(encoding='utf-8')
+            print("[Info] Loaded pre-compiled .mmh3 prompt. Note: Image references must be extracted from a paired .txt or handled manually.")
         else:
-            script = Path(args.input).read_text()
+            script = Path(args.input).read_text(encoding='utf-8')
     else:
-        # --- THE COMPLETE SELF-CONTAINED SCRIPT ---
         script = """
         # --- ASSETS (with generation prompts) ---
         bg   | barn    | images/rustic_barn.png    | the inside of a rustic barn, with a large open doorway allowing light to spill in
@@ -765,11 +581,8 @@ def main():
         char | red     | images/red_woman.png      | a medium shot of a red haired woman, blue jeans, tshirt, cowboy boots
         item | dog     | images/samoyed_dog.png    | a samoyed dog
         
-        # --- AUDIO REFERENCES (with voice generation prompts) ---
-        # audio | label   | path                    | target  | extra_desc                          | voice_prompt
-        # audio | voice_b | audio/voice_sample.wav  | blondie | containing a spoken English vocal layer | female
-        audio | voice_r | audio/voice_sample2.wav | red     | containing a spoken English vocal layer | female
-
+        # --- AUDIO REFERENCES ---
+        audio | voice_r | audio/voice_sample2.wav | red | containing a spoken English vocal layer | female
         portrait | red_port | images/red_portrait.png | red | a red haired woman
         
         # --- SCENE CONTEXT ---
@@ -783,54 +596,67 @@ def main():
         """
 
     if not final_prompt:
-        # Build and execute
-        builder = SmartVideoPromptBuilder().load_script(script, base_dir=str(base_dir.resolve()), generators=generators, low_vram=args.low_vram)
+        builder = SmartVideoPromptBuilder().load_script(
+            script, 
+            base_dir=str(base_dir.resolve()), 
+            input_dir=input_dir,
+            generators=generators, 
+            low_vram=args.low_vram
+        )
         final_prompt = builder.generate(args.low_vram)
+        
     print(final_prompt)
-    if args.input:
-        Path(args.input.replace('.txt','.mmh3')).write_text(final_prompt)
     
-    # Extract paths dynamically from the builder instead of hardcoding
-    img_refs = [
-        data["path"]
-        for data in builder.entities.values()
-        if data["path"] is not None
-    ]
-    if not args.low_vram:
-        img_refs = (img_refs + builder.portrait_manager.get_paths())
-    aud_refs = [data["path"] for data in builder.used_audio_refs.values()]
+    if args.input and not args.input.endswith('.mmh3'):
+        Path(args.input.replace('.txt', '.mmh3')).write_text(final_prompt, encoding='utf-8')
 
-    #width and height must be multiples of 32, 1344x768, 864x480 minimal
+    # Extract paths dynamically from the builder with strict existence checks
+    if builder is not None:
+        img_refs = [
+            data["path"]
+            for data in builder.entities.values()
+            if data["path"] is not None and os.path.exists(data["path"])
+        ]
+        if not args.low_vram:
+            img_refs = img_refs + [p for p in builder.portrait_manager.get_paths() if os.path.exists(p)]
+        aud_refs = [data["path"] for data in builder.used_audio_refs.values() if os.path.exists(data["path"])]
+    else:
+        img_refs = []
+        aud_refs = []
 
-
-    #if args.low_vram:
+    # SAFE RESIZE WITH FALLBACK: Prevents resize functions from silently dropping valid images
     from plan10.lib.util import resize_low_vram_png
     img_refs_resized = []
     for ref in img_refs:
-        out = resize_low_vram_png(ref, divisor=32)
-        if out:
-            img_refs_resized.append(out)
+        if not ref or not os.path.exists(ref):
+            print(f"[Warning] Image reference not found, skipping: {ref}")
+            continue
+        try:
+            out = resize_low_vram_png(ref, divisor=32)
+            # If resize returns None or fails, fall back to the original valid path
+            img_refs_resized.append(out if out else ref)
+        except Exception as e:
+            print(f"[Warning] Failed to resize {ref}: {e}. Using original path.")
+            img_refs_resized.append(ref)
     img_refs = img_refs_resized
 
+    print(f"\n[Debug] Final image refs to be used ({len(img_refs)}): {img_refs}")
+    print(f"[Debug] Final audio refs to be used ({len(aud_refs)}): {aud_refs}\n")
+
+    output_filename = f"{base_input.replace('.txt', '.mp4')}" if args.input else str((base_dir / "output.mp4").resolve())
+
     if args.debug and not args.wangp:
-        sys.exit()
+        sys.exit(0)
 
     if args.wangp:
         send(
-            final_prompt, 
-            img_refs, 
-            aud_refs, 
-            output=output_filename, 
-            width=args.width, 
-            height=args.height, 
-            duration=builder.duration,
-            steps=args.steps,
-            debug=args.debug
-
+            final_prompt, img_refs, aud_refs, output=output_filename, 
+            width=args.width, height=args.height, duration=builder.duration if builder else 5.0,
+            steps=args.steps, debug=args.debug
         )
     else:
         from plan10.lib.mmh3 import compose_video
-        print(compose_video(final_prompt, img_refs, aud_refs, output_filename, args.width, args.height, builder.duration))
+        print(compose_video(final_prompt, img_refs, aud_refs, output_filename, args.width, args.height, builder.duration if builder else 5.0))
 
 if __name__ == '__main__':
     main()
