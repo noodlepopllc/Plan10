@@ -506,6 +506,8 @@ def replace_character_names(script, char_names):
 
     for cndx, name in enumerate(char_names, 1):
         token = f"char{cndx}"
+        if name is None:
+            continue
         pattern = re.compile(rf"\b{re.escape(name)}\b", re.IGNORECASE)
         pattern_possessive = re.compile(rf"\b{re.escape(name)}'s\b", re.IGNORECASE)
 
