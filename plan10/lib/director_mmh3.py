@@ -261,27 +261,25 @@ class SmartVideoPromptBuilder:
                     path_field = parts[2].strip()
                     prompt = parts[3] if len(parts) > 3 else ""
 
-                    if path_field == "-":
+                    if not path_field or path_field == "-":
                         if not prompt:
                             raise ValueError(f"{cmd} '{label}' uses '-' but no description was provided.")
                         self.add_text_subject(label, prompt, is_character=(cmd == "char"), is_environment=(cmd == "bg"))
                         continue
 
-                    # ROBUST PATH RESOLUTION: Check multiple likely locations
                     candidate_paths = [
-                        path_field, # absolute path
-                        os.path.join(input_dir, path_field) if input_dir else "",
-                        os.path.join(os.getcwd(), path_field),
+                        path_field, 
+                        os.path.join(input_dir, path_field) if input_dir else "", 
+                        os.path.join(os.getcwd(), path_field), 
                         os.path.join(base_dir, path_field)
                     ]
                     
-                    resolved_path = next((p for p in candidate_paths if p and os.path.exists(p)), None)
-                    if resolved_path is None:
-                        resolved_path = os.path.join(base_dir, path_field) # Fallback for generation
+                    resolved_path = next((p for p in candidate_paths if p and os.path.exists(p)), os.path.join(base_dir, path_field))
                         
                     if not os.path.exists(resolved_path):
                         if cmd in generators:
                             print(f"Generating {label} at {resolved_path}...")
+                            os.makedirs(os.path.dirname(resolved_path), exist_ok=True)
                             generators[cmd](prompt, resolved_path)
                         else:
                             print(f"[Warning] File not found: {path_field}. Skipping {cmd} '{label}'.")
@@ -297,17 +295,27 @@ class SmartVideoPromptBuilder:
                         
                 elif cmd == 'audio':
                     label = parts[1]
-                    path_field = parts[2]
+                    path_field = parts[2].strip()
                     target = parts[3] if len(parts) > 3 else ""
                     extra = parts[4] if len(parts) > 4 else ""
                     voice_prompt = parts[5] if len(parts) > 5 else "female"
                     
-                    candidate_paths = [path_field, os.path.join(input_dir, path_field) if input_dir else "", os.path.join(os.getcwd(), path_field), os.path.join(base_dir, path_field)]
+                    # FIX: Assign a valid default path if '-' is used
+                    if not path_field or path_field == '-':
+                        path_field = f"audio/{label}.wav"
+
+                    candidate_paths = [
+                        path_field, 
+                        os.path.join(input_dir, path_field) if input_dir else "", 
+                        os.path.join(os.getcwd(), path_field), 
+                        os.path.join(base_dir, path_field)
+                    ]
                     resolved_path = next((p for p in candidate_paths if p and os.path.exists(p)), os.path.join(base_dir, path_field))
 
                     if not os.path.exists(resolved_path):
                         if 'audio' in generators:
                             print(f"Generating voice {label} at {resolved_path}...")
+                            os.makedirs(os.path.dirname(resolved_path), exist_ok=True)
                             generators['audio'](voice_prompt, resolved_path, long=True)
                         else:
                             print(f"[Warning] Audio file not found: {path_field}. Skipping.")
@@ -317,11 +325,20 @@ class SmartVideoPromptBuilder:
                     
                 elif not low_vram and cmd == 'portrait':
                     label = parts[1]
-                    path_field = parts[2]
+                    path_field = parts[2].strip()
                     target = parts[3]
                     extra = parts[4] if len(parts) > 4 else ""
 
-                    candidate_paths = [path_field, os.path.join(input_dir, path_field) if input_dir else "", os.path.join(os.getcwd(), path_field), os.path.join(base_dir, path_field)]
+                    # FIX: Assign a valid default path if '-' is used
+                    if not path_field or path_field == '-':
+                        path_field = f"images/{label}_portrait.png"
+
+                    candidate_paths = [
+                        path_field, 
+                        os.path.join(input_dir, path_field) if input_dir else "", 
+                        os.path.join(os.getcwd(), path_field), 
+                        os.path.join(base_dir, path_field)
+                    ]
                     resolved_path = next((p for p in candidate_paths if p and os.path.exists(p)), os.path.join(base_dir, path_field))
 
                     if not os.path.exists(resolved_path):
@@ -331,7 +348,10 @@ class SmartVideoPromptBuilder:
                             target_key = target.lower()
                             char_ref = self.entities.get(target_key, None)
                             cref_path = char_ref['path'] if char_ref else ''
-                            generator('', cref_path, resolved_path)
+                            
+                            # Ensure the directory exists before generating
+                            os.makedirs(os.path.dirname(resolved_path), exist_ok=True)
+                            generator(extra, cref_path, resolved_path)
                         else:
                             print(f"[Warning] Portrait file not found: {path_field}. Skipping.")
                             continue
@@ -350,7 +370,7 @@ class SmartVideoPromptBuilder:
                 print(f"[Warning] Malformed line skipped: {line}")
                 
         return self
-
+        
     def generate(self, low_vram=False) -> str:
         sections = []
         self.used_audio_refs = {}
