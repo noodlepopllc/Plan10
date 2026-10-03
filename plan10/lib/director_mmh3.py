@@ -716,7 +716,7 @@ def main():
         from plan10.lib.image_gen import GenerateImage, CreateCharacterSheet, CreateBackground, CreatePortrait
     from plan10.lib.dialog import DesignVoice
     parser = argparse.ArgumentParser(description='Cinematic Director')
-    parser.add_argument('-O', '--output', type=str, default='output')
+    parser.add_argument('-O', '--output', type=str, default='')
     parser.add_argument('-I', '--input', type=str, default=None)
     parser.add_argument('-D', '--debug', action='store_true')
     parser.add_argument('-W', '--width', type=int, default=int(os.environ.get("WIDTH", "768")))
