@@ -483,7 +483,7 @@ def send(prompt, images, audio, output='output.mp4', width=768, height=448, dura
         args["image_prompt_type"] = "S"
         if images:
             args["image_start"] = images[0]
-            args['image_refs'] = images[1:]
+            args['image_refs'] = images
         else:
             args["image_prompt_type"] = "T" # Fallback to text-to-video if no images found
             args['image_refs'] = []
@@ -630,6 +630,8 @@ def main():
     if args.input and not args.input.endswith('.mmh3'):
         Path(args.input.replace('.txt', '.mmh3')).write_text(final_prompt, encoding='utf-8')
 
+    start_image = False
+
     # Extract paths dynamically from the builder
     if builder is not None:
         img_refs = []
@@ -640,6 +642,7 @@ def main():
             if ff_data["path"] and os.path.exists(ff_data["path"]):
                 img_refs.append(ff_data["path"])
                 print(f"[Debug] Added first frame: {ff_data['path']}")
+                start_image=True
             else:
                 print(f"[Warning] First frame path not found: {ff_data.get('path')}")
         
@@ -689,7 +692,7 @@ def main():
 
     if args.wangp:
         send(
-            final_prompt, img_refs, aud_refs, output=output_filename, 
+            final_prompt, img_refs, aud_refs, output=output_filename, start_image=start_image,
             width=args.width, height=args.height, duration=builder.duration if builder else 5.0,
             steps=args.steps, debug=args.debug
         )
