@@ -21,47 +21,47 @@ class Director:
             return self.analyze_reality_gemma(media_path, intended_action, width, height, output_dir)
         return self.analyze_reality_smol(media_path, intended_action, width, height, output_dir)
         
-def analyze_reality_gemma(self, media_path, width, height, output_dir):
-    from plan10.lib.image_analysis import AnalyzeMediaGemma     
-    from plan10.lib.dialog import transcribe
+    def analyze_reality_gemma(self, media_path, width, height, output_dir):
+        from plan10.lib.image_analysis import AnalyzeMediaGemma     
+        from plan10.lib.dialog import transcribe
 
-    full_transcript_text = str(transcribe(media_path, True))
-    transcript_context = f'"{full_transcript_text}"' if full_transcript_text.strip() else "[No speech detected]"
+        full_transcript_text = str(transcribe(media_path, True))
+        transcript_context = f'"{full_transcript_text}"' if full_transcript_text.strip() else "[No speech detected]"
 
-    qa_instructions = f"""You are an observational analyst describing exactly what appears in this video.
+        qa_instructions = f"""You are an observational analyst describing exactly what appears in this video.
 
-RAW AUDIO TRANSCRIPT:
-{transcript_context}
+    RAW AUDIO TRANSCRIPT:
+    {transcript_context}
 
-TASK:
-1. Identify all active characters in the video frames. Assign clear, descriptive temporary names based on their clothing or appearance (e.g., <woman_in_red>, <man_in_suit>).
-2. If speech is present in the transcript, break down the conversation sentence-by-sentence. Attribute each line to a character ID based on mouth movements and timing.
-3. If no speech is present, skip the dialogue section and note "none".
+    TASK:
+    1. Identify all active characters in the video frames. Assign clear, descriptive temporary names based on their clothing or appearance (e.g., <woman_in_red>, <man_in_suit>).
+    2. If speech is present in the transcript, break down the conversation sentence-by-sentence. Attribute each line to a character ID based on mouth movements and timing.
+    3. If no speech is present, skip the dialogue section and note "none".
 
-Output strictly inside this format:
+    Output strictly inside this format:
 
-CHARACTER IDENTIFIERS:
-- [Character ID]: [Short visual description]
+    CHARACTER IDENTIFIERS:
+    - [Character ID]: [Short visual description]
 
-DIALOGUE BREAKDOWN:
-- [Character ID]: "[Words spoken]" ([Short action/expression])
-(or "none" if no dialogue)
+    DIALOGUE BREAKDOWN:
+    - [Character ID]: "[Words spoken]" ([Short action/expression])
+    (or "none" if no dialogue)
 
-CHARACTER STATES:
-- [Character ID]: [pose], [position], [facing], [holding]
+    CHARACTER STATES:
+    - [Character ID]: [pose], [position], [facing], [holding]
 
-ENVIRONMENT:
-- [Brief description of visible setting, lighting, and objects]
-"""
+    ENVIRONMENT:
+    - [Brief description of visible setting, lighting, and objects]
+    """
 
-    result = AnalyzeMediaGemma(
-        media=media_path, 
-        prompt=qa_instructions, 
-        max_tokens=512, 
-        temperature=0.0
-    )
-    
-    return result
+        result = AnalyzeMediaGemma(
+            media=media_path, 
+            prompt=qa_instructions, 
+            max_tokens=512, 
+            temperature=0.0
+        )
+        
+        return result
 
     def analyze_reality_smol(self, media_path, intended_action, width, height, output_dir):
         media_path = Path(media_path)
