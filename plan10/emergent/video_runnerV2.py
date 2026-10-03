@@ -605,6 +605,7 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0, visual_ids=[], char_n
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-O', '--output', type=str, default="feedback_output")
+    parser.add_argument('-M', '--scene-mode', action='store_true')
     args, _ = parser.parse_known_args()
     
     state_mgr = StateManager(args.output)
@@ -662,7 +663,10 @@ def main():
             current_source.save('tmp.png')
             current_source_path = f'{os.getcwd()}/tmp.png'
             
-        script = h3_ref(bg, None, refs, None, prompt, duration, visual_ids=visual_ids, char_names=char_names)
+        if args.scene_mode:
+            script = h3_ref(None, current_source, refs, None, prompt, duration, visual_ids=visual_ids, char_names=char_names)
+        else:
+            script = h3_ref(bg, None, refs, None, prompt, duration, visual_ids=visual_ids, char_names=char_names)
         Path(pending_job['output_path'].replace('.mp4', '_script.txt')).write_text(script, encoding='utf-8')
 
         if LTX:
