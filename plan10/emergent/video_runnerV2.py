@@ -663,7 +663,7 @@ def main():
         current_source_path = None
         
         if current_source:
-            current_source_path = Path(args.output_dir) / 'tmp.png'
+            current_source_path = Path(args.output) / 'tmp.png'
             current_source.save(str(current_source_path.resolve()))
             
         if args.scene_mode:
