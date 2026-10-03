@@ -370,7 +370,7 @@ class SmartVideoPromptBuilder:
                 print(f"[Warning] Malformed line skipped: {line}")
                 
         return self
-        
+
     def generate(self, low_vram=False) -> str:
         sections = []
         self.used_audio_refs = {}
@@ -630,15 +630,34 @@ def main():
     if args.input and not args.input.endswith('.mmh3'):
         Path(args.input.replace('.txt', '.mmh3')).write_text(final_prompt, encoding='utf-8')
 
-    # Extract paths dynamically from the builder with strict existence checks
+    # Extract paths dynamically from the builder
     if builder is not None:
-        img_refs = [
-            data["path"]
-            for data in builder.entities.values()
-            if data["path"] is not None and os.path.exists(data["path"])
-        ]
+        img_refs = []
+        
+        # FIRST: Add first frame if it exists
+        if builder.first_frame_label and builder.first_frame_label in builder.entities:
+            ff_data = builder.entities[builder.first_frame_label]
+            if ff_data["path"] and os.path.exists(ff_data["path"]):
+                img_refs.append(ff_data["path"])
+                print(f"[Debug] Added first frame: {ff_data['path']}")
+            else:
+                print(f"[Warning] First frame path not found: {ff_data.get('path')}")
+        
+        # THEN: Add all other entities (bg, char, item)
+        for label, data in builder.entities.items():
+            if label == builder.first_frame_label:
+                continue  # Skip ff, already added
+            if data["path"] and os.path.exists(data["path"]):
+                img_refs.append(data["path"])
+                print(f"[Debug] Added entity: {label} -> {data['path']}")
+        
+        # Add portraits if not low_vram
         if not args.low_vram:
-            img_refs = img_refs + [p for p in builder.portrait_manager.get_paths() if os.path.exists(p)]
+            for portrait_path in builder.portrait_manager.get_paths():
+                if os.path.exists(portrait_path):
+                    img_refs.append(portrait_path)
+                    print(f"[Debug] Added portrait: {portrait_path}")
+        
         aud_refs = [data["path"] for data in builder.used_audio_refs.values() if os.path.exists(data["path"])]
     else:
         img_refs = []
