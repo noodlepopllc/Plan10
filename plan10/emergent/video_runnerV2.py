@@ -663,11 +663,11 @@ def main():
         current_source_path = None
         
         if current_source:
-            current_source.save('tmp.png')
-            current_source_path = f'{os.getcwd()}/tmp.png'
+            current_source_path = Path(args.output_dir) / 'tmp.png'
+            current_source.save(str(current_source_path.resolve()))
             
         if args.scene_mode:
-            script = h3_ref(None, current_source_path, refs, None, prompt, duration, visual_ids=visual_ids, char_names=char_names)
+            script = h3_ref(None, str(current_source_path.resolve()), refs, None, prompt, duration, visual_ids=visual_ids, char_names=char_names)
         else:
             script = h3_ref(bg, None, refs, None, prompt, duration, visual_ids=visual_ids, char_names=char_names)
         Path(pending_job['output_path'].replace('.mp4', '_script.txt')).write_text(script, encoding='utf-8')
