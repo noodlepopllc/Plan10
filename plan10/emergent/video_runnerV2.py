@@ -650,7 +650,7 @@ def main():
     
     try:
         prompt = pending_job['prompt']
-        media = pending_job['input_media']
+        media = initial if args.scene_mode else pending_job['input_media']
         
         if isinstance(media, (list, tuple)) and len(media):
             start_image = media[0]
