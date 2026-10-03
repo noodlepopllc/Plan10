@@ -10,26 +10,19 @@ class CharacterProfile:
         self._match_seed_characters_llm()
     
     def _extract_all_characters(self):
-        prompt = """Analyze this image and extract a complete profile for the 1 to 3 MOST PROMINENT FOREGROUND characters ONLY.
+        prompt = """Identify the 1 to 3 MOST PROMINENT FOREGROUND characters in this image.
 
-CRITICAL RULES:
-1. IGNORE background people, crowds, blurry figures, or distant subjects.
-2. Focus ONLY on characters who are large, in focus, and clearly the main subjects of the image.
-3. Maximum of 3 characters. If there is only 1 prominent person, output only CHARACTER_1.
-
-For EACH prominent character, provide:
-1. VISUAL_ID: 15-25 word description including ethnicity, exact age range, hair color and style (length, texture), skin tone, face shape, distinctive facial features, and main clothing items with specific colors
-2. APPEARANCE: Physical details
-3. CLOTHING: Detailed clothing
+For each, provide an 8-12 word visual identifier including:
+- Approximate age and ethnicity
+- Hair color and style
+- Key clothing (1-2 items with colors)
 
 Output format:
 CHARACTER_1:
-VISUAL_ID: ...
-APPEARANCE: ...
-CLOTHING: ...
+VISUAL_ID: [8-12 words]
 
 CHARACTER_2:
-...
+VISUAL_ID: [8-12 words]
 """
         
         result = AnalyzeImage(self.ref_path, prompt)['analysis'].strip()
