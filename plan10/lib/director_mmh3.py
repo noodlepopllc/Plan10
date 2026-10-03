@@ -737,6 +737,7 @@ def main():
     base_dir = Path.cwd() / args.output
     (base_dir / "images" ).mkdir(parents=True, exist_ok=True)
     (base_dir / "audio" ).mkdir(parents=True, exist_ok=True)
+    base_input = str((Path.cwd() / args.input).resolve())
     
     # Pass generation functions to the parser
     generators = {
@@ -749,7 +750,7 @@ def main():
     }
     final_prompt = ''
 
-    output_filename = f"{args.input.replace('.txt','.mp4')}" if args.input else f'{str((base_dir / "output.mp4").resolve())}'
+    output_filename = f"{base_input.replace('.txt','.mp4')}" if args.input else f'{str((base_dir / "output.mp4").resolve())}'
     if args.input:
         if args.input.endswith('.mmh3'):
             final_prompt = Path(args.input).read_text()
