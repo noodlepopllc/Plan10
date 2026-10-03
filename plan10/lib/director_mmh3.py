@@ -667,6 +667,7 @@ def main():
         aud_refs = []
 
     # SAFE RESIZE WITH FALLBACK: Prevents resize functions from silently dropping valid images
+    #width and height must be multiples of 32, 1344x768, 864x480 minimal
     from plan10.lib.util import resize_low_vram_png
     img_refs_resized = []
     for ref in img_refs:
@@ -675,8 +676,14 @@ def main():
             continue
         try:
             out = resize_low_vram_png(ref, divisor=32)
-            # If resize returns None or fails, fall back to the original valid path
-            img_refs_resized.append(out if out else ref)
+            # Validate that the resized file actually exists and was created
+            if out and os.path.exists(out) and os.path.getsize(out) > 0:
+                img_refs_resized.append(out)
+                print(f"[Debug] Successfully resized: {ref} -> {out}")
+            else:
+                # Fallback to original if resize failed
+                print(f"[Warning] Resize failed for {ref}, using original")
+                img_refs_resized.append(ref)
         except Exception as e:
             print(f"[Warning] Failed to resize {ref}: {e}. Using original path.")
             img_refs_resized.append(ref)
