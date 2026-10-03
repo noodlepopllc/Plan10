@@ -671,7 +671,7 @@ def send(prompt, images, audio, output='output.mp4', width=768, height=448, dura
         json_filename = output.replace('.mp4','.json')
         with open(json_filename, 'w') as js:
             js.write(json.dumps(args, indent=4))
-    args['output_dir'] = f'{os.getcwd()}/{Path(output).parent}'
+    args['output_dir'] = f'{Path(output).parent}'
     if args['output_dir'][-1] == '.':
         args['output_dir'] = args['output_dir'][:-1]
     print(args)
