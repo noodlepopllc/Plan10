@@ -285,8 +285,9 @@ def _run_generation(task, ref_paths, output, width, height, seed, shot_type, sty
     
     status = EditImage(task, ref_paths, output, width, height, seed)
     
-    img = Image.open(output)
-    meta = load_metadata(img)
+    with Image.open(output) as img:
+        meta = load_metadata(img)
+        img.load()
     meta.add_text("Prompt", task)
     meta.add_text("Action", action)
     meta.add_text("ShotType", shot_type)

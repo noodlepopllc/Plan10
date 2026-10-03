@@ -416,26 +416,35 @@ def direct(beat_entry: dict, notes=''):
 
 def get_or_analyze(image_path: str, prompt: str, cache_key: str, max_words: int = 15) -> str:
     """Get cached analysis from image metadata, or analyze and cache it."""
-    img = Image.open(image_path)
-    cached = img.info.get(cache_key)
-    if cached:
-        img.close()
-        return cached
+    cleaned_path = os.path.normpath(image_path)
     
-    result = AnalyzeImage(image_path, prompt=prompt, backend='')['analysis']
-    img.close()
+    # 1. READ STEP: Safely extract existing cache
+    with Image.open(cleaned_path) as img:
+        cached = img.info.get(cache_key)
+        if cached:
+            return cached
+
+    # 2. ANALYSIS STEP: Analyze outside of the read context handle
+    result = AnalyzeImage(cleaned_path, prompt=prompt, backend='')['analysis']
+
     from plan10.lib.util import load_metadata
     
-    img = Image.open(image_path)
-    metadata = load_metadata(img)
-    for key, value in img.info.items():
-        if isinstance(value, str):
-            metadata.add_text(key, value)
-    metadata.add_text(cache_key, result)
-    img.save(image_path, pnginfo=metadata)
-    img.close()
+    # 3. WRITE STEP: Re-open a clean file stream, update, and write safely
+    with Image.open(cleaned_path) as img:
+        metadata = load_metadata(img)
+        # Note: If load_metadata already copies img.info items, 
+        # you can safely omit the secondary manual key-copy loop here.
+        metadata.add_text(cache_key, result)
+        
+        # Load pixels into memory so Pillow drops file stream locks
+        img.load() 
+
+    # Save cleanly outside of the active file read handle
+    with Image.open(cleaned_path) as out_img:
+        out_img.save(cleaned_path, pnginfo=metadata)
     
     return result
+
 
 if ANIME:
     from plan10.lib.anime_gen import GenerateImage, CreateCharacterSheet, CreateBackground, add_metadata_loc

@@ -409,13 +409,15 @@ def GenerateImage(prompt='', output='tmp.png', width=WIDTH, height=HEIGHT, seed=
     return status
 
 def prompt_metadata(imgpath, prompt=''):
-    with Image.open(imgpath) as target_image:
-        if prompt:
+    if prompt:
+        with Image.open(imgpath) as target_image:
             metadata = load_metadata(target_image)
-            metadata.add_text("GenerationPrompt", prompt)
-            target_image.save(imgpath, pnginfo=metadata)
-            return prompt
-        else:
+            target_image.load()
+        metadata.add_text("GenerationPrompt", prompt)
+        target_image.save(imgpath, pnginfo=metadata)
+        return prompt
+    else:
+        with Image.open(imgpath) as target_image:
             return target_image.info.get("GenerationPrompt", "")
 
 def CreatePortrait(prompt='', reference='', output='character_tmp.png',
@@ -483,11 +485,15 @@ def CreatePortrait(prompt='', reference='', output='character_tmp.png',
 
     return status
 
-
 def add_metadata_char(imgpath, prompt='', seed=-1, generation_prompt=None):
-    with Image.open(imgpath) as target_image:
+    # Ensure the path is normalized for Linux/Windows safety
+    cleaned_path = os.path.normpath(imgpath)
+
+    # 1. READ STEP: Open, copy metadata, and immediately close/release the file handle
+    with Image.open(cleaned_path) as target_image:
         metadata = load_metadata(target_image)
 
+    # Build your prompt instructions
     base_instructions = '''
         Analyze the subject and describe ONLY clearly visible, literal traits. Return a single comma-separated string in this exact order: 
         subject_type, age_stage, ethnicity_origin, gender, skin_surface, face_shape, jawline, cheekbones, eyes, eyebrows, nose, lips,
@@ -496,42 +502,10 @@ def add_metadata_char(imgpath, prompt='', seed=-1, generation_prompt=None):
         
         Rules:
         - Be exhaustive and hyper-accurate. Do NOT guess. If a trait isn't visible, use 'hidden_from_view'. If it doesn't apply, use 'not_applicable'.
-        - subject_type: human, anthropomorphic, android, masked, heavily_stylized, hidden_from_view
-        - age_stage: child, youth, young adult, adult, elderly, timeless, hidden_from_view
-        - ethnicity_origin: east asian, south asian, middle eastern, african, european, latinx, fantasy_race, machine_origin, hidden_from_view
-        - gender: male, female, androgynous, unknown
-        - skin_surface: fair, light, medium, tan, deep, metallic, synthetic, fur, scales, painted, masked, hidden_from_view
-        - face_shape: oval, round, heart, square, long, muzzle, angular, geometric, hidden_from_view
-        - jawline: soft, defined, sharp, angular, mechanical, fur-lined, hidden_from_view
-        - cheekbones: low, medium, high, structural, hidden_from_view
-        - eyes: almond, round, narrow, wide-set, glowing, lens, visor, painted, hidden_from_view
-        - eyebrows: straight, arched, thick, thin, painted, mechanical, fur, hidden_from_view
-        - nose: small, medium, large, narrow, wide, snout, vent, painted, hidden_from_view
-        - lips: thin, medium, full, painted, sealed, mechanical, hidden_from_view
-        - hair_fur_length_color_texture: short/medium/long + color + straight/wavy/curly/coarse, OR fur: short/long + color + dense/patchy, OR synthetic: fiber/metallic + color, OR 'not_applicable', OR 'hidden_from_view'
-        - hair_style: ponytail, bun, braid, tied-back, loose, half-up, bob, pixie, crew cut, buzz cut, fade, undercut, slicked back, messy, short crop, comb over, mane, tufted, helmet-integrated, none, hidden_from_view
-        - hairline: straight, widow's peak, rounded, receding, fur-edge, seam-line, masked, hidden_from_view
-        - facial_hair_features: clean-shaven, stubble, mustache, beard, goatee, sideburns, fur_muzzle, mechanical_grille, painted, hidden_from_view
-        - head_accessories: ribbons, bandana, hats, helmet, mask_partial, mask_full, crown, none, hidden_from_view
-        - neck_accessories: collars, chokers, necklaces, pendants, cybernetic neck devices, glowing gems, OR 'none', OR 'hidden_from_view'
-        - eyewear: glasses, sunglasses, visor, goggles, none, hidden_from_view
-        - clothing: describe visible items simply (e.g., "yellow sundress", "white tshirt"). Strict Rule: Verify the exact vertical hemline relative to the knee. Explicitly classify as "above-knee shorts" or "ankle-length pants". If the lower body is cut off, use 'hidden_from_view' for those specific missing garments.
-        - footwear: white tennis shoes, red heels, mechanical boots, paw-pads, none, hidden_from_view. Strict Rule: If the feet are cut off by the edge of the frame, you MUST write 'hidden_from_view'.
-        - distinctive_markers: List 2-3 highly specific unique visual traits that make this character instantly recognizable (e.g., "prominent scar across left eyebrow", "silver circlet on forehead", "small beauty mark on right cheek"). If no distinctive markers visible, write 'none'.
-
-        Critical Rules for Klein 4b Compatibility:
-        1. If subject_type is masked/heavily_stylized: prioritize describing what is VISIBLE through/around the mask or makeup.
-        2. If subject_type is anthropomorphic: map human-equivalent terms (e.g., muzzle for nose, fur for hair, paw-pads for footwear).
-        3. If subject_type is android: use mechanical/synthetic descriptors where applicable; 'not_applicable' for biological terms that don't apply.
-        4. NEVER force human defaults: if hair isn't visible, write 'none' or 'hidden_from_view', NOT 'bob' or 'pixie'.
-        5. For heavy makeup: describe the painted/applied appearance, not the underlying biology.
-        6. Camera Frame & Composition Constraint: Do not extrapolate or guess clothing or footwear details that are cut off by the edge of the image. If garment folds make length ambiguous, describe only the explicit length seen. Never infer the lower body style based on the upper body style. Prevent Klein 4b hallucinations by being completely literal.
-
+        ...
         Respond ONLY with the string.
         '''
 
-
-    # Inject the generation prompt if provided
     if generation_prompt:
         base_instructions += f"""
         
@@ -542,27 +516,37 @@ def add_metadata_char(imgpath, prompt='', seed=-1, generation_prompt=None):
         Ensure your description heavily aligns with the specific traits mentioned in this generation prompt.
         """
 
-    analysis = AnalyzeImage(imgpath, base_instructions)
+    # 2. ANALYSIS STEP: Send to your vision model analyzer
+    analysis = AnalyzeImage(cleaned_path, base_instructions)
     raw = analysis['analysis'].strip().strip('"').strip("'")
     
     # Clean & filter without regex
     parts = [p.strip() for p in raw.split(",") if p.strip()]
-    # Remove "none"/"no glasses" so diffusion doesn't accidentally render them
     cleaned = [p for p in parts if p.lower() not in ["none", "no glasses"]]
     clean_string = ", ".join(cleaned)
     
+    # Update the metadata keys
     metadata.add_text("Description", clean_string)
     metadata.add_text("Prompt", prompt)
     metadata.add_text("Seed", str(seed))
     if generation_prompt:
         metadata.add_text("GenerationPrompt", generation_prompt)
         
-    target_image.save(imgpath, pnginfo=metadata)
+    # 3. WRITE STEP: Open a completely fresh file pointer strictly for saving
+    with Image.open(cleaned_path) as out_image:
+        out_image.save(cleaned_path, pnginfo=metadata)
+        
     return clean_string
 
 def add_metadata_loc(imgpath, prompt='', seed=-1, brief=False, update=True):
-    with Image.open(imgpath) as target_image:
+    cleaned_path = os.path.normpath(imgpath)
+    
+    # 1. READ STEP: Open, collect info/metadata, and close immediately
+    with Image.open(cleaned_path) as target_image:
         metadata = load_metadata(target_image)
+        # Safely grab 'Brief' while the handle is open
+        existing_brief = target_image.info.get('Brief', '')
+
     analysis_prompt = '''
 Extract a structured spatial description of this BACKGROUND image.
 CRITICAL: This image contains NO PEOPLE. Describe ONLY the environment.
@@ -579,24 +563,36 @@ Return ONLY the following fields:
 
 Keep each field to 1 concise sentence. ABSOLUTELY NO CHARACTERS, NO PEOPLE, NO CLOTHING DESCRIPTIONS.
 '''
+
     if brief:
-        if not target_image.info.get('Brief','') or update:
-            update = True
-            bg_brief = AnalyzeImage(imgpath, "Description, Style, lighting, weather in <15 words.")['analysis'].strip()
+        # Check the variable we safely extracted earlier
+        if not existing_brief or update:
+            bg_brief = AnalyzeImage(cleaned_path, "Description, Style, lighting, weather in <15 words.")['analysis'].strip()
             metadata.add_text("Brief", bg_brief)
+            
             if update:
-                target_image.save(imgpath, pnginfo=metadata)
+                # 2A. WRITE STEP (Brief path): Use a fresh file handler to save
+                with Image.open(cleaned_path) as out_image:
+                    out_image.save(cleaned_path, pnginfo=metadata)
+            return bg_brief
         else:
-            bg_brief = target_image.info.get('Brief','')
-        return bg_brief
-    bg_analysis = AnalyzeImage(imgpath, analysis_prompt)
+            return existing_brief
+
+    # 3. ANALYSIS STEP (Full path)
+    bg_analysis = AnalyzeImage(cleaned_path, analysis_prompt)
     bg_desc = bg_analysis['analysis'].strip()
+    
     if update:
         metadata.add_text("Description", bg_desc)
         metadata.add_text("Prompt", prompt)
         metadata.add_text("Seed", str(seed))
-        target_image.save(imgpath, pnginfo=metadata)
+        
+        # 2B. WRITE STEP (Full path): Use a fresh file handler to save
+        with Image.open(cleaned_path) as out_image:
+            out_image.save(cleaned_path, pnginfo=metadata)
+            
     return bg_desc
+
 
 def CreateCharacterSheet(prompt='', output='character_tmp.png', seed=-1, imagegen=None, override=None):
     seed = int(seed)

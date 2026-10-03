@@ -22,26 +22,45 @@ MMH3 = os.environ.get('MMH3', 'False') != 'False'
 QWEN2 = os.environ.get('IMAGE_GEN', 'False') == 'QWEN2'
 
 
-def get_or_create_visual_id(character_image: str, goal: str) -> str:
-    """Get cached visual ID or generate and cache it."""
+import os
+from PIL import Image
+from plan10.lib.util import load_metadata
 
-    with Image.open(character_image) as img:
+def get_or_create_visual_id(character_image: str, goal: str):
+    """Get cached visual ID or generate and cache it."""
+    cleaned_path = os.path.normpath(character_image)
+    
+    # 1. READ STEP: Open the image and check for the cached ID
+    with Image.open(cleaned_path) as img:
         img.load()
-        loaded = img.copy()
         visual_id = img.info.get("VisualID")
         
-        if not visual_id:
-            profile = CharacterProfile(character_image, goal)
-            visual_id = profile.get_visual_id(0)
-            
-            metadata = load_metadata(loaded)
-            for key, value in img.info.items():
-                if isinstance(value, str):
-                    metadata.add_text(key, value)
-            metadata.add_text("VisualID", visual_id)
-            img.save(character_image, pnginfo=metadata)
+        # Pull out existing metadata structure right away
+        metadata = load_metadata(img)
+    
+    # Initialize variables to prevent NameErrors down the line
+    character_name = "Unknown" 
+
+    # 2. GENERATION STEP: If not cached, run the profile processor
+    if not visual_id:
+        profile = CharacterProfile(cleaned_path, goal)
+        visual_id = profile.get_visual_id(0)
+        character_name = profile.get_character_name(0)
         
-        return visual_id, profile.get_character_name(0)
+        # Update metadata object
+        metadata.add_text("VisualID", visual_id)
+        
+        # 3. WRITE STEP: Open a clean, fresh file pointer exclusively to save
+        with Image.open(cleaned_path) as out_img:
+            out_img.save(cleaned_path, pnginfo=metadata)
+    else:
+        # If it was cached, we still need the character name. 
+        # (Assuming you need to recreate the profile to fetch it if it isn't in metadata)
+        profile = CharacterProfile(cleaned_path, goal)
+        character_name = profile.get_character_name(0)
+
+    return visual_id, character_name
+
 
 if ANIME:
     from plan10.lib.anime_gen import GenerateImage, prompt_metadata
