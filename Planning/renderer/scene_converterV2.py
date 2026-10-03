@@ -193,8 +193,10 @@ def get_visual_id(ref_path):
         prompt = """Analyze this image and extract a complete profile for character ONLY.
 
 
-For EACH prominent character, provide:
-1. 15-25 word description including ethnicity, exact age range, hair color and style (length, texture), skin tone, face shape, distinctive facial features, and main clothing items with specific colors
+For each, provide an 8-12 word visual identifier including:
+- Approximate age and ethnicity
+- Hair color and style
+- Key clothing (1-2 items with colors)
 
 """
         
