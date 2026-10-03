@@ -21,56 +21,47 @@ class Director:
             return self.analyze_reality_gemma(media_path, intended_action, width, height, output_dir)
         return self.analyze_reality_smol(media_path, intended_action, width, height, output_dir)
         
-    def analyze_reality_gemma(self, media_path, intended_action, width, height, output_dir):
-        from plan10.lib.image_analysis import AnalyzeMediaGemma     
-        from plan10.lib.dialog import transcribe
-        # 1. Run your clean, reliable native Whisper pass
-        # (Extracts: "You know what you are? AI slop.", etc.)
-        #raw_transcript_lines = str(transcribe(media_path, True))
-        #full_transcript_text = " ".join(raw_transcript_lines)
+def analyze_reality_gemma(self, media_path, width, height, output_dir):
+    from plan10.lib.image_analysis import AnalyzeMediaGemma     
+    from plan10.lib.dialog import transcribe
 
-        full_transcript_text = str(transcribe(media_path, True))
+    full_transcript_text = str(transcribe(media_path, True))
+    transcript_context = f'"{full_transcript_text}"' if full_transcript_text.strip() else "[No speech detected]"
 
-        # Handle empty/silent audio strings gracefully
-        transcript_context = f'"{full_transcript_text}"' if full_transcript_text.strip() else "[No speech or dialogue detected in audio track]"
+    qa_instructions = f"""You are an observational analyst describing exactly what appears in this video.
 
-        qa_instructions = f"""You are a high-precision QA bot checking an AI video generation output.
-    We intended to generate the following action: "{intended_action}"
+RAW AUDIO TRANSCRIPT:
+{transcript_context}
 
-    RAW AUDIO TRANSCRIPT:
-    {transcript_context}
+TASK:
+1. Identify all active characters in the video frames. Assign clear, descriptive temporary names based on their clothing or appearance (e.g., <woman_in_red>, <man_in_suit>).
+2. If speech is present in the transcript, break down the conversation sentence-by-sentence. Attribute each line to a character ID based on mouth movements and timing.
+3. If no speech is present, skip the dialogue section and note "none".
 
-    TASK:
-    1. Identify all active characters in the video frames. Invent clear, descriptive temporary names for them based on their clothing or appearance (e.g., <woman_in_red>, <man_in_suit>).
-    2. If speech is present in the transcript above, analyze the video frames to break down the conversation sentence-by-sentence. Attribute each line to an invented character ID based on their mouth movements, physical reactions, and timing.
-    3. If no speech is present, or if it is just background audio/music, skip the dialogue section and note "none".
-    4. Evaluate the video for physical hallucinations, warping, or quality issues.
+Output strictly inside this format:
 
-    Output strictly inside this format:
+CHARACTER IDENTIFIERS:
+- [Character ID]: [Short visual description]
 
-    CHARACTER IDENTIFIERS:
-    - [Invented Character ID]: [Short visual description of appearance/clothing]
+DIALOGUE BREAKDOWN:
+- [Character ID]: "[Words spoken]" ([Short action/expression])
+(or "none" if no dialogue)
 
-    DIALOGUE BREAKDOWN:
-    - [Invented Character ID]: "[Words spoken]" ([Short action/expression description])
-    (or output "none" if no dialogue is present)
+CHARACTER STATES:
+- [Character ID]: [pose], [position], [facing], [holding]
 
-    CHARACTER STATES:
-    - [Invented Character ID]: [pose], [position], [facing], [holding]
+ENVIRONMENT:
+- [Brief description of visible setting, lighting, and objects]
+"""
 
-    VISUAL & PHYSICAL QUALITY ISSUES:
-    - [List hallucinations, warping, continuity breaks, problems, differences with intended actions, location changes or "none"]
-    """
-
-        # 3. Call your native Gemma 4 function with your runtime multi-backend signature
-        result = AnalyzeMediaGemma(
-            media=media_path, 
-            prompt=qa_instructions, 
-            max_tokens=512, 
-            temperature=0.0 # Force greedy decoding for strict mapping accuracy
-        )
-        
-        return result
+    result = AnalyzeMediaGemma(
+        media=media_path, 
+        prompt=qa_instructions, 
+        max_tokens=512, 
+        temperature=0.0
+    )
+    
+    return result
 
     def analyze_reality_smol(self, media_path, intended_action, width, height, output_dir):
         media_path = Path(media_path)
