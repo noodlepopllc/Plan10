@@ -531,14 +531,15 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0, visual_ids=[], char_n
         script += f"ff | ff | {ff} | {ff_desc}\n"
         ff_notes = f"First frame visual context: {ff_desc}"
     
-    # 2. Background - CACHED
-    bg_desc = add_metadata_loc(bg, prompt='', seed=-1, brief=True, update=False)
-    script += f"bg | bg | {bg} | {bg_desc}\n"
+    if bg:
+        # 2. Background - CACHED
+        bg_desc = add_metadata_loc(bg, prompt='', seed=-1, brief=True, update=False)
+        script += f"bg | bg | {bg} | {bg_desc}\n"
     
     # 3. Generate shots using the new director workflow
     beat_entry = {
         'summary': prompt,
-        'background': bg_desc,
+        'background': bg_desc if bg else ff_desc,
         'active_characters': [{'name': name} for name in char_names],
         'passive_characters': []
     }
