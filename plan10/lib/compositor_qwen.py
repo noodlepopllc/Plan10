@@ -152,6 +152,7 @@ def shot_type_to_camera_description(shot_type: str) -> str:
         return "profile view, character facing right, side of face visible"
 
     return f"{shot_type} shot, static camera, eye-level"
+    
 
 
 def build_qwen_prompt(
@@ -330,9 +331,7 @@ def main():
         prompt=prompt,
         output=out_path
     )
-
     print(status)
-
 
 if __name__ == "__main__":
     main()

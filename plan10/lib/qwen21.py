@@ -42,29 +42,35 @@ WH_RATIO_TO_SIZE_LOW_VRAM = {
 }
 
 def normalize_to_target_resolution(image_path, target_width, target_height):
-    """Resize image to exactly match target resolution, maintaining aspect ratio with padding."""
+    """
+    Pads the image to match the target aspect ratio FIRST, 
+    then resizes to the exact target resolution. 
+    This prevents the character from being shrunk and distorted.
+    """
     img = Image.open(image_path).convert("RGBA")
     
-    # Calculate scaling to fit within target while maintaining aspect ratio
-    scale_w = target_width / img.width
-    scale_h = target_height / img.height
-    scale = min(scale_w, scale_h)
+    target_ratio = target_width / target_height
+    img_ratio = img.width / img.height
     
-    # Resize to fit
-    new_size = (int(img.width * scale), int(img.height * scale))
-    resized = img.resize(new_size, Image.Resampling.LANCZOS)
+    if img_ratio > target_ratio:
+        # Image is wider than target: Pad TOP and BOTTOM
+        new_height = int(img.width / target_ratio)
+        canvas = Image.new("RGBA", (img.width, new_height), (0, 0, 0, 0))
+        offset_y = (new_height - img.height) // 2
+        canvas.paste(img, (0, offset_y))
+    else:
+        # Image is taller than target: Pad LEFT and RIGHT
+        new_width = int(img.height * target_ratio)
+        canvas = Image.new("RGBA", (new_width, img.height), (0, 0, 0, 0))
+        offset_x = (new_width - img.width) // 2
+        canvas.paste(img, (offset_x, 0))
     
-    # Create canvas at target resolution with transparent background
-    canvas = Image.new("RGBA", (target_width, target_height), (0, 0, 0, 0))
-    
-    # Center the resized image on canvas
-    offset_x = (target_width - new_size[0]) // 2
-    offset_y = (target_height - new_size[1]) // 2
-    canvas.paste(resized, (offset_x, offset_y))
+    # Now resize the perfectly padded canvas to the exact target resolution
+    final_img = canvas.resize((target_width, target_height), Image.Resampling.LANCZOS)
     
     # Save normalized version
     normalized_path = image_path.replace(".png", f"_norm_{target_width}x{target_height}.png")
-    canvas.save(normalized_path)
+    final_img.save(normalized_path)
     return normalized_path
 
 def expand_prompt_with_qwen_image(user_prompt: str) -> dict:
@@ -277,7 +283,7 @@ def prompt_metadata(imgpath, prompt=''):
         with Image.open(imgpath) as target_image:
             return target_image.info.get("GenerationPrompt", "")
 
-class ImageGenQwen2(object):
+class ImageGenQwen21(object):
     def __init__(self,vrlimit=14):
         if "VRAM" in os.environ:
             vrlimit = int(os.environ["VRAM"])
@@ -332,7 +338,7 @@ class ImageGenQwen2(object):
         if torch.cuda.is_available():  # ✅ Was `if torch.cuda:` (always truthy)
             torch.cuda.empty_cache()
 
-class ImageEditQwen2(object):
+class ImageEditQwen21(object):
     def __init__(self,vrlimit=14):
         if "VRAM" in os.environ:
             vrlimit = int(os.environ["VRAM"])
@@ -405,7 +411,7 @@ class ImageEditQwen2(object):
         if torch.cuda and torch.cuda.is_available():  # ✅ Was `if torch.cuda:` (always truthy)
             torch.cuda.empty_cache()
 
-ImageGen = ImageGenQwen2
+ImageGen = ImageGenQwen21
 
 def GenerateImage(prompt='', output='tmp.png', width=WIDTH, height=HEIGHT, seed=SEED, imagegen=None):
     #prompt = EnhancePrompt('',prompt,'system/QwenImage.txt')['analysis']
@@ -423,9 +429,9 @@ def GenerateImage(prompt='', output='tmp.png', width=WIDTH, height=HEIGHT, seed=
     prompt_metadata(output, prompt)
     return status
 
-ImageEdit = ImageEditQwen2
+ImageEdit = ImageEditQwen21
 
-def EditImage(prompt='', images=[''], output='tmp_edit.png', width=WIDTH, height=HEIGHT, seed=42, img_edit=None):
+def EditImage(prompt='', images=[''], output='tmp_edit.png', width=WIDTH, height=HEIGHT, seed=SEED, img_edit=None):
     if not img_edit:
         edit = ImageEdit()
     else:
@@ -435,166 +441,169 @@ def EditImage(prompt='', images=[''], output='tmp_edit.png', width=WIDTH, height
         del edit
     return status
 
+def shot_prompt(shot_type: str, character_count: int) -> str:
+    shot_type = shot_type.lower()
+
+    if shot_type == "closeup":
+        return (
+            "close-up shot, character face dominates frame, "
+            "cinematic framing, clear subject focus"
+        )
+
+    if shot_type == "medium":
+        return (
+            "medium shot, waist-up framing, "
+            "subject centered naturally within environment"
+        )
+
+    if shot_type == "wide":
+        return (
+            "wide shot, environment clearly visible, "
+            "characters naturally integrated into the location"
+        )
+
+    if shot_type == "two_shot":
+        return (
+            "medium two-shot, both characters clearly visible, "
+            "balanced composition, natural conversational spacing"
+        )
+
+    if shot_type == "ots":
+        return (
+            "over-the-shoulder shot, foreground character partially visible, "
+            "focus on the other character"
+        )
+
+    return shot_type.replace("_", " ")
+
+
+def build_qwen_scene_prompt(
+    shot_type: str,
+    action: str,
+    character_count: int,
+    style: str = "realistic",
+) -> str:
+
+    lines = []
+
+    lines.append(
+        "Use image 1 as the location reference."
+    )
+
+    if character_count > 0:
+        lines.append(
+            f"Use images 2 through {character_count + 1} as character identity references."
+        )
+
+    lines.append("")
+
+    lines.append("SHOT:")
+    lines.append(shot_prompt(shot_type, character_count))
+
+    lines.append("")
+
+    lines.append("ACTION:")
+    lines.append(action)
+
+    lines.append("")
+
+    lines.append("COMPOSITION:")
+
+    if shot_type == "two_shot":
+        lines.extend([
+            "Both characters visible.",
+            "Characters facing each other naturally.",
+            "Clear separation between subjects.",
+            "Environment remains visible."
+        ])
+
+    elif shot_type == "ots":
+        lines.extend([
+            "Foreground character nearest camera.",
+            "Background character clearly visible.",
+            "Natural conversational framing."
+        ])
+
+    elif character_count == 1:
+        lines.extend([
+            "Single clear subject.",
+            "Strong visual focus on the character.",
+            "Natural integration into location."
+        ])
+
+    lines.append("")
+    lines.append("STYLE:")
+    lines.append(style)
+
+    lines.append("")
+    lines.append("Maintain character identity.")
+    lines.append("Natural pose and body language.")
+    lines.append("Consistent scene lighting.")
+    lines.append("Photograph-like realism.")
+
+    return "\n".join(lines)
+
+
 def CompositeScene(
     background_path: str,
     characters: list[str],
     shot_type: str = "medium",
-    action: str = "hair swaying gently",
+    action: str = "standing naturally",
     output: str = "composite.png",
-    seed: int = -1,
     width: int = WIDTH,
     height: int = HEIGHT,
+    seed: int = -1
 ):
-    # Import the expander and ratio map at the top of your file, or here
-    # from plan10.lib.qwen_prompt_expander import expand_edit_prompt_with_qwen_image, WH_RATIO_TO_SIZE
-    
-    style = "anime" if os.environ.get('ANIME', 'False') != 'False' else "realistic"
-    
-    # 1. Validate inputs
-    if not os.path.exists(background_path): 
-        raise FileNotFoundError(f"Background not found: {background_path}")
-    for c in characters:
-        if not os.path.exists(c): 
-            raise FileNotFoundError(f"Character not found: {c}")
+    from pathlib import Path
 
-    # 2. Handle establishing shot (no characters) as a simple fallback
-    if len(characters) == 0:
-        desc = add_metadata_loc(background_path, '', seed, False, False)
-        task = (
-            f"REF 1: {desc}. {shot_type.upper()} SHOT of the environment. "
-            f"Focus instruction: {action}. No characters, no silhouettes, no human forms. "
-            f"Preserve exact rendering style of REF 1 ({style} style). "
-            "ALLOW CROPPING of background elements naturally. "
-            "NO FOREGROUND BLOCKERS: The center and foreground must remain physically clear."
+    if not os.path.exists(background_path):
+        raise FileNotFoundError(
+            f"Background not found: {background_path}"
         )
-        return _run_generation(task, [background_path], output, width, height, seed, shot_type, style, f"{style} image", action)
 
-    # 3. Build a concise, high-signal user prompt for the PE-I2I expander
-    user_prompt = f"{shot_type.replace('_', ' ')} shot, {style} style. Action: {action}."
-    
-    if shot_type == 'ots' and len(characters) > 1:
-        user_prompt += " Over-the-shoulder shot. Foreground character back to camera, slightly blurred. Background character facing camera, clear and sharp."
-    elif shot_type == 'two_shot':
-        user_prompt += " Two distinct characters interacting, facing each other, both clearly visible and sharp."
-    elif shot_type in ['closeup', 'medium', 'profile_left', 'profile_right']:
-        user_prompt += f" Single character, {shot_type.replace('_', ' ')} framing."
+    for char in characters:
+        if not os.path.exists(char):
+            raise FileNotFoundError(
+                f"Character not found: {char}"
+            )
 
-    # 4. Call the PE-I2I prompt expander (Replaces ALL manual metadata extraction and prompt building)
-    ref_paths = [background_path] + characters
-    
-    expander_result = expand_edit_prompt_with_qwen_image(
-        image_paths=ref_paths,
-        user_prompt=user_prompt
-    )
-    
-    # 5. Append critical hard constraints to the expander's rich description
-    # This ensures we don't lose the strict pipeline rules that prevent common generation failures
-    hard_constraints = []
-    
-    if style == "anime":
-        hard_constraints.append(
-            "STYLE RULES: Anime cel-shaded lighting, flat color fills, bold outlines. "
-            "Correct head-to-body ratio (1/6 to 1/7 of total height). No chibi or super-deformed proportions."
-        )
-    else:
-        hard_constraints.append(
-            "STYLE RULES: Photorealistic rendering, natural skin texture with subsurface scattering, realistic shadows."
-        )
-        
-    hard_constraints.append(
-        "SPATIAL RULES: Characters MUST maintain clean spatial boundaries (no clipping through objects). "
-        "Properly grounded on floor surfaces. Maintain consistent depth layering."
-    )
-    
-    if len(characters) > 1:
-        hard_constraints.append(
-            "ANTI-BLENDING RULE: Generate EXACTLY distinct human beings. DO NOT blend, merge, or average faces, features, or clothing of different references."
-        )
-        
-    hard_constraints.append(
-        "COMPOSITION RULE: Background elements may be cropped or extend off-frame naturally. NEVER shrink objects to fit."
+    style = (
+        "anime"
+        if os.environ.get("ANIME", "False") != "False"
+        else "realistic"
     )
 
-    hard_constraints.append(
-        "PHOTOGRAPHY RULES: Shallow depth of field, f/1.8 aperture. "
-        "CRITICAL: The character must be in razor-sharp focus. "
-        "The background MUST be heavily blurred with smooth bokeh. "
-        "Do not keep the background sharp. Simulate a real camera lens focus pull."
+    images = [background_path] + characters
+
+    prompt = build_qwen_scene_prompt(
+        shot_type=shot_type,
+        action=action,
+        character_count=len(characters),
+        style=style,
     )
 
-    # Combine the rich expander output with our hard constraints
-    final_task = f"{expander_result['rewritten_prompt']}\n\nCRITICAL CONSTRAINTS:\n" + "\n".join(f"- {c}" for c in hard_constraints)
+    print("\n=== SCENE PROMPT ===\n")
+    print(prompt)
 
-
-    # Critical compositing constraints the expander won't emphasize enough
-    compositing_rules = (
-        "\n\nCRITICAL COMPOSITING RULES:\n"
-        "- Characters MUST match the lighting direction, color temperature, and intensity of REF 1 exactly.\n"
-        "- Character shadows must fall in the same direction as background shadows.\n"
-        "- Apply the same atmospheric haze, fog, or depth-of-field to characters as the background.\n"
-        "- Characters must have the same color grading and white balance as the environment.\n"
-        "- Add subtle ambient occlusion where characters meet the ground plane.\n"
-        "- Characters should NOT look pasted on or cut out. They must appear to physically exist in the space.\n"
-        "- Skin tones and clothing must reflect the ambient light color from the environment.\n"
+    expanded = expand_edit_prompt_with_qwen_image(image_paths=images,
+        user_prompt=prompt
     )
 
-    final_task += compositing_rules
+    final_prompt = expanded["rewritten_prompt"]
 
-    # 6. Optional: Override width/height based on the expander's ratio recommendation for perfect VAE alignment
-    # recommended_ratio = expander_result.get('wh_ratio', '16:9')
-    # final_width, final_height = WH_RATIO_TO_SIZE.get(recommended_ratio, (width, height))
-    final_width, final_height = width, height  # Keeping your passed dimensions for now
+    editor = ImageEditQwen21()
 
-    # Normalize background to output resolution
-    normalized_bg = normalize_to_target_resolution(background_path, width, height)
-
-    # Normalize all character references to output resolution
-    normalized_chars = [
-        normalize_to_target_resolution(c, width, height)
-        for c in characters
-    ]
-
-    # Now all images are exactly width x height
-    ref_paths = [normalized_bg] + normalized_chars
-
-    # Pass to the model
-    status = EditImage(
-        prompt=final_task,
-        images=ref_paths,  # All same resolution now
+    status = editor.generate(
+        prompt=final_prompt,
+        images=images,
         output=str(output),
         width=width,
         height=height,
-        seed=seed
+        seed=seed,
     )
 
-    # Clean up normalized temp files
-    os.remove(normalized_bg)
-    for nc in normalized_chars:
-        os.remove(nc)
+    status["prompt"] = final_prompt
 
-def _run_generation(task, ref_paths, output, width, height, seed, shot_type, style, analysis_style, action):
-    """Helper to handle generation, metadata, and analysis to reduce function size."""
-    print(f"\n📝 PROMPT ({len(task.split())} words):\n{task}\n")
-    
-    status = EditImage(task, ref_paths, output, width, height, seed)
-    
-    with Image.open(output) as img:
-        meta = load_metadata(img)
-        img.load()
-    meta.add_text("Prompt", task)
-    meta.add_text("Action", action)
-    meta.add_text("ShotType", shot_type)
-    meta.add_text("Style", style)
-    img.save(output, pnginfo=meta)
-
-    status.update({"action": action, "prompt": task})
-    if os.environ.get('BATCH', 'False') == 'False':
-        analysis = AnalyzeImage(
-            output, 
-            f"Briefly describe this {analysis_style}, no more than 100 words"
-        )
-        status['description'] = analysis['analysis']
-    status['prompt'] = task
     return status
 
 def add_metadata_char(imgpath, prompt='', seed=-1, generation_prompt=None):
@@ -817,12 +826,8 @@ def CreateBackground(prompt='', output='location_tmp.png', seed=-1, override=Non
 
 def CreateCharacterSheet(prompt='', output='character_tmp.png', seed=-1, imagegen=None, override=None):
     seed = int(seed)
-    width, height = override if override else (1024, 1024)
-    
-    # Single T2I expander call - it understands "turnaround sheet" natively
-    print(f"[Character Sheet] Enhancing prompt...")
-    t2i_result = expand_prompt_with_qwen_image(
-        user_prompt = (
+    width, height = override if override else (1536, 1536)
+    user_prompt = (
         "Professional character design turnaround sheet, single image with two side-by-side views "
         "(3/4 front view and back view) of the same character. "
         "The character is standing on a seamless white cyclorama studio backdrop with soft volumetric "
@@ -831,14 +836,19 @@ def CreateCharacterSheet(prompt='', output='character_tmp.png', seed=-1, imagege
         "the front and back views. Clean crisp edges, professional concept art quality, "
         "sharp focus, high detail. "
         f"Character description: {prompt}" )
-    )
     
-    enhanced_prompt = t2i_result['rewritten_prompt']
-    print(f"[Character Sheet] Enhanced prompt ({len(enhanced_prompt)} chars)")
+    # Single T2I expander call - it understands "turnaround sheet" natively
+    #print(f"[Character Sheet] Enhancing prompt...")
+    #t2i_result = expand_prompt_with_qwen_image(
+    #    user_prompt = user_prompt
+    #)
+    
+    #enhanced_prompt = t2i_result['rewritten_prompt']
+    #print(f"[Character Sheet] Enhanced prompt ({len(enhanced_prompt)} chars)")
     
     # Generate directly
     gen = imagegen if imagegen else ImageGen()
-    status = gen.generate(enhanced_prompt, 'tmp.png', width, height, seed)
+    status = gen.generate(user_prompt, 'tmp.png', width, height, seed)
     if not imagegen:
         del gen
     
@@ -852,7 +862,7 @@ def CreateCharacterSheet(prompt='', output='character_tmp.png', seed=-1, imagege
         os.remove('tmp.png')
     
     status['description'] = add_metadata_char(output, prompt, seed)
-    status['prompt'] = enhanced_prompt
+    status['prompt'] = user_prompt
     
     return status
 
@@ -981,12 +991,13 @@ def main():
     elif args.location:
         print(CreateBackground(args.prompt, args.output,args.seed))
     elif args.expand_image:
-        if args.images:
-            print(expand_edit_prompt_with_qwen_image(args.images, args.prompt))
+        if args.edit:
+            expanded = expand_edit_prompt_with_qwen_image(args.images, args.prompt)
+            EditImage(expanded['rewritten_prompt'], args.images, args.output, args.seed)
         else:
             print(expand_prompt_with_qwen_image(args.prompt))
     elif args.edit:
-        print(EditImage(args.prompt, args.images, args.output, args.seed))
+        print(EditImage(args.prompt, args.images, args.output, args.width, args.height, args.seed))
     elif args.portrait:
         print(CreatePortrait('', args.images[0], args.output, args.seed))
     elif args.composite:

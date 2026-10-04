@@ -451,6 +451,9 @@ elif "SENSENOVA" in os.environ.get("IMAGE_EDIT", "KLEIN"):
     ImageEdit = ImageEditSenseNova
 elif "QWEN2" in os.environ.get("IMAGE_EDIT", "KLEIN"):
     ImageEdit = ImageEditQwen2
+elif "QWEN21" in os.environ.get("IMAGE_EDIT", "KLEIN"):
+    from plan10.lib.qwen21 import ImageEditQwen21
+    ImageEdit = ImageEditQwen21
 else:
     ImageEdit = ImageEditQwen
 

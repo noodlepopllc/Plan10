@@ -186,9 +186,6 @@ VISUAL_ID: [8-12 words]
                         char["character_name"] = "unknown"
                         char["confidence"] = 0.0
 
-
-
-
     def get_character(self, index):
         if 0 <= index < len(self.characters):
             return self.characters[index]

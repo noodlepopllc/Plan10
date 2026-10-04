@@ -537,6 +537,8 @@ def send(prompt, images, audio, output='output.mp4', width=768, height=448, dura
 def get_builder(script, output_dir):
     if ANIME:
         from plan10.lib.anime_gen import GenerateImage, CreateCharacterSheet, CreateBackground, CreatePortrait
+    elif os.environ.get('IMAGE_GEN', 'KLEIN') == 'QWEN21':
+        from plan10.lib.qwen21 import GenerateImage, CreateCharacterSheet, CreateBackground, CreatePortrait
     else:
         from plan10.lib.image_gen import GenerateImage, CreateCharacterSheet, CreateBackground, CreatePortrait
     from plan10.lib.dialog import DesignVoice
@@ -552,6 +554,8 @@ def main():
     import argparse, sys
     if ANIME:
         from plan10.lib.anime_gen import GenerateImage, CreateCharacterSheet, CreateBackground, CreatePortrait
+    elif os.environ.get('IMAGE_GEN', 'KLEIN') == 'QWEN21':
+        from plan10.lib.qwen21 import GenerateImage, CreateCharacterSheet, CreateBackground, CreatePortrait
     else:
         from plan10.lib.image_gen import GenerateImage, CreateCharacterSheet, CreateBackground, CreatePortrait
     from plan10.lib.dialog import DesignVoice

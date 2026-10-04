@@ -390,6 +390,9 @@ elif os.environ.get("IMAGE_GEN", "KLEIN") == "SENSENOVA":
     ImageGen = ImageGenSenseNova
 elif os.environ.get("IMAGE_GEN", "KLEIN") == "QWEN2":
     ImageGen = ImageGenQwen2
+elif os.environ.get("IMAGE_GEN", "KLEIN") == "QWEN21":
+    from plan10.lib.qwen21 import ImageGenQwen21
+    ImageGen = ImageGenQwen21
 else:
     ImageGen = ImageGenQwen
 

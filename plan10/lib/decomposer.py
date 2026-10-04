@@ -19,10 +19,15 @@ VRAM = int(os.environ.get("VRAM", "80"))
 
 if ANIME:
     from plan10.lib.anime_gen import CreateCharacterSheet, CreateBackground, ImageGen, add_metadata_loc, GenerateImage
+elif os.environ.get('IMAGE_GEN', 'KLEIN') == 'QWEN21':
+    from plan10.lib.qwen21 import CreateCharacterSheet, CreateBackground, ImageGen, add_metadata_loc, GenerateImage
 else:
     from plan10.lib.image_gen import CreateCharacterSheet, CreateBackground, ImageGen, add_metadata_loc, GenerateImage
 
-from plan10.lib.compositor import CompositeScene
+if os.environ.get('IMAGE_EDIT', 'KLEIN') == 'QWEN21':
+    from plan10.lib.qwen21 import CompositeScene
+else:
+    from plan10.lib.compositor import CompositeScene
 
 import json
 from pathlib import Path

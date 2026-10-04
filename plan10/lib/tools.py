@@ -11,6 +11,8 @@ from plan10.lib.image_gen import (
 ) 
 if os.environ.get('ANIME','False') != 'False':
     from plan10.lib.anime_gen import GenerateImage, CreateBackground, CreateCharacterSheet
+elif os.environ.get('IMAGE_GEN', 'KLEIN') == 'QWEN21':
+    from plan10.lib.qwen21 import GenerateImage, CreateBackground, CreateCharacterSheet
 else:
     from plan10.lib.image_gen import GenerateImage, CreateBackground, CreateCharacterSheet
 from plan10.lib.graphics_gen import GenerateGraphic, GenerateGraphicSchema
@@ -18,18 +20,23 @@ from plan10.lib.image_analysis import EnhancePrompt
 from plan10.lib.dialog import VoiceDesignSchema, VoiceCloneSchema, DesignVoice, CloneVoice
 from plan10.lib.compositor import (
     CompositeSceneSchema, 
-    CompositeScene,
     CompositeBackgroundSchema,
     CompositeBackground
     )
+if os.environ.get('IMAGE_GEN', 'KLEIN') == 'QWEN21':
+    from plan10.lib.qwen21 import CompositeScene 
+else:
+from plan10.lib.compositor import CompositeScene
 
 import traceback
 
 # UPDATED IMPORTS to match consolidated image_edit.py
-from plan10.lib.image_edit import (
-    EditImageSchema, 
-    EditImage
-)
+from plan10.lib.image_edit import EditImageSchema
+
+if os.environ.get('IMAGE_EDIT', 'KLEIN') == 'QWEN21':
+    from plan10.lib.qwen21 import EditImage
+else:
+    from plan10.lib.image_edit import EditImage
 
 from plan10.lib.camera import GimbalShotSchema, ApplyGimbalShot
 

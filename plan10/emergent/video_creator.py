@@ -64,6 +64,8 @@ def get_or_create_visual_id(character_image: str, goal: str):
 
 if ANIME:
     from plan10.lib.anime_gen import GenerateImage, prompt_metadata
+elif os.environ.get('IMAGE_GEN', 'KLEIN') == 'QWEN21':
+    from plan10.lib.qwen21 import  GenerateImage, prompt_metadata
 else:
     from plan10.lib.image_gen import GenerateImage, prompt_metadata
 
@@ -151,8 +153,36 @@ def main():
         print(f"REFERENCES: {refs}")
 
         char_ids = [get_or_create_visual_id(ref, goal) for ref in refs]
+        
+        # Sanitize BOTH lists to ensure they stay perfectly in sync
+        sanitized_char_ids = []
+        char_names = []
+        
+        for i, (vid, name) in enumerate(char_ids, 1):
+            # Clean the name: handle None, strip whitespace, make lowercase for comparison
+            clean_name = (name or "").strip().lower()
+            
+            if not clean_name or clean_name == "unknown":
+                final_name = f"char{i}"
+            else:
+                final_name = name  # Keep original valid name (preserves casing)
+                
+            sanitized_char_ids.append((vid, final_name))
+            char_names.append(final_name)
+            
+        # Overwrite the originals with the sanitized versions
+        char_ids = sanitized_char_ids
         visual_ids = [x[0] for x in char_ids]
         char_names = [x[1] for x in char_ids]
+
+        tmp_names = []
+
+        for i, name in enumerate(char_names, 1):
+            if name.strip() == 'unknown':
+                tmp_names.append(f'char{i}')
+            else:
+                tmp_names.append(name)
+        char_names = tmp_names
         
         beat_count = 0
         story_context = args.context
