@@ -73,4 +73,5 @@ bot_cli = "plan10.bin.bot_cli:main"
 llm = "plan10.lib.qwen_llm:main"
 director = "plan10.lib.director_mmh3:main"
 previewer = "plan10.emergent.ltx25_previewer:main"
+qwen21 = "plan10.lib.qwen21:main"
 
