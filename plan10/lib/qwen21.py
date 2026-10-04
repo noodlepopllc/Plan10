@@ -412,6 +412,7 @@ def GenerateImage(prompt='', output='tmp.png', width=WIDTH, height=HEIGHT, seed=
     gen = imagegen if imagegen else ImageGen()
     if seed == -1:
         seed = random.randint(0, 1000000)
+    prompt = expand_prompt_with_qwen_image(prompt)
     status = gen.generate(prompt, output, int(width), int(height), int(seed))
     del gen
     status['description'] = ''

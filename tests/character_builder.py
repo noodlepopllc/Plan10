@@ -500,6 +500,8 @@ def main():
     load_environ()
     if os.environ.get('ANIME','False') != 'False':
         from plan10.lib.anime_gen import ImageGen, CreateCharacterSheet
+    elif os.environ.get("IMAGE_GEN", "KLEIN") == "QWEN21":
+        from plan10.lib.qwen21 import ImageGen, CreateCharacterSheet
     else:
         from plan10.lib.image_gen import ImageGen, CreateCharacterSheet
     from pathlib import Path
