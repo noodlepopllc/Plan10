@@ -472,8 +472,8 @@ def shot_prompt(shot_type: str, character_count: int) -> str:
 
     if shot_type == "ots":
         return (
-            "over-the-shoulder shot, foreground character partially visible, "
-            "focus on the other character"
+            "over-the-shoulder shot, foreground character <image 2> partially visible, back of head and top of shoulders only "
+            "focus on the other character <image 3>"
         )
 
     return shot_type.replace("_", " ")
