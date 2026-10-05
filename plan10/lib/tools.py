@@ -26,7 +26,7 @@ from plan10.lib.compositor import (
 if os.environ.get('IMAGE_GEN', 'KLEIN') == 'QWEN21':
     from plan10.lib.qwen21 import CompositeScene 
 else:
-from plan10.lib.compositor import CompositeScene
+    from plan10.lib.compositor import CompositeScene
 
 import traceback
 
