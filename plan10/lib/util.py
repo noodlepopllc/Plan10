@@ -310,5 +310,5 @@ def resize_low_vram_png(ref_path, divisor=32):
 
     # Save resized PNG
     out.save(resized)
-    return str(resized)
+    return str(Path(resized).resolve())
 
