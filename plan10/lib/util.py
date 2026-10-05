@@ -277,14 +277,18 @@ def classify_ratio(w, h):
     }
     return min(targets, key=lambda k: abs(ratio - targets[k]))
 
+from pathlib import Path
+from PIL import Image
+
 def resize_low_vram_png(ref_path, divisor=32):
-    p = Path(ref_path)
+    # 1. Resolve immediately to ensure absolute paths everywhere
+    p = Path(ref_path).resolve()
 
     # Only PNG allowed
     if p.suffix.lower() != ".png":
         return None
 
-    # Deterministic cache filename
+    # Deterministic cache filename (now guaranteed to be absolute)
     resized = p.with_name(p.stem + "_resized.png")
 
     # Reuse cached version
@@ -310,5 +314,7 @@ def resize_low_vram_png(ref_path, divisor=32):
 
     # Save resized PNG
     out.save(resized)
-    return str(Path(resized).resolve())
+    
+    # Return the absolute path
+    return str(resized)
 
