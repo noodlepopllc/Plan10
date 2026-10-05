@@ -567,12 +567,12 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0, visual_ids=[], char_n
     for ndx, ref in enumerate(refs, start=1):
         label = f"char{ndx}"
         char_desc = get_or_analyze(ref, CHAR_PROMPT, 'Description', max_words=100)
-        script += f"char | {label} | {ref} | {char_desc}\n"
+        script += f"char | {label} | {'-' if low_vram and ff else ref} | {char_desc}\n"
 
         if portraits:
             portrait_desc = get_or_analyze(portraits[ndx-1], FACE_PROMPT, 'Description', max_words=100)
             portrait_entries += f"portrait | portrait_{ndx} | {portraits[ndx-1]} | {label} | {portrait_desc}\n"
-        else:
+        elif not low_vram:
             port_path = os.path.splitext(ref)[0] + '_portrait.png'
             portrait_desc = get_or_analyze(ref, FACE_PROMPT, 'Description', max_words=100)
             portrait_entries += f"portrait | portrait_{ndx} | {port_path} | {label} | A portrait of {label}\n"
