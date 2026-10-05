@@ -481,14 +481,9 @@ def send(prompt, images, audio, output='output.mp4', width=768, height=448, dura
             
     if start_image:
         args["image_prompt_type"] = "S"
-        if images:
-            args["image_start"] = images[0]
-            args['image_refs'] = images
-        else:
-            args["image_prompt_type"] = "T" # Fallback to text-to-video if no images found
-            args['image_refs'] = []
-    else:
-        args['image_refs'] = images
+    if images:
+        args["image_start"] = images[0]
+        args['image_refs'] = images[1:]
         
     if upscale:
         args["spatial_upsampling"] = "ltx25*2"
