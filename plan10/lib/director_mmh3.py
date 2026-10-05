@@ -479,8 +479,8 @@ def send(prompt, images, audio, output='output.mp4', width=768, height=448, dura
         if len(audio):
             args["audio_guide2"] = audio.pop()
             
-    if start_image:
-        args["image_prompt_type"] = "S"
+
+    args["image_prompt_type"] = "S"
     if images:
         args["image_start"] = images[0]
         args['image_refs'] = images[1:]
