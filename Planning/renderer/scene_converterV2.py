@@ -127,7 +127,7 @@ def h3_ref(bg, refs, prompt, duration=10.0, visual_ids=[], char_names=[], shots=
             script += f"audio | voice_{ndx} | {wav_path} | {label} | {','.join(voice_profile)}\n"
     
     script += portrait_entries
-    script += f"summary | {prompt}\n"
+    script += f"summary | {replace_character_names(prompt, char_names)}\n"
     script += f"soundscape | {translate_to_audio_prompt(bg_desc)}\n"
     script += shots + "\n"
 
