@@ -170,12 +170,10 @@ def replace_character_names(script: str, char_names: list) -> str:
                 
                 # Simple case-insensitive replacement
                 # Check if word matches the name (with or without punctuation)
-                clean_word = word.strip('.,;:!?')
-                if clean_word.lower() == name.lower():
+                if word.lower().startswith(name.lower()):
                     # Preserve any trailing punctuation
-                    punctuation = word[len(clean_word):]
-                    word = token + punctuation
-        
+                    word = word.lower().replace(name.lower(), token)
+    
         result.append(word)
     
     return ' '.join(result)
