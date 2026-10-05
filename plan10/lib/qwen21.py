@@ -719,7 +719,6 @@ def CreatePortrait(prompt='', reference='', output='character_tmp.png',
             )
     else:
         # T2I path: no reference, pure generation
-        from plan10.lib.qwen_prompt_expander import expand_prompt_with_qwen_image
         print(f"[Portrait] Using T2I expander (no reference)...")
         user_prompt = f"Professional headshot portrait. Shoulders and head fully visible, front-facing, looking directly at camera. Clean neutral background, soft even studio lighting. {prompt}"
         
