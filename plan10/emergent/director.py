@@ -182,9 +182,8 @@ SCENE TRANSITIONS: If NEXT_ACTION describes characters moving to a NEW location 
         # Cleanly join optional context blocks
         context_blocks = [history_text, setup_context, transition_directive, constraint_directive]
         recent_context = "\n".join(filter(None, context_blocks))
-        interaction_directive = ""
-        if len(char_names) > 1:
-            interaction_directive = """
+
+        interaction_directive = """
 INTERACTION RULE: When multiple characters are present, their interaction must feel natural and purposeful.
 - If the scene calls for conversation: include a specific, goal-relevant line of dialogue.
 - If the scene is a quiet moment, reaction, or transition: use a meaningful physical interaction (shared glance, synchronized movement, emotional reaction) instead.
@@ -198,6 +197,8 @@ PREVIOUS INTENTION: {intended_action}
 ACTUAL SCENE STATE: {actual_reality}
 {visual_grounding}
 {recent_context}
+
+{interaction_directive}
 
 {task_directive}
 
