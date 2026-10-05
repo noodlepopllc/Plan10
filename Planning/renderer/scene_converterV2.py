@@ -145,6 +145,7 @@ def replace_character_names(script: str, char_names: list) -> str:
     Replaces character names with charX tokens, skipping quoted segments.
     Simple word-by-word approach with quote tracking.
     """
+    print("WTF IS GOING ON?", char_names, script)
     # Normalize unicode quotes
     script = script.replace("’", "'").replace("‘", "'")
     
