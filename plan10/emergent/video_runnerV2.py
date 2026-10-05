@@ -668,9 +668,9 @@ def main():
             current_source.save(str(current_source_path.resolve()))
             
         if args.scene_mode:
-            script = h3_ref(None, str(current_source_path.resolve()), refs, None, prompt, duration, visual_ids=visual_ids, char_names=char_names, args.low_vram)
+            script = h3_ref(None, str(current_source_path.resolve()), refs, None, prompt, duration, visual_ids=visual_ids, char_names=char_names, low_vram=args.low_vram)
         else:
-            script = h3_ref(bg, None, refs, None, prompt, duration, visual_ids=visual_ids, char_names=char_names, args.low_vram)
+            script = h3_ref(bg, None, refs, None, prompt, duration, visual_ids=visual_ids, char_names=char_names, low_vram=args.low_vram)
         Path(pending_job['output_path'].replace('.mp4', '_script.txt')).write_text(script, encoding='utf-8')
 
         if LTX:
