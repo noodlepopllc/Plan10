@@ -363,11 +363,13 @@ class SmartVideoPromptBuilder:
                 elif cmd == 'soundscape':
                     self.set_soundscape(parts[1] if len(parts) > 1 else "")
                 elif cmd == 'shot':
+                    # Safely parse duration, catching ValueError if it's not a number
                     duration = float(parts[2]) if len(parts) > 2 and parts[2] else None
                     self.add_shot(parts[1], duration=duration)
                     
-            except IndexError:
-                print(f"[Warning] Malformed line skipped: {line}")
+            except (IndexError, ValueError) as e:
+                # Now you will SEE exactly which line is failing and why
+                print(f"[Warning] Malformed line skipped: '{line}' (Error: {e})")
                 
         return self
 
