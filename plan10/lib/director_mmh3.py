@@ -666,28 +666,29 @@ def main():
         img_refs = []
         aud_refs = []
 
-    # SAFE RESIZE WITH FALLBACK: Prevents resize functions from silently dropping valid images
-    #width and height must be multiples of 32, 1344x768, 864x480 minimal
-    from plan10.lib.util import resize_low_vram_png
-    img_refs_resized = []
-    for ref in img_refs:
-        if not ref or not os.path.exists(ref):
-            print(f"[Warning] Image reference not found, skipping: {ref}")
-            continue
-        try:
-            out = resize_low_vram_png(ref, divisor=32)
-            # Validate that the resized file actually exists and was created
-            if out and os.path.exists(out) and os.path.getsize(out) > 0:
-                img_refs_resized.append(out)
-                print(f"[Debug] Successfully resized: {ref} -> {out}")
-            else:
-                # Fallback to original if resize failed
-                print(f"[Warning] Resize failed for {ref}, using original")
+    if args.low_vram:
+        # SAFE RESIZE WITH FALLBACK: Prevents resize functions from silently dropping valid images
+        #width and height must be multiples of 32, 1344x768, 864x480 minimal
+        from plan10.lib.util import resize_low_vram_png
+        img_refs_resized = []
+        for ref in img_refs:
+            if not ref or not os.path.exists(ref):
+                print(f"[Warning] Image reference not found, skipping: {ref}")
+                continue
+            try:
+                out = resize_low_vram_png(ref, divisor=32)
+                # Validate that the resized file actually exists and was created
+                if out and os.path.exists(out) and os.path.getsize(out) > 0:
+                    img_refs_resized.append(out)
+                    print(f"[Debug] Successfully resized: {ref} -> {out}")
+                else:
+                    # Fallback to original if resize failed
+                    print(f"[Warning] Resize failed for {ref}, using original")
+                    img_refs_resized.append(ref)
+            except Exception as e:
+                print(f"[Warning] Failed to resize {ref}: {e}. Using original path.")
                 img_refs_resized.append(ref)
-        except Exception as e:
-            print(f"[Warning] Failed to resize {ref}: {e}. Using original path.")
-            img_refs_resized.append(ref)
-    img_refs = img_refs_resized
+        img_refs = img_refs_resized
 
     print(f"\n[Debug] Final image refs to be used ({len(img_refs)}): {img_refs}")
     print(f"[Debug] Final audio refs to be used ({len(aud_refs)}): {aud_refs}\n")

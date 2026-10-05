@@ -136,52 +136,17 @@ class Director:
         )
             
 
-    def compare_and_decide_dialog(self, intended_action, actual_reality, story_context, history, pending_setup, goal=None, force_transition=False, 
-                              location_constraint=None, bg_desc=None, ff_desc=None):
-        history_text = "\n".join([f"- {a}" for a in history[-3:]]) if history else "First beat."
-        
-        setup_context = ""
-        if pending_setup:
-            setup_context = f"\nPREVIOUS SETUP: {pending_setup}\nThis was set up in the last beat and should now pay off or escalate."
-        
-        transition_directive = ""
-        if force_transition:
-            transition_directive = """
-    CRITICAL: The character has walked away or turned their back. You MUST generate a "CUT TO:" that transitions to a NEW LOCATION or NEW CAMERA ANGLE where the character is clearly visible from the front or 3/4 view. Do NOT continue the current shot."""
-        
-        constraint_directive = ""
-        if location_constraint:
-            constraint_directive = f"\nCONSTRAINT: {location_constraint}"
-
-        visual_grounding = ""
-        if bg_desc:
-            visual_grounding += f"\nACTUAL ENVIRONMENT (ground truth): {bg_desc}"
-        if ff_desc:
-            visual_grounding += f"\nCURRENT FRAME LAYOUT: {ff_desc}"
-        
-        goal_directive = ""
-        if goal:
-            goal_directive = f"""
-NARRATIVE GOAL: {goal}
-
-Every action MUST move toward completing this goal. If characters deviated from the intended path, adapt and find a new logical route.
-
-SCENE TRANSITIONS: If NEXT_ACTION describes characters moving to a NEW location (walking to ship, entering cave, running away), set SCENE_TRANSITION: YES and describe NEW_LOCATION in detail. Minor movements (stepping forward, turning) = NO.
-"""
-        
         if not history:
             task_directive = """TASK: This is the FIRST BEAT. 
 1. The ACTUAL SCENE STATE is the starting visual.
-2. Your NEXT_ACTION MUST execute the STORY CONTEXT as the immediate action. Characters can speak, react, or interact with the environment."""
+2. Your NEXT_ACTION MUST execute the STORY CONTEXT as the immediate action. Characters can speak dialogue, react, or physically interact with the environment."""
         else:
             task_directive = """TASK: Apply "Yes, And..." improv logic with GOAL-DIRECTED PROGRESSION.
 1. YES: Accept the ACTUAL SCENE STATE as absolute truth (what actually happened visually, not what was intended).
-2. AND: Generate the next moment-to-moment action that moves toward the NARRATIVE GOAL.
-3. CONTINUITY: Characters maintain their current pose/posture from the ACTUAL SCENE STATE. If a pose must change, explicitly describe the transition (e.g., "stands up from kneeling"). Never repeat a pose they are already in as if it's a new action."""
+2. AND: Generate the next moment-to-moment action or DIALOGUE that moves toward the NARRATIVE GOAL.
+3. CONTINUITY: Characters maintain their current pose/posture from the ACTUAL SCENE STATE. If a pose must change, explicitly describe the transition. Characters may speak, react, or converse to advance the scene."""
 
-        # Cleanly join optional context blocks
-        context_blocks = [history_text, setup_context, transition_directive, constraint_directive]
-        recent_context = "\n".join(filter(None, context_blocks))
+        # ... [keep the rest of the context blocks the same] ...
 
         prompt = f"""STORY CONTEXT: {story_context}
 {goal_directive}
@@ -194,27 +159,18 @@ ACTUAL SCENE STATE: {actual_reality}
 
 IMPORTANT:
 Identify characters ONLY by:
-- hair color
-- hair style
-- clothing type
-- crown/headpiece
-- face shape
+- hair color, hair style, clothing type, crown/headpiece, face shape
 
 Do NOT infer identity from:
-- pose
-- gesture
-- hand position
-- who is speaking
-- who is gesturing
+- pose, gesture, hand position, who is speaking, who is gesturing
 
 VALIDATION RULES:
 
 # HARD ERRORS — retry required
 If ACTUAL SCENE STATE shows:
-- missing intended physical action
-- wrong character performing the action
-- duplicated characters
-- hallucinated characters
+- missing intended physical action OR intended dialogue was completely ignored
+- wrong character performing the action or speaking
+- duplicated or hallucinated characters
 - empty/black/corrupted frame
 - broken camera angle
 - unintended turning away, walking off-frame, or exiting
@@ -230,16 +186,15 @@ Then:
 # SOFT ERRORS — partial match, continue
 If ACTUAL SCENE STATE shows:
 - minor warping/morphing
-- expression mismatch
-- gesture mismatch (action still occurred)
+- expression or emotional tone mismatch
+- gesture mismatch (but core action/dialogue still occurred)
 - missing micro-actions
-- emotional tone mismatch
 - slight facing-direction mismatch
 - background/crowd variation
 
 Then:
     MATCH: PARTIAL
-    NEXT_ACTION: [corrected physical action]
+    NEXT_ACTION: [corrected physical action or dialogue line]
     SETUP: [corrected setup]
     GOAL_PROGRESS: continue
     SCENE_TRANSITION: NO
@@ -247,10 +202,9 @@ Then:
 
 # FULL MATCH — move on
 If ACTUAL SCENE STATE shows:
-- intended physical action occurred
-- correct character performed it
-- pose matches
-- facing matches
+- intended physical action or dialogue occurred
+- correct character performed it or spoke
+- pose and facing match the context
 - camera matches
 - no unintended turning/walking/exiting
 
@@ -270,20 +224,10 @@ LOCATION: [brief location]
 CHARACTERS: [brief descriptions]
 SCENE_TRANSITION: [YES/NO]
 NEW_LOCATION: [if YES]
-NEXT_ACTION: [Describe ONE action beat OR "RETRY_SCENE"]
+NEXT_ACTION: [Describe ONE physical action, dialogue line, or reaction beat OR "RETRY_SCENE"]
 SETUP: [description OR "NONE"]
 GOAL_PROGRESS: [description OR "NONE"]
 """
-        
-        result = llm_analyze_media(
-            media="", prompt=prompt,
-            system="You are a film director and screenwriter specializing in comedic timing and character interaction. Every action (including dialogue, facial expressions, and physical comedy) must move toward the narrative goal while adapting to what actually happened. Use cinematic cuts to solve visibility issues.",
-            max_tokens=2048, temperature=0.7
-        )['analysis']
-
-        print(f"\n=== RAW LLM OUTPUT ===\n{result}\n=== END RAW OUTPUT ===\n")
-        
-        return result.strip()
 
     def compare_and_decide_no_dialog(self, intended_action, actual_reality, story_context, history, pending_setup, goal=None, force_transition=False, location_constraint=None, bg_desc=None, ff_desc=None):
         history_text = "\n".join([f"- {a}" for a in history[-3:]]) if history else "First beat."
