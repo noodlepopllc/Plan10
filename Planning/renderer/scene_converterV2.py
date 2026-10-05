@@ -143,41 +143,52 @@ import re
 def replace_character_names(script: str, char_names: list) -> str:
     """
     Replaces character names with charX tokens, skipping quoted segments.
-    Simple word-by-word approach with quote tracking.
     """
-    print("WTF IS GOING ON?", char_names, script)
     # Normalize unicode quotes
-    script = script.replace("’", "'").replace("‘", "'")
+    script = (script
+        .replace("'", "'").replace("'", "'")
+        .replace(""", '"').replace(""", '"'))
     
-    # Split on whitespace while preserving spaces
-    words = script.split(' ')
+    # Build name → token mapping
+    name_map = {}
+    for i, name in enumerate(char_names, 1):
+        if name and name.lower() != "unknown":
+            name_map[name.lower()] = f"char{i}"
     
-    in_quotes = False
     result = []
+    in_quotes = False
+    i = 0
     
-    for word in words:
-        # Check if this word contains a quote toggle
-        # Count quotes to track state
-        quote_count = word.count('"') + word.count("'")
+    while i < len(script):
+        char = script[i]
         
-        # If odd number of quotes, toggle state
-        if quote_count % 2 == 1:
+        # Track quote state
+        if char == '"' or char == "'":
             in_quotes = not in_quotes
+            result.append(char)
+            i += 1
+            continue
         
-        # Only replace if NOT in quotes
-        if not in_quotes:
-            for cndx, name in enumerate(char_names, 1):
-                token = f"char{cndx}"
-                
-                # Simple case-insensitive replacement
-                # Check if word matches the name (with or without punctuation)
-                if word.lower().startswith(name.lower()):
-                    # Preserve any trailing punctuation
-                    word = word.lower().replace(name.lower(), token)
+        # Inside quotes - copy verbatim
+        if in_quotes:
+            result.append(char)
+            i += 1
+            continue
+        
+        # Outside quotes - try to match a name
+        matched = False
+        for name, token in name_map.items():
+            if script[i:].lower().startswith(name):
+                result.append(token)
+                i += len(name)
+                matched = True
+                break
+        
+        if not matched:
+            result.append(char)
+            i += 1
     
-        result.append(word)
-    
-    return ' '.join(result)
+    return ''.join(result)
 
     # ------------------------------------------------------------
     # 4. Call your LLM
