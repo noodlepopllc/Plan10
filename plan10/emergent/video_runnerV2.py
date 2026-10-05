@@ -520,7 +520,7 @@ def replace_character_names(script, char_names):
 
     return ''.join(segments)
 
-def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0, visual_ids=[], char_names=[]):
+def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0, visual_ids=[], char_names=[], low_vram=False):
     script = ""
     char_labels = [f"char{ndx}" for ndx in range(1, len(refs) + 1)]
     
@@ -609,6 +609,7 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('-O', '--output', type=str, default="feedback_output")
     parser.add_argument('-M', '--scene-mode', action='store_true')
+    parser.add_argument('--low-vram', action='store_true')
     args, _ = parser.parse_known_args()
     
     state_mgr = StateManager(args.output)
@@ -667,9 +668,9 @@ def main():
             current_source.save(str(current_source_path.resolve()))
             
         if args.scene_mode:
-            script = h3_ref(None, str(current_source_path.resolve()), refs, None, prompt, duration, visual_ids=visual_ids, char_names=char_names)
+            script = h3_ref(None, str(current_source_path.resolve()), refs, None, prompt, duration, visual_ids=visual_ids, char_names=char_names, args.low_vram)
         else:
-            script = h3_ref(bg, None, refs, None, prompt, duration, visual_ids=visual_ids, char_names=char_names)
+            script = h3_ref(bg, None, refs, None, prompt, duration, visual_ids=visual_ids, char_names=char_names, args.low_vram)
         Path(pending_job['output_path'].replace('.mp4', '_script.txt')).write_text(script, encoding='utf-8')
 
         if LTX:
