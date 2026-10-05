@@ -96,7 +96,8 @@ def expand_prompt_with_qwen_image(user_prompt: str) -> dict:
     
     # Load system prompt
     sys_prompt_path = huggingface_hub.hf_hub_download(model_id, "system_prompt.txt")
-    system_prompt = open(sys_prompt_path).read().strip()
+    with open(sys_prompt_path, "r", encoding="utf-8") as f:
+        system_prompt = f.read().strip()
     
     # Format input
     text = tokenizer.apply_chat_template(
@@ -163,8 +164,9 @@ def expand_edit_prompt_with_qwen_image(image_paths: list, user_prompt: str) -> d
     
     # Load system prompt
     sys_prompt_path = huggingface_hub.hf_hub_download(model_id, "system_prompt.txt")
-    system_prompt = open(sys_prompt_path).read().strip()
-    
+    with open(sys_prompt_path, "r", encoding="utf-8") as f:
+        system_prompt = f.read().strip()
+
     # Load all input images (resize for speed)
     input_images = [prepare_image_for_expander(path, max_size=512) for path in image_paths]
     
