@@ -136,6 +136,39 @@ class Director:
         )
             
 
+    def compare_and_decide_dialog(self, intended_action, actual_reality, story_context, history, pending_setup, goal=None, force_transition=False, 
+                              location_constraint=None, bg_desc=None, ff_desc=None):
+        history_text = "\n".join([f"- {a}" for a in history[-3:]]) if history else "First beat."
+        
+        setup_context = ""
+        if pending_setup:
+            setup_context = f"\nPREVIOUS SETUP: {pending_setup}\nThis was set up in the last beat and should now pay off or escalate."
+        
+        transition_directive = ""
+        if force_transition:
+            transition_directive = """
+    CRITICAL: The character has walked away or turned their back. You MUST generate a "CUT TO:" that transitions to a NEW LOCATION or NEW CAMERA ANGLE where the character is clearly visible from the front or 3/4 view. Do NOT continue the current shot."""
+        
+        constraint_directive = ""
+        if location_constraint:
+            constraint_directive = f"\nCONSTRAINT: {location_constraint}"
+
+        visual_grounding = ""
+        if bg_desc:
+            visual_grounding += f"\nACTUAL ENVIRONMENT (ground truth): {bg_desc}"
+        if ff_desc:
+            visual_grounding += f"\nCURRENT FRAME LAYOUT: {ff_desc}"
+        
+        goal_directive = ""
+        if goal:
+            goal_directive = f"""
+NARRATIVE GOAL: {goal}
+
+Every action MUST move toward completing this goal. If characters deviated from the intended path, adapt and find a new logical route.
+
+SCENE TRANSITIONS: If NEXT_ACTION describes characters moving to a NEW location (walking to ship, entering cave, running away), set SCENE_TRANSITION: YES and describe NEW_LOCATION in detail. Minor movements (stepping forward, turning) = NO.
+"""
+        
         if not history:
             task_directive = """TASK: This is the FIRST BEAT. 
 1. The ACTUAL SCENE STATE is the starting visual.
@@ -146,7 +179,9 @@ class Director:
 2. AND: Generate the next moment-to-moment action or DIALOGUE that moves toward the NARRATIVE GOAL.
 3. CONTINUITY: Characters maintain their current pose/posture from the ACTUAL SCENE STATE. If a pose must change, explicitly describe the transition. Characters may speak, react, or converse to advance the scene."""
 
-        # ... [keep the rest of the context blocks the same] ...
+        # Cleanly join optional context blocks
+        context_blocks = [history_text, setup_context, transition_directive, constraint_directive]
+        recent_context = "\n".join(filter(None, context_blocks))
 
         prompt = f"""STORY CONTEXT: {story_context}
 {goal_directive}
@@ -228,6 +263,16 @@ NEXT_ACTION: [Describe ONE physical action, dialogue line, or reaction beat OR "
 SETUP: [description OR "NONE"]
 GOAL_PROGRESS: [description OR "NONE"]
 """
+        
+        result = llm_analyze_media(
+            media="", prompt=prompt,
+            system="You are a film director and screenwriter specializing in comedic timing and character interaction. Every action (including dialogue, facial expressions, and physical comedy) must move toward the narrative goal while adapting to what actually happened. Use cinematic cuts to solve visibility issues.",
+            max_tokens=2048, temperature=0.7
+        )['analysis']
+
+        print(f"\n=== RAW LLM OUTPUT ===\n{result}\n=== END RAW OUTPUT ===\n")
+        
+        return result.strip()
 
     def compare_and_decide_no_dialog(self, intended_action, actual_reality, story_context, history, pending_setup, goal=None, force_transition=False, location_constraint=None, bg_desc=None, ff_desc=None):
         history_text = "\n".join([f"- {a}" for a in history[-3:]]) if history else "First beat."
