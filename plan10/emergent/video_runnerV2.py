@@ -499,26 +499,32 @@ DEFINITIONS:
 - {hair color} is the observed color.
 '''
 
-def replace_character_names(script, char_names):
-    import unicodedata
-    script = unicodedata.normalize("NFKC", script)
-    segments = re.split(r'(".*?"|\'.*?\')', script)
-
-    for cndx, name in enumerate(char_names, 1):
-        token = f"char{cndx}"
-        if name is None:
-            continue
-        pattern = re.compile(rf"\b{re.escape(name)}\b", re.IGNORECASE)
-        pattern_possessive = re.compile(rf"\b{re.escape(name)}'s\b", re.IGNORECASE)
-
-        for idx, segment in enumerate(segments):
-            if segment and segment[0] in {'"', "'"}:
-                continue
-            segment = pattern.sub(token, segment)
-            segment = pattern_possessive.sub(f"{token}'s", segment)
-            segments[idx] = segment
-
-    return ''.join(segments)
+def replace_character_names(script: str, char_names: list) -> str:
+    """
+    Replaces character names with charX tokens, skipping quoted segments.
+    """
+    # Build name → token mapping
+    name_map = {}
+    for i, name in enumerate(char_names, 1):
+        if name and name.lower() != "unknown":
+            name_map[name] = f"char{i}"
+    
+    # Split by quotes - even indices are outside quotes, odd are inside
+    parts = re.split(r'(["\'])', script)
+    result = []
+    
+    for i, part in enumerate(parts):
+        if part in ['"', "'"]:
+            result.append(part)
+        elif i % 2 == 0:  # Not in quotes
+            for name, token in name_map.items():
+                # Case-insensitive replacement
+                part = re.sub(re.escape(name), token, part, flags=re.IGNORECASE)
+            result.append(part)
+        else:  # In quotes
+            result.append(part)
+    
+    return ''.join(result)
 
 def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0, visual_ids=[], char_names=[], low_vram=False):
     script = ""
@@ -573,7 +579,7 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0, visual_ids=[], char_n
             portrait_desc = get_or_analyze(portraits[ndx-1], FACE_PROMPT, 'Description', max_words=100)
             portrait_entries += f"portrait | portrait_{ndx} | {portraits[ndx-1]} | {label} | {portrait_desc}\n"
         elif not low_vram:
-            port_path = os.path.splitext(ref)[0] + '_portrait.png'
+            port_path = Path('images') / f"{Path(ref).stem}_portrait.png"
             portrait_desc = get_or_analyze(ref, FACE_PROMPT, 'Description', max_words=100)
             portrait_entries += f"portrait | portrait_{ndx} | {port_path} | {label} | A portrait of {label}\n"
         
@@ -585,7 +591,7 @@ def h3_ref(bg, ff, refs, portraits, prompt, duration=10.0, visual_ids=[], char_n
             gender, age = [item.strip().lower() for item in voice_data.split(',')]
             voice_profile = voice_prompt(gender, age)
             
-            wav_path = os.path.splitext(ref)[0] + '.wav'
+            wav_path = port_path = Path('audio') / f"{Path(ref).stem}.wav"
             script += f"audio | voice_{ndx} | {wav_path} | {label} | {','.join(voice_profile)}\n"
     
     script += portrait_entries
