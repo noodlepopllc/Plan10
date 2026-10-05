@@ -131,7 +131,7 @@ def h3_ref(bg, refs, prompt, duration=10.0, visual_ids=[], char_names=[], shots=
     script += f"soundscape | {translate_to_audio_prompt(bg_desc)}\n"
     script += shots + "\n"
 
-    script = replace_character_names(script, char_names)
+    #script = replace_character_names(script, char_names)
     
     return script
 
@@ -140,53 +140,32 @@ import unicodedata
 
 import re
 
+import re
+
 def replace_character_names(script: str, char_names: list) -> str:
     """
     Replaces character names with charX tokens, skipping quoted segments.
     """
-    # Normalize unicode quotes
-    script = (script
-        .replace("'", "'").replace("'", "'")
-        .replace(""", '"').replace(""", '"'))
-    
     # Build name → token mapping
     name_map = {}
     for i, name in enumerate(char_names, 1):
         if name and name.lower() != "unknown":
-            name_map[name.lower()] = f"char{i}"
+            name_map[name] = f"char{i}"
     
+    # Split by quotes - even indices are outside quotes, odd are inside
+    parts = re.split(r'(["\'])', script)
     result = []
-    in_quotes = False
-    i = 0
     
-    while i < len(script):
-        char = script[i]
-        
-        # Track quote state
-        if char == '"' or char == "'":
-            in_quotes = not in_quotes
-            result.append(char)
-            i += 1
-            continue
-        
-        # Inside quotes - copy verbatim
-        if in_quotes:
-            result.append(char)
-            i += 1
-            continue
-        
-        # Outside quotes - try to match a name
-        matched = False
-        for name, token in name_map.items():
-            if script[i:].lower().startswith(name):
-                result.append(token)
-                i += len(name)
-                matched = True
-                break
-        
-        if not matched:
-            result.append(char)
-            i += 1
+    for i, part in enumerate(parts):
+        if part in ['"', "'"]:
+            result.append(part)
+        elif i % 2 == 0:  # Not in quotes
+            for name, token in name_map.items():
+                # Case-insensitive replacement
+                part = re.sub(re.escape(name), token, part, flags=re.IGNORECASE)
+            result.append(part)
+        else:  # In quotes
+            result.append(part)
     
     return ''.join(result)
 
