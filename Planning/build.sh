@@ -4,7 +4,7 @@ set -euo pipefail
 mkdir -p $2/output
 output="$2/output"
 
-basepath="Planning"
+basepath="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
 if [[ ! -f "$output/story.txt" ]]; then
     python $basepath/builders/storywriter.py -S $1 -O $output/story.txt
