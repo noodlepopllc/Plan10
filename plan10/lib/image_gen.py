@@ -746,7 +746,7 @@ def CreateCharacterSheetSchema():
         "type": "function",
         "function": {
             "name": "create_character_sheet",
-            "description": "Generate a character reference sheet with side-by-side 3/4 front and back views on a white background.",
+            "description": "Generate a character reference",
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -766,7 +766,7 @@ def CreateBackgroundSchema():
         "type": "function",
         "function": {
             "name": "create_background",
-            "description": "Generate a pure environmental background plate with NO foreground objects.",
+            "description": "Generate a background.",
             "parameters": {
                 "type": "object",
                 "properties": {

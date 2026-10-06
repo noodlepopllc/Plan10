@@ -827,7 +827,7 @@ def CreateBackground(prompt='', output='location_tmp.png', seed=-1, override=Non
     del gen
     
     status['description'] = add_metadata_loc(output, final_prompt, seed)
-    status['prompt'] = final_prompt
+    status['prompt'] = prompt
     return status
 
 def CreateCharacterSheet(prompt='', output='character_tmp.png', seed=-1, imagegen=None, override=None):
@@ -868,7 +868,7 @@ def CreateCharacterSheet(prompt='', output='character_tmp.png', seed=-1, imagege
         os.remove('tmp.png')
     
     status['description'] = add_metadata_char(output, prompt, seed)
-    status['prompt'] = user_prompt
+    status['prompt'] = prompt
     
     return status
 

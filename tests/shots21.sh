@@ -55,9 +55,9 @@ shot() {
 
         if [ "$char1" = "$char2" ]; then 
 
-            uv run video_creator -I "$out" -R "$char1" -C "$vid_prompt" -O "$OUTDIR/$out_suffix" -D 8 -M
+            uv run video_creator -I "$out" -R "$char1" -C "$vid_prompt" -O "$OUTDIR/$out_suffix" -D 5 -M
         else
-            uv run video_creator -I "$out" -R "$char1" -R "$char2" -C "$vid_prompt" -O "$OUTDIR/$out_suffix" -D 8 -M
+            uv run video_creator -I "$out" -R "$char1" -R "$char2" -C "$vid_prompt" -O "$OUTDIR/$out_suffix" -D 5 -M
         fi
         uv run video_runner -O "$OUTDIR/$out_suffix" -M
         uv run director -I "$OUTDIR/$out_suffix/beat_001_script.txt" -O "$OUTDIR" -W $WIDTH -H $HEIGHT -S 8 --wangp
