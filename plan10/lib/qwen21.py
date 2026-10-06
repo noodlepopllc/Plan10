@@ -470,12 +470,12 @@ def shot_prompt(shot_type: str, character_count: int) -> str:
             "balanced composition, natural conversational spacing"
         )
 
-    if shot_type == "ots" and character_count = 2:
+    if shot_type == "ots" and character_count == 2:
         return (
             "over-the-shoulder shot, foreground character <image 2> partially visible, back of head and top of shoulders only "
             "focus on the other character <image 3>"
         )
-    if shot_type == "ots" and character_count = 1:
+    if shot_type == "ots" and character_count == 1:
             return (
             "over-the-shoulder shot, foreground character <image 2> partially visible, back of head and top of shoulders only "
             "focus is a perspective view of the character <image 2> is currently seeing"
