@@ -453,10 +453,6 @@ def main():
     get_backgrounds(assets, mappings, T)
 
     if mode != "minimum":
-        render_beats_actions(assets, actions, mappings, T, backdrop_position)
-        render_beats_dialog(assets, actions, mappings, T, backdrop_position)
-
-
 
         actions = []
         if not Path(f"{basepath}/output/complete_segmented.json").exists():
@@ -473,6 +469,9 @@ def main():
                 json.dump(actions,act,indent=4)
         else:
             actions = json.loads(Path(f"{basepath}/output/complete_segmented.json").read_text())
+
+    render_beats_actions(assets, actions, mappings, T, backdrop_position)
+    render_beats_dialog(assets, actions, mappings, T, backdrop_position)
 
     T.buffer.dump(mode)
 
