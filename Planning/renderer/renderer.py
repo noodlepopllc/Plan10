@@ -470,8 +470,8 @@ def main():
         else:
             actions = json.loads(Path(f"{basepath}/output/complete_segmented.json").read_text())
 
-    render_beats_actions(assets, actions, mappings, T, backdrop_position)
-    render_beats_dialog(assets, actions, mappings, T, backdrop_position)
+        render_beats_actions(assets, actions, mappings, T, backdrop_position)
+        render_beats_dialog(assets, actions, mappings, T, backdrop_position)
 
     T.buffer.dump(mode)
 
