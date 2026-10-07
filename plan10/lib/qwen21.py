@@ -625,6 +625,7 @@ def add_metadata_char(imgpath, prompt='', seed=-1, generation_prompt=None):
     # 1. READ STEP: Open, copy metadata, and immediately close/release the file handle
     with Image.open(cleaned_path) as target_image:
         metadata = load_metadata(target_image)
+        img_copy = target_image.copy()
 
     # Build your prompt instructions
     base_instructions = '''
@@ -666,8 +667,7 @@ def add_metadata_char(imgpath, prompt='', seed=-1, generation_prompt=None):
         metadata.add_text("GenerationPrompt", generation_prompt)
         
     # 3. WRITE STEP: Open a completely fresh file pointer strictly for saving
-    with Image.open(cleaned_path) as out_image:
-        out_image.save(cleaned_path, pnginfo=metadata)
+    img_copy.save(cleaned_path, pnginfo=metadata)
         
     return clean_string
 
