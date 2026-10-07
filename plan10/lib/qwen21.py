@@ -930,7 +930,6 @@ def add_metadata_loc(imgpath, prompt='', seed=-1, brief=False, update=True):
     
     # 1. READ STEP: Open, collect info/metadata, and close immediately
     with Image.open(cleaned_path) as target_image:
-    with Image.open(cleaned_path) as target_image:
         metadata = load_metadata(target_image)
         img_copy = target_image.copy()
         # Safely grab 'Brief' while the handle is open
