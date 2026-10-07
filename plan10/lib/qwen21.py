@@ -924,6 +924,7 @@ def add_metadata_loc(imgpath, prompt='', seed=-1, brief=False, update=True):
         metadata = load_metadata(target_image)
         # Safely grab 'Brief' while the handle is open
         existing_brief = target_image.info.get('Brief', '')
+        img_memory = target_image.copy()
 
     analysis_prompt = '''
 Extract a structured spatial description of this BACKGROUND image.
@@ -950,8 +951,7 @@ Keep each field to 1 concise sentence. ABSOLUTELY NO CHARACTERS, NO PEOPLE, NO C
             
             if update:
                 # 2A. WRITE STEP (Brief path): Use a fresh file handler to save
-                with Image.open(cleaned_path) as out_image:
-                    out_image.save(cleaned_path, pnginfo=metadata)
+                img_memory.save(cleaned_path, pnginfo=metadata).save(cleaned_path, pnginfo=metadata)
             return bg_brief
         else:
             return existing_brief
@@ -965,9 +965,8 @@ Keep each field to 1 concise sentence. ABSOLUTELY NO CHARACTERS, NO PEOPLE, NO C
         metadata.add_text("Prompt", prompt)
         metadata.add_text("Seed", str(seed))
         
-        # 2B. WRITE STEP (Full path): Use a fresh file handler to save
-        with Image.open(cleaned_path) as out_image:
-            out_image.save(cleaned_path, pnginfo=metadata)
+
+        img_memory.save(cleaned_path, pnginfo=metadata).save(cleaned_path, pnginfo=metadata)
             
     return bg_desc
 
