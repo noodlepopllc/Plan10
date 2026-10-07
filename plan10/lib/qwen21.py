@@ -274,6 +274,8 @@ print(result)
 '''
 
 def prompt_metadata(imgpath, prompt=''):
+    from plan10.lib.util import wait_for_file
+    wait_for_file(imgpath)
     if prompt:
         with Image.open(imgpath) as target_image:
             metadata = load_metadata(target_image)
@@ -617,6 +619,9 @@ def add_metadata_char(imgpath, prompt='', seed=-1, generation_prompt=None):
     # Ensure the path is normalized for Linux/Windows safety
     cleaned_path = os.path.normpath(imgpath)
 
+    from plan10.lib.util import wait_for_file
+    wait_for_file(cleaned_path)
+
     # 1. READ STEP: Open, copy metadata, and immediately close/release the file handle
     with Image.open(cleaned_path) as target_image:
         metadata = load_metadata(target_image)
@@ -918,6 +923,9 @@ Environment description:
 
 def add_metadata_loc(imgpath, prompt='', seed=-1, brief=False, update=True):
     cleaned_path = os.path.normpath(imgpath)
+
+    from plan10.lib.util import wait_for_file
+    wait_for_file(cleaned_path)
     
     # 1. READ STEP: Open, collect info/metadata, and close immediately
     with Image.open(cleaned_path) as target_image:
