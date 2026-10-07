@@ -697,8 +697,8 @@ def main():
                 print(f"[Warning] Failed to resize {ref}: {e}. Using original path.")
                 img_refs_resized.append(ref)
         img_refs = img_refs_resized
-        img_refs = [str(Path(r).resolve()) for r in img_refs]
-        aud_refs = [str(Path(r).resolve()) for r in aud_refs]
+    img_refs = [str(Path(r).resolve()) for r in img_refs]
+    aud_refs = [str(Path(r).resolve()) for r in aud_refs]
 
     print(f"\n[Debug] Final image refs to be used ({len(img_refs)}): {img_refs}")
     print(f"[Debug] Final audio refs to be used ({len(aud_refs)}): {aud_refs}\n")
