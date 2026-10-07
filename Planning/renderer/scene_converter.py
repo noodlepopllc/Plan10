@@ -139,10 +139,6 @@ def h3_ref(bg, refs, prompt, duration=10.0, visual_ids=[], char_names=[], shots=
 import re
 import unicodedata
 
-import re
-
-import re
-
 def replace_character_names(script: str, char_names: list) -> str:
     """
     Replaces character names with charX tokens, skipping quoted segments.
@@ -268,7 +264,7 @@ def group_pop_front(shots_text: str, max_total=15):
 
 
 def main():
-    from parse_scriptV2 import parse_script_txt
+    from plan10.lib.create_registry import parse_script_txt
     from director import direct, build_beat_character_list
     
     script_path = Path(sys.argv[1])

@@ -32,9 +32,9 @@ bot "$2/scene.txt" -F --max-steps 3
 
 THINKING=$TMP_THINKING
 
-uv run $basepath/renderer/generate_header.py --context $2/scene/context.json --registry $output/registry.json --script $output/script.txt --output $output/final_script.txt
-
-python $basepath/renderer/scene_converter.py $output/final_script.txt $2
+#uv run $basepath/renderer/generate_header.py --context $2/scene/context.json --registry $output/registry.json --script $output/script.txt --output $output/final_script.txt
+create_registry --context $2/scene/context.json --registry $output/registry.json --script $output/script.txt --output $output/final_script.txt --format header
+create_shots $output/final_script.txt $2
 
 echo "✅ Pipeline complete: scene $2"
 
