@@ -841,6 +841,7 @@ def CreateCharacterSheet(prompt='', output='character_tmp.png', seed=-1, imagege
     user_prompt = (
         "Professional character design turnaround sheet, single image with two side-by-side views "
         "(3/4 front view and back view) of the same character. "
+        "The character is in a neutral standing position, full body with a neutral expression. "
         "The character is standing on a seamless white cyclorama studio backdrop with soft volumetric "
         "studio lighting from above, creating subtle soft ground shadows beneath the character. "
         "Ensure the clothing, garment structure, proportions, and details match exactly between "
