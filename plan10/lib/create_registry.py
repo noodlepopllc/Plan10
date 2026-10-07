@@ -683,7 +683,7 @@ def main():
                         help="Character image paths (one or more)")
     parser.add_argument('-O', '--output', type=str, default='.',
                         help="Output directory or specific file path (default: current directory)")
-    parser.add_argument('--format', type=str, choices=['registry', 'context', 'both', 'header', parse'], default='both',
+    parser.add_argument('--format', type=str, choices=['registry', 'context', 'both', 'header', 'parse'], default='both',
                         help="Output format: 'registry', 'context', 'both', 'parse' or 'header' (default: both)")
     parser.add_argument('--context', type=str, required=False, 
                         help='Path to context.json')
