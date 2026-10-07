@@ -961,7 +961,7 @@ Keep each field to 1 concise sentence. ABSOLUTELY NO CHARACTERS, NO PEOPLE, NO C
             
             if update:
                 # 2A. WRITE STEP (Brief path): Use a fresh file handler to save
-                img_memory.save(cleaned_path, pnginfo=metadata).save(cleaned_path, pnginfo=metadata)
+                img_copy.save(cleaned_path, pnginfo=metadata)
             return bg_brief
         else:
             return existing_brief
@@ -974,7 +974,7 @@ Keep each field to 1 concise sentence. ABSOLUTELY NO CHARACTERS, NO PEOPLE, NO C
         metadata.add_text("Description", bg_desc)
         metadata.add_text("Prompt", prompt)
         metadata.add_text("Seed", str(seed))
-        img_copy.save(cleaned_path, pnginfo=metadata).save(cleaned_path, pnginfo=metadata)
+        img_copy.save(cleaned_path, pnginfo=metadata)
             
     return bg_desc
 
