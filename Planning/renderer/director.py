@@ -413,24 +413,3 @@ def direct(beat_entry: dict, notes=''):
         print(f"Shotlist Done: \n{final_shotlist}")
 
     return final_shotlist, director_shots
-    '''
-    fixed_shotlist = []
-    for line in final_shotlist.split('\n'):
-        parts = line.split('|')
-
-        dialog_words = quoted_word_count(line)
-        if len(parts) != 3:
-            continue
-        total_words = len(parts[1].split())
-
-        if dialog_words:
-            duration = max(2, min(6, math.ceil(dialog_words / 2.5)))
-        else:
-            # Action shots should be 2-3 seconds max
-            duration = max(2, min(3, math.ceil(total_words / 20)))
-
-        fixed_shotlist.append('|'.join(parts[:-1] + [str(duration)]))
-
-    return '\n'.join(fixed_shotlist), director_shots
-    '''
-

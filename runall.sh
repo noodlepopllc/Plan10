@@ -22,7 +22,7 @@ for f in $IN/beat*.txt; do
             OUT="${f/.txt/.mp4}"
             if [[ ! -f $OUT ]]; then
                 uv run director -I "$f" \
-                    -O "" -W $WIDTH -H $HEIGHT -S 6 --wangp --low-vram
+                    -O "" -W $WIDTH -H $HEIGHT -S 6 --wangp 
         fi
     fi
 done

@@ -28,11 +28,13 @@ fi
 
 python $basepath/renderer/renderer.py $2 minimum > $2/scene.txt
 
-uv run bot "$2/scene.txt" -F --max-steps 3
+bot "$2/scene.txt" -F --max-steps 3
 
 THINKING=$TMP_THINKING
 
-python $basepath/renderer/scene_converterV2.py $2
+uv run $basepath/renderer/generate_header.py --context $2/scene/context.json --registry $output/registry.json --script $output/script.txt --output $output/final_script.txt
+
+python $basepath/renderer/scene_converter.py $output/final_script.txt $2
 
 echo "✅ Pipeline complete: scene $2"
 

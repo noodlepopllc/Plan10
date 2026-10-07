@@ -300,7 +300,7 @@ class SmartVideoPromptBuilder:
                     extra = parts[4] if len(parts) > 4 else ""
                     voice_prompt = parts[5] if len(parts) > 5 else "female"
                     
-                    # FIX: Assign a valid default path if '-' is used
+                    # Assign a valid default path if '-' is used
                     if not path_field or path_field == '-':
                         path_field = f"audio/{label}.wav"
 
@@ -310,7 +310,12 @@ class SmartVideoPromptBuilder:
                         os.path.join(os.getcwd(), path_field), 
                         os.path.join(base_dir, path_field)
                     ]
+                    
+                    # Find the first path that exists, otherwise default to base_dir + path_field
                     resolved_path = next((p for p in candidate_paths if p and os.path.exists(p)), os.path.join(base_dir, path_field))
+                    
+                    # CRITICAL FIX: Always convert to an absolute path
+                    resolved_path = str(Path(resolved_path).resolve())
 
                     if not os.path.exists(resolved_path):
                         if 'audio' in generators:
@@ -475,11 +480,12 @@ def send(prompt, images, audio, output='output.mp4', width=768, height=448, dura
     if steps <= 8:
         args["activated_loras"] = ["minimax_h3_larryvrh_v4_step600_ema.safetensors"]
         args["loras_multipliers"] = "1.0|"
-    if len(audio):
-        args["audio_prompt_type"] = "AB" if len(audio) == 2 else "A"
-        args["audio_guide"] = audio.pop()
-        if len(audio):
-            args["audio_guide2"] = audio.pop()
+    if len(audio) == 1: 
+        args["audio_prompt_type"] = "A"
+        args["audio_guide"] = audio[0]
+    if len(audio) == 2:
+        args["audio_prompt_type"] = "AB"
+        args["audio_guide2"] = audio[1]
             
     if start_image:
         args["image_prompt_type"] = "S"
