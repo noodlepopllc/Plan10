@@ -930,10 +930,11 @@ def add_metadata_loc(imgpath, prompt='', seed=-1, brief=False, update=True):
     
     # 1. READ STEP: Open, collect info/metadata, and close immediately
     with Image.open(cleaned_path) as target_image:
+        img_memory = target_image.copy()
         metadata = load_metadata(target_image)
         # Safely grab 'Brief' while the handle is open
         existing_brief = target_image.info.get('Brief', '')
-        img_memory = target_image.copy()
+        
 
     analysis_prompt = '''
 Extract a structured spatial description of this BACKGROUND image.
