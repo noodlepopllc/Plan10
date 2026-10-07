@@ -930,8 +930,9 @@ def add_metadata_loc(imgpath, prompt='', seed=-1, brief=False, update=True):
     
     # 1. READ STEP: Open, collect info/metadata, and close immediately
     with Image.open(cleaned_path) as target_image:
-        img_memory = target_image.copy()
+    with Image.open(cleaned_path) as target_image:
         metadata = load_metadata(target_image)
+        img_copy = target_image.copy()
         # Safely grab 'Brief' while the handle is open
         existing_brief = target_image.info.get('Brief', '')
         
@@ -974,9 +975,7 @@ Keep each field to 1 concise sentence. ABSOLUTELY NO CHARACTERS, NO PEOPLE, NO C
         metadata.add_text("Description", bg_desc)
         metadata.add_text("Prompt", prompt)
         metadata.add_text("Seed", str(seed))
-        
-
-        img_memory.save(cleaned_path, pnginfo=metadata).save(cleaned_path, pnginfo=metadata)
+        img_copy.save(cleaned_path, pnginfo=metadata).save(cleaned_path, pnginfo=metadata)
             
     return bg_desc
 
