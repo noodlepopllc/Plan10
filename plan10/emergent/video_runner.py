@@ -442,7 +442,7 @@ def main():
         current_source.save('tmp.png')
         current_source_path = f'{os.getcwd()}/tmp.png'
         script = h3_ref(bg, None, refs, portraits, prompt,  duration, visual_ids=visual_ids, char_names=char_names)
-        Path(pending_job['output_path'].replace('.mp4', '_script.txt')).write_text(script)
+        Path(pending_job['output_path'].replace('.mp4', '.txt')).write_text(script)
 
         if LTX:
             from plan10.emergent.ltx25_previewer import LTXPipeline
