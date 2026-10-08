@@ -21,7 +21,7 @@ class Director:
             return self.analyze_reality_gemma(media_path, intended_action, width, height, output_dir)
         return self.analyze_reality_smol(media_path, intended_action, width, height, output_dir)
         
-    def analyze_reality_gemma(self, media_path, width, height, output_dir):
+    def analyze_reality_gemma(self, media_path, intended_action, width, height, output_dir):
         from plan10.lib.image_analysis import AnalyzeMediaGemma     
         from plan10.lib.dialog import transcribe
 
