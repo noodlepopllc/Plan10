@@ -447,7 +447,7 @@ def main():
         if LTX:
             from plan10.emergent.ltx25_previewer import LTXPipeline
             converter = LTXPipeline()
-            beat_out = pending_job['output_path'].replace('.mp4', '_script.txt')
+            beat_out = pending_job['output_path'].replace('.mp4', '.txt')
             converted = converter.run(beat_out, style='', use_descriptions=False)
             print(converted)
             Path(beat_out.replace('.txt', '_ltx.txt')).write_text(

@@ -21,6 +21,7 @@ dependencies = [
     "faster-qwen3-tts",
     "rembg",
     "openai",
+    "av==18.1.0",
     "triton; platform_system != 'Windows'",
     "triton-windows; platform_system == 'Windows'"
 ]
