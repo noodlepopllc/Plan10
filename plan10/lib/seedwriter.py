@@ -93,7 +93,7 @@ def run_prompt(prompt, system, pth):
 FOCUS = 'DIALOG-HEAVY,ACTION-HEAVY,EMOTIONAL SUBTEXT,MULTI-CHARACTER,PROP PASSING,EXPLORATION,POWER DYNAMIC,INTIMACY ESCALATION,MISUNDERSTANDING,TIME PRESSURE'.split(',')
 GENRES = 'Medieval Fantasy,Cyberpunk,Post-Apocalyptic,Victorian,Sci-Fi Space Station,1920s Noir,Modern Urban,Ancient Mythological,Steampunk,Western'.split(',')
 
-if __name__ == '__main__':
+def main():
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument('-O', '--output', type=str, default='story.txt')
@@ -121,3 +121,6 @@ if __name__ == '__main__':
     inputs = f"Generate a test seed\nGenre: {genre}\nFocus: {focus}"
     SEED_GENERATOR = seed_generator(args.gender, genre, focus, f'exactly {char_count} characters')
     print(run_prompt(inputs, SEED_GENERATOR, args.output))
+
+if __name__ == '__main__':
+    main()
