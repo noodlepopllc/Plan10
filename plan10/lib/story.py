@@ -227,8 +227,8 @@ def main():
         system=architect.format(seed=seed),
         max_tokens=8000
     )['analysis']
-    with open(out_path / 'blueprint.txt', 'w') as of:
-        of.write(blueprint, encoding='utf-8')
+    with open(out_path / 'blueprint.txt', 'w', encoding='utf-8') as of:
+        of.write(blueprint)
     print(blueprint)
 
     # STEP 2: Parse blueprint into structured data
@@ -250,8 +250,8 @@ def main():
     
     episode_data = json.loads(parsed_clean)
 
-    with open(out_path / 'episodes.json', 'w') as of:
-        of.write(json.dumps(episode_data, indent=4), encoding='utf-8')
+    with open(out_path / 'episodes.json', 'w', encoding='utf-8') as of:
+        of.write(json.dumps(episode_data, indent=4))
 
     # STEP 3: Generate each scene iteratively
     continuity = "START OF EPISODE"
@@ -270,8 +270,8 @@ def main():
 
         _, scene = [s.strip().lower().replace(' ','') for s in scene_id.split(',')]
 
-        with open(out_path / f'{scene}.outline', 'w') as of:
-            of.write(scene_outline, encoding='utf-8')
+        with open(out_path / f'{scene}.outline', 'w', encoding='utf-8') as of:
+            of.write(scene_outline)
         
         result = llm_analyze_media(
             '',
@@ -285,8 +285,8 @@ def main():
             max_tokens=24000
         )['analysis']
 
-        with open(out_path / f'{scene}.story', 'w') as of:
-            of.write(result, encoding='utf-8')
+        with open(out_path / f'{scene}.story', 'w', encoding='utf-8') as of:
+            of.write(result)
         
         print(result)
         
