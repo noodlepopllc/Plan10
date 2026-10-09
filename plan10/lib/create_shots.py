@@ -758,7 +758,7 @@ def group_pop_front(shots_text: str, max_total=15):
 
 
 def main():
-    from plan10.lib.create_registry import parse_script_txt
+    from plan10.lib.create_metadata import parse_script_txt
     
     script_path = Path(sys.argv[1])
     scene_base = Path(sys.argv[2])

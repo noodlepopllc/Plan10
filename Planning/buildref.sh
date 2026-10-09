@@ -33,7 +33,7 @@ LLM_BACKEND=$LLM_BACKUP
 
 THINKING=$TMP_THINKING
 
-create_registry --context $2/scene/context.json --registry $output/registry.json --script $output/script.txt --output $output/final_script.txt --format header
+create_metadata --context $2/scene/context.json --registry $output/registry.json --script $output/script.txt --output $output/final_script.txt --format header
 create_shots $output/final_script.txt $2
 
 echo "✅ Pipeline complete: scene $2"
