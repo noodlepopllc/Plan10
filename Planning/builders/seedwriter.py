@@ -6,8 +6,8 @@ from pathlib import Path
 
 CHARACTERS_MIXED = '''
 **Characters** (2–4 characters):
-- [Name]: [age], [gender], [race/species if relevant], [2–3 sentence physical description including build, face, distinctive features, FULL clothing with material/color/condition, hair style/color/length, footwear, accessories]. [1 sentence personality/behavioral tendency].
-- [Name]: [same structure]
+- [First Name]: [age], [gender], [race/species if relevant], [2–3 sentence physical description including build, face, distinctive features, FULL clothing with material/color/condition, hair style/color/length, footwear, accessories]. [1 sentence personality/behavioral tendency].
+- [First Name]: [same structure]
 - [Additional characters if applicable]
 '''
 
@@ -23,8 +23,8 @@ If a story requires a male character, reimagine them as a female
 NEVER output a male character
 
 **Characters** (2–4 characters):
-- [Name - feminine only, no ambiguous names]: [age], [female], [race/species if relevant], [2–3 sentence physical description including build, face, distinctive features, FULL clothing with material/color/condition, hair style/color/length, footwear, accessories, accentuate female features in face chest, waist and body]. [1 sentence personality/behavioral tendency].
-- [Name]: [same structure]
+- [First Name - feminine only, no ambiguous names]: [age], [female], [race/species if relevant], [2–3 sentence physical description including build, face, distinctive features, FULL clothing with material/color/condition, hair style/color/length, footwear, accessories, accentuate female features in face chest, waist and body]. [1 sentence personality/behavioral tendency].
+- [First Name]: [same structure]
 - [Additional characters if applicable]
 '''
 
