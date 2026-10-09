@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-uv run config -R
+config -R
 source .env
 
 mkdir -p $2/output
@@ -14,25 +14,25 @@ echo "$basepath"
 TMP_THINKING="$THINKING"
 THINKING="False"
 
-if [[ ! -f "$output/story.txt" ]]; then
-    python $basepath/builders/storywriter.py -S $1 -O $output/story.txt
+if [[ ! -d "$2/story" ]]; then
+    mkdir -p $2/story
+    story --seed $1 --output $2/story
 fi
 
 if [[ ! -f "$output/script.txt" || ! -f "$output/world.txt" ]]; then
-    python $basepath/builders/script.py $1 $output
-fi
-
-if [[ ! -f "$output/narrative.json" ]]; then
-    python $basepath/builders/scriptwriter.py $1 $output
+    python $basepath/builders/script.py $1 $output --story $2/story/scene$3.story
 fi
 
 python $basepath/renderer/renderer.py $2 minimum > $2/scene.txt
 
+
+LLM_BACKUP=$LLM_BACKEND
+LLM_BACKEND="transformers"
 bot "$2/scene.txt" -F --max-steps 3
+LLM_BACKEND=$LLM_BACKUP
 
 THINKING=$TMP_THINKING
 
-#uv run $basepath/renderer/generate_header.py --context $2/scene/context.json --registry $output/registry.json --script $output/script.txt --output $output/final_script.txt
 create_registry --context $2/scene/context.json --registry $output/registry.json --script $output/script.txt --output $output/final_script.txt --format header
 create_shots $output/final_script.txt $2
 

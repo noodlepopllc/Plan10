@@ -16,6 +16,42 @@ def llm(prompt, cooloff=30, processor=None, model=None):
     response = llm_analyze_media('', prompt=prompt, max_tokens=8192, temperature=0.4, processor=processor, model=model)['analysis']
     return response.strip()
 
+def parse_director_splits_with_shots(director_shots_text: str, final_shotlist: str, original_summary: str):
+    """
+    Parse director's output for summaries, then split the shot planner's output to match.
+    """
+    # Split director's output by parts
+    parts = re.split(r'---\s*PART\s+\d+\s*---', director_shots_text)
+    parts = [p.strip() for p in parts if p.strip()]
+    
+    if len(parts) <= 1:
+        # No split, use original summary and full shotlist
+        yield (original_summary, final_shotlist.strip())
+        return
+
+    # Split detected: extract summaries and count shots per part
+    part_summaries = []
+    part_shot_counts = []
+    
+    for part_text in parts:
+        # Extract summary
+        summary_match = re.search(r'summary:\s*(.+?)(?=\nshot|\n---|$)', part_text, re.IGNORECASE | re.DOTALL)
+        sub_summary = summary_match.group(1).strip() if summary_match else original_summary
+        part_summaries.append(sub_summary)
+        
+        # Count shots in this part
+        shot_count = len(re.findall(r'^shot\s+\d+', part_text, re.MULTILINE))
+        part_shot_counts.append(shot_count)
+    
+    # Split the final_shotlist accordingly
+    shot_lines = [line for line in final_shotlist.split('\n') if line.strip().startswith('shot')]
+    
+    current_idx = 0
+    for i, (summary, shot_count) in enumerate(zip(part_summaries, part_shot_counts)):
+        sub_shots = '\n'.join(shot_lines[current_idx:current_idx + shot_count])
+        current_idx += shot_count
+        yield (summary, sub_shots)
+
 shot_planner_prompt = '''
 You are the shot planner.
 
@@ -40,6 +76,9 @@ Keep all actions, camera descriptions, dialog, audio, and durations exactly as t
 Maintain all camera angles, movements, shot sizes, and compositions without modification.
 Use only ambient audio explicitly present in the director shot plan.
 Apply the director duration exactly as specified.
+
+- HARD DURATION LIMIT: Ensure no single shot duration exceeds 5 seconds. If the director's plan implies a longer shot, break it into sequential shots.
+- Avoid describing repetitive or looping actions. Each shot must show forward narrative progression, not a sustained loop.
 
 ------------------------------------------------------------
 DIALOG FORMATTING
@@ -274,9 +313,28 @@ SHOT TYPES
 Duration: sum of merged moments, clamped to 2-10 seconds.
 
 ------------------------------------------------------------
-OUTPUT FORMAT
+DURATION AND SPLITTING RULES (CRITICAL)
 ------------------------------------------------------------
-shot N
+1. HARD CAP: NO single shot may exceed 5 seconds. 
+2. If the action or dialog naturally requires more than 5 seconds, you MUST split it into multiple sequential shots (e.g., Shot 1: Action begins, Shot 2: Reaction/Continuation).
+3. NO LOOPING: Do not describe actions that naturally repeat or loop to fill time (e.g., "taps foot repeatedly for 5 seconds", "nods continuously"). Describe the distinct start, middle, and end of a micro-action.
+4. If the total estimated duration of a beat exceeds 15 seconds, you MUST split the output into TWO distinct parts ("--- PART 1 ---" and "--- PART 2 ---") with unique summaries for each.
+
+Calculate the total estimated duration of all merged moments.
+If the total duration exceeds 15 seconds, you MUST split the output into TWO distinct parts (e.g., "PART 1" and "PART 2").
+
+When splitting, you MUST:
+1. Keep narrative units intact. NEVER separate a physical action from the dialog that accompanies it.
+2. Generate a NEW, unique `summary:` for EACH part that describes ONLY the events occurring in that specific part.
+3. Use the exact delimiter format below.
+
+If duration is <= 15 seconds, output a single block with one summary.
+
+------------------------------------------------------------
+OUTPUT FORMAT (Single Beat)
+------------------------------------------------------------
+summary: [One sentence describing the core visual action and dialog of this beat]
+shot 1
 type: establishing / action / dialog / reaction
 moments: [list of moment numbers]
 duration: estimated duration
@@ -285,6 +343,19 @@ camera: summary of angles and movement
 visual: summary of visible elements
 audio: summary of notable sounds
 verification: why this shot boundary exists
+
+------------------------------------------------------------
+OUTPUT FORMAT (Split Beat > 15s)
+------------------------------------------------------------
+--- PART 1 ---
+summary: [One sentence describing ONLY the events in Part 1]
+shot 1
+... (shot details) ...
+
+--- PART 2 ---
+summary: [One sentence describing ONLY the events in Part 2]
+shot 2
+... (shot details) ...
 
 ------------------------------------------------------------
 NOW PRODUCE THE DIRECTOR SHOT PLAN.
@@ -713,7 +784,8 @@ def main():
         beat['background'] = bg_path
         
         # Generate shots and get characters in this specific beat
-        shots, notes = direct(beat, notes)
+        shots, director_shots_text = direct(beat, notes)
+        notes = director_shots_text  # Pass director output to next beat for continuity
         characters_in_scene = build_beat_character_list(beat)
         
         actor_refs = []
@@ -728,15 +800,18 @@ def main():
                 actor_identities.append(characters[actor_upper]['Visual_Id'])
                 
         # Handle shot grouping if total duration exceeds max_total
-        for subbeat, dentry in enumerate(group_pop_front(shots), start=1):
+        for subbeat, (sub_summary, sub_shots) in enumerate(
+            parse_director_splits_with_shots(director_shots_text, shots, beat.get('summary', '')), 
+            start=1
+        ):
             script = h3_ref(
                 beat['background'],
                 actor_refs,
-                beat.get('summary', ''),
+                sub_summary,
                 duration=10.0,
                 visual_ids=actor_identities,
                 char_names=actor_names,
-                shots=dentry
+                shots=sub_shots  # Now this is renderer-ready
             )
             
             outname = f"beat_{beat_idx:03d}_{subbeat:03d}.txt"

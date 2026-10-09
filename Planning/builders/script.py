@@ -46,12 +46,14 @@ RULES:
    - If dialog exists, infer delivery from tone.
    - If unclear, inherit delivery from PREVIOUS CONTEXT.
 5. DIALOG:
-   - Extract ONLY text inside quotes.
-   - Strip quotes.
-   - If none, set to null.
+   - Extract ONLY text inside quotes from the beat.
+   - CRITICAL: If there is no exact quoted text, BUT the character is clearly making vocal sounds or speaking (e.g., "continues her story", "mumbles", "sighs", "whispers"), you MUST output a generic, muteable vocalization in quotes, such as "[mumbles]", "[sighs]", or "[inaudible chatter]". 
+   - Only set to null if the character is completely silent.
+
 6. ACTION:
    - Extract physical actions performed by the character.
-   - If none, set to null.
+   - CRITICAL RULE: If dialog is null, the action MUST NOT contain any verbs of speech (e.g., "says", "whispers", "tells", "continues her story"). 
+   - If a character is acting like they are speaking but no dialog is provided, you MUST rewrite the action to be strictly physical and non-verbal (e.g., "gestures animatedly", "leans forward with an animated expression", "mouth moves silently").
 7. CHARACTERS:
    - Include ALL characters present in the beat, even if silent.
 8. SUMMARY:
@@ -242,6 +244,10 @@ def split_into_beats(story_text):
     # Remove everything before and including COLD OPEN END
     if 'COLD OPEN END' in story_text:
         story_text = story_text.split('COLD OPEN END')[-1]
+
+        # Remove continuity log and everything after it
+    if 'CONTINUITY LOG FOR NEXT SCENE:' in story_text:
+        story_text = story_text.split('CONTINUITY LOG FOR NEXT SCENE:')[0]
     
     # Remove star markers
     story_text = re.sub(r'\*+', '', story_text)
@@ -363,27 +369,45 @@ if __name__ == '__main__':
     def my_llm_call(prompt, temperature=0.1, processor=None, model=None):
         result = llm_analyze_media('', prompt=prompt, system=None, max_tokens=8192, temperature=temperature, processor=processor, model=model)
         return result['analysis'] 
-    
-    if len(sys.argv) < 2:
-        print("Usage: python story_to_script.py <directory_path>")
-        sys.exit(1)
-    if len(sys.argv) == 3:
-        seed = Path(sys.argv[1]).read_text(encoding='utf-8')
-        dir_path = sys.argv[2]
-    else:
-        dir_path = sys.argv[1]
 
+    import argparse
+
+    # ═══════════════════════════════════════════════════════════════
+    # ARGUMENT PARSING
+    # ═══════════════════════════════════════════════════════════════
+    parser = argparse.ArgumentParser(description='Convert story prose to script format')
+    parser.add_argument('paths', nargs='+', help='[seed_path] dir_path')
+    parser.add_argument('--story', default=None, help='Path to story file (default: <dir_path>/story.txt)')
+    args = parser.parse_args()
+
+    # Parse positional arguments (backward compatible)
+    if len(args.paths) == 1:
+        dir_path = args.paths[0]
+        seed = None
+    elif len(args.paths) == 2:
+        seed_path = args.paths[0]
+        dir_path = args.paths[1]
+        seed = Path(seed_path).read_text(encoding='utf-8')
+    else:
+        parser.error("Expected 1 or 2 positional arguments: [seed_path] dir_path")
+
+    # Determine story input
+    if args.story:
+        story_input = Path(args.story).read_text(encoding='utf-8')
+    else:
+        story_input = Path(f'{dir_path}/story.txt').read_text(encoding='utf-8')
+    
     PLANNING_DIR = Path(__file__).resolve().parent.parent
     prompt_path = str(PLANNING_DIR / "prompts")
     WORLD = Path(f'{prompt_path}/scriptwriter/world.txt').read_text(encoding='utf-8')
     BIOGRAPHY = Path(f'{prompt_path}/scriptwriter/biography.txt').read_text(encoding='utf-8')
-    story_input = Path(f'{dir_path}/story.txt').read_text(encoding='utf-8')
+    #story_input = Path(f'{dir_path}/story.txt').read_text(encoding='utf-8')
     world = run_prompt(f'SEED FILE: \n{seed}\n STORY FILE: \n{story_input}', WORLD, f'{dir_path}/world.txt')
     biography_text = run_prompt(world, BIOGRAPHY, f'{dir_path}/registry.json')
     world_text = format_compact_world(json.loads(biography_text))
     
     story_to_script(
-        story_path=f'{dir_path}/story.txt',
+        story_path=args.story if args.story else f'{dir_path}/story.txt',
         world_text=world_text,
         output_path=f'{dir_path}/script.txt',
         llm_call_func=my_llm_call
