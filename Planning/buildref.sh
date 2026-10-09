@@ -27,12 +27,12 @@ if [[ ! -f "$output/script.txt" || ! -f "$output/world.txt" ]]; then
     script $1 $output --story $2/story/scene$3.story
 fi
 
-render_identity $output/registry.json $2/scene.txt
+render_identity $output/registry.json $2/assets.txt
 
 
 LLM_BACKUP=$LLM_BACKEND
 LLM_BACKEND="transformers"
-bot "$2/scene.txt" -F --max-steps 3
+bot "$2/assets.txt" -F --max-steps 3
 LLM_BACKEND=$LLM_BACKUP
 
 THINKING=$TMP_THINKING
