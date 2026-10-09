@@ -4,6 +4,7 @@ sys.stdout.reconfigure(encoding='utf-8')
 
 from plan10.lib.config import load_config
 load_config()
+from plan10.lib.qwen_llm import llm_analyze_media
 
 import re
 import json
