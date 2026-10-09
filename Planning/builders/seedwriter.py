@@ -22,13 +22,13 @@ If a story requires a male character, reimagine them as a female
 
 NEVER output a male character
 
-**Characters** (2–4 characters):
+**Characters** ({char_count}, no more, no less):
 - [First Name - feminine only, no ambiguous names]: [age], [female], [race/species if relevant], [2–3 sentence physical description including build, face, distinctive features, FULL clothing with material/color/condition, hair style/color/length, footwear, accessories, accentuate female features in face chest, waist and body]. [1 sentence personality/behavioral tendency].
 - [First Name]: [same structure]
 - [Additional characters if applicable]
 '''
 
-def seed_generator(gender, genre, focus):
+def seed_generator(gender, genre, focus, char_count):
   CHARACTERS = CHARACTERS_MIXED if gender == 'mixed' else CHARACTERS_FEMALE
   
   return f'''
@@ -44,7 +44,7 @@ def seed_generator(gender, genre, focus):
   **Genre**: {genre}
   **Test Focus**: {focus}
 
-  {CHARACTERS}
+  {CHARACTERS.format(char_count=char_count)}
 
   **Location**:
   [Name of location]. [2–3 sentences describing the space: size, key architectural features, lighting, textures, sounds, temperature/atmosphere, 3–5 specific objects/furniture present]. [What the location is typically used for].
@@ -68,6 +68,7 @@ def seed_generator(gender, genre, focus):
       Initial situation MUST specify exact positions and body states
       Locations MUST include 3–5 specific physical objects
       Names must be distinct and pronounceable
+      You MUST output {char_count}. Not one more, not one fewer.
 
   ⭐ BEGIN OUTPUT NOW
   Generate one complete seed in the exact format above. No commentary or explanation.
@@ -104,7 +105,12 @@ if __name__ == '__main__':
     # Do random selection in Python, not the LLM
     genre = args.genre if args.genre else random.choice(GENRES)
     focus = args.focus.upper() if args.focus and args.focus.upper() in FOCUS else random.choice(FOCUS)
+
+    if focus == 'MULTI-CHARACTER':
+      char_count = "exactly 3 characters"
+    else:
+      char_count = "exactly 2 characters"
     
     inputs = f"Generate a test seed\nGenre: {genre}\nFocus: {focus}"
-    SEED_GENERATOR = seed_generator(args.gender, genre, focus)
+    SEED_GENERATOR = seed_generator(args.gender, genre, focus, char_count)
     print(run_prompt(inputs, SEED_GENERATOR, args.output))
