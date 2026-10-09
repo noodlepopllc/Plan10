@@ -132,6 +132,17 @@ Write 2-4 paragraphs of dense visual prose. End with:
 ******* COLD OPEN END ****
 
 ═══════════════════════════════════════════════════════════
+LENGTH CONSTRAINT
+═══════════════════════════════════════════════════════════
+
+Keep the scene concise and focused:
+- Cold open: 2-4 paragraphs maximum
+- Scene body: 5-15 beats (paragraphs) maximum
+- Total length: Under 2000 words
+
+Every sentence must serve the Scene Goal. Cut anything that doesn't advance the plot or reveal character through action.
+
+═══════════════════════════════════════════════════════════
 EXECUTION
 ═══════════════════════════════════════════════════════════
 
@@ -282,7 +293,7 @@ def main():
                 scene_outline=scene_outline,
                 continuity=continuity
             ),
-            max_tokens=24000
+            max_tokens=8000
         )['analysis']
 
         with open(out_path / f'{scene}.story', 'w', encoding='utf-8') as of:
