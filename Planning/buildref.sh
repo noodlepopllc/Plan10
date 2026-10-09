@@ -5,7 +5,7 @@ config -R
 source .env
 
 mkdir -p $2/output
-output="$2/output"
+
 
 basepath="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
@@ -18,6 +18,12 @@ if [[ ! -d "$2/story" ]]; then
     mkdir -p $2/story
     story --seed $1 --output $2/story
 fi
+
+
+scene_out=$2/scene$3
+mkdir -p $scene_out
+
+output="$scene_out/output"
 
 if [[ ! -f "$output/script.txt" || ! -f "$output/world.txt" ]]; then
     script $1 $output --story $2/story/scene$3.story
@@ -34,7 +40,7 @@ LLM_BACKEND=$LLM_BACKUP
 THINKING=$TMP_THINKING
 
 create_metadata --context $2/scene/context.json --registry $output/registry.json --script $output/script.txt --output $output/final_script.txt --format header
-create_shots $output/final_script.txt $2
+create_shots $output/final_script.txt $scene_out
 
 echo "✅ Pipeline complete: scene $2"
 
