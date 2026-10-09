@@ -4,9 +4,6 @@ set -euo pipefail
 config -R
 source .env
 
-mkdir -p $2/output
-
-
 basepath="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 
 echo "$basepath"
@@ -24,6 +21,7 @@ scene_out=$2/scene$3
 mkdir -p $scene_out
 
 output="$scene_out/output"
+mkdir -p $output
 
 if [[ ! -f "$output/script.txt" || ! -f "$output/world.txt" ]]; then
     script $1 $output --story $2/story/scene$3.story
