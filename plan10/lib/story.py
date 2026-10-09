@@ -189,6 +189,10 @@ CONTINUITY LOG FOR NEXT SCENE:
 - Physical State: [What are they holding? Position? New props? Battery/damage status?]
 - Emotional State: [Each character's mood]
 - Unresolved Tension: [What hangs in the air?]
+
+CONTINUITY LOG MUST BE UNDER 150 WORDS.
+Only record what CHANGED in this scene.
+Do NOT repeat information from previous scenes.
 ---
 '''
 
