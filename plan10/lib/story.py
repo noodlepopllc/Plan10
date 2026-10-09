@@ -159,41 +159,37 @@ Example (CORRECT format):
 Amy's hovering foot finally touches down, the impact sending a visible shudder through her frame as the dangling cables at her hip spark once, twice. She turns her head toward Blaire—a full two-second rotation, the servos in her neck whining at a pitch just below audible—and her amber eyes flicker. "Power at eleven percent," Amy says, her voice a pleasant contralto but the consonants smearing at the edges. "I can feel my thermal regulation failing."
 
 Blaire sets the glass down on the obsidian bar. The sound is too loud in the bass-heavy air. She pushes off the bar, her missing eye-socket catching a laser sweep, throwing a thin red line across her cheek. "We find a buyer. We charge. We fix the panel." She taps the exposed wiring in her chest with one blue fingertip, and a small shower of sparks cascades onto the bar top. "We fix me."
+'''
 
-═══════════════════════════════════════════════════════════
-CONTINUITY PRIORITY RULES
-═══════════════════════════════════════════════════════════
+# ═══════════════════════════════════════════════════════════
+# PROMPT 4: THE CONTINUITY TRACKER
+# Extracts state from the generated scene to pass to the next
+# ═══════════════════════════════════════════════════════════
 
-The CONTINUITY LOG takes absolute priority over the SCENE OUTLINE for physical state and location.
+continuity_tracker = '''
+You are a strict continuity tracker for a video production pipeline. 
+Your job is to read the scene that just happened and extract a concise state log for the next scene.
 
-If the Continuity Log says characters are in Location A, but the Scene Outline says Location B:
-- The cold open MUST show characters in Location A (where they actually are)
-- The scene must BEGIN with them transitioning from Location A to Location B
-- Do NOT teleport characters to the Scene Outline's location without showing the movement
+PREVIOUS CONTINUITY STATE:
+{continuity}
 
-If the Continuity Log says a character is standing, but the Scene Outline implies they're sitting:
-- The cold open MUST show them standing
-- The scene must show them sitting down as part of the action
+SCENE THAT JUST OCCURRED:
+{scene_text}
 
-Physical state (damage, power levels, held objects, injuries) from the Continuity Log is absolute. Do not reset or ignore it.
+Generate a CONCISE continuity log (under 150 words) for the next scene. 
+Include ONLY what is actively relevant right now:
+- Time/Location: Where are we, what time is it?
+- Physical State: What are they holding? What is their physical condition/damage/power? (Only note changes)
+- Emotional State: Each character's current mood.
+- Unresolved Tension: What is the immediate dramatic question?
 
-═══════════════════════════════════════════════════════════
-MANDATORY OUTPUT: CONTINUITY LOG
-═══════════════════════════════════════════════════════════
+Do NOT repeat historical details from the previous state unless they are still actively unresolved. Be ruthlessly concise.
 
-At the very end, output:
-
----
-CONTINUITY LOG FOR NEXT SCENE:
-- Time/Location: [Where are we now? Has time passed?]
-- Physical State: [What are they holding? Position? New props? Battery/damage status?]
-- Emotional State: [Each character's mood]
-- Unresolved Tension: [What hangs in the air?]
-
-CONTINUITY LOG MUST BE UNDER 150 WORDS.
-Only record what CHANGED in this scene.
-Do NOT repeat information from previous scenes.
----
+Output format:
+- Time/Location: ...
+- Physical State: ...
+- Emotional State: ...
+- Unresolved Tension: ...
 '''
 
 # ═══════════════════════════════════════════════════════════
@@ -281,14 +277,14 @@ def main():
             f"Goal: {scene['goal']}\n"
             f"Turn: {scene['turn']}"
         )
-        print(scene_id)
 
-        _, scene = [s.strip().lower().replace(' ','') for s in scene_id.split(',')]
+        _, scene_filename = [s.strip().lower().replace(' ','') for s in scene_id.split(',')]
 
-        with open(out_path / f'{scene}.outline', 'w', encoding='utf-8') as of:
+        with open(out_path / f'{scene_filename}.outline', 'w', encoding='utf-8') as of:
             of.write(scene_outline)
         
-        result = llm_analyze_media(
+        # --- PASS 1: GENERATE THE SCENE ---
+        scene_result = llm_analyze_media(
             '',
             system=scene_generator.format(
                 episode_summary=episode_data["episode_summary"],
@@ -297,21 +293,39 @@ def main():
                 scene_outline=scene_outline,
                 continuity=continuity
             ),
-            max_tokens=8000
+            max_tokens=6000  # Reduced, since we don't need to generate the log anymore
         )['analysis']
 
-        with open(out_path / f'{scene}.story', 'w', encoding='utf-8') as of:
-            of.write(result)
+        # Safety cleanup: strip any continuity log the LLM might have accidentally hallucinated
+        for marker in ["CONTINUITY LOG FOR NEXT SCENE:", "CONTINUITY LOG:", "---\nCONTINUITY LOG"]:
+            if marker in scene_result:
+                scene_result = scene_result.split(marker)[0].strip()
+                break
+
+        with open(out_path / f'{scene_filename}.story', 'w', encoding='utf-8') as of:
+            of.write(scene_result)
         
-        print(result)
+        print(f"✓ Scene written.")
         
-        # Extract continuity log from the output for the next iteration
-        if "CONTINUITY LOG FOR NEXT SCENE:" in result:
-            continuity = result.split("CONTINUITY LOG FOR NEXT SCENE:")[1].strip()
-            print(continuity)
-        else:
-            print(f"⚠ WARNING: No continuity log found in {scene_id}")
-            continuity = "CONTINUITY LOG NOT PROVIDED"
+        # --- PASS 2: GENERATE CONTINUITY LOG ---
+        print(f">>> Extracting continuity for next scene...")
+        continuity_result = llm_analyze_media(
+            '',
+            system=continuity_tracker.format(
+                continuity=continuity,
+                scene_text=scene_result
+            ),
+            max_tokens=800  # Very small limit to force conciseness
+        )['analysis']
+        
+        # Update the continuity variable for the next loop iteration
+        continuity = continuity_result
+        
+        # Optional: Save the continuity log to a file for debugging
+        with open(out_path / f'{scene_filename}.continuity', 'w', encoding='utf-8') as of:
+            of.write(continuity)
+            
+        print(f"✓ Continuity updated.\n")
 
 if __name__ == '__main__':
     main()
