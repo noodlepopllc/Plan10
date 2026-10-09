@@ -27,10 +27,10 @@ class CommandBuffer:
             print(c)
         for c in self.backgrounds:
             print(c)
+        for c in self.voices:
+            print(c)
         if mode not in ("minimum"):
             for c in self.images:
-                print(c)
-            for c in self.voices:
                 print(c)
         if mode in ("images"):
             for c in self.video_images:

@@ -23,7 +23,7 @@ if [[ ! -f "$output/script.txt" || ! -f "$output/world.txt" ]]; then
     python $basepath/builders/script.py $1 $output --story $2/story/scene$3.story
 fi
 
-python $basepath/renderer/renderer.py $2 minimum > $2/scene.txt
+python render_identity $output/registry.json $2/scene.txt
 
 
 LLM_BACKUP=$LLM_BACKEND
