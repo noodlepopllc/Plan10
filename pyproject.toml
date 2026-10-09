@@ -77,4 +77,3 @@ director = "plan10.lib.director_mmh3:main"
 previewer = "plan10.lib.ltx25_previewer:main"
 qwen21 = "plan10.lib.qwen21:main"
 story = "plan10.lib.story:main"
-
