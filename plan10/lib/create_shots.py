@@ -182,6 +182,16 @@ Limit all character references to those appearing in character_list.
 Treat context_notes as continuity of tone, emotion, and physical state only.
 
 ------------------------------------------------------------
+PHYSICAL STATE (CRITICAL)
+------------------------------------------------------------
+If the scene_description states a character's physical position 
+(sitting, standing, kneeling, etc.), you MUST use that exact position.
+Do NOT infer or assume physical positions from the environment.
+A character in a tavern is NOT necessarily sitting.
+A character at a table is NOT necessarily seated.
+Only use the physical state explicitly provided in scene_description.
+
+------------------------------------------------------------
 ACTOR ISOLATION
 ------------------------------------------------------------
 
@@ -448,18 +458,17 @@ def direct(beat_entry: dict, notes=''):
 
     beat_characters = build_beat_character_list(beat_entry)
     scene_parts = []
-    
-    # 1. Overall scene context
     if beat_entry.get('summary'):
         scene_parts.append(beat_entry['summary'])
-    
-    # 2. ALL actions and dialogs from ALL active characters
     for char in beat_entry.get('active_characters', []):
+        # NEW: Inject explicit physical state
+        physical_state = char.get('physical_state', '')
+        if physical_state:
+            scene_parts.append(f"{char['name']} is {physical_state}.")
         if char.get('action'):
             scene_parts.append(f"{char['name']}: {char['action']}")
         if char.get('dialog'):
             scene_parts.append(f'{char["name"]} DIALOG: "{char["dialog"]}"')
-    
     scene_description = " ".join(scene_parts)
 
     with LLMContext() as (p_ctx, m_ctx):

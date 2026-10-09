@@ -31,7 +31,8 @@ OUTPUT FORMAT (JSON ONLY):
   "characters": [
     {{
       "name": "CHARACTER NAME",
-      "delivery": "ONE WORD describing how the dialog is spoken (e.g., suspicious, weary, hopeful, neutral)",
+      "physical_state": "Current physical position: sitting, standing, kneeling, lying, walking, etc.",
+      "delivery": "ONE WORD describing how the dialog is spoken",
       "dialog": "spoken words or null",
       "action": "action description or null"
     }}
@@ -59,7 +60,15 @@ RULES:
 8. SUMMARY:
    - Must describe the visual moment.
    - Should be consistent with PREVIOUS CONTEXT unless the beat explicitly changes the scene.
-9. Output ONLY raw JSON."""
+9. Output ONLY raw JSON.
+10. PHYSICAL STATE:
+    - Track each character's current physical position (sitting, standing, kneeling, etc.)
+    - If the beat describes a state change (e.g., "stands up", "sits down"), output the NEW state
+    - If the character remains in the same state, output the CURRENT state (don't describe the action of standing if they're already standing)
+    - The action field should describe what they're doing WHILE in that state, not the state itself
+    - Example: If character is already standing and waves, physical_state="standing", action="waves dismissively"
+    - Example: If character is sitting and stands up, physical_state="standing", action="stands up from the table"
+"""
 
 
 # ═══════════════════════════════════════════════════════════════
@@ -74,7 +83,7 @@ OUTPUT FORMAT:
 [ZONE: <zone>]
 >> <summary>
 
-<CHARACTER> (<delivery>)
+<CHARACTER> (<delivery>) [STATE: <physical_state>]
 "<dialog>"
 <action>
 
@@ -83,7 +92,9 @@ RULES:
 2. If dialog is null/empty, omit the dialog line entirely.
 3. If action is null/empty, omit the action line entirely.
 4. Character name MUST be the EXACT full name from BEAT DATA, in ALL CAPS.
-5. Output ONLY the formatted text."""
+5. Output ONLY the formatted text.
+6. The [STATE: ...] tag shows the character's current physical position. Only include it if the state changed in this beat.
+"""
 
 def build_history_context(state, max_beats=5):
     history = {
@@ -97,7 +108,8 @@ def build_history_context(state, max_beats=5):
         history["characters"][char] = {
             "delivery": state.get("character_delivery", {}).get(char),
             "last_dialog": state.get("character_dialog", {}).get(char),
-            "last_action": state.get("character_action", {}).get(char)
+            "last_action": state.get("character_action", {}).get(char),
+            "physical_state": state.get("character_physical_state", {}).get(char)  # NEW
         }
 
     return history
@@ -114,6 +126,7 @@ def update_state(state, analyzed_beat):
     new_state.setdefault("character_delivery", {})
     new_state.setdefault("character_dialog", {})
     new_state.setdefault("character_action", {})
+    new_state.setdefault("character_physical_state", {})
     new_state.setdefault("history_beats", [])
 
     zone = analyzed_beat.get("zone")
@@ -136,6 +149,7 @@ def update_state(state, analyzed_beat):
         delivery = char_data.get("delivery")
         dialog = char_data.get("dialog")
         action = char_data.get("action")
+        physical_state = char_data.get("physical_state")
 
         if delivery:
             new_state["character_delivery"][name] = delivery
@@ -143,12 +157,15 @@ def update_state(state, analyzed_beat):
             new_state["character_dialog"][name] = dialog
         if action:
             new_state["character_action"][name] = action
+        if physical_state:  # NEW
+            new_state["character_physical_state"][name] = physical_state
 
         beat_chars.append({
             "name": name,
             "delivery": delivery,
             "dialog": dialog,
-            "action": action
+            "action": action,
+            "physical_state": physical_state 
         })
 
     # append compact beat snapshot
