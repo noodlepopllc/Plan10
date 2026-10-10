@@ -686,6 +686,7 @@ def main():
         notes = Path(cold_open_path).read_text()
     else:
         notes = ''
+    print("Starting notes: ", notes)
     for beat_idx, beat in enumerate(beats, start=1):
         # Resolve background path from header zones
         zone_name = beat.get('zone', '').upper()
