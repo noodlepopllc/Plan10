@@ -323,22 +323,27 @@ OUTPUT FORMAT (JSON ONLY):
     {{
       "name": "CHARACTER NAME",
       "physical_state": "Current physical position. MUST inherit from PREVIOUS CONTEXT unless beat explicitly describes a change.",
-      "delivery": "ONE WORD describing how dialog is spoken (e.g., hoarse, tense, dangerous). If no dialog, use 'silent'.",
+      "delivery": "ONE WORD describing emotional demeanor (e.g., fearful, wary, tense, focused, alert, desperate). NEVER use 'silent'. If no dialog, infer from action/summary context.",
       "dialog": "spoken words in quotes, or null if completely silent",
       "action": "physical action description, or null"
     }}
   ]
 }}
 
+DELIVERY RULES (CRITICAL):
+1. If dialog exists, infer delivery from tone (e.g., "hoarse", "dangerous", "urgent").
+2. If dialog is null, you MUST still provide a delivery value based on the character's emotional state inferred from the summary or action text.
+3. NEVER output "silent" as a delivery. Instead, use descriptive emotional states: fearful, wary, tense, focused, alert, desperate, watchful, etc.
+4. Examples:
+   - Character has no dialog but summary says "fear in her eyes" → delivery: "fearful"
+   - Character has no dialog but is "gripping a blade" → delivery: "tense" or "dangerous"
+   - Character has no dialog but is "peering through the tear" → delivery: "watchful" or "alert"
+
 PHYSICAL STATE CONTINUITY RULES (CRITICAL):
 1. Check PREVIOUS CONTEXT for each character's last known physical_state.
 2. If the CURRENT BEAT explicitly describes a state change (e.g., "stands up", "kneels down", "crouches"), output the NEW state.
 3. If the CURRENT BEAT does NOT describe a state change, you MUST INHERIT the previous physical_state from PREVIOUS CONTEXT.
 4. NEVER output null for physical_state. If this is the character's first appearance, infer their initial state from the beat text (default to "standing" if unclear).
-5. Examples:
-   - Beat 1: "Sora kneels by the wall" → physical_state: "kneeling"
-   - Beat 2: "Sora searches the panel" (no state change mentioned) → physical_state: "kneeling" (inherited from Beat 1)
-   - Beat 3: "Sora stands up" → physical_state: "standing" (explicit change)
 
 OTHER RULES:
 1. Use PREVIOUS CONTEXT to maintain continuity across beats.
@@ -368,24 +373,11 @@ OUTPUT FORMAT:
 
 STRICT FORMATTING RULES:
 1. CHARACTER: MUST be the EXACT full name from BEAT DATA, in ALL CAPS.
-2. DELIVERY: If 'delivery' exists in BEAT DATA and is not null, wrap it in parentheses: (delivery). If null or missing, omit the parentheses entirely.
-3. STATE: ALWAYS include [STATE: <physical_state>] for every character. This is a continuity marker showing their current physical position.
-4. DIALOG: If 'dialog' exists and is not null, wrap it in double QUOTES on its own line: "dialog text here". If null, omit this line entirely.
-5. ACTION: If 'action' exists and is not null, output it on its own line. If null, omit this line entirely.
+2. DELIVERY: If present and not null, wrap in parentheses: (delivery). If null, omit parentheses.
+3. STATE: ALWAYS include [STATE: <physical_state>]. This is a continuity marker. NEVER omit it.
+4. DIALOG: If present and not null, wrap in double QUOTES on its own line. If null, omit this line.
+5. ACTION: If present and not null, output on its own line. If null, omit this line.
 6. Output ONLY the formatted text. No markdown, no explanations.
-
-EXAMPLE 1 (Full data with dialog):
-[ZONE: Escape Pod Interior]
->> Sora pushes herself up from a slumped position.
-SORA (hoarse) [STATE: kneeling]
-"Comms... where are the comms?"
-turns her head toward the jagged tear, shifts her weight, and reaches for the control panel
-
-EXAMPLE 2 (No dialog, still output state):
-[ZONE: Pod Exterior Debris Field]
->> Lindsy's trembling hand releases a glowing rectangular comms device.
-LINDSY (stammering) [STATE: standing]
-hand trembles and the metallic object slips from her fingers
 """
 
 def build_history_context(state, max_beats=5):
