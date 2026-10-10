@@ -366,7 +366,7 @@ def direct(beat_entry: dict, notes='', scene_base=''):
         if char.get('dialog'):
             scene_parts.append(f'{char["name"]} DIALOG: "{char["dialog"]}"')
     scene_description = " ".join(scene_parts)
-    with open(Path(scene_base) / 'director.log', 'a') as dlog:
+    with open(Path(scene_base) / 'director.log', 'a', encoding='utf-8') as dlog:
         with LLMContext() as (p_ctx, m_ctx):
             dlog.write(f'\n{"*"*100} \nScene Description\n {scene_description}\n')
             camera_log = llm(camera_prompt.format(
@@ -665,7 +665,7 @@ def main():
     
     # 1. Parse the self-contained script (no registry/context needed!)
     beats, header_chars, header_zones = parse_script_txt(script_path)
-    with open(Path(scene_base) / 'beats.json') as oj:
+    with open(Path(scene_base) / 'beats.json', 'w', encoding='utf-8') as oj:
         json.dump(beat, oj, indent=4)
     
     # 2. Build character lookup with absolute paths and visual IDs

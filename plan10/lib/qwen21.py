@@ -14,6 +14,7 @@ from PIL import Image
 WIDTH = int(os.environ.get("WIDTH", "832"))
 HEIGHT = int(os.environ.get("HEIGHT", "480"))
 SEED = int(os.environ.get("SEED", "-1"))
+TURBO = os.environ.get('TURBO', 'False') != 'False'
 
 import json
 import torch
@@ -306,31 +307,60 @@ class ImageGenQwen21(object):
                 "computation_dtype": torch.bfloat16,
                 "computation_device": "cuda"
             }
-            self.pipe = QwenImage21Pipeline.from_pretrained(
-                torch_dtype=torch.bfloat16,
-                device="cuda",
-                model_configs=[
-                    ModelConfig(model_id="Qwen/Qwen-Image-2.1", origin_file_pattern="transformer/diffusion_pytorch_model*.safetensors", **vram_config),
-                    ModelConfig(model_id="Qwen/Qwen-Image-2.1", origin_file_pattern="text_encoder/model*.safetensors", **vram_config),
-                    ModelConfig(model_id="Qwen/Qwen-Image-2.1", origin_file_pattern="vae/diffusion_pytorch_model*.safetensors", **vram_config),
-                ],
-                processor_config=ModelConfig(model_id="Qwen/Qwen-Image-2.1", origin_file_pattern="processor/"),
-                        vram_limit=self.vrlimit,
+
+            if TURBO:
+                self.pipe = QwenImage21Pipeline.from_pretrained(
+                    torch_dtype=torch.bfloat16,
+                    device="cuda",
+                    model_configs=[
+                        ModelConfig(model_id="Qwen/Qwen-Image-2.1-Turbo", origin_file_pattern="transformer/diffusion_pytorch_model*.safetensors", **vram_config),
+                        ModelConfig(model_id="Qwen/Qwen-Image-2.1", origin_file_pattern="text_encoder/model*.safetensors", **vram_config),
+                        ModelConfig(model_id="Qwen/Qwen-Image-2.1", origin_file_pattern="vae/diffusion_pytorch_model*.safetensors", **vram_config),
+                    ],
+                    processor_config=ModelConfig(model_id="Qwen/Qwen-Image-2.1", origin_file_pattern="processor/"),
+                    vram_limit=self.vrlimit,
                 )
+            else:
+                self.pipe = QwenImage21Pipeline.from_pretrained(
+                    torch_dtype=torch.bfloat16,
+                    device="cuda",
+                    model_configs=[
+                        ModelConfig(model_id="Qwen/Qwen-Image-2.1", origin_file_pattern="transformer/diffusion_pytorch_model*.safetensors", **vram_config),
+                        ModelConfig(model_id="Qwen/Qwen-Image-2.1", origin_file_pattern="text_encoder/model*.safetensors", **vram_config),
+                        ModelConfig(model_id="Qwen/Qwen-Image-2.1", origin_file_pattern="vae/diffusion_pytorch_model*.safetensors", **vram_config),
+                    ],
+                    processor_config=ModelConfig(model_id="Qwen/Qwen-Image-2.1", origin_file_pattern="processor/"),
+                    vram_limit=self.vrlimit,
+                    )
+            
 
     def generate(self, prompt, output, width, height, seed):
         if not self.pipe:
             self.__enter__()
-        image = self.pipe(
+        if TURBO:
+            sigmas = [1.0, 0.978453, 0.95418, 0.926626, 0.89508, 0.845148, 0.704534, 0.414568]
+            image = self.pipe(
                 prompt=prompt,
                 seed=seed,
                 height=height,
                 width=width,
+                sigmas=sigmas,
                 num_inference_steps=40,
                 tiled=(width > 1536) or (height > 1536),
                 tile_size = 384,
                 tile_stride = 320
             )
+        else:
+            image = self.pipe(
+                    prompt=prompt,
+                    seed=seed,
+                    height=height,
+                    width=width,
+                    num_inference_steps=40,
+                    tiled=(width > 1536) or (height > 1536),
+                    tile_size = 384,
+                    tile_stride = 320
+                )
         image.save(output)
         return {"status":"success", "output_path":output}
 
