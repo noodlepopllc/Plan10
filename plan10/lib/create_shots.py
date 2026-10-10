@@ -386,7 +386,7 @@ def build_beat_character_list(beat_entry: dict) -> list:
     
     return characters
 
-def direct(beat_entry: dict, notes=''):
+def direct(beat_entry: dict, notes='', scene_base=''):
     if notes: 
         notes = summarize_continuity_from_director_shots(notes)
 
@@ -404,9 +404,9 @@ def direct(beat_entry: dict, notes=''):
         if char.get('dialog'):
             scene_parts.append(f'{char["name"]} DIALOG: "{char["dialog"]}"')
     scene_description = " ".join(scene_parts)
-    with open('director.log', 'a') as dlog:
+    with open(Path(scene_base) / 'director.log', 'a') as dlog:
         with LLMContext() as (p_ctx, m_ctx):
-            dlog.write(f'{"*"*100} \nScene Description\n {scene_description}')
+            dlog.write(f'\n{"*"*100} \nScene Description\n {scene_description}\n')
             camera_log = llm(camera_prompt.format(
                 scene_description=scene_description,
                 character_list=beat_characters,
@@ -414,7 +414,7 @@ def direct(beat_entry: dict, notes=''):
                 context_notes=notes
             ), processor=p_ctx, model=m_ctx)
             print(f"Camera Done: \n{camera_log}")
-            dlog.write(f'{"-"*100} \nCamera Log\n {camera_log}')
+            dlog.write(f'\n{"-"*100} \nCamera Log\n {camera_log}\n')
 
             director_shots = llm(
                 director_prompt.format(
@@ -426,7 +426,7 @@ def direct(beat_entry: dict, notes=''):
                 ), processor=p_ctx, model=m_ctx
             )
             print(f"Director Done: \n{director_shots}")
-            dlog.write(f'{"-"*100} \nDirector Log\n {director_shots}')
+            dlog.write(f'\n{"-"*100} \nDirector Log\n {director_shots}\n')
 
             final_shotlist = llm(
                 shot_planner_prompt.format(
@@ -434,7 +434,7 @@ def direct(beat_entry: dict, notes=''):
                 ), processor=p_ctx, model=m_ctx
             )
             print(f"Shotlist Done: \n{final_shotlist}")
-            dlog.write(f'{"-"*100} \nShot list\n {final_shotlist}')
+            dlog.write(f'\n{"-"*100} \nShot list\n {final_shotlist}\n')
 
     return final_shotlist, director_shots
 
@@ -731,7 +731,7 @@ def main():
         beat['background'] = bg_path
         
         # Generate shots and get characters in this specific beat
-        shots, director_shots_text = direct(beat, notes)
+        shots, director_shots_text = direct(beat, notes, scene_base)
         notes = director_shots_text  # Pass director output to next beat for continuity
         characters_in_scene = build_beat_character_list(beat)
         
