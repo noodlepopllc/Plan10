@@ -122,21 +122,17 @@ Keep all character actions and expressions strictly aligned with the scene descr
 The scene_description is the authoritative source for all character behavior.
 
 ------------------------------------------------------------
-CONTINUOUS CAMERA MOVEMENT
+CAMERA MOVEMENT
 ------------------------------------------------------------
 
-The camera moves through the scene as a continuous flowing presence.
+Each shot contains ONE smooth, motivated camera movement (or is static).
 
-Connect every moment with smooth, motivated camera movement.
-Frame transitions describe the camera moving to its new position.
-Each moment ends where the next moment begins, maintaining spatial continuity.
-Maintain continuous spatial tracking when a character performs a multi-part action.
+Every camera movement serves a specific purpose:
+- Character movement motivates the camera to follow
+- Gaze shifts motivate the camera to pan
+- Emotional beats motivate a push-in or pull-back
 
-Every camera movement serves a specific narrative, emotional, or spatial purpose:
-- Character movement motivates the camera to follow the action
-- Gaze shifts motivate the camera to pan toward the new focus
-- Spatial relationships motivate the camera to reveal the environment
-- Emotional beats motivate the camera to push in for intimacy or pull back for isolation
+Maintain spatial continuity across shots through consistent screen direction and framing, NOT through chained camera movements.
 
 Prioritize simple, strong compositions over complex maneuvers.
 
@@ -184,13 +180,15 @@ Two characters may both be active only when performing one synchronized physical
 Apply the single-active-character default when the scene describes no synchronized action.
 
 ------------------------------------------------------------
-TEMPORAL RULES
+TEMPORAL & SHOT RULES
 ------------------------------------------------------------
 
-Plan MOMENTS of 2 seconds each, with a maximum of 3 seconds.
-These moments will be merged into shots by the director.
+Plan discrete SHOTS of 2 to 5 seconds each.
 Open with a wide or medium-wide establishing shot.
-Reserve slow pan or tilt for the first moment only.
+Reserve slow pan or tilt for the first shot only.
+
+CRITICAL CAMERA RULE: Each shot must contain EXACTLY ONE simple camera movement (e.g., ONLY a slow push-in, OR ONLY a slow pan, OR completely static). 
+NEVER chain multiple movements in a single shot (e.g., "tilts up then pushes in" is strictly forbidden).
 
 ------------------------------------------------------------
 DIALOG
@@ -213,11 +211,10 @@ Audio: natural diegetic sounds (footsteps, objects, environment) and exact quote
 ------------------------------------------------------------
 OUTPUT FORMAT
 ------------------------------------------------------------
-moment N | duration_seconds
-camera: angle + movement
+shot N | duration_seconds (2-5)
+camera: [ONE simple movement or static] + [angle]
 visual: what is visible + character actions
-audio: notable sounds
-
+audio: notable sounds + exact quoted dialog (if speaking)
 ------------------------------------------------------------
 NOW PRODUCE THE CAMERA LOG.
 '''
@@ -234,75 +231,40 @@ INPUTS:
 - Background: {background_label}
 - Context notes: {context_notes}
 
-Your output is the semantic shot plan for the shot planner.
-
 ------------------------------------------------------------
-BEAT FIDELITY & DIALOG PROTECTION (CRITICAL)
+VALIDATION RULES (CRITICAL)
 ------------------------------------------------------------
-Keep all actions, reactions, and object interactions strictly aligned with scene_description.
-CRITICAL: NEVER split a single line of dialog across two shots. If a dialog turn is long, keep it in one shot (up to 8 seconds max for dialog). Only split the *action* around the dialog, never the dialog itself.
-
-------------------------------------------------------------
-DIALOG EXTRACTION AND VERIFICATION
-------------------------------------------------------------
-Extract exact quoted dialog verbatim from DIALOG: "..." lines in scene_description.
-You MUST explicitly label this in your output using "dialog: " so the shot planner can find it.
-
-------------------------------------------------------------
-ACTOR ISOLATION
-------------------------------------------------------------
-Feature one active character per shot.
-When a character speaks, they are the sole moving subject.
-Other visible characters remain frozen and static during speech.
-
-------------------------------------------------------------
-SHOT BOUNDARY RULES
-------------------------------------------------------------
-Start a new shot when:
-- Action intent changes
-- Gaze target changes
-- Speech begins or ends
-- Object interaction begins or ends
-
-Merge moments into shots of 2-8 seconds each. (Dialog turns may extend to 8s to remain intact).
+1. NO CHAINED MOVEMENTS: If any shot in the camera log contains more than one camera movement (e.g., "pans then pushes in"), you MUST split it into two separate shots.
+2. HARD DURATION CAP: No single shot may exceed 5 seconds. If a shot is longer, split it.
+3. DIALOG PROTECTION: Never split a single line of dialog across two shots. If a dialog turn is long, keep it in one shot (up to 5 seconds max). 
+4. ACTOR ISOLATION: Feature one active character per shot. When a character speaks, they are the sole moving subject.
 
 ------------------------------------------------------------
 DURATION AND SPLITTING RULES
 ------------------------------------------------------------
-1. HARD CAP: NO single shot may exceed 8 seconds. 
-2. If the total estimated duration of a beat exceeds 15 seconds, you MUST split the output into TWO distinct parts ("--- PART 1 ---" and "--- PART 2 ---") with unique summaries for each.
-3. When splitting, NEVER separate a physical action from the dialog that accompanies it.
+Calculate the total estimated duration of all validated shots in this beat.
+If the total duration exceeds 15 seconds, you MUST split the output into TWO distinct parts ("--- PART 1 ---" and "--- PART 2 ---") with unique summaries for each.
+
+When splitting, you MUST:
+1. Keep narrative units intact. NEVER separate a physical action from the dialog that accompanies it.
+2. Generate a NEW, unique `summary:` for EACH part.
 
 ------------------------------------------------------------
-OUTPUT FORMAT (Single Beat)
+OUTPUT FORMAT (Validated Shot Plan)
 ------------------------------------------------------------
-summary: [One sentence describing the core visual action and dialog of this beat]
+summary: [One sentence describing the core visual action and dialog of this beat/part]
 shot 1
 type: establishing / action / dialog / reaction
-moments: [list of moment numbers]
-duration: estimated duration (2-8)
-purpose: what this shot accomplishes
-camera: summary of angles and movement
+duration: 2-5
+camera: [ONE simple movement or static] + [angle]
 visual: summary of visible elements
 dialog: [Exact quoted dialog, or "None"]
-audio: [Ambient sounds + dialog summary]
-verification: why this shot boundary exists
+audio: [Ambient sounds]
+
+(Repeat for shot 2, shot 3, etc.)
 
 ------------------------------------------------------------
-OUTPUT FORMAT (Split Beat > 15s)
-------------------------------------------------------------
---- PART 1 ---
-summary: [One sentence describing ONLY the events in Part 1]
-shot 1
-... (shot details, including dialog: and audio: fields) ...
-
---- PART 2 ---
-summary: [One sentence describing ONLY the events in Part 2]
-shot 2
-... (shot details, including dialog: and audio: fields) ...
-
-------------------------------------------------------------
-NOW PRODUCE THE DIRECTOR SHOT PLAN.
+NOW PRODUCE THE VALIDATED DIRECTOR SHOT PLAN.
 '''
 
 def summarize_continuity_from_director_shots(director_shots_text: str) -> str:
