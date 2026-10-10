@@ -39,12 +39,12 @@ def parse_director_splits_with_shots(director_shots_text: str, final_shotlist: s
         sub_summary = summary_match.group(1).strip() if summary_match else original_summary
         part_summaries.append(sub_summary)
         
-        # Count shots in this part
-        shot_count = len(re.findall(r'^shot\s+\d+', part_text, re.MULTILINE))
+        # Count shots in this part (case-insensitive to catch "Shot 1" or "shot 1")
+        shot_count = len(re.findall(r'(?i)^shot\s+\d+', part_text, re.MULTILINE))
         part_shot_counts.append(shot_count)
     
     # Split the final_shotlist accordingly
-    shot_lines = [line for line in final_shotlist.split('\n') if line.strip().startswith('shot')]
+    shot_lines = [line for line in final_shotlist.split('\n') if line.strip().lower().startswith('shot')]
     
     current_idx = 0
     for i, (summary, shot_count) in enumerate(zip(part_summaries, part_shot_counts)):
@@ -63,40 +63,24 @@ INPUT:
 ------------------------------------------------------------
 SHOT PLANNER ROLE
 ------------------------------------------------------------
-
-The director shot plan is authoritative.
 Convert the approved director shot plan into renderer-ready syntax.
 Preserve the director shot plan exactly as written.
 
 ------------------------------------------------------------
-PRESERVATION REQUIREMENTS
+DIALOG FORMATTING (CRITICAL)
 ------------------------------------------------------------
+Look for exact quoted dialog in EITHER the "dialog:" or "audio:" lines of the director shot plan.
+Format ALL spoken dialog using this exact renderer syntax:
 
-Keep all actions, camera descriptions, dialog, audio, and durations exactly as they appear in the director shot plan.
-Maintain all camera angles, movements, shot sizes, and compositions without modification.
-Use only ambient audio explicitly present in the director shot plan.
-Apply the director duration exactly as specified.
-
-- HARD DURATION LIMIT: Ensure no single shot duration exceeds 5 seconds. If the director's plan implies a longer shot, break it into sequential shots.
-- Avoid describing repetitive or looping actions. Each shot must show forward narrative progression, not a sustained loop.
-
-------------------------------------------------------------
-DIALOG FORMATTING
-------------------------------------------------------------
-
-Extract exact quoted dialog from DIALOG: "..." lines in the director shot plan.
-Format all spoken dialog using this renderer syntax:
-
-character speaks [English] "dialog text"
+character speaks [English] "exact dialog text"
 They close their mouth and are silent.
 
 The [English] tag is renderer metadata required for all dialog lines.
-Preserve the quoted dialog text exactly without paraphrasing or summarizing.
+Preserve the quoted dialog text exactly without paraphrasing, summarizing, or splitting it.
 
 ------------------------------------------------------------
 OUTPUT FORMAT
 ------------------------------------------------------------
-
 Format each shot as a single line:
 
 shot | audio. camera. visual. dialog (if any). | duration
@@ -253,92 +237,41 @@ INPUTS:
 Your output is the semantic shot plan for the shot planner.
 
 ------------------------------------------------------------
-BEAT FIDELITY
+BEAT FIDELITY & DIALOG PROTECTION (CRITICAL)
 ------------------------------------------------------------
-
 Keep all actions, reactions, and object interactions strictly aligned with scene_description.
-Characters remain still unless explicitly described in the scene.
-When uncertain, prefer scene_description over camera_log.
-Enhance the cinematic framing while preserving the source material.
+CRITICAL: NEVER split a single line of dialog across two shots. If a dialog turn is long, keep it in one shot (up to 8 seconds max for dialog). Only split the *action* around the dialog, never the dialog itself.
 
 ------------------------------------------------------------
 DIALOG EXTRACTION AND VERIFICATION
 ------------------------------------------------------------
-
 Extract exact quoted dialog verbatim from DIALOG: "..." lines in scene_description.
-Include exact quoted dialog in every shot describing speech.
-Use exact quoted dialog text for all speaking moments.
-Speaking moments require exact quoted dialog to be valid.
+You MUST explicitly label this in your output using "dialog: " so the shot planner can find it.
 
 ------------------------------------------------------------
 ACTOR ISOLATION
 ------------------------------------------------------------
-
 Feature one active character per shot.
-Two characters may both be active only when performing one synchronized physical action together.
 When a character speaks, they are the sole moving subject.
 Other visible characters remain frozen and static during speech.
-Passive characters appear with static language only.
-
-------------------------------------------------------------
-SPATIAL AND EYELINE VALIDATION
-------------------------------------------------------------
-
-Direct the speaker's eyeline toward the listener's established screen position.
-Maintain consistent screen direction for each character across all shots.
-Keep the camera on one consistent side of the axis of action.
-Angle the speaker's gaze just past the lens when the listener is off-screen.
-Match the speaker's gaze direction to the spatial relationship in scene_description.
 
 ------------------------------------------------------------
 SHOT BOUNDARY RULES
 ------------------------------------------------------------
-
 Start a new shot when:
 - Action intent changes
 - Gaze target changes
 - Speech begins or ends
 - Object interaction begins or ends
-- Character enters or exits
 
-Merge moments into shots of 2-10 seconds each.
-Sum the durations of merged moments.
-
-Merge moments only when:
-- Camera angle remains identical
-- Motion continues as part of the same phase
-- Dialog belongs to the same turn
-- No character enters or exits
-- Only one active character is present
+Merge moments into shots of 2-8 seconds each. (Dialog turns may extend to 8s to remain intact).
 
 ------------------------------------------------------------
-SHOT TYPES
+DURATION AND SPLITTING RULES
 ------------------------------------------------------------
-
-- establishing: wide or medium-wide framing
-- dialog: speaker isolated in frame
-- action: one active performer
-- reaction: one active performer
-
-Duration: sum of merged moments, clamped to 2-10 seconds.
-
-------------------------------------------------------------
-DURATION AND SPLITTING RULES (CRITICAL)
-------------------------------------------------------------
-1. HARD CAP: NO single shot may exceed 5 seconds. 
-2. If the action or dialog naturally requires more than 5 seconds, you MUST split it into multiple sequential shots (e.g., Shot 1: Action begins, Shot 2: Reaction/Continuation).
-3. NO LOOPING: Do not describe actions that naturally repeat or loop to fill time (e.g., "taps foot repeatedly for 5 seconds", "nods continuously"). Describe the distinct start, middle, and end of a micro-action.
-4. If the total estimated duration of a beat exceeds 15 seconds, you MUST split the output into TWO distinct parts ("--- PART 1 ---" and "--- PART 2 ---") with unique summaries for each.
-
-Calculate the total estimated duration of all merged moments.
-If the total duration exceeds 15 seconds, you MUST split the output into TWO distinct parts (e.g., "PART 1" and "PART 2").
-
-When splitting, you MUST:
-1. Keep narrative units intact. NEVER separate a physical action from the dialog that accompanies it.
-2. Generate a NEW, unique `summary:` for EACH part that describes ONLY the events occurring in that specific part.
-3. Use the exact delimiter format below.
-
-If duration is <= 15 seconds, output a single block with one summary.
+1. HARD CAP: NO single shot may exceed 8 seconds. 
+2. If the total estimated duration of a beat exceeds 15 seconds, you MUST split the output into TWO distinct parts ("--- PART 1 ---" and "--- PART 2 ---") with unique summaries for each.
+3. When splitting, NEVER separate a physical action from the dialog that accompanies it.
 
 ------------------------------------------------------------
 OUTPUT FORMAT (Single Beat)
@@ -347,11 +280,12 @@ summary: [One sentence describing the core visual action and dialog of this beat
 shot 1
 type: establishing / action / dialog / reaction
 moments: [list of moment numbers]
-duration: estimated duration
+duration: estimated duration (2-8)
 purpose: what this shot accomplishes
 camera: summary of angles and movement
 visual: summary of visible elements
-audio: summary of notable sounds
+dialog: [Exact quoted dialog, or "None"]
+audio: [Ambient sounds + dialog summary]
 verification: why this shot boundary exists
 
 ------------------------------------------------------------
@@ -360,12 +294,12 @@ OUTPUT FORMAT (Split Beat > 15s)
 --- PART 1 ---
 summary: [One sentence describing ONLY the events in Part 1]
 shot 1
-... (shot details) ...
+... (shot details, including dialog: and audio: fields) ...
 
 --- PART 2 ---
 summary: [One sentence describing ONLY the events in Part 2]
 shot 2
-... (shot details) ...
+... (shot details, including dialog: and audio: fields) ...
 
 ------------------------------------------------------------
 NOW PRODUCE THE DIRECTOR SHOT PLAN.
