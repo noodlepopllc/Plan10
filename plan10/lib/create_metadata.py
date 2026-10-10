@@ -135,7 +135,8 @@ def parse_script_txt(script_path):
     # Build regex patterns
     if upper_names:
         name_alt = "|".join(re.escape(n) for n in sorted(upper_names, key=len, reverse=True))
-        char_re = re.compile(rf"^({name_alt})\s*(?:\(([^)]+)\))?\s*$")
+        # ADDED: (?:\[STATE:\s*([^\]]+)\])? to optionally capture the state
+        char_re = re.compile(rf"^({name_alt})\s*(?:\(([^)]+)\))?\s*(?:\[STATE:\s*([^\]]+)\])?\s*$")
     else:
         char_re = None
     
@@ -178,13 +179,14 @@ def parse_script_txt(script_path):
                 beat["summary"] = s[2:].strip()
             continue
         
-        # Character name with optional delivery
+        # Character name with optional delivery and state
         if char_re:
             m = char_re.match(s)
             if m and beat:
                 current_char = {
                     "name": m.group(1).strip(),
                     "delivery": m.group(2).strip() if m.group(2) else None,
+                    "physical_state": m.group(3).strip() if m.group(3) else None,  # <-- CAPTURED HERE
                     "dialog": None,
                     "action": None,
                 }

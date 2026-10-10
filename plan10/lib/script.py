@@ -322,43 +322,31 @@ OUTPUT FORMAT (JSON ONLY):
   "characters": [
     {{
       "name": "CHARACTER NAME",
-      "physical_state": "Current physical position: sitting, standing, kneeling, lying, walking, etc.",
-      "delivery": "ONE WORD describing how the dialog is spoken",
-      "dialog": "spoken words or null",
-      "action": "action description or null"
+      "physical_state": "Current physical position. MUST inherit from PREVIOUS CONTEXT unless beat explicitly describes a change.",
+      "delivery": "ONE WORD describing how dialog is spoken (e.g., hoarse, tense, dangerous). If no dialog, use 'silent'.",
+      "dialog": "spoken words in quotes, or null if completely silent",
+      "action": "physical action description, or null"
     }}
   ]
 }}
 
-RULES:
+PHYSICAL STATE CONTINUITY RULES (CRITICAL):
+1. Check PREVIOUS CONTEXT for each character's last known physical_state.
+2. If the CURRENT BEAT explicitly describes a state change (e.g., "stands up", "kneels down", "crouches"), output the NEW state.
+3. If the CURRENT BEAT does NOT describe a state change, you MUST INHERIT the previous physical_state from PREVIOUS CONTEXT.
+4. NEVER output null for physical_state. If this is the character's first appearance, infer their initial state from the beat text (default to "standing" if unclear).
+5. Examples:
+   - Beat 1: "Sora kneels by the wall" → physical_state: "kneeling"
+   - Beat 2: "Sora searches the panel" (no state change mentioned) → physical_state: "kneeling" (inherited from Beat 1)
+   - Beat 3: "Sora stands up" → physical_state: "standing" (explicit change)
+
+OTHER RULES:
 1. Use PREVIOUS CONTEXT to maintain continuity across beats.
 2. If the beat does not explicitly change zone, inherit the previous zone.
-3. If the beat does not explicitly change spatial layout, inherit the previous summary.
-4. DELIVERY:
-   - If dialog exists, infer delivery from tone.
-   - If unclear, inherit delivery from PREVIOUS CONTEXT.
-5. DIALOG:
-   - Extract ONLY text inside quotes from the beat.
-   - CRITICAL: If there is no exact quoted text, BUT the character is clearly making vocal sounds or speaking (e.g., "continues her story", "mumbles", "sighs", "whispers"), you MUST output a generic, muteable vocalization in quotes, such as "[mumbles]", "[sighs]", or "[inaudible chatter]". 
-   - Only set to null if the character is completely silent.
-
-6. ACTION:
-   - Extract physical actions performed by the character.
-   - CRITICAL RULE: If dialog is null, the action MUST NOT contain any verbs of speech (e.g., "says", "whispers", "tells", "continues her story"). 
-   - If a character is acting like they are speaking but no dialog is provided, you MUST rewrite the action to be strictly physical and non-verbal (e.g., "gestures animatedly", "leans forward with an animated expression", "mouth moves silently").
-7. CHARACTERS:
-   - Include ALL characters present in the beat, even if silent.
-8. SUMMARY:
-   - Must describe the visual moment.
-   - Should be consistent with PREVIOUS CONTEXT unless the beat explicitly changes the scene.
-9. Output ONLY raw JSON.
-10. PHYSICAL STATE:
-    - Track each character's current physical position (sitting, standing, kneeling, etc.)
-    - If the beat describes a state change (e.g., "stands up", "sits down"), output the NEW state
-    - If the character remains in the same state, output the CURRENT state (don't describe the action of standing if they're already standing)
-    - The action field should describe what they're doing WHILE in that state, not the state itself
-    - Example: If character is already standing and waves, physical_state="standing", action="waves dismissively"
-    - Example: If character is sitting and stands up, physical_state="standing", action="stands up from the table"
+3. DIALOG: Extract ONLY text inside quotes. If a character makes vocal sounds but no exact quote exists, output a generic vocalization like "[mumbles]" or "[sighs]". Only use null if completely silent.
+4. ACTION: Extract physical actions. If dialog is null, the action MUST NOT contain verbs of speech. Rewrite to be strictly physical (e.g., "gestures animatedly", "mouth moves silently").
+5. CHARACTERS: Include ALL characters present in the beat, even if silent.
+6. Output ONLY raw JSON.
 """
 
 
@@ -378,13 +366,26 @@ OUTPUT FORMAT:
 "<dialog>"
 <action>
 
-RULES:
-1. If dialog exists, wrap it in QUOTES: "dialog text here".
-2. If dialog is null/empty, omit the dialog line entirely.
-3. If action is null/empty, omit the action line entirely.
-4. Character name MUST be the EXACT full name from BEAT DATA, in ALL CAPS.
-5. Output ONLY the formatted text.
-6. The [STATE: ...] tag shows the character's current physical position. Only include it if the state changed in this beat.
+STRICT FORMATTING RULES:
+1. CHARACTER: MUST be the EXACT full name from BEAT DATA, in ALL CAPS.
+2. DELIVERY: If 'delivery' exists in BEAT DATA and is not null, wrap it in parentheses: (delivery). If null or missing, omit the parentheses entirely.
+3. STATE: ALWAYS include [STATE: <physical_state>] for every character. This is a continuity marker showing their current physical position.
+4. DIALOG: If 'dialog' exists and is not null, wrap it in double QUOTES on its own line: "dialog text here". If null, omit this line entirely.
+5. ACTION: If 'action' exists and is not null, output it on its own line. If null, omit this line entirely.
+6. Output ONLY the formatted text. No markdown, no explanations.
+
+EXAMPLE 1 (Full data with dialog):
+[ZONE: Escape Pod Interior]
+>> Sora pushes herself up from a slumped position.
+SORA (hoarse) [STATE: kneeling]
+"Comms... where are the comms?"
+turns her head toward the jagged tear, shifts her weight, and reaches for the control panel
+
+EXAMPLE 2 (No dialog, still output state):
+[ZONE: Pod Exterior Debris Field]
+>> Lindsy's trembling hand releases a glowing rectangular comms device.
+LINDSY (stammering) [STATE: standing]
+hand trembles and the metallic object slips from her fingers
 """
 
 def build_history_context(state, max_beats=5):
