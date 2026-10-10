@@ -662,6 +662,9 @@ def main():
     
     script_path = Path(sys.argv[1])
     scene_base = Path(sys.argv[2])
+    cold_open_path = ''
+    if len(sys.argv) > 3:
+        cold_open_path = sys.argv[3]
     
     # 1. Parse the self-contained script (no registry/context needed!)
     beats, header_chars, header_zones = parse_script_txt(script_path)
@@ -679,7 +682,10 @@ def main():
         }
     
     # 3. Process beats
-    notes = ''
+    if cold_open_path:
+        notes = Path(cold_open_path).read_text()
+    else:
+        notes = ''
     for beat_idx, beat in enumerate(beats, start=1):
         # Resolve background path from header zones
         zone_name = beat.get('zone', '').upper()

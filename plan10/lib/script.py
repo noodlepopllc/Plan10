@@ -472,7 +472,7 @@ def story_to_script(story_path, world_text, output_path, llm_call_func):
     story_text = Path(story_path).read_text(encoding='utf-8')
 
     # Split into beats
-    beats = split_into_beats(story_text)
+    beats = split_into_beats(story_text, story_path)
 
     # Prepare output file
     output_file = Path(output_path)
@@ -539,12 +539,18 @@ def safe_json_load(text):
             return None
     return None
 
-def split_into_beats(story_text):
+def split_into_beats(story_text, story_path):
     """Split story into beats, handling both paragraph and line-by-line formats."""
+
+    cold_open = ''
     
     # Remove everything before and including COLD OPEN END
     if 'COLD OPEN END' in story_text:
-        story_text = story_text.split('COLD OPEN END')[-1]
+        cold_open, story_text = story_text.split('COLD OPEN END')
+        cold_open = re.sub(r'\*+', '', cold_open)
+        cold_open_path = Path(story_path).parent / (str(Path(story_path).stem).replace('scene', 'cold_open') + '.txt')
+        cold_open_path.write_text(cold_open, encoding='utf-8')
+        print(f"Saved cold open to {cold_open_path}")
 
         # Remove continuity log and everything after it
     if 'CONTINUITY LOG FOR NEXT SCENE:' in story_text:
