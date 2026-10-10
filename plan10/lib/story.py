@@ -161,7 +161,7 @@ Amy's hovering foot finally touches down, the impact sending a visible shudder t
 Blaire sets the glass down on the obsidian bar. The sound is too loud in the bass-heavy air. She pushes off the bar, her missing eye-socket catching a laser sweep, throwing a thin red line across her cheek. "We find a buyer. We charge. We fix the panel." She taps the exposed wiring in her chest with one blue fingertip, and a small shower of sparks cascades onto the bar top. "We fix me."
 '''
 
-scene_generator = '''
+scene_generator_small = '''
 You are an expert screenwriter. Write a scene for a short-form video series.
 
 EPISODE CONTEXT:
