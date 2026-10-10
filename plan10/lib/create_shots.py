@@ -666,7 +666,7 @@ def main():
     # 1. Parse the self-contained script (no registry/context needed!)
     beats, header_chars, header_zones = parse_script_txt(script_path)
     with open(Path(scene_base) / 'beats.json', 'w', encoding='utf-8') as oj:
-        json.dump(beat, oj, indent=4)
+        json.dump(beats, oj, indent=4)
     
     # 2. Build character lookup with absolute paths and visual IDs
     characters = {}
