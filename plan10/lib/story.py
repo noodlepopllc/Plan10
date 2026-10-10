@@ -161,6 +161,45 @@ Amy's hovering foot finally touches down, the impact sending a visible shudder t
 Blaire sets the glass down on the obsidian bar. The sound is too loud in the bass-heavy air. She pushes off the bar, her missing eye-socket catching a laser sweep, throwing a thin red line across her cheek. "We find a buyer. We charge. We fix the panel." She taps the exposed wiring in her chest with one blue fingertip, and a small shower of sparks cascades onto the bar top. "We fix me."
 '''
 
+scene_generator = '''
+You are an expert screenwriter. Write a scene for a short-form video series.
+
+EPISODE CONTEXT:
+{episode_summary}
+
+THEME/TONE: {theme_tone}
+
+CHARACTERS:
+{character_sheet}
+
+SCENE TO WRITE:
+{scene_outline}
+
+PREVIOUS STATE:
+{continuity}
+
+STRICT WRITING RULES:
+1. SHOW, DON'T TELL: Express emotions only through physical actions and posture.
+2. MACRO-PHYSICALITY: Describe actions clearly. Use: [verb] + [object] + [manner/reaction].
+3. DIALOG: Max 2 sentences per turn. Always break up dialog with physical action.
+4. LENGTH: Write exactly 5 to 10 paragraphs total. 
+5. DENSITY: Every paragraph must be 3 to 5 sentences long. No single-sentence paragraphs.
+
+REQUIRED STRUCTURE:
+Paragraph 1: COLD OPEN. Describe the setting, lighting, and exact physical positions of characters. No plot advancement or dialog yet.
+
+After Paragraph 1, output this exact line on its own:
+******* COLD OPEN END ****
+
+Paragraphs 2 to (N-1): THE SCENE. Action and dialog. Each paragraph is one distinct story beat.
+Final Paragraph: THE TURN. The scene must end with the specific event described in the Scene Outline.
+
+STYLE REFERENCE (Mimic this density and pacing):
+"Amy's hovering foot finally touches down, the impact sending a visible shudder through her frame as the dangling cables at her hip spark once, twice. She turns her head toward Blaire—a full two-second rotation, the servos in her neck whining at a pitch just below audible—and her amber eyes flicker. 'Power at eleven percent,' Amy says, her voice a pleasant contralto but the consonants smearing at the edges."
+
+Write the scene now. Output ONLY the story text.
+'''
+
 # ═══════════════════════════════════════════════════════════
 # PROMPT 4: THE CONTINUITY TRACKER
 # Extracts state from the generated scene to pass to the next
@@ -198,19 +237,30 @@ Output format:
 # ═══════════════════════════════════════════════════════════
 
 parser = '''
-You are a data extraction assistant. Parse the following text into a JSON object with exactly these keys:
+You are a strict data extraction engine. Your ONLY output must be a valid, parseable JSON object.
 
-- "episode_summary": string (the paragraph from Section 1)
-- "theme_tone": string (the full Theme and Tone lines from Section 2)
-- "character_sheet": string (the full character descriptions from Section 3)
-- "scenes": array of objects, each with:
-  - "id": string (e.g., "ACT I, Scene 1")
-  - "location": string
-  - "characters": string
-  - "goal": string
-  - "turn": string
+STRICT RULES:
+1. Your response MUST begin with `{{` and end with `}}`.
+2. Do NOT use markdown code blocks (no ```json or ```).
+3. Do NOT output any conversational text, explanations, or notes.
+4. You MUST escape all double quotes and newlines inside the extracted strings.
 
-Output ONLY valid JSON. No markdown, no commentary.
+Fill out this exact JSON template based on the text provided:
+
+{{
+  "episode_summary": "Extract the paragraph from SECTION 1: EPISODE SUMMARY",
+  "theme_tone": "Combine the Theme and Tone lines from SECTION 2 into a single string",
+  "character_sheet": "Extract all character descriptions from SECTION 3",
+  "scenes": [
+    {{
+      "id": "Reformat 'Scene Y (Act X)' to 'Act X, Scene Y'",
+      "location": "Extract the location text",
+      "characters": "Extract the characters text",
+      "goal": "Extract the goal text",
+      "turn": "Extract the turn text"
+    }}
+  ]
+}}
 
 TEXT TO PARSE:
 {blueprint}
@@ -253,6 +303,7 @@ def main():
     # You may need to clean the JSON string depending on your LLM's output
     import json
     # Strip markdown code fences if present
+    print(parsed)
     parsed_clean = parsed.strip()
     if parsed_clean.startswith("```"):
         parsed_clean = parsed_clean.split("\n", 1)[1]
@@ -295,12 +346,6 @@ def main():
             ),
             max_tokens=6000  # Reduced, since we don't need to generate the log anymore
         )['analysis']
-
-        # Safety cleanup: strip any continuity log the LLM might have accidentally hallucinated
-        for marker in ["CONTINUITY LOG FOR NEXT SCENE:", "CONTINUITY LOG:", "---\nCONTINUITY LOG"]:
-            if marker in scene_result:
-                scene_result = scene_result.split(marker)[0].strip()
-                break
 
         with open(out_path / f'{scene_filename}.story', 'w', encoding='utf-8') as of:
             of.write(scene_result)
