@@ -666,6 +666,35 @@ def format_compact_world(world_json):
     
     return "\n".join(lines)
 
+def post_process_script(script_path):
+    lines = Path(script_path).read_text().split('\n')
+    output = []
+    last_states = {}  # Track last known state per character
+    
+    for line in lines:
+        # Check if this is a character line (starts with character name)
+        if line.strip() and not line.startswith('[') and not line.startswith('>>') and not line.startswith('"'):
+            # Parse character name and check for tags
+            parts = line.split()
+            if parts:
+                char_name = parts[0]
+                
+                # Check if [STATE: ...] exists
+                if '[STATE:' not in line:
+                    # Inherit or default
+                    state = last_states.get(char_name, 'standing')
+                    # Insert [STATE: ...] after character name
+                    line = f"{char_name} [STATE: {state}]"
+                else:
+                    # Extract and track state
+                    match = re.search(r'\[STATE:\s*([^\]]+)\]', line)
+                    if match:
+                        last_states[char_name] = match.group(1)
+        
+        output.append(line)
+    
+    Path(script_path).write_text('\n'.join(output))
+
 def main():
     import json
     from plan10.lib.qwen_llm import llm_analyze_media
@@ -713,6 +742,8 @@ def main():
         output_path=f'{dir_path}/script.txt',
         llm_call_func=my_llm_call
     )
+
+    post_process_script(f'{dir_path}/script.txt')
 
 # ═══════════════════════════════════════════════════════════════
 # USAGE

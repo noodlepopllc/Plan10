@@ -25,11 +25,9 @@ def parse_director_splits_with_shots(director_shots_text: str, final_shotlist: s
     parts = [p.strip() for p in parts if p.strip()]
     
     if len(parts) <= 1:
-        # No split, use original summary and full shotlist
         yield (original_summary, final_shotlist.strip())
         return
 
-    # Split detected: extract summaries and count shots per part
     part_summaries = []
     part_shot_counts = []
     
@@ -39,12 +37,12 @@ def parse_director_splits_with_shots(director_shots_text: str, final_shotlist: s
         sub_summary = summary_match.group(1).strip() if summary_match else original_summary
         part_summaries.append(sub_summary)
         
-        # Count shots in this part (case-insensitive to catch "Shot 1" or "shot 1")
-        shot_count = len(re.findall(r'(?i)^shot\s+\d+', part_text, re.MULTILINE))
+        # Count shots - match "shot |" without requiring numbering
+        shot_count = len(re.findall(r'^shot\s*\|', part_text, re.MULTILINE))
         part_shot_counts.append(shot_count)
     
     # Split the final_shotlist accordingly
-    shot_lines = [line for line in final_shotlist.split('\n') if line.strip().lower().startswith('shot')]
+    shot_lines = [line for line in final_shotlist.split('\n') if line.strip().startswith('shot')]
     
     current_idx = 0
     for i, (summary, shot_count) in enumerate(zip(part_summaries, part_shot_counts)):
