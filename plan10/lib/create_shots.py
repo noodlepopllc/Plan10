@@ -406,6 +406,7 @@ def direct(beat_entry: dict, notes=''):
     scene_description = " ".join(scene_parts)
     with open('director.log', 'a') as dlog:
         with LLMContext() as (p_ctx, m_ctx):
+            dlog.write("*"*100, '\nScene Description\n', scene_description)
             camera_log = llm(camera_prompt.format(
                 scene_description=scene_description,
                 character_list=beat_characters,
@@ -413,7 +414,7 @@ def direct(beat_entry: dict, notes=''):
                 context_notes=notes
             ), processor=p_ctx, model=m_ctx)
             print(f"Camera Done: \n{camera_log}")
-            dlog.write(camera_log)
+            dlog.write("-"*100, '\nCamera Log\n', camera_log)
 
             director_shots = llm(
                 director_prompt.format(
@@ -425,7 +426,7 @@ def direct(beat_entry: dict, notes=''):
                 ), processor=p_ctx, model=m_ctx
             )
             print(f"Director Done: \n{director_shots}")
-            dlog.write(director_shots)
+            dlog.write("-"*100, '\nDirector Log\n', director_shots)
 
             final_shotlist = llm(
                 shot_planner_prompt.format(
@@ -433,7 +434,7 @@ def direct(beat_entry: dict, notes=''):
                 ), processor=p_ctx, model=m_ctx
             )
             print(f"Shotlist Done: \n{final_shotlist}")
-            dlog.write(final_shotlist)
+            dlog.write("-"*100, '\nShot list\n', final_shotlist)
 
     return final_shotlist, director_shots
 
