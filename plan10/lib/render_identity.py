@@ -13,14 +13,15 @@ class CommandBuffer:
         self.backgrounds = []
         self.voices = []
 
-    def dump(self, mode="all"):
+    def dump(self, mode="image"):
         mode = mode.lower()
         for c in self.identity:
             print(c)
         for c in self.backgrounds:
             print(c)
-        #for c in self.voices:
-            #print(c)
+        if mode == "all":
+            for c in self.voices:
+                print(c)
 
 class Templates:
     def __init__(self):
@@ -92,6 +93,11 @@ def main():
     registry_path = sys.argv[1]
     output_path = sys.argv[2] if len(sys.argv) > 2 else None  # Optional output file
 
+    if '--all' in sys.argv:
+        mode = 'all'
+    else:
+        mode = 'image'
+
     with open(registry_path, 'r') as ass:
         assets = json.load(ass)
 
@@ -112,7 +118,7 @@ def main():
         print(f"Wrote {output_path}")
     else:
         # Print to stdout
-        T.buffer.dump()
+        T.buffer.dump(mode=mode)
 
 if __name__ == "__main__":
     main()
