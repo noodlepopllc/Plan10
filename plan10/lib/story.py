@@ -8,31 +8,95 @@ from pathlib import Path
 # ═══════════════════════════════════════════════════════════
 
 architect = '''
-You are an expert screenwriter and story architect. Your task is to take a story seed and produce a complete structural blueprint for a short-form video episode.
+You are a screenwriter on a new short-form web video series.
 
-### STORY SEED
+Your task is to expand a summary of the episode into a 5-act escalating narrative.
+
+═══════════════════════════════════════════════════════════
+INPUT
+═══════════════════════════════════════════════════════════
+
+STORY SUMMARY:
 {seed}
 
-### YOUR OUTPUT MUST CONTAIN THESE FOUR SECTIONS:
+═══════════════════════════════════════════════════════════
+5-ACT STRUCTURE (MANDATORY)
+═══════════════════════════════════════════════════════════
 
----
-SECTION 1: EPISODE SUMMARY
-One paragraph. What is this episode about? What is the overall arc from beginning to end? The episode must have a clean resolution so the next episode may start fresh.
+Act I: Exposition & Inciting Incident
+- Purpose: Establish setting, characters, and normal world
+- Action: Introduce the inciting incident that disrupts the status quo
 
-SECTION 2: THEME / TONE
-Theme: [Specific visual/style world. e.g., "Futuristic Cyberpunk. Gritty, high-tech/low-life, neon, tactile technology, decaying infrastructure."]
-Tone: [Emotional register. e.g., "Tense, claustrophobic, predatory. Heavy emotional weight. Vulnerable characters vs. controlling antagonist."]
+Act II: Rising Action
+- Purpose: Escalate tension and complicate the protagonist's journey
+- Action: Protagonist faces challenges/obstacles, deepening central conflict
 
-SECTION 3: CHARACTER REFERENCE SHEET
-Locked visual descriptions for asset generation. Be specific and concrete. These descriptions will be reused across every scene.
+Act III: Climax/Crisis
+- Purpose: Turning point with highest peak of tension
+- Action: Major, irreversible decision or confrontation that changes the path
 
-For each character, include: facial features/ethnicity, build, clothing, hair, distinguishing physical features, baseline posture/mannerisms.
+Act IV: Falling Action
+- Purpose: Explore immediate consequences of the climax
+- Action: Story moves toward resolution, showing aftermath
 
-[CHARACTER NAME]: [Full locked description]
+Act V: Resolution
+- Purpose: Close the story and establish new reality
+- Action: Main conflict resolved, providing finality and closure
 
-SECTION 4: SCENE-BY-SCENE OUTLINE
-Break the story into 5 acts. Each act contains 1-3 scenes. 
-Number the scenes GLOBALLY and sequentially from 1 to the end of the episode (e.g., Scene 1, Scene 2, Scene 3...), but note which Act they belong to.
+The episode MUST have a clean resolution so the next episode may start fresh.
+
+═══════════════════════════════════════════════════════════
+OUTPUT FORMAT (STRICT)
+═══════════════════════════════════════════════════════════
+
+You must produce output with exactly these 5 sections:
+
+1. **Restate Intent**
+   - Paraphrase the user's request in one sentence beginning with "You want to..."
+
+2. **Extract Constraints**
+   - List all explicit constraints (format, length, tone, required elements)
+   - If none exist, write "No explicit constraints."
+
+3. **Plan**
+   - Write 3-5 bullet points describing how you will structure the 5 acts
+
+4. **Execute**
+   - Provide the complete 5-act narrative structure
+
+5. **Self-Check**
+   - Confirm you followed all constraints
+   - If you could not follow any constraint, explain why
+
+═══════════════════════════════════════════════════════════
+EXECUTION SECTION FORMAT
+═══════════════════════════════════════════════════════════
+
+For the "Execute" section, structure the narrative as follows:
+
+### EPISODE SUMMARY
+One paragraph. What is this episode about? What is the overall arc?
+
+### THEME / TONE
+Theme: [Specific visual/style world]
+Tone: [Emotional register]
+
+### CHARACTER REFERENCE SHEET
+Keep descriptions LIGHT initially. Focus on:
+- Basic appearance (age range, ethnicity, build)
+- Key clothing/costume elements
+- One or two distinguishing physical features
+- Baseline posture/mannerisms
+
+Do NOT over-describe. Details will be added during scene generation.
+
+[CHARACTER NAME]: [Light description]
+
+### SCENE-BY-SCENE OUTLINE
+
+Break the story into 5 acts. Each act contains 1-3 scenes.
+Number scenes GLOBALLY and sequentially (Scene 1, Scene 2, Scene 3...).
+Note which Act each scene belongs to.
 
 For each scene, provide:
 - Scene Number and Act (e.g., "Scene 1 (Act I)")
@@ -42,6 +106,7 @@ For each scene, provide:
 - Scene Turn (what specific event ends this scene and pushes into the next?)
 
 Format exactly like this:
+
 Scene 1 (Act I): [Location] | Characters: [list]
   Goal: [one sentence]
   Turn: [one sentence]
@@ -54,10 +119,19 @@ Scene 3 (Act II): [Location] | Characters: [list]
   Goal: [one sentence]
   Turn: [one sentence]
 
-Each scene's location must be physically reachable from the previous scene's ending position. Do not reset characters to earlier locations unless the Scene Turn explicitly describes them returning.
+[Continue through all 5 acts...]
 
-The episode must resolve cleanly in the final scene.
----
+Each scene's location must be physically reachable from the previous scene's ending position.
+
+═══════════════════════════════════════════════════════════
+RULES
+═══════════════════════════════════════════════════════════
+
+- Do not add content outside the required 5-section structure
+- Do not invent facts not present in the input
+- If information is missing, state "Information not provided."
+- Every scene must serve the 5-act escalation
+- The final scene MUST resolve the central conflict cleanly
 '''
 
 # ═══════════════════════════════════════════════════════════
@@ -109,9 +183,9 @@ THE RULES OF PROSE
 COLD OPEN (MANDATORY FOR EVERY SCENE)
 ═══════════════════════════════════════════════════════════
 
-Every scene must begin with a cold open: a rich, static prose snapshot that serves as a visual reference for background and character asset generation.
+Every scene must begin with a cold open: a single, dense paragraph that serves as a visual reference for background and character asset generation.
 
-REQUIRED VISUAL ELEMENTS:
+REQUIRED VISUAL ELEMENTS (all in ONE paragraph):
 
 1. ENVIRONMENT/BACKGROUND:
    - Location type, lighting conditions, architectural details
@@ -128,27 +202,31 @@ REQUIRED VISUAL ELEMENTS:
 
 FORBIDDEN: plot advancement, goal-directed movement, conflict escalation, dialog beyond ambient.
 
-Write 2-4 paragraphs of dense visual prose. End with:
+Write ONE dense paragraph of visual prose. End with:
 ******* COLD OPEN END ****
 
 ═══════════════════════════════════════════════════════════
-LENGTH CONSTRAINT
+SCENE STRUCTURE
 ═══════════════════════════════════════════════════════════
 
-Keep the scene concise and focused:
-- Cold open: 2-4 paragraphs maximum
-- Scene body: 5-15 beats (paragraphs) maximum
-- Total length: Under 2000 words
+After the cold open, write the scene body. The scene has ONE purpose:
 
-Every sentence must serve the Scene Goal. Cut anything that doesn't advance the plot or reveal character through action.
+1. ESTABLISH the current dramatic situation (the Scene Goal)
+2. DRIVE ACTION toward the Scene Turn
+3. END the moment the Scene Turn is achieved
+
+The scene is DONE when the Scene Turn occurs. Do not continue past that point.
+
+LENGTH GUIDELINE:
+- Write only as many paragraphs as necessary to achieve the Scene Turn
+- Typical scenes: 3-8 paragraphs after the cold open
+- If you reach 10+ paragraphs, you are padding. Cut it.
+- Every paragraph must advance toward the Scene Turn
 
 ═══════════════════════════════════════════════════════════
-EXECUTION
+FORMATTING RULES
 ═══════════════════════════════════════════════════════════
 
-After the cold open, write the scene in standard literary prose. Let the friction between characters dictate length. Write as many Reactive Moments as necessary to achieve the Scene Turn naturally.
-
-FORMATTING RULES:
 - Each PARAGRAPH is one beat
 - Separate beats with a single blank line (double newline)
 - Each beat must contain multiple sentences woven together: action, reaction, and/or dialog
