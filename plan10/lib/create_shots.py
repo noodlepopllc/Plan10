@@ -530,7 +530,7 @@ def h3_ref(bg, refs, prompt, duration=10.0, visual_ids=[], char_names=[], shots=
 
 import re
 import unicodedata
-
+'''
 def replace_character_names(script: str, char_names: list) -> str:
     """
     Replaces character names with charX tokens, skipping quoted segments.
@@ -565,6 +565,96 @@ def replace_character_names(script: str, char_names: list) -> str:
     response = llm_analyze_media('', prompt=llm_prompt, max_tokens=8192, temperature=0.4)['analysis']
 
     return response
+'''
+
+import re
+
+def replace_character_names(script: str, char_names: list[str]) -> str:
+    """
+    Replace character names with charX tokens, but never
+    inside quoted text.
+
+    Example:
+        Victoria walks over to Samantha.
+        -> char1 walks over to char2.
+
+        Victoria says "Hello Samantha"
+        -> char1 says "Hello Samantha"
+    """
+
+    replacements = []
+
+    for i, name in enumerate(char_names, 1):
+        if name and name.lower() != "unknown":
+            replacements.append(
+                (re.compile(rf"\b{re.escape(name)}\b", re.IGNORECASE),
+                 f"char{i}")
+            )
+
+    result = []
+    buffer = []
+
+    quote_char = None
+    escape = False
+
+    def flush_buffer():
+        text = "".join(buffer)
+
+        for pattern, token in replacements:
+            text = pattern.sub(token, text)
+
+        result.append(text)
+        buffer.clear()
+
+    for ch in script:
+
+        if escape:
+            if quote_char:
+                result.append(ch)
+            else:
+                buffer.append(ch)
+
+            escape = False
+            continue
+
+        if ch == "\\":
+            if quote_char:
+                result.append(ch)
+            else:
+                buffer.append(ch)
+
+            escape = True
+            continue
+
+        #
+        # Enter quoted section
+        #
+        if quote_char is None and ch in ("'", '"'):
+            flush_buffer()
+
+            quote_char = ch
+            result.append(ch)
+            continue
+
+        #
+        # Exit quoted section
+        #
+        if quote_char == ch:
+            quote_char = None
+            result.append(ch)
+            continue
+
+        #
+        # Characters inside quotes pass through untouched
+        #
+        if quote_char:
+            result.append(ch)
+        else:
+            buffer.append(ch)
+
+    flush_buffer()
+
+    return "".join(result)
 
 
 def get_visual_id(ref_path):
