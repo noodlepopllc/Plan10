@@ -113,8 +113,9 @@ def main():
                 f.write(c)
             for c in T.buffer.backgrounds:
                 f.write(c)
-            for c in T.buffer.voices:
-                f.write(c)
+            if mode == 'all':
+                for c in T.buffer.voices:
+                    f.write(c)
         print(f"Wrote {output_path}")
     else:
         # Print to stdout
