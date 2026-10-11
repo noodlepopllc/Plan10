@@ -19,8 +19,8 @@ class CommandBuffer:
             print(c)
         for c in self.backgrounds:
             print(c)
-        for c in self.voices:
-            print(c)
+        #for c in self.voices:
+            #print(c)
 
 class Templates:
     def __init__(self):
