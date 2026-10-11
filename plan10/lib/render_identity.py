@@ -36,7 +36,7 @@ create a character sheet of {description}, Seed: {self.SEED}
     def voice_design(self, alias, voice_desc):
         self.buffer.voices.append(f"""
 >> ALIAS: {alias}_VOICE
-design a voice for {voice_desc}
+design_voice using description {voice_desc}
 """)
 
     def background(self, alias, architecture, definition, anchored):
