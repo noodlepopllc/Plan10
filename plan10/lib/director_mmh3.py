@@ -480,7 +480,7 @@ def send(prompt, images, audio, output='output.mp4', width=768, height=448, dura
     if steps <= 8:
         args["activated_loras"] = ["minimax_h3_larryvrh_v4_step600_ema.safetensors"]
         args["loras_multipliers"] = "1.0|"
-    if len(audio) == 1: 
+    if len(audio) >= 1: 
         args["audio_prompt_type"] = "A"
         args["audio_guide"] = audio[0]
     if len(audio) == 2:
