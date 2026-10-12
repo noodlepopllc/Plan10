@@ -396,17 +396,30 @@ class ImageEditQwen21(object):
             "computation_dtype": torch.bfloat16,
             "computation_device": "cuda"
             }
-            self.pipe = QwenImage21Pipeline.from_pretrained(
-                torch_dtype=torch.bfloat16,
-                device="cuda",
-                model_configs=[
-                    ModelConfig(model_id="Qwen/Qwen-Image-2.1", origin_file_pattern="transformer/diffusion_pytorch_model*.safetensors", **vram_config),
-                    ModelConfig(model_id="Qwen/Qwen-Image-2.1", origin_file_pattern="text_encoder/model*.safetensors", **vram_config),
-                    ModelConfig(model_id="Qwen/Qwen-Image-2.1", origin_file_pattern="vae/diffusion_pytorch_model*.safetensors", **vram_config),
-                ],
-                processor_config=ModelConfig(model_id="Qwen/Qwen-Image-2.1", origin_file_pattern="processor/"),
-                            vram_limit=self.vrlimit
+            if TURBO:
+                self.pipe = QwenImage21Pipeline.from_pretrained(
+                    torch_dtype=torch.bfloat16,
+                    device="cuda",
+                    model_configs=[
+                        ModelConfig(model_id="Qwen/Qwen-Image-2.1-Turbo", origin_file_pattern="transformer/diffusion_pytorch_model*.safetensors", **vram_config),
+                        ModelConfig(model_id="Qwen/Qwen-Image-2.1", origin_file_pattern="text_encoder/model*.safetensors", **vram_config),
+                        ModelConfig(model_id="Qwen/Qwen-Image-2.1", origin_file_pattern="vae/diffusion_pytorch_model*.safetensors", **vram_config),
+                    ],
+                    processor_config=ModelConfig(model_id="Qwen/Qwen-Image-2.1", origin_file_pattern="processor/"),
+                    vram_limit=self.vrlimit,
                 )
+            else:
+                self.pipe = QwenImage21Pipeline.from_pretrained(
+                    torch_dtype=torch.bfloat16,
+                    device="cuda",
+                    model_configs=[
+                        ModelConfig(model_id="Qwen/Qwen-Image-2.1", origin_file_pattern="transformer/diffusion_pytorch_model*.safetensors", **vram_config),
+                        ModelConfig(model_id="Qwen/Qwen-Image-2.1", origin_file_pattern="text_encoder/model*.safetensors", **vram_config),
+                        ModelConfig(model_id="Qwen/Qwen-Image-2.1", origin_file_pattern="vae/diffusion_pytorch_model*.safetensors", **vram_config),
+                    ],
+                    processor_config=ModelConfig(model_id="Qwen/Qwen-Image-2.1", origin_file_pattern="processor/"),
+                    vram_limit=self.vrlimit,
+                    )
         return self
 
     def generate(self, prompt, images, output, width, height, seed):
@@ -425,10 +438,21 @@ class ImageEditQwen21(object):
                 raise TypeError(f"Unsupported image type: {type(item)}")
         if seed == -1: seed = random.randint(0, 1000000)
 
-        image = self.pipe(
-            prompt, edit_image=edit_images, seed=seed,
-            height=height, width=width
-        )
+        if TURBO:
+            sigmas = [1.0, 0.978453, 0.95418, 0.926626, 0.89508, 0.845148, 0.704534, 0.414568]
+            image = self.pipe(
+                prompt=prompt,
+                seed=seed,
+                height=height,
+                width=width,
+                sigmas=sigmas,
+                edit_images=edit_images,
+            )
+        else:
+            image = self.pipe(
+                prompt, edit_image=edit_images, seed=seed,
+                height=height, width=width
+            )
         image.save(output)
         os.utime(output, None) 
         status = {"status": "success", "output_path": output, "prompt": prompt, "description": ''}
@@ -834,7 +858,7 @@ def CreateBackground(prompt='', output='location_tmp.png', seed=-1, override=Non
     user_part = prompt.strip() if prompt else "empty atmospheric location"
     
     # Let the expander handle EVERYTHING - location + ambience
-    if ambience:
+    if ambience and classification['density'] in ("medium", "high"):
         expander_prompt = (
             f"Wide-angle establishing shot of {user_part}. "
             f"Include ambient background figures with {classification['density']} crowd density. "
