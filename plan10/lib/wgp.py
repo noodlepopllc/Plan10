@@ -261,7 +261,7 @@ def s2v_ltx(prompt='', media='', end_image='', audio='', text='', output='output
 
     args = requests.get(f"http://127.0.0.1:8080/defaults/{tool_dialog}").json()
 
-    desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 50 words")['analysis']
+    desc = AnalyzeImage(media, "Briefly describe this image, background and character, no more than 10 words")['analysis']
     audio_desc = translate_to_audio_prompt(desc)
 
     newprompt = f"[VISUAL]: Static Shot. Locked tripod shot. Camera remains completely stationary throughout the clip. No zooming, no dolly movement, no panning, no tilting. {desc} {prompt} Lips moving in perfect sync with the audio. Character begins speaking immediately on the first frame of the video. \n[SPEECH]: {text}.\n[SOUNDS]: {audio_desc}."
