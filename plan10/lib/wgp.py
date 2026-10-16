@@ -271,8 +271,11 @@ def s2v_ltx(prompt='', media='', end_image='', audio='', text='', output='output
     args['output_dir'] = norm(Path(output).parent)
     args['output_filename'] = Path(output).name
     args['prompt'] = newprompt
-    args['image_prompt_type'] =  'S'
-    args['image_start'] = norm(media)
+    if media:
+        args['image_prompt_type'] =  'SE' if end else 'S'
+        args['image_start'] = norm(media)
+        if end:
+            args['image_end'] = norm(end_image)
     args['guidance_phases'] = 1 if 'DISTILLED:1' in os.environ['LTX'] else 2
     args['num_inference_steps'] = 8 if DISTILLED else 30
     args['guidance_scale'] = 1.0 if DISTILLED else 3.0
@@ -282,7 +285,7 @@ def s2v_ltx(prompt='', media='', end_image='', audio='', text='', output='output
     args['audio_guide'] = audio
     args['activated_loras'] = ["id-lora-celebvhq-ltx2.3.safetensors"] #["id-lora-talkvid-ltx2.3 .safetensors"] 
     args["multi_prompts_gen_type"] = "FG"
-    args['loras_multipliers'] = '0.8|'
+    args['loras_multipliers'] = '0.6|'
     args['seed'] = SEED
 
     #args['audio_source'] = None

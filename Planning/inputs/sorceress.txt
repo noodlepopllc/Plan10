@@ -1,5 +1,5 @@
 Characters:
-- Alora: princess 23 year old, short tattered low cut tight fitting brown dress, blonde hair, prisoner
+- Alora: 23 year old princess, wearing a tattered burlap sack dress tied at the waist with thick rustic twine, messy blonde hair
 - Quin: sorceress age 29, believes rightful queen, aunt of Alora, low cut fitted regal red dress with gold embroidery and a slit down the side, 
     black hair in a bun, a spiked black iron crown that has a glowing green emerald in the center is atop her head
 
@@ -21,4 +21,3 @@ Alora wants to be freed and her aunt Quin to be punished.
 
 Initial Situation:
 Alora is standing in front of Quin beneath an abandoned castle in a dark dank dungeon.
-
