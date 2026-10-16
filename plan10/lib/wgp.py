@@ -272,7 +272,7 @@ def s2v_ltx(prompt='', media='', end_image='', audio='', text='', output='output
     args['output_filename'] = Path(output).name
     args['prompt'] = newprompt
     if media:
-        args['image_prompt_type'] =  'SE' if end else 'S'
+        args['image_prompt_type'] =  'SE' if end_image else 'S'
         args['image_start'] = norm(media)
         if end:
             args['image_end'] = norm(end_image)
