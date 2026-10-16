@@ -274,7 +274,7 @@ def s2v_ltx(prompt='', media='', end_image='', audio='', text='', output='output
     if media:
         args['image_prompt_type'] =  'SE' if end_image else 'S'
         args['image_start'] = norm(media)
-        if end:
+        if end_image:
             args['image_end'] = norm(end_image)
     args['guidance_phases'] = 1 if 'DISTILLED:1' in os.environ['LTX'] else 2
     args['num_inference_steps'] = 8 if DISTILLED else 30
