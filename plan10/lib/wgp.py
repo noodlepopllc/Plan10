@@ -285,7 +285,7 @@ def s2v_ltx(prompt='', media='', end_image='', audio='', text='', output='output
     args['audio_guide'] = audio
     args['activated_loras'] = ["id-lora-celebvhq-ltx2.3.safetensors"] #["id-lora-talkvid-ltx2.3 .safetensors"] 
     args["multi_prompts_gen_type"] = "FG"
-    args['loras_multipliers'] = '0.6|'
+    args['loras_multipliers'] = '1.0|'
     args['seed'] = SEED
 
     #args['audio_source'] = None
