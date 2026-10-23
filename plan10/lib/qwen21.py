@@ -446,7 +446,7 @@ class ImageEditQwen21(object):
                 height=height,
                 width=width,
                 sigmas=sigmas,
-                edit_images=edit_images,
+                edit_image=edit_images,
             )
         else:
             image = self.pipe(
