@@ -1060,9 +1060,10 @@ def main():
     elif args.expand_image:
         if args.edit:
             expanded = expand_edit_prompt_with_qwen_image(args.images, args.prompt)
-            EditImage(expanded['rewritten_prompt'], args.images, args.output, args.seed)
+            print(EditImage(expanded['rewritten_prompt'], args.images, args.output, args.seed))
         else:
-            print(expand_prompt_with_qwen_image(args.prompt))
+            expanded =expand_prompt_with_qwen_image(args.prompt)
+            print(GenerateImage(expanded['rewritten_prompt'], args.output, args.width, args.height, args.seed))
     elif args.edit:
         print(EditImage(args.prompt, args.images, args.output, args.width, args.height, args.seed))
     elif args.portrait:
