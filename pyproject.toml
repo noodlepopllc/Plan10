@@ -3,13 +3,13 @@ name = "plan10"
 version = "0.1.7"
 requires-python = "==3.12.*"
 dependencies = [
-    "torch",          
+    "torch",
     "torchaudio",
     "torchvision",
     "torchcodec",
     "torchao",
     "transformers==5.16.*",
-    "bitsandbytes", 
+    "bitsandbytes",
     "opencv-python-headless==4.10.0.84",
     "uniface",
     "librosa",
@@ -23,7 +23,8 @@ dependencies = [
     "openai",
     "av==18.1.0",
     "triton; platform_system != 'Windows'",
-    "triton-windows; platform_system == 'Windows'"
+    "triton-windows; platform_system == 'Windows'",
+    "omnivoice>=0.2.1",
 ]
 
 [tool.uv]

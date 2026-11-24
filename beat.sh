@@ -29,15 +29,12 @@ VISION_BACKEND="qwen"
 if [[ $LTX != "False" ]]; then
     image_to_video \
         -I "tmp.png" \
-        -P "$(tail -n +2 "$OUTDIR/beat_${BEAT}_script_ltx.txt")" \
-        -D "$(head -n 1 "$OUTDIR/beat_${BEAT}_script_ltx.txt" | cut -d':' -f2 | xargs)" \
+        -P "$(tail -n +2 "$OUTDIR/beat_${BEAT}_ltx.txt")" \
+        -D "$(head -n 1 "$OUTDIR/beat_${BEAT}_ltx.txt" | cut -d':' -f2 | xargs)" \
         -O "$OUTDIR/beat_${BEAT}.mp4"
 fi
 if [[ $MMH3 != "False" ]]; then
-    director -I "$OUTDIR/beat_${BEAT}_script.txt" \
+    director -I "$OUTDIR/beat_${BEAT}.txt" \
         -O "" -W $WIDTH -H $HEIGHT -S 8 --wangp
 fi
 
-if [[ -f "$OUTDIR/beat_${BEAT}_script.mp4" ]]; then
-    mv "$OUTDIR/beat_${BEAT}_script.mp4" "$OUTDIR/beat_${BEAT}.mp4"
-fi

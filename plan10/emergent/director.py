@@ -211,10 +211,16 @@ Do NOT infer identity from:
 
 VALIDATION RULES:
 
+AUDIO EVALUATION (critical):
+- The ONLY dialogue-related failure is when the INTENDED dialogue (from PREVIOUS INTENTION) is missing from the scene.
+- Extra, unrelated, or hallucinated audio (e.g., "welcome to the channel", background chatter, Whisper artifacts) must be IGNORED.
+- If the intended dialogue is present alongside extra audio → MATCH: YES or PARTIAL (depending on other factors). Do NOT retry.
+- If the intended dialogue is completely absent → then evaluate as HARD ERROR below.
+
 # HARD ERRORS — retry required
 If ACTUAL SCENE STATE shows:
-- missing intended physical action OR intended dialogue was completely ignored
-- wrong character performing the action or speaking
+- intended physical action missing, OR intended dialogue (from PREVIOUS INTENTION) completely absent
+- wrong character performing the action or speaking the intended line
 - duplicated or hallucinated characters
 - empty/black/corrupted frame
 - broken camera angle
@@ -236,6 +242,7 @@ If ACTUAL SCENE STATE shows:
 - missing micro-actions
 - slight facing-direction mismatch
 - background/crowd variation
+- extra/unrelated audio present (but intended dialogue/action still occurred)
 
 Then:
     MATCH: PARTIAL
@@ -252,6 +259,7 @@ If ACTUAL SCENE STATE shows:
 - pose and facing match the context
 - camera matches
 - no unintended turning/walking/exiting
+- (any extra audio is ignored)
 
 Then:
     MATCH: YES

@@ -547,7 +547,7 @@ def get_builder(script, output_dir):
         from plan10.lib.qwen21 import GenerateImage, CreateCharacterSheet, CreateBackground, CreatePortrait
     else:
         from plan10.lib.image_gen import GenerateImage, CreateCharacterSheet, CreateBackground, CreatePortrait
-    from plan10.lib.dialog import DesignVoice
+    from plan10.lib.dialog_omni import DesignVoice
     
     base_dir = str((Path.cwd() / output_dir).resolve())
     generators = {

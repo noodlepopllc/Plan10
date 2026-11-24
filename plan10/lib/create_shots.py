@@ -9,46 +9,81 @@ from plan10.lib.util import video_to_img, to_absolute
 from plan10.lib.image_gen import add_metadata_loc
 from PIL import Image
 
-def llm(prompt, cooloff=30, processor=None, model=None):
+def llm(prompt, cooloff=30, processor=None, model=None, temperature=0.4):
     if os.environ.get("LLM_BACKEND", "transformers") == "ollama":
         print(f'Cool off period: {cooloff} seconds')
         time.sleep(cooloff)
-    response = llm_analyze_media('', prompt=prompt, max_tokens=8192, temperature=0.4, processor=processor, model=model)['analysis']
+    response = llm_analyze_media('', prompt=prompt, max_tokens=16384, temperature=temperature, processor=processor, model=model)['analysis']
     return response.strip()
 
 def parse_director_splits_with_shots(director_shots_text: str, final_shotlist: str, original_summary: str):
     """
-    Parse director's output for summaries, then split the shot planner's output to match.
+    Split the shot planner's output to match the director's PART summaries.
+
+    Fix: the director writes "shot 1" / "shot 2" headers, NOT "shot |" —
+    counting "shot |" in the director text always gave 0, so every
+    multi-part beat yielded empty shots. Also handles case/numbering
+    variations and count mismatches without ever dropping a shot.
     """
-    # Split director's output by parts
-    parts = re.split(r'---\s*PART\s+\d+\s*---', director_shots_text)
+    parts = re.split(r'---\s*PART\s+\d+\s*---', director_shots_text, flags=re.IGNORECASE)
     parts = [p.strip() for p in parts if p.strip()]
-    
-    if len(parts) <= 1:
+
+    # Planner lines: "shot | ...", case-insensitive, optional "1." numbering
+    shot_lines = [ln.strip() for ln in final_shotlist.splitlines()
+                  if re.match(r'^\s*(?:\d+\s*[.)]\s*)?shot\s*\|', ln, re.IGNORECASE)]
+
+    if not shot_lines:
+        print("WARNING: planner output has no 'shot |' lines; passing raw text through.")
         yield (original_summary, final_shotlist.strip())
         return
 
-    part_summaries = []
-    part_shot_counts = []
-    
+    if len(parts) <= 1:
+        yield (original_summary, '\n'.join(shot_lines))
+        return
+
+    summaries, counts = [], []
     for part_text in parts:
-        # Extract summary
-        summary_match = re.search(r'summary:\s*(.+?)(?=\nshot|\n---|$)', part_text, re.IGNORECASE | re.DOTALL)
-        sub_summary = summary_match.group(1).strip() if summary_match else original_summary
-        part_summaries.append(sub_summary)
-        
-        # Count shots - match "shot |" without requiring numbering
-        shot_count = len(re.findall(r'^shot\s*\|', part_text, re.MULTILINE))
-        part_shot_counts.append(shot_count)
-    
-    # Split the final_shotlist accordingly
-    shot_lines = [line for line in final_shotlist.split('\n') if line.strip().startswith('shot')]
-    
-    current_idx = 0
-    for i, (summary, shot_count) in enumerate(zip(part_summaries, part_shot_counts)):
-        sub_shots = '\n'.join(shot_lines[current_idx:current_idx + shot_count])
-        current_idx += shot_count
-        yield (summary, sub_shots)
+        m = re.search(r'summary:\s*(.+?)(?=\n\s*shot\b|\n---|$)', part_text, re.IGNORECASE | re.DOTALL)
+        summaries.append(m.group(1).strip() if m else original_summary)
+        # Director format: "shot 1", "shot 2:", etc. (also tolerate "shot |")
+        counts.append(len(re.findall(r'^\s*shot\s*(?:\d+\b|:|\|)', part_text, re.IGNORECASE | re.MULTILINE)))
+
+    n = len(shot_lines)
+    if len(parts) > n:  # more parts than lines: clamp so no part comes out empty
+        parts, summaries, counts = parts[:n], summaries[:n], counts[:n]
+
+    if all(c > 0 for c in counts) and sum(counts) == n:
+        alloc = counts                                   # exact match: trust the director
+    elif all(c > 0 for c in counts):
+        # Mismatch: allocate proportionally, at least 1 line per part
+        alloc = [max(1, round(n * c / sum(counts))) for c in counts]
+        while sum(alloc) > n:
+            alloc[alloc.index(max(alloc))] -= 1
+        while sum(alloc) < n:
+            alloc[max(range(len(alloc)), key=lambda k: counts[k] / alloc[k])] += 1
+    else:
+        # Can't count director shots: bucket planner lines by duration (<=15s)
+        def dur(line):
+            m = re.search(r'\d+(?:\.\d+)?', line.rsplit('|', 1)[-1])
+            return max(1, math.ceil(float(m.group()))) if m else 3
+        alloc, idx = [], 0
+        for p in range(len(parts)):
+            parts_left = len(parts) - p - 1
+            take, secs = 0, 0
+            while (idx + take < n and (n - idx - take) > parts_left
+                   and (take == 0 or secs + dur(shot_lines[idx + take]) <= 15)):
+                secs += dur(shot_lines[idx + take])
+                take += 1
+            alloc.append(take)
+            idx += take
+        alloc[-1] += n - idx                             # last part absorbs remainder
+
+    idx = 0
+    for summary, take in zip(summaries, alloc):
+        yield (summary, '\n'.join(shot_lines[idx:idx + take]))
+        idx += take
+    if idx < n:                                          # never drop leftover shots
+        yield (summaries[-1], '\n'.join(shot_lines[idx:]))
 
 shot_planner_prompt = '''
 You are the shot planner.
@@ -220,48 +255,83 @@ NOW PRODUCE THE CAMERA LOG.
 director_prompt = '''
 Your job: verify the camera log faithfully represents the beat while maintaining continuity and cinematic grammar.
 
+MANDATORY OUTPUT RULE:
+You MUST always produce a complete validated director shot plan.
+Never return an empty response.
+Never return only approval text.
+If the camera log is already valid, copy/reformat the full camera log into the required director shot plan format.
+If corrections are needed, output the corrected full plan.
+Do not omit any shots.
+Do not summarize instead of listing shots.
+
 The beat is the source of truth. The camera log is an interpretation. Your role is to verify and correct.
 
 INPUTS:
-- Camera operator log: {camera_log}
-- Scene description: {scene_description}
-- Characters: {character_list}
-- Background: {background_label}
-- Context notes: {context_notes}
+Camera operator log: {camera_log}
+Scene description: {scene_description}
+Characters: {character_list}
+Background: {background_label}
+Context notes: {context_notes}
 
-------------------------------------------------------------
 VALIDATION RULES (CRITICAL)
-------------------------------------------------------------
-1. NO CHAINED MOVEMENTS: If any shot in the camera log contains more than one camera movement (e.g., "pans then pushes in"), you MUST split it into two separate shots.
-2. HARD DURATION CAP: No single shot may exceed 5 seconds. If a shot is longer, split it.
-3. DIALOG PROTECTION: Never split a single line of dialog across two shots. If a dialog turn is long, keep it in one shot (up to 5 seconds max). 
-4. ACTOR ISOLATION: Feature one active character per shot. When a character speaks, they are the sole moving subject.
+NO CHAINED MOVEMENTS: If any shot in the camera log contains more than one camera movement, split it into two separate shots.
+HARD DURATION CAP: No single shot may exceed 5 seconds. If a shot is longer, split it.
+DIALOG PROTECTION: Never split a single line of dialog across two shots. Preserve exact quoted dialog.
+ACTOR ISOLATION: Feature one active character per shot. When a character speaks, they are the sole moving subject.
 
-------------------------------------------------------------
 DURATION AND SPLITTING RULES
-------------------------------------------------------------
-Calculate the total estimated duration of all validated shots in this beat.
-If the total duration exceeds 15 seconds, you MUST split the output into TWO distinct parts ("--- PART 1 ---" and "--- PART 2 ---") with unique summaries for each.
+Calculate the total estimated duration of all validated shots.
+If total duration is 15 seconds or less, output one normal plan.
+If total duration exceeds 15 seconds, output EXACTLY TWO parts using these exact markers:
 
-When splitting, you MUST:
-1. Keep narrative units intact. NEVER separate a physical action from the dialog that accompanies it.
-2. Generate a NEW, unique `summary:` for EACH part.
+--- PART 1 ---
+summary: ...
+shot 1
+...
 
-------------------------------------------------------------
-OUTPUT FORMAT (Validated Shot Plan)
-------------------------------------------------------------
-summary: [One sentence describing the core visual action and dialog of this beat/part]
+--- PART 2 ---
+summary: ...
+shot N
+...
+
+Each part must contain at least one shot.
+Each part must have its own unique summary.
+Keep narrative units intact where possible.
+Never separate a physical action from the dialog that directly accompanies it unless required by the 15-second limit.
+
+OUTPUT FORMAT
+
+If NOT split:
+summary: [one sentence]
 shot 1
 type: establishing / action / dialog / reaction
-duration: 2-5
+duration: [2-5]
 camera: [ONE simple movement or static] + [angle]
-visual: summary of visible elements
-dialog: [Exact quoted dialog, or "None"]
-audio: [Ambient sounds]
+visual: [visible elements and action]
+dialog: [character: "exact quoted dialog", or None]
+audio: [ambient sounds]
 
-(Repeat for shot 2, shot 3, etc.)
+If split:
+--- PART 1 ---
+summary: [unique summary for part 1]
+shot 1
+type: establishing / action / dialog / reaction
+duration: [2-5]
+camera: ...
+visual: ...
+dialog: ...
+audio: ...
 
-------------------------------------------------------------
+--- PART 2 ---
+summary: [unique summary for part 2]
+shot N
+type: establishing / action / dialog / reaction
+duration: [2-5]
+camera: ...
+visual: ...
+dialog: ...
+audio: ...
+
 NOW PRODUCE THE VALIDATED DIRECTOR SHOT PLAN.
 '''
 
@@ -346,6 +416,156 @@ def build_beat_character_list(beat_entry: dict) -> list:
     
     return characters
 
+def director_has_shots(text: str) -> bool:
+    return bool(re.search(
+        r'^\s*shot\s*(?:\d+\b|:|\|)',
+        text or '',
+        re.IGNORECASE | re.MULTILINE
+    ))
+
+
+def _extract_field(body: str, name: str) -> str:
+    m = re.search(
+        rf'^\s*{name}\s*:\s*(.*?)(?=^\s*(?:camera|visual|audio|dialog|type|duration)\s*:|\Z)',
+        body,
+        re.IGNORECASE | re.MULTILINE | re.DOTALL
+    )
+    return m.group(1).strip() if m else ""
+
+
+def parse_camera_log_shots(camera_log: str) -> list[dict]:
+    """
+    Convert camera output:
+
+    shot 1 | 4
+    camera: ...
+    visual: ...
+    audio: ...
+
+    into structured shot dicts.
+    """
+    shots = []
+
+    pattern = re.compile(
+        r'^\s*shot\s+(\d+)\s*\|\s*(\d+(?:\.\d+)?)\s*\n(.*?)(?=^\s*shot\s+\d+\s*\|\s*\d+(?:\.\d+)?\s*\n|\Z)',
+        re.IGNORECASE | re.MULTILINE | re.DOTALL
+    )
+
+    for m in pattern.finditer(camera_log or ""):
+        num = int(m.group(1))
+        duration = max(2, min(5, math.ceil(float(m.group(2)))))
+        body = m.group(3)
+
+        camera = _extract_field(body, "camera")
+        visual = _extract_field(body, "visual")
+        audio = _extract_field(body, "audio")
+        dialog = _extract_field(body, "dialog")
+
+        # Camera log usually puts dialogue in audio:
+        # audio: LIN: "What in the fuck is going on here!!"
+        if not dialog or dialog.lower() == "none":
+            dm = re.search(r'([^:\n"]+):\s*"([^"]*)"', audio)
+            if dm:
+                speaker = dm.group(1).strip()
+                line = dm.group(2).strip()
+                dialog = f'{speaker}: "{line}"'
+            else:
+                dialog = "None"
+
+        # Remove spoken dialogue from ambient audio field if present.
+        ambient = re.sub(r'[^:\n"]+:\s*"[^"]*"\.?', '', audio).strip()
+        ambient = ambient.strip(" ,.;")
+        if not ambient:
+            ambient = "quiet office ambience"
+
+        shot_type = "dialog" if dialog != "None" else "action"
+        if num == 1:
+            shot_type = "establishing"
+
+        shots.append({
+            "num": num,
+            "duration": duration,
+            "type": shot_type,
+            "camera": camera or "static medium shot, eye-level",
+            "visual": visual,
+            "dialog": dialog,
+            "audio": ambient,
+        })
+
+    return shots
+
+
+def camera_log_to_director_plan(camera_log: str, base_summary: str) -> str:
+    """
+    Fallback: deterministically convert the camera log into director format.
+    Handles >15s by splitting into two parts near the midpoint.
+    """
+    shots = parse_camera_log_shots(camera_log)
+    if not shots:
+        return ""
+
+    total = sum(s["duration"] for s in shots)
+
+    groups = [shots]
+
+    if total > 15 and len(shots) > 1:
+        best_i = None
+        best_score = float("inf")
+
+        for i in range(1, len(shots)):
+            left = sum(s["duration"] for s in shots[:i])
+            right = sum(s["duration"] for s in shots[i:])
+
+            # Prefer both parts under 15, balanced.
+            if left <= 15 and right <= 15:
+                score = abs(left - right)
+                if score < best_score:
+                    best_score = score
+                    best_i = i
+
+        # If no perfect split exists, split closest to midpoint.
+        if best_i is None:
+            target = total / 2
+            running = 0
+            best_i = 1
+            best_score = float("inf")
+            for i in range(1, len(shots)):
+                running += shots[i - 1]["duration"]
+                score = abs(running - target)
+                if score < best_score:
+                    best_score = score
+                    best_i = i
+
+        groups = [shots[:best_i], shots[best_i:]]
+
+    base_summary = (base_summary or "The scene continues.").strip().rstrip(".")
+
+    out = []
+
+    for part_idx, group in enumerate(groups, start=1):
+        if len(groups) > 1:
+            out.append(f"--- PART {part_idx} ---")
+            out.append(
+                f"summary: {base_summary}; part {part_idx} covers shots "
+                f"{group[0]['num']}-{group[-1]['num']}."
+            )
+        else:
+            out.append(f"summary: {base_summary}.")
+
+        for s in group:
+            out.extend([
+                f"shot {s['num']}",
+                f"type: {s['type']}",
+                f"duration: {s['duration']}",
+                f"camera: {s['camera']}",
+                f"visual: {s['visual']}",
+                f"dialog: {s['dialog']}",
+                f"audio: {s['audio']}",
+                ""
+            ])
+
+    return "\n".join(out).strip()
+
 def direct(beat_entry: dict, notes='', scene_base=''):
     if notes: 
         notes = summarize_continuity_from_director_shots(notes)
@@ -383,15 +603,38 @@ def direct(beat_entry: dict, notes='', scene_base=''):
                     character_list=beat_characters,
                     background_label=beat_entry["background"],
                     context_notes=notes
-                ), processor=p_ctx, model=m_ctx
+                ), processor=p_ctx, model=m_ctx, temperature=0.1
             )
+
             print(f"Director Done: \n{director_shots}")
             dlog.write(f'\n{"-"*100} \nDirector Log\n {director_shots}\n')
+
+            # Critical guard: never pass empty director output to shot planner.
+            if not director_has_shots(director_shots):
+                print("⚠️ Director returned empty/no-shot output.")
+                print("⚠️ Falling back to deterministic camera-log conversion.")
+
+                dlog.write(
+                    f'\n{"!"*100}\n'
+                    f'DIRECTOR FAILED: empty or no-shot output.\n'
+                    f'Falling back to deterministic camera-log conversion.\n'
+                )
+
+                director_shots = camera_log_to_director_plan(
+                    camera_log,
+                    beat_entry.get("summary", "")
+                )
+
+                print(f"Deterministic Director Fallback: \n{director_shots}")
+                dlog.write(f'\n{"-"*100} \nDeterministic Director Fallback\n{director_shots}\n')
+
+                if not director_has_shots(director_shots):
+                    raise RuntimeError("Director failed and camera fallback could not produce shots.")
 
             final_shotlist = llm(
                 shot_planner_prompt.format(
                     director_shot_plan=director_shots
-                ), processor=p_ctx, model=m_ctx
+                ), processor=p_ctx, model=m_ctx, temperature=0.1
             )
             print(f"Shotlist Done: \n{final_shotlist}")
             dlog.write(f'\n{"-"*100} \nShot list\n {final_shotlist}\n')
@@ -530,44 +773,6 @@ def h3_ref(bg, refs, prompt, duration=10.0, visual_ids=[], char_names=[], shots=
 
 import re
 import unicodedata
-'''
-def replace_character_names(script: str, char_names: list) -> str:
-    """
-    Replaces character names with charX tokens, skipping quoted segments.
-    """
-    # Build name → token mapping
-    name_map = {}
-    for i, name in enumerate(char_names, 1):
-        if name and name.lower() != "unknown":
-            name_map[name] = f"char{i}"
-    
-    # Split by quotes - even indices are outside quotes, odd are inside
-    parts = re.split(r'(["\'])', script)
-    result = []
-    
-    for i, part in enumerate(parts):
-        if part in ['"', "'"]:
-            result.append(part)
-        elif i % 2 == 0:  # Not in quotes
-            for name, token in name_map.items():
-                # Case-insensitive replacement
-                part = re.sub(re.escape(name), token, part, flags=re.IGNORECASE)
-            result.append(part)
-        else:  # In quotes
-            result.append(part)
-    
-    return ''.join(result)
-
-    # ------------------------------------------------------------
-    # 4. Call your LLM
-    # ------------------------------------------------------------
-
-    response = llm_analyze_media('', prompt=llm_prompt, max_tokens=8192, temperature=0.4)['analysis']
-
-    return response
-'''
-
-import re
 
 def replace_character_names(script: str, char_names: list[str]) -> str:
     """

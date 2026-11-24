@@ -228,7 +228,7 @@ def GenerateVideo(prompt='', media='', output='output.mp4',
 
         try:
             if MMH3:
-                i2v(eprompt, f'{os.getcwd()}/tmp.png' if start_image else '', last, Path(output).name, 
+                i2v(eprompt, f'{os.getcwd()}/tmp.png' if start_image else '', last, output, 
                         duration_sec, width, height, seed)
             else:
                 i2v(eprompt, f'{os.getcwd()}/tmp.png' if start_image else '', last, output, 

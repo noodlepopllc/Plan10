@@ -17,7 +17,7 @@ else:
     from plan10.lib.image_gen import GenerateImage, CreateBackground, CreateCharacterSheet
 from plan10.lib.graphics_gen import GenerateGraphic, GenerateGraphicSchema
 from plan10.lib.image_analysis import EnhancePrompt
-from plan10.lib.dialog import VoiceDesignSchema, VoiceCloneSchema, DesignVoice, CloneVoice
+from plan10.lib.dialog_omni import VoiceDesignSchema, VoiceCloneSchema, DesignVoice, CloneVoice
 from plan10.lib.compositor import (
     CompositeSceneSchema, 
     CompositeBackgroundSchema,
